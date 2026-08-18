@@ -22,7 +22,7 @@ body {
 .sidebar {
     position: fixed;
     top: 0;
-    left: -100%;
+    left: 0;
     width: var(--sidebar-width);
     height: 100vh;
     background: linear-gradient(180deg, #1e1b4b 0%, #312e81 100%);
@@ -34,8 +34,8 @@ body {
     box-shadow: 4px 0 20px rgba(0, 0, 0, 0.3);
 }
 
-.sidebar.active {
-    left: 0;
+.sidebar.hidden {
+    left: calc(-1 * var(--sidebar-width));
 }
 
 .sidebar-header {
@@ -179,9 +179,13 @@ body {
     z-index: 998;
     transition: all var(--transition-speed);
     box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);
-    display: flex;
+    display: none;
     align-items: center;
     justify-content: center;
+}
+
+.menu-toggle.visible {
+    display: flex;
 }
 
 .menu-toggle:hover {
@@ -223,18 +227,6 @@ p {
         transform: translateX(0);
     }
 }
-
-.sidebar.active .nav-item {
-    animation: slideIn 0.3s ease forwards;
-}
-
-.sidebar.active .nav-item:nth-child(1) { animation-delay: 0.05s; }
-.sidebar.active .nav-item:nth-child(2) { animation-delay: 0.1s; }
-.sidebar.active .nav-item:nth-child(3) { animation-delay: 0.15s; }
-.sidebar.active .nav-item:nth-child(4) { animation-delay: 0.2s; }
-.sidebar.active .nav-item:nth-child(5) { animation-delay: 0.25s; }
-.sidebar.active .nav-item:nth-child(6) { animation-delay: 0.3s; }
-.sidebar.active .nav-item:nth-child(7) { animation-delay: 0.35s; }
 
 /* Responsive */
 @media (max-width: 768px) {

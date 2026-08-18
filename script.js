@@ -6,13 +6,15 @@ document.addEventListener('DOMContentLoaded', function() {
     const navItems = document.querySelectorAll('.nav-item');
 
     function openSidebar() {
-        sidebar.classList.add('active');
-        overlay.classList.add('active');
+        sidebar.classList.remove('hidden');
+        menuToggle.classList.remove('visible');
+        overlay.classList.remove('active');
     }
 
     function closeSidebar() {
-        sidebar.classList.remove('active');
-        overlay.classList.remove('active');
+        sidebar.classList.add('hidden');
+        menuToggle.classList.add('visible');
+        overlay.classList.add('active');
     }
 
     menuToggle.addEventListener('click', openSidebar);
