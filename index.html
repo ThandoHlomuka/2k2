@@ -21,25 +21,38 @@
                 <i class="fas fa-home"></i>
                 <span>Home</span>
             </a>
-            <a href="#" class="nav-item" data-page="general-profile">
-                <i class="fas fa-user"></i>
-                <span>General User</span>
+            <div class="nav-divider"></div>
+            <span class="nav-section-title">General User</span>
+            <a href="#" class="nav-item" data-page="user-dashboard">
+                <i class="fas fa-th-large"></i>
+                <span>Dashboard</span>
+            </a>
+            <a href="#" class="nav-item" data-page="user-profile">
+                <i class="fas fa-user-circle"></i>
+                <span>My Profile</span>
+            </a>
+            <a href="#" class="nav-item" data-page="user-create">
+                <i class="fas fa-user-plus"></i>
+                <span>Create Profile</span>
+            </a>
+            <div class="nav-divider"></div>
+            <span class="nav-section-title">Service Provider</span>
+            <a href="#" class="nav-item" data-page="provider-dashboard">
+                <i class="fas fa-tachometer-alt"></i>
+                <span>Dashboard</span>
             </a>
             <a href="#" class="nav-item" data-page="provider-profile">
-                <i class="fas fa-briefcase"></i>
-                <span>Service Provider</span>
+                <i class="fas fa-id-badge"></i>
+                <span>My Profile</span>
             </a>
+            <a href="#" class="nav-item" data-page="provider-create">
+                <i class="fas fa-plus-circle"></i>
+                <span>Create Profile</span>
+            </a>
+            <div class="nav-divider"></div>
             <a href="#" class="nav-item" data-page="settings">
                 <i class="fas fa-cog"></i>
                 <span>Settings</span>
-            </a>
-            <a href="#" class="nav-item" data-page="notifications">
-                <i class="fas fa-bell"></i>
-                <span>Notifications</span>
-            </a>
-            <a href="#" class="nav-item" data-page="messages">
-                <i class="fas fa-envelope"></i>
-                <span>Messages</span>
             </a>
         </nav>
 
@@ -60,208 +73,595 @@
         <!-- Home Page -->
         <div class="page active" id="page-home">
             <div class="container">
-                <h1>Welcome to 2k2</h1>
-                <p>This is a simple empty website.</p>
+                <div class="welcome-hero">
+                    <h1>Welcome to <span class="gradient-text">2k2</span></h1>
+                    <p>Choose your profile type to get started</p>
+                    <div class="profile-type-cards">
+                        <div class="type-card type-user" onclick="navigateTo('user-dashboard')">
+                            <div class="type-icon"><i class="fas fa-user"></i></div>
+                            <h3>General User</h3>
+                            <p>Create your personal profile and connect with others</p>
+                            <span class="type-link">Get Started <i class="fas fa-arrow-right"></i></span>
+                        </div>
+                        <div class="type-card type-provider" onclick="navigateTo('provider-dashboard')">
+                            <div class="type-icon"><i class="fas fa-briefcase"></i></div>
+                            <h3>Service Provider</h3>
+                            <p>Showcase your business and services</p>
+                            <span class="type-link">Get Started <i class="fas fa-arrow-right"></i></span>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
 
-        <!-- General User Profile -->
-        <div class="page" id="page-general-profile">
+        <!-- General User Dashboard -->
+        <div class="page" id="page-user-dashboard">
             <div class="container">
-                <div class="profile-header">
-                    <div class="avatar">
-                        <i class="fas fa-user"></i>
+                <div class="dashboard-header">
+                    <div>
+                        <h1>General User Dashboard</h1>
+                        <p>Manage your profiles and activity</p>
                     </div>
-                    <div class="profile-title">
-                        <h1>General User</h1>
-                        <span class="badge badge-user">User</span>
-                    </div>
+                    <button class="btn btn-primary" onclick="navigateTo('user-create')">
+                        <i class="fas fa-plus"></i> New Profile
+                    </button>
                 </div>
 
-                <div class="profile-card">
-                    <h2><i class="fas fa-info-circle"></i> Personal Information</h2>
-                    <div class="form-grid">
-                        <div class="form-group">
-                            <label>Full Name</label>
-                            <input type="text" placeholder="Enter your name" id="userName">
-                        </div>
-                        <div class="form-group">
-                            <label>Email</label>
-                            <input type="email" placeholder="Enter your email" id="userEmail">
-                        </div>
-                        <div class="form-group">
-                            <label>Phone</label>
-                            <input type="tel" placeholder="Enter your phone" id="userPhone">
-                        </div>
-                        <div class="form-group">
-                            <label>Location</label>
-                            <input type="text" placeholder="Enter your location" id="userLocation">
+                <div class="stats-row">
+                    <div class="stat-card">
+                        <div class="stat-icon user-bg"><i class="fas fa-users"></i></div>
+                        <div class="stat-info">
+                            <span class="stat-number" id="userCount">0</span>
+                            <span class="stat-label">Total Profiles</span>
                         </div>
                     </div>
-                </div>
-
-                <div class="profile-card">
-                    <h2><i class="fas fa-heart"></i> Interests</h2>
-                    <div class="tags-container">
-                        <span class="tag">Technology</span>
-                        <span class="tag">Music</span>
-                        <span class="tag">Travel</span>
-                        <span class="tag">Photography</span>
-                        <span class="tag">Fitness</span>
-                        <span class="tag">+ Add</span>
-                    </div>
-                </div>
-
-                <div class="profile-card">
-                    <h2><i class="fas fa-file-alt"></i> Bio</h2>
-                    <textarea placeholder="Tell us about yourself..." id="userBio"></textarea>
-                </div>
-
-                <div class="profile-stats">
-                    <div class="stat">
-                        <span class="stat-value">0</span>
-                        <span class="stat-label">Posts</span>
-                    </div>
-                    <div class="stat">
-                        <span class="stat-value">0</span>
-                        <span class="stat-label">Followers</span>
-                    </div>
-                    <div class="stat">
-                        <span class="stat-value">0</span>
-                        <span class="stat-label">Following</span>
-                    </div>
-                </div>
-
-                <button class="btn btn-primary" id="saveGeneralProfile">Save Profile</button>
-            </div>
-        </div>
-
-        <!-- Service Provider Profile -->
-        <div class="page" id="page-provider-profile">
-            <div class="container">
-                <div class="profile-header">
-                    <div class="avatar avatar-provider">
-                        <i class="fas fa-briefcase"></i>
-                    </div>
-                    <div class="profile-title">
-                        <h1>Service Provider</h1>
-                        <span class="badge badge-provider">Provider</span>
-                    </div>
-                </div>
-
-                <div class="profile-card">
-                    <h2><i class="fas fa-building"></i> Business Information</h2>
-                    <div class="form-grid">
-                        <div class="form-group">
-                            <label>Business Name</label>
-                            <input type="text" placeholder="Enter business name" id="businessName">
+                    <div class="stat-card">
+                        <div class="stat-icon purple-bg"><i class="fas fa-heart"></i></div>
+                        <div class="stat-info">
+                            <span class="stat-number">0</span>
+                            <span class="stat-label">Interests</span>
                         </div>
-                        <div class="form-group">
-                            <label>Business Type</label>
-                            <select id="businessType">
-                                <option value="">Select type</option>
-                                <option value="individual">Individual</option>
-                                <option value="company">Company</option>
-                                <option value="freelancer">Freelancer</option>
-                                <option value="agency">Agency</option>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon green-bg"><i class="fas fa-check-circle"></i></div>
+                        <div class="stat-info">
+                            <span class="stat-number">0</span>
+                            <span class="stat-label">Active</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="profiles-section">
+                    <div class="section-header">
+                        <h2>Your Profiles</h2>
+                        <div class="filter-group">
+                            <select id="userFilter" onchange="filterUserProfiles()">
+                                <option value="all">All Profiles</option>
+                                <option value="active">Active</option>
+                                <option value="inactive">Inactive</option>
                             </select>
                         </div>
+                    </div>
+                    <div class="profiles-grid" id="userProfilesList">
+                        <div class="empty-state">
+                            <i class="fas fa-user-plus"></i>
+                            <h3>No profiles yet</h3>
+                            <p>Create your first profile to get started</p>
+                            <button class="btn btn-primary" onclick="navigateTo('user-create')">Create Profile</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- General User Create/Edit Profile -->
+        <div class="page" id="page-user-create">
+            <div class="container">
+                <div class="form-header">
+                    <button class="btn-back" onclick="navigateTo('user-dashboard')">
+                        <i class="fas fa-arrow-left"></i> Back
+                    </button>
+                    <h1 id="userFormTitle">Create General User Profile</h1>
+                </div>
+
+                <form id="userProfileForm" onsubmit="handleUserSubmit(event)">
+                    <input type="hidden" id="userProfileId" value="">
+                    
+                    <div class="profile-card">
+                        <h2><i class="fas fa-user"></i> Basic Information</h2>
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label>Full Name *</label>
+                                <input type="text" id="userFullName" placeholder="Enter your full name" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Email *</label>
+                                <input type="email" id="userFormEmail" placeholder="Enter your email" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Phone</label>
+                                <input type="tel" id="userFormPhone" placeholder="Enter your phone">
+                            </div>
+                            <div class="form-group">
+                                <label>Location</label>
+                                <input type="text" id="userFormLocation" placeholder="Enter your location">
+                            </div>
+                            <div class="form-group">
+                                <label>Date of Birth</label>
+                                <input type="date" id="userDob">
+                            </div>
+                            <div class="form-group">
+                                <label>Gender</label>
+                                <select id="userGender">
+                                    <option value="">Select gender</option>
+                                    <option value="male">Male</option>
+                                    <option value="female">Female</option>
+                                    <option value="other">Other</option>
+                                    <option value="prefer-not">Prefer not to say</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="profile-card">
+                        <h2><i class="fas fa-file-alt"></i> About You</h2>
                         <div class="form-group">
-                            <label>Email</label>
-                            <input type="email" placeholder="Business email" id="providerEmail">
+                            <label>Bio</label>
+                            <textarea id="userFormBio" placeholder="Tell us about yourself..." rows="4"></textarea>
                         </div>
                         <div class="form-group">
-                            <label>Phone</label>
-                            <input type="tel" placeholder="Business phone" id="providerPhone">
-                        </div>
-                        <div class="form-group full-width">
                             <label>Website</label>
-                            <input type="url" placeholder="https://yourwebsite.com" id="providerWebsite">
+                            <input type="url" id="userFormWebsite" placeholder="https://yourwebsite.com">
                         </div>
-                        <div class="form-group full-width">
-                            <label>Address</label>
-                            <input type="text" placeholder="Business address" id="providerAddress">
+                    </div>
+
+                    <div class="profile-card">
+                        <h2><i class="fas fa-heart"></i> Interests</h2>
+                        <div class="tags-input-container">
+                            <div class="tags-display" id="userTagsDisplay"></div>
+                            <input type="text" id="userTagsInput" placeholder="Type and press Enter to add interest">
+                        </div>
+                        <div class="suggested-tags">
+                            <span class="tag-label">Suggestions:</span>
+                            <button type="button" class="tag-suggestion" onclick="addSuggestedTag('Technology')">Technology</button>
+                            <button type="button" class="tag-suggestion" onclick="addSuggestedTag('Music')">Music</button>
+                            <button type="button" class="tag-suggestion" onclick="addSuggestedTag('Travel')">Travel</button>
+                            <button type="button" class="tag-suggestion" onclick="addSuggestedTag('Sports')">Sports</button>
+                            <button type="button" class="tag-suggestion" onclick="addSuggestedTag('Art')">Art</button>
+                            <button type="button" class="tag-suggestion" onclick="addSuggestedTag('Food')">Food</button>
+                            <button type="button" class="tag-suggestion" onclick="addSuggestedTag('Gaming')">Gaming</button>
+                            <button type="button" class="tag-suggestion" onclick="addSuggestedTag('Fitness')">Fitness</button>
+                        </div>
+                    </div>
+
+                    <div class="profile-card">
+                        <h2><i class="fas fa-image"></i> Profile Photo</h2>
+                        <div class="photo-upload">
+                            <div class="photo-preview" id="userPhotoPreview">
+                                <i class="fas fa-camera"></i>
+                                <span>Click to upload</span>
+                            </div>
+                            <input type="file" id="userPhotoInput" accept="image/*" onchange="previewPhoto(this, 'userPhotoPreview')">
+                        </div>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="button" class="btn btn-secondary" onclick="navigateTo('user-dashboard')">Cancel</button>
+                        <button type="submit" class="btn btn-primary" id="userSubmitBtn">Create Profile</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- General User View Profile -->
+        <div class="page" id="page-user-profile">
+            <div class="container">
+                <div class="form-header">
+                    <button class="btn-back" onclick="navigateTo('user-dashboard')">
+                        <i class="fas fa-arrow-left"></i> Back
+                    </button>
+                    <h1>View Profile</h1>
+                    <div class="header-actions">
+                        <button class="btn btn-secondary" id="userEditBtn" onclick="editUserProfile()">
+                            <i class="fas fa-edit"></i> Edit
+                        </button>
+                        <button class="btn btn-danger" id="userDeleteBtn" onclick="deleteUserProfile()">
+                            <i class="fas fa-trash"></i> Delete
+                        </button>
+                    </div>
+                </div>
+
+                <div class="view-profile" id="userProfileView">
+                    <div class="profile-card view-header-card">
+                        <div class="view-avatar">
+                            <img id="userViewAvatar" src="" alt="" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'">
+                            <div class="avatar-placeholder" style="display:none"><i class="fas fa-user"></i></div>
+                        </div>
+                        <div class="view-basic-info">
+                            <h1 id="userViewName">-</h1>
+                            <span class="badge badge-user">General User</span>
+                            <p id="userViewEmail" class="view-email">-</p>
+                        </div>
+                    </div>
+
+                    <div class="view-grid">
+                        <div class="profile-card">
+                            <h2><i class="fas fa-info-circle"></i> Details</h2>
+                            <div class="detail-row">
+                                <span class="detail-label">Phone</span>
+                                <span class="detail-value" id="userViewPhone">-</span>
+                            </div>
+                            <div class="detail-row">
+                                <span class="detail-label">Location</span>
+                                <span class="detail-value" id="userViewLocation">-</span>
+                            </div>
+                            <div class="detail-row">
+                                <span class="detail-label">Date of Birth</span>
+                                <span class="detail-value" id="userViewDob">-</span>
+                            </div>
+                            <div class="detail-row">
+                                <span class="detail-label">Gender</span>
+                                <span class="detail-value" id="userViewGender">-</span>
+                            </div>
+                        </div>
+
+                        <div class="profile-card">
+                            <h2><i class="fas fa-file-alt"></i> Bio</h2>
+                            <p id="userViewBio" class="view-bio">-</p>
+                            <div class="detail-row" style="margin-top:16px">
+                                <span class="detail-label">Website</span>
+                                <a href="#" id="userViewWebsite" target="_blank" class="detail-link">-</a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="profile-card">
+                        <h2><i class="fas fa-heart"></i> Interests</h2>
+                        <div class="tags-container" id="userViewInterests">
+                            <span class="tag empty-tag">No interests added</span>
+                        </div>
+                    </div>
+
+                    <div class="profile-card">
+                        <h2><i class="fas fa-clock"></i> Metadata</h2>
+                        <div class="detail-row">
+                            <span class="detail-label">Created</span>
+                            <span class="detail-value" id="userViewCreated">-</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Last Updated</span>
+                            <span class="detail-value" id="userViewUpdated">-</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Status</span>
+                            <span class="detail-value" id="userViewStatus">-</span>
                         </div>
                     </div>
                 </div>
 
-                <div class="profile-card">
-                    <h2><i class="fas fa-concierge-bell"></i> Services Offered</h2>
-                    <div class="services-list" id="servicesList">
-                        <div class="service-item">
-                            <input type="text" placeholder="Service name" class="service-name">
-                            <input type="number" placeholder="Price" class="service-price">
-                            <button class="btn-remove"><i class="fas fa-times"></i></button>
-                        </div>
+                <div class="no-profile-state" id="userNoProfile" style="display:none">
+                    <i class="fas fa-user-slash"></i>
+                    <h3>No profile selected</h3>
+                    <p>Select a profile from the dashboard to view</p>
+                    <button class="btn btn-primary" onclick="navigateTo('user-dashboard')">Go to Dashboard</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Service Provider Dashboard -->
+        <div class="page" id="page-provider-dashboard">
+            <div class="container">
+                <div class="dashboard-header">
+                    <div>
+                        <h1>Service Provider Dashboard</h1>
+                        <p>Manage your business profiles and services</p>
                     </div>
-                    <button class="btn btn-secondary" id="addService">+ Add Service</button>
+                    <button class="btn btn-primary provider-btn" onclick="navigateTo('provider-create')">
+                        <i class="fas fa-plus"></i> New Profile
+                    </button>
                 </div>
 
-                <div class="profile-card">
-                    <h2><i class="fas fa-star"></i> Portfolio</h2>
-                    <div class="portfolio-grid">
-                        <div class="portfolio-item">
-                            <i class="fas fa-image"></i>
-                            <span>Add Image</span>
+                <div class="stats-row">
+                    <div class="stat-card">
+                        <div class="stat-icon green-bg"><i class="fas fa-briefcase"></i></div>
+                        <div class="stat-info">
+                            <span class="stat-number" id="providerCount">0</span>
+                            <span class="stat-label">Total Profiles</span>
                         </div>
                     </div>
-                </div>
-
-                <div class="profile-card">
-                    <h2><i class="fas fa-clock"></i> Availability</h2>
-                    <div class="availability-grid">
-                        <div class="day">
-                            <input type="checkbox" id="mon" checked>
-                            <label for="mon">Mon</label>
+                    <div class="stat-card">
+                        <div class="stat-icon orange-bg"><i class="fas fa-concierge-bell"></i></div>
+                        <div class="stat-info">
+                            <span class="stat-number">0</span>
+                            <span class="stat-label">Services</span>
                         </div>
-                        <div class="day">
-                            <input type="checkbox" id="tue" checked>
-                            <label for="tue">Tue</label>
-                        </div>
-                        <div class="day">
-                            <input type="checkbox" id="wed" checked>
-                            <label for="wed">Wed</label>
-                        </div>
-                        <div class="day">
-                            <input type="checkbox" id="thu" checked>
-                            <label for="thu">Thu</label>
-                        </div>
-                        <div class="day">
-                            <input type="checkbox" id="fri" checked>
-                            <label for="fri">Fri</label>
-                        </div>
-                        <div class="day">
-                            <input type="checkbox" id="sat">
-                            <label for="sat">Sat</label>
-                        </div>
-                        <div class="day">
-                            <input type="checkbox" id="sun">
-                            <label for="sun">Sun</label>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon blue-bg"><i class="fas fa-star"></i></div>
+                        <div class="stat-info">
+                            <span class="stat-number">0.0</span>
+                            <span class="stat-label">Avg Rating</span>
                         </div>
                     </div>
                 </div>
 
-                <div class="profile-card">
-                    <h2><i class="fas fa-file-alt"></i> About Business</h2>
-                    <textarea placeholder="Describe your services and expertise..." id="providerBio"></textarea>
+                <div class="profiles-section">
+                    <div class="section-header">
+                        <h2>Your Business Profiles</h2>
+                        <div class="filter-group">
+                            <select id="providerFilter" onchange="filterProviderProfiles()">
+                                <option value="all">All Profiles</option>
+                                <option value="active">Active</option>
+                                <option value="inactive">Inactive</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="profiles-grid" id="providerProfilesList">
+                        <div class="empty-state">
+                            <i class="fas fa-plus-circle"></i>
+                            <h3>No business profiles yet</h3>
+                            <p>Create your first business profile to get started</p>
+                            <button class="btn btn-primary provider-btn" onclick="navigateTo('provider-create')">Create Profile</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Service Provider Create/Edit Profile -->
+        <div class="page" id="page-provider-create">
+            <div class="container">
+                <div class="form-header">
+                    <button class="btn-back" onclick="navigateTo('provider-dashboard')">
+                        <i class="fas fa-arrow-left"></i> Back
+                    </button>
+                    <h1 id="providerFormTitle">Create Service Provider Profile</h1>
                 </div>
 
-                <div class="profile-stats">
-                    <div class="stat">
-                        <span class="stat-value">0</span>
-                        <span class="stat-label">Services</span>
+                <form id="providerProfileForm" onsubmit="handleProviderSubmit(event)">
+                    <input type="hidden" id="providerProfileId" value="">
+                    
+                    <div class="profile-card">
+                        <h2><i class="fas fa-building"></i> Business Information</h2>
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label>Business Name *</label>
+                                <input type="text" id="providerBusinessName" placeholder="Enter business name" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Business Type *</label>
+                                <select id="providerBusinessType" required>
+                                    <option value="">Select type</option>
+                                    <option value="individual">Individual</option>
+                                    <option value="company">Company</option>
+                                    <option value="freelancer">Freelancer</option>
+                                    <option value="agency">Agency</option>
+                                    <option value="startup">Startup</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Contact Person</label>
+                                <input type="text" id="providerContactPerson" placeholder="Contact person name">
+                            </div>
+                            <div class="form-group">
+                                <label>Email *</label>
+                                <input type="email" id="providerFormEmail" placeholder="Business email" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Phone *</label>
+                                <input type="tel" id="providerFormPhone" placeholder="Business phone" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Established Year</label>
+                                <input type="number" id="providerEstYear" placeholder="e.g. 2020" min="1900" max="2099">
+                            </div>
+                            <div class="form-group full-width">
+                                <label>Website</label>
+                                <input type="url" id="providerFormWebsite" placeholder="https://yourbusiness.com">
+                            </div>
+                            <div class="form-group full-width">
+                                <label>Address *</label>
+                                <input type="text" id="providerFormAddress" placeholder="Full business address" required>
+                            </div>
+                        </div>
                     </div>
-                    <div class="stat">
-                        <span class="stat-value">0</span>
-                        <span class="stat-label">Reviews</span>
+
+                    <div class="profile-card">
+                        <h2><i class="fas fa-file-alt"></i> About Business</h2>
+                        <div class="form-group">
+                            <label>Business Description *</label>
+                            <textarea id="providerFormDescription" placeholder="Describe your business and expertise..." rows="4" required></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label>Tagline</label>
+                            <input type="text" id="providerFormTagline" placeholder="A short catchy tagline">
+                        </div>
                     </div>
-                    <div class="stat">
-                        <span class="stat-value">0</span>
-                        <span class="stat-label">Rating</span>
+
+                    <div class="profile-card">
+                        <h2><i class="fas fa-concierge-bell"></i> Services</h2>
+                        <div class="services-list" id="providerServicesList">
+                            <div class="service-item">
+                                <input type="text" placeholder="Service name" class="service-name" required>
+                                <input type="number" placeholder="Price ($)" class="service-price" min="0" step="0.01">
+                                <input type="text" placeholder="Description (optional)" class="service-desc">
+                                <button type="button" class="btn-remove" onclick="removeServiceItem(this)"><i class="fas fa-times"></i></button>
+                            </div>
+                        </div>
+                        <button type="button" class="btn btn-secondary" onclick="addServiceItem()">
+                            <i class="fas fa-plus"></i> Add Service
+                        </button>
+                    </div>
+
+                    <div class="profile-card">
+                        <h2><i class="fas fa-tag"></i> Categories</h2>
+                        <div class="tags-input-container">
+                            <div class="tags-display" id="providerTagsDisplay"></div>
+                            <input type="text" id="providerTagsInput" placeholder="Type and press Enter to add category">
+                        </div>
+                        <div class="suggested-tags">
+                            <span class="tag-label">Popular:</span>
+                            <button type="button" class="tag-suggestion provider-suggestion" onclick="addProviderSuggestedTag('Web Development')">Web Development</button>
+                            <button type="button" class="tag-suggestion provider-suggestion" onclick="addProviderSuggestedTag('Design')">Design</button>
+                            <button type="button" class="tag-suggestion provider-suggestion" onclick="addProviderSuggestedTag('Marketing')">Marketing</button>
+                            <button type="button" class="tag-suggestion provider-suggestion" onclick="addProviderSuggestedTag('Consulting')">Consulting</button>
+                            <button type="button" class="tag-suggestion provider-suggestion" onclick="addProviderSuggestedTag('Photography')">Photography</button>
+                            <button type="button" class="tag-suggestion provider-suggestion" onclick="addProviderSuggestedTag('Writing')">Writing</button>
+                        </div>
+                    </div>
+
+                    <div class="profile-card">
+                        <h2><i class="fas fa-clock"></i> Availability</h2>
+                        <div class="availability-grid">
+                            <div class="day"><input type="checkbox" id="provMon" checked><label for="provMon">Mon</label></div>
+                            <div class="day"><input type="checkbox" id="provTue" checked><label for="provTue">Tue</label></div>
+                            <div class="day"><input type="checkbox" id="provWed" checked><label for="provWed">Wed</label></div>
+                            <div class="day"><input type="checkbox" id="provThu" checked><label for="provThu">Thu</label></div>
+                            <div class="day"><input type="checkbox" id="provFri" checked><label for="provFri">Fri</label></div>
+                            <div class="day"><input type="checkbox" id="provSat"><label for="provSat">Sat</label></div>
+                            <div class="day"><input type="checkbox" id="provSun"><label for="provSun">Sun</label></div>
+                        </div>
+                        <div class="form-grid" style="margin-top:16px">
+                            <div class="form-group">
+                                <label>Working Hours Start</label>
+                                <input type="time" id="providerWorkStart" value="09:00">
+                            </div>
+                            <div class="form-group">
+                                <label>Working Hours End</label>
+                                <input type="time" id="providerWorkEnd" value="17:00">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="profile-card">
+                        <h2><i class="fas fa-image"></i> Business Logo</h2>
+                        <div class="photo-upload">
+                            <div class="photo-preview" id="providerLogoPreview">
+                                <i class="fas fa-cloud-upload-alt"></i>
+                                <span>Click to upload logo</span>
+                            </div>
+                            <input type="file" id="providerLogoInput" accept="image/*" onchange="previewPhoto(this, 'providerLogoPreview')">
+                        </div>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="button" class="btn btn-secondary" onclick="navigateTo('provider-dashboard')">Cancel</button>
+                        <button type="submit" class="btn btn-primary provider-btn" id="providerSubmitBtn">Create Profile</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Service Provider View Profile -->
+        <div class="page" id="page-provider-profile">
+            <div class="container">
+                <div class="form-header">
+                    <button class="btn-back" onclick="navigateTo('provider-dashboard')">
+                        <i class="fas fa-arrow-left"></i> Back
+                    </button>
+                    <h1>View Business Profile</h1>
+                    <div class="header-actions">
+                        <button class="btn btn-secondary" id="providerEditBtn" onclick="editProviderProfile()">
+                            <i class="fas fa-edit"></i> Edit
+                        </button>
+                        <button class="btn btn-danger" id="providerDeleteBtn" onclick="deleteProviderProfile()">
+                            <i class="fas fa-trash"></i> Delete
+                        </button>
                     </div>
                 </div>
 
-                <button class="btn btn-primary" id="saveProviderProfile">Save Profile</button>
+                <div class="view-profile" id="providerProfileView">
+                    <div class="profile-card view-header-card provider-view-header">
+                        <div class="view-avatar provider-avatar-view">
+                            <img id="providerViewAvatar" src="" alt="" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'">
+                            <div class="avatar-placeholder provider-placeholder" style="display:none"><i class="fas fa-briefcase"></i></div>
+                        </div>
+                        <div class="view-basic-info">
+                            <h1 id="providerViewName">-</h1>
+                            <span class="badge badge-provider">Service Provider</span>
+                            <span class="badge" id="providerViewType">-</span>
+                            <p id="providerViewEmail" class="view-email">-</p>
+                        </div>
+                    </div>
+
+                    <div class="view-grid">
+                        <div class="profile-card">
+                            <h2><i class="fas fa-building"></i> Business Details</h2>
+                            <div class="detail-row">
+                                <span class="detail-label">Phone</span>
+                                <span class="detail-value" id="providerViewPhone">-</span>
+                            </div>
+                            <div class="detail-row">
+                                <span class="detail-label">Address</span>
+                                <span class="detail-value" id="providerViewAddress">-</span>
+                            </div>
+                            <div class="detail-row">
+                                <span class="detail-label">Contact Person</span>
+                                <span class="detail-value" id="providerViewContact">-</span>
+                            </div>
+                            <div class="detail-row">
+                                <span class="detail-label">Established</span>
+                                <span class="detail-value" id="providerViewEst">-</span>
+                            </div>
+                        </div>
+
+                        <div class="profile-card">
+                            <h2><i class="fas fa-file-alt"></i> About</h2>
+                            <p id="providerViewTagline" class="view-tagline">-</p>
+                            <p id="providerViewDescription" class="view-bio">-</p>
+                            <div class="detail-row" style="margin-top:16px">
+                                <span class="detail-label">Website</span>
+                                <a href="#" id="providerViewWebsite" target="_blank" class="detail-link">-</a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="profile-card">
+                        <h2><i class="fas fa-concierge-bell"></i> Services</h2>
+                        <div class="services-view-list" id="providerViewServices">
+                            <p class="empty-text">No services added</p>
+                        </div>
+                    </div>
+
+                    <div class="profile-card">
+                        <h2><i class="fas fa-tag"></i> Categories</h2>
+                        <div class="tags-container" id="providerViewCategories">
+                            <span class="tag empty-tag">No categories added</span>
+                        </div>
+                    </div>
+
+                    <div class="profile-card">
+                        <h2><i class="fas fa-clock"></i> Availability</h2>
+                        <div class="availability-view" id="providerViewAvailability"></div>
+                        <div class="detail-row" style="margin-top:12px">
+                            <span class="detail-label">Working Hours</span>
+                            <span class="detail-value" id="providerViewHours">-</span>
+                        </div>
+                    </div>
+
+                    <div class="profile-card">
+                        <h2><i class="fas fa-clock"></i> Metadata</h2>
+                        <div class="detail-row">
+                            <span class="detail-label">Created</span>
+                            <span class="detail-value" id="providerViewCreated">-</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Last Updated</span>
+                            <span class="detail-value" id="providerViewUpdated">-</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Status</span>
+                            <span class="detail-value" id="providerViewStatus">-</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="no-profile-state" id="providerNoProfile" style="display:none">
+                    <i class="fas fa-building-circle-xmark"></i>
+                    <h3>No profile selected</h3>
+                    <p>Select a profile from the dashboard to view</p>
+                    <button class="btn btn-primary provider-btn" onclick="navigateTo('provider-dashboard')">Go to Dashboard</button>
+                </div>
             </div>
         </div>
 
@@ -269,22 +669,31 @@
         <div class="page" id="page-settings">
             <div class="container">
                 <h1>Settings</h1>
+                <div class="profile-card">
+                    <h2><i class="fas fa-palette"></i> Appearance</h2>
+                    <div class="detail-row">
+                        <span class="detail-label">Theme</span>
+                        <span class="detail-value">Light</span>
+                    </div>
+                </div>
             </div>
         </div>
 
-        <!-- Notifications Page -->
-        <div class="page" id="page-notifications">
-            <div class="container">
-                <h1>Notifications</h1>
+        <!-- Confirm Delete Modal -->
+        <div class="modal-overlay" id="deleteModal">
+            <div class="modal">
+                <div class="modal-icon danger"><i class="fas fa-exclamation-triangle"></i></div>
+                <h2>Delete Profile?</h2>
+                <p id="deleteModalText">This action cannot be undone. All data will be permanently removed.</p>
+                <div class="modal-actions">
+                    <button class="btn btn-secondary" onclick="closeDeleteModal()">Cancel</button>
+                    <button class="btn btn-danger" id="confirmDeleteBtn" onclick="confirmDelete()">Delete</button>
+                </div>
             </div>
         </div>
 
-        <!-- Messages Page -->
-        <div class="page" id="page-messages">
-            <div class="container">
-                <h1>Messages</h1>
-            </div>
-        </div>
+        <!-- Toast Container -->
+        <div class="toast-container" id="toastContainer"></div>
     </div>
 
     <script src="script.js"></script>
