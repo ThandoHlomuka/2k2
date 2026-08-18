@@ -1,0 +1,36 @@
+========================================
+UPDATES LOG - 2k2 Project
+========================================
+
+Date: 2026-08-18
+========================================
+
+[FEATURE] Initial Project Setup
+- Created empty website template (index.html, style.css, script.js)
+- Added README.md documentation
+- Pushed to GitHub repository: ThandoHlomuka/2k2
+
+[FEATURE] Side Menu Implementation
+- Added exquisite sidebar navigation with icons
+- Font Awesome icons integration
+- Smooth slide-in/out animations with cubic-bezier
+- Hover effects with scaling icons and sliding text
+- Active state with animated left border accent
+- Staggered animation delays for nav items
+- Keyboard support (Escape to close)
+
+[UPDATE] Sidebar Behavior
+- Sidebar visible immediately on page load
+- Close button (X icon) to hide sidebar
+- Hamburger menu icon appears when sidebar is closed
+- Sidebar reopens via hamburger menu click
+
+[UPDATE] Overlay Removal
+- Removed overlay element from HTML
+- Removed overlay styles from CSS
+- Removed overlay logic from JavaScript
+- Clean open/close mechanism without blocking elements
+
+========================================
+END OF UPDATES LOG
+========================================
