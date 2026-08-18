@@ -9,14 +9,28 @@ const Storage = {
     setUsers: (data) => localStorage.setItem('k2_users', JSON.stringify(data)),
     getProviders: () => JSON.parse(localStorage.getItem('k2_providers') || '[]'),
     setProviders: (data) => localStorage.setItem('k2_providers', JSON.stringify(data)),
-    clearAll: () => { localStorage.removeItem('k2_users'); localStorage.removeItem('k2_providers'); }
+    getListings: () => JSON.parse(localStorage.getItem('k2_listings') || '[]'),
+    setListings: (data) => localStorage.setItem('k2_listings', JSON.stringify(data)),
+    clearAll: () => { localStorage.removeItem('k2_users'); localStorage.removeItem('k2_providers'); localStorage.removeItem('k2_listings'); }
+};
+
+const DIRECTORY_TYPES = {
+    'content-creator': { label: 'Content Creator', icon: 'fa-video', color: '#8b5cf6' },
+    'model': { label: 'Model', icon: 'fa-camera-retro', color: '#ec4899' },
+    'exotic-dancer': { label: 'Exotic Dancer', icon: 'fa-music', color: '#f59e0b' },
+    'escort': { label: 'Escort', icon: 'fa-gem', color: '#6366f1' },
+    'nude-chef': { label: 'Nude Chef', icon: 'fa-utensils', color: '#ef4444' }
 };
 
 let currentViewUserId = null;
 let currentViewProviderId = null;
+let currentViewListingId = null;
 let deleteTarget = { type: null, id: null };
 let userTags = [];
 let providerTags = [];
+let listingTags = [];
+let listingGallery = [];
+let currentDirectoryFilter = 'all';
 
 // ==========================================
 // Navigation
@@ -43,6 +57,9 @@ function navigateTo(page) {
     if (page === 'provider-dashboard') renderProviderProfiles();
     if (page === 'user-create') resetUserForm();
     if (page === 'provider-create') resetProviderForm();
+    if (page === 'directory') renderDirectory();
+    if (page === 'provider-directory') renderListings();
+    if (page === 'provider-listing-create') resetListingForm();
 }
 
 // ==========================================
@@ -68,13 +85,17 @@ document.addEventListener('DOMContentLoaded', function() {
     // Tags input
     document.getElementById('userTagsInput')?.addEventListener('keydown', handleUserTagInput);
     document.getElementById('providerTagsInput')?.addEventListener('keydown', handleProviderTagInput);
+    document.getElementById('listingTagsInput')?.addEventListener('keydown', handleListingTagInput);
+    document.getElementById('directorySearch')?.addEventListener('keydown', (e) => { if (e.key === 'Enter') searchDirectory(); });
 
     // Auto-detect page and render
     const isProviderPage = window.location.pathname.includes('provider.html');
     if (isProviderPage) {
         document.getElementById('providerProfilesList') && renderProviderProfiles();
+        document.getElementById('listingsList') && renderListings();
     } else {
         document.getElementById('userProfilesList') && renderUserProfiles();
+        document.getElementById('directoryList') && renderDirectory();
     }
 });
 
@@ -601,3 +622,348 @@ function previewPhoto(input, previewId) {
         reader.readAsDataURL(input.files[0]);
     }
 }
+
+// ==========================================
+// DIRECTORY - BROWSE (General User Page)
+// ==========================================
+function renderDirectory() {
+    const listings = Storage.getListings();
+    const container = document.getElementById('directoryList');
+    if (!container) return;
+
+    let filtered = listings.filter(l => l.status === 'active');
+    
+    if (currentDirectoryFilter !== 'all') {
+        filtered = filtered.filter(l => l.category === currentDirectoryFilter);
+    }
+
+    const searchVal = (document.getElementById('directorySearch')?.value || '').toLowerCase();
+    if (searchVal) {
+        filtered = filtered.filter(l =>
+            l.name.toLowerCase().includes(searchVal) ||
+            l.location.toLowerCase().includes(searchVal) ||
+            (l.tags || []).some(t => t.toLowerCase().includes(searchVal))
+        );
+    }
+
+    const sortVal = document.getElementById('directorySort')?.value || 'newest';
+    filtered.sort((a, b) => {
+        if (sortVal === 'newest') return new Date(b.createdAt) - new Date(a.createdAt);
+        if (sortVal === 'oldest') return new Date(a.createdAt) - new Date(b.createdAt);
+        if (sortVal === 'name-asc') return a.name.localeCompare(b.name);
+        if (sortVal === 'name-desc') return b.name.localeCompare(a.name);
+        return 0;
+    });
+
+    document.getElementById('directoryCount').textContent = filtered.length;
+
+    if (filtered.length === 0) {
+        container.innerHTML = `<div class="empty-state"><i class="fas fa-search"></i><h3>No profiles found</h3><p>Try adjusting your filters or search terms</p></div>`;
+        return;
+    }
+
+    container.innerHTML = filtered.map((l, i) => {
+        const type = DIRECTORY_TYPES[l.category] || {};
+        return `
+        <div class="directory-card" style="animation-delay:${i * 0.05}s" onclick="viewDirectoryListing('${l.id}')">
+            <div class="directory-card-photo">
+                ${l.photo ? `<img src="${l.photo}" alt="">` : `<div class="directory-card-icon" style="background:${type.color}"><i class="fas ${type.icon || 'fa-user'}"></i></div>`}
+            </div>
+            <div class="directory-card-body">
+                <div class="directory-card-header">
+                    <h3>${l.name}</h3>
+                    <span class="directory-type-badge" style="background:${type.color}20; color:${type.color}">${type.label || l.category}</span>
+                </div>
+                <p class="directory-card-location"><i class="fas fa-map-marker-alt"></i> ${l.location}</p>
+                <div class="directory-card-tags">${(l.tags || []).slice(0, 3).map(t => `<span class="mini-tag">${t}</span>`).join('')}</div>
+                <div class="directory-card-footer">
+                    <span class="directory-card-rate">${l.rate || 'Contact'}</span>
+                </div>
+            </div>
+        </div>`;
+    }).join('');
+}
+
+function filterDirectory(type) {
+    currentDirectoryFilter = type;
+    document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
+    event.target.closest('.filter-tab').classList.add('active');
+    renderDirectory();
+}
+
+function searchDirectory() { renderDirectory(); }
+
+function viewDirectoryListing(id) {
+    const listings = Storage.getListings();
+    const l = listings.find(item => item.id === id);
+    if (!l) return;
+    currentViewListingId = id;
+
+    const type = DIRECTORY_TYPES[l.category] || {};
+    
+    document.getElementById('dirViewName').textContent = l.name;
+    document.getElementById('dirViewLocation').innerHTML = `<i class="fas fa-map-marker-alt"></i> ${l.location}`;
+    document.getElementById('dirViewEmail').textContent = l.email;
+    document.getElementById('dirViewPhone').textContent = l.phone || '-';
+    document.getElementById('dirViewRate').textContent = l.rate || 'Contact for rate';
+    document.getElementById('dirViewBio').textContent = l.bio || '-';
+    document.getElementById('dirViewWebsite').textContent = l.website || '-';
+    document.getElementById('dirViewWebsite').href = l.website || '#';
+
+    const typeBadge = document.getElementById('dirViewType');
+    typeBadge.textContent = type.label || l.category;
+    typeBadge.style.background = (type.color || '#6366f1') + '20';
+    typeBadge.style.color = type.color || '#6366f1';
+
+    const avatarImg = document.getElementById('dirViewAvatar');
+    const avatarPlaceholder = avatarImg.nextElementSibling;
+    const avatarContainer = document.getElementById('directoryViewAvatar');
+    if (l.photo) { avatarImg.src = l.photo; avatarImg.style.display = 'block'; avatarPlaceholder.style.display = 'none'; }
+    else { avatarImg.style.display = 'none'; avatarPlaceholder.style.display = 'flex'; avatarPlaceholder.style.background = `linear-gradient(135deg, ${type.color}, ${type.color}dd)`; }
+
+    const tagsContainer = document.getElementById('dirViewTags');
+    if (l.tags && l.tags.length > 0) {
+        tagsContainer.innerHTML = l.tags.map(t => `<span class="tag">${t}</span>`).join('');
+    } else {
+        tagsContainer.innerHTML = '<span class="tag empty-tag">No specialties listed</span>';
+    }
+
+    const galleryContainer = document.getElementById('dirViewGallery');
+    if (l.gallery && l.gallery.length > 0) {
+        galleryContainer.innerHTML = l.gallery.map(img => `<div class="gallery-item"><img src="${img}" alt=""></div>`).join('');
+    } else {
+        galleryContainer.innerHTML = '<p class="empty-text">No gallery images</p>';
+    }
+
+    const days = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
+    const dayLabels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+    const availContainer = document.getElementById('dirViewAvailability');
+    availContainer.innerHTML = days.map((d, i) => `<span class="day-badge ${l.availability?.[d] ? 'day-active' : 'day-inactive'}">${dayLabels[i]}</span>`).join('');
+
+    navigateTo('directory-view');
+}
+
+// ==========================================
+// DIRECTORY - CRUD (Provider Page)
+// ==========================================
+function resetListingForm() {
+    const form = document.getElementById('listingForm');
+    if (!form) return;
+    form.reset();
+    document.getElementById('listingId').value = '';
+    document.getElementById('listingFormTitle').textContent = 'Create Directory Listing';
+    document.getElementById('listingSubmitBtn').textContent = 'Publish Listing';
+    listingTags = [];
+    listingGallery = [];
+    renderListingTags();
+    renderGalleryUpload();
+    document.getElementById('listingPhotoPreview').innerHTML = '<i class="fas fa-camera"></i><span>Click to upload</span>';
+}
+
+function handleListingSubmit(e) {
+    e.preventDefault();
+    const id = document.getElementById('listingId').value;
+    const now = new Date().toISOString();
+
+    const listing = {
+        id: id || generateId(),
+        name: document.getElementById('listingName').value,
+        category: document.getElementById('listingCategory').value,
+        email: document.getElementById('listingEmail').value,
+        phone: document.getElementById('listingPhone').value,
+        location: document.getElementById('listingLocation').value,
+        rate: document.getElementById('listingRate').value,
+        website: document.getElementById('listingWebsite').value,
+        bio: document.getElementById('listingBio').value,
+        tags: [...listingTags],
+        gallery: [...listingGallery],
+        photo: document.getElementById('listingPhotoPreview').querySelector('img')?.src || '',
+        availability: {
+            mon: document.getElementById('listMon').checked,
+            tue: document.getElementById('listTue').checked,
+            wed: document.getElementById('listWed').checked,
+            thu: document.getElementById('listThu').checked,
+            fri: document.getElementById('listFri').checked,
+            sat: document.getElementById('listSat').checked,
+            sun: document.getElementById('listSun').checked
+        },
+        status: 'active',
+        updatedAt: now
+    };
+
+    const listings = Storage.getListings();
+    if (id) {
+        const idx = listings.findIndex(l => l.id === id);
+        if (idx !== -1) { listing.createdAt = listings[idx].createdAt; listings[idx] = listing; }
+        showToast('Listing updated successfully!');
+    } else {
+        listing.createdAt = now;
+        listings.push(listing);
+        showToast('Listing published successfully!');
+    }
+    Storage.setListings(listings);
+    navigateTo('provider-directory');
+}
+
+function renderListings(filter = 'all') {
+    const listings = Storage.getListings();
+    const container = document.getElementById('listingsList');
+    const countEl = document.getElementById('listingCount');
+    if (!container) return;
+
+    const filtered = filter === 'all' ? listings : listings.filter(l => l.category === filter);
+    if (countEl) countEl.textContent = listings.length;
+
+    if (filtered.length === 0) {
+        container.innerHTML = `<div class="empty-state"><i class="fas fa-plus-circle"></i><h3>No listings yet</h3><p>Create your first directory listing to get discovered</p><button class="btn btn-primary provider-btn" onclick="navigateTo('provider-listing-create')">Create Listing</button></div>`;
+        return;
+    }
+
+    container.innerHTML = filtered.map((l, i) => {
+        const type = DIRECTORY_TYPES[l.category] || {};
+        return `
+        <div class="profile-list-card" style="animation-delay:${i * 0.1}s">
+            <div class="list-card-avatar" style="background:${type.color}20; color:${type.color}">
+                ${l.photo ? `<img src="${l.photo}" alt="">` : `<i class="fas ${type.icon || 'fa-user'}"></i>`}
+            </div>
+            <div class="list-card-info">
+                <h3>${l.name}</h3>
+                <p>${type.label || l.category} &middot; ${l.location}</p>
+                <div class="list-card-tags">${(l.tags || []).slice(0, 3).map(t => `<span class="mini-tag">${t}</span>`).join('')}</div>
+            </div>
+            <div class="list-card-actions">
+                <span class="status-badge status-${l.status}">${l.status}</span>
+                <button class="btn-icon" onclick="event.stopPropagation(); editListingById('${l.id}')"><i class="fas fa-edit"></i></button>
+                <button class="btn-icon danger-icon" onclick="event.stopPropagation(); promptDeleteListing('${l.id}')"><i class="fas fa-trash"></i></button>
+            </div>
+        </div>`;
+    }).join('');
+}
+
+function filterListings() { renderListings(document.getElementById('listingFilter').value); }
+
+function editListingById(id) {
+    const listings = Storage.getListings();
+    const l = listings.find(item => item.id === id);
+    if (!l) return;
+    populateListingForm(l);
+    navigateTo('provider-listing-create');
+}
+
+function populateListingForm(l) {
+    document.getElementById('listingId').value = l.id;
+    document.getElementById('listingName').value = l.name || '';
+    document.getElementById('listingCategory').value = l.category || '';
+    document.getElementById('listingEmail').value = l.email || '';
+    document.getElementById('listingPhone').value = l.phone || '';
+    document.getElementById('listingLocation').value = l.location || '';
+    document.getElementById('listingRate').value = l.rate || '';
+    document.getElementById('listingWebsite').value = l.website || '';
+    document.getElementById('listingBio').value = l.bio || '';
+    document.getElementById('listingFormTitle').textContent = 'Edit Directory Listing';
+    document.getElementById('listingSubmitBtn').textContent = 'Update Listing';
+
+    listingTags = [...(l.tags || [])];
+    listingGallery = [...(l.gallery || [])];
+    renderListingTags();
+    renderGalleryUpload();
+
+    if (l.availability) {
+        document.getElementById('listMon').checked = l.availability.mon || false;
+        document.getElementById('listTue').checked = l.availability.tue || false;
+        document.getElementById('listWed').checked = l.availability.wed || false;
+        document.getElementById('listThu').checked = l.availability.thu || false;
+        document.getElementById('listFri').checked = l.availability.fri || false;
+        document.getElementById('listSat').checked = l.availability.sat || false;
+        document.getElementById('listSun').checked = l.availability.sun || false;
+    }
+
+    const preview = document.getElementById('listingPhotoPreview');
+    if (l.photo) { preview.innerHTML = `<img src="${l.photo}" alt="">`; }
+    else { preview.innerHTML = '<i class="fas fa-camera"></i><span>Click to upload</span>'; }
+}
+
+function promptDeleteListing(id) {
+    deleteTarget = { type: 'listing', id };
+    document.getElementById('deleteModalText').textContent = 'This will permanently delete this directory listing.';
+    document.getElementById('deleteModal').classList.add('active');
+}
+
+// ==========================================
+// DIRECTORY - Tags
+// ==========================================
+function handleListingTagInput(e) {
+    if (e.key === 'Enter') {
+        e.preventDefault();
+        const val = e.target.value.trim();
+        if (val && !listingTags.includes(val)) { listingTags.push(val); renderListingTags(); }
+        e.target.value = '';
+    }
+}
+
+function addListingSuggestedTag(tag) {
+    if (!listingTags.includes(tag)) { listingTags.push(tag); renderListingTags(); }
+}
+
+function removeListingTag(index) { listingTags.splice(index, 1); renderListingTags(); }
+
+function renderListingTags() {
+    const container = document.getElementById('listingTagsDisplay');
+    if (!container) return;
+    container.innerHTML = listingTags.map((t, i) => `<span class="tag provider-tag">${t}<button type="button" onclick="removeListingTag(${i})"><i class="fas fa-times"></i></button></span>`).join('');
+}
+
+// ==========================================
+// DIRECTORY - Gallery
+// ==========================================
+function addGalleryImage(input) {
+    if (input.files && input.files[0] && listingGallery.length < 6) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            listingGallery.push(e.target.result);
+            renderGalleryUpload();
+        };
+        reader.readAsDataURL(input.files[0]);
+    }
+    input.value = '';
+}
+
+function removeGalleryImage(index) {
+    listingGallery.splice(index, 1);
+    renderGalleryUpload();
+}
+
+function renderGalleryUpload() {
+    const container = document.getElementById('galleryUploadGrid');
+    if (!container) return;
+
+    let html = listingGallery.map((img, i) => `
+        <div class="gallery-upload-item has-image">
+            <img src="${img}" alt="">
+            <button class="gallery-remove" onclick="event.stopPropagation(); removeGalleryImage(${i})"><i class="fas fa-times"></i></button>
+        </div>
+    `).join('');
+
+    if (listingGallery.length < 6) {
+        html += `<div class="gallery-upload-item" onclick="document.getElementById('galleryInput').click()"><i class="fas fa-plus"></i><span>Add Photo</span></div>`;
+    }
+
+    container.innerHTML = html;
+}
+
+// ==========================================
+// UPDATE confirmDelete for listings
+// ==========================================
+const _origConfirmDelete = confirmDelete;
+confirmDelete = function() {
+    if (deleteTarget.type === 'listing') {
+        const listings = Storage.getListings().filter(l => l.id !== deleteTarget.id);
+        Storage.setListings(listings);
+        showToast('Listing deleted.', 'info');
+        currentViewListingId = null;
+        closeDeleteModal();
+        navigateTo('provider-directory');
+        return;
+    }
+    _origConfirmDelete();
+};

@@ -30,6 +30,16 @@
                 <span>View Profile</span>
             </a>
             <div class="nav-divider"></div>
+            <span class="nav-section-title">Directory</span>
+            <a href="#" class="nav-item" data-page="provider-directory">
+                <i class="fas fa-address-book"></i>
+                <span>My Listings</span>
+            </a>
+            <a href="#" class="nav-item" data-page="provider-listing-create">
+                <i class="fas fa-plus-square"></i>
+                <span>New Listing</span>
+            </a>
+            <div class="nav-divider"></div>
             <span class="nav-section-title">Switch Portal</span>
             <a href="index.html" class="nav-item">
                 <i class="fas fa-user"></i>
@@ -337,6 +347,185 @@
                     <h2><i class="fas fa-palette"></i> Appearance</h2>
                     <div class="detail-row"><span class="detail-label">Theme</span><span class="detail-value">Light</span></div>
                 </div>
+            </div>
+        </div>
+
+        <!-- Directory Listings Manager -->
+        <div class="page" id="page-provider-directory">
+            <div class="container">
+                <div class="dashboard-header">
+                    <div>
+                        <h1>My Directory Listings</h1>
+                        <p>Manage your public profile listings</p>
+                    </div>
+                    <button class="btn btn-primary provider-btn" onclick="navigateTo('provider-listing-create')">
+                        <i class="fas fa-plus"></i> New Listing
+                    </button>
+                </div>
+
+                <div class="stats-row">
+                    <div class="stat-card">
+                        <div class="stat-icon green-bg"><i class="fas fa-list"></i></div>
+                        <div class="stat-info">
+                            <span class="stat-number" id="listingCount">0</span>
+                            <span class="stat-label">Total Listings</span>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon purple-bg"><i class="fas fa-eye"></i></div>
+                        <div class="stat-info">
+                            <span class="stat-number">0</span>
+                            <span class="stat-label">Views</span>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon blue-bg"><i class="fas fa-star"></i></div>
+                        <div class="stat-info">
+                            <span class="stat-number">0.0</span>
+                            <span class="stat-label">Rating</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="profiles-section">
+                    <div class="section-header">
+                        <h2>Listings</h2>
+                        <div class="filter-group">
+                            <select id="listingFilter" onchange="filterListings()">
+                                <option value="all">All</option>
+                                <option value="content-creator">Content Creator</option>
+                                <option value="model">Model</option>
+                                <option value="exotic-dancer">Exotic Dancer</option>
+                                <option value="escort">Escort</option>
+                                <option value="nude-chef">Nude Chef</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="profiles-grid" id="listingsList"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Create/Edit Listing -->
+        <div class="page" id="page-provider-listing-create">
+            <div class="container">
+                <div class="form-header">
+                    <button class="btn-back" onclick="navigateTo('provider-directory')">
+                        <i class="fas fa-arrow-left"></i> Back
+                    </button>
+                    <h1 id="listingFormTitle">Create Directory Listing</h1>
+                </div>
+
+                <form id="listingForm" onsubmit="handleListingSubmit(event)">
+                    <input type="hidden" id="listingId" value="">
+                    
+                    <div class="profile-card">
+                        <h2><i class="fas fa-user"></i> Profile Information</h2>
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label>Display Name *</label>
+                                <input type="text" id="listingName" placeholder="Your display name" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Category *</label>
+                                <select id="listingCategory" required>
+                                    <option value="">Select category</option>
+                                    <option value="content-creator">Content Creator</option>
+                                    <option value="model">Model</option>
+                                    <option value="exotic-dancer">Exotic Dancer</option>
+                                    <option value="escort">Escort</option>
+                                    <option value="nude-chef">Nude Chef</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Email *</label>
+                                <input type="email" id="listingEmail" placeholder="Contact email" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Phone</label>
+                                <input type="tel" id="listingPhone" placeholder="Contact phone">
+                            </div>
+                            <div class="form-group">
+                                <label>Location *</label>
+                                <input type="text" id="listingLocation" placeholder="City, State" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Rate</label>
+                                <input type="text" id="listingRate" placeholder="e.g. $100/hr">
+                            </div>
+                            <div class="form-group full-width">
+                                <label>Website</label>
+                                <input type="url" id="listingWebsite" placeholder="https://yourwebsite.com">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="profile-card">
+                        <h2><i class="fas fa-file-alt"></i> Bio</h2>
+                        <div class="form-group">
+                            <label>About You *</label>
+                            <textarea id="listingBio" placeholder="Tell potential clients about yourself..." rows="4" required></textarea>
+                        </div>
+                    </div>
+
+                    <div class="profile-card">
+                        <h2><i class="fas fa-tag"></i> Specialties</h2>
+                        <div class="tags-input-container">
+                            <div class="tags-display" id="listingTagsDisplay"></div>
+                            <input type="text" id="listingTagsInput" placeholder="Type and press Enter to add specialty">
+                        </div>
+                        <div class="suggested-tags">
+                            <span class="tag-label">Popular:</span>
+                            <button type="button" class="tag-suggestion provider-suggestion" onclick="addListingSuggestedTag('Photoshoots')">Photoshoots</button>
+                            <button type="button" class="tag-suggestion provider-suggestion" onclick="addListingSuggestedTag('Video Content')">Video Content</button>
+                            <button type="button" class="tag-suggestion provider-suggestion" onclick="addListingSuggestedTag('Live Streaming')">Live Streaming</button>
+                            <button type="button" class="tag-suggestion provider-suggestion" onclick="addListingSuggestedTag('Private Events')">Private Events</button>
+                            <button type="button" class="tag-suggestion provider-suggestion" onclick="addListingSuggestedTag('Catering')">Catering</button>
+                            <button type="button" class="tag-suggestion provider-suggestion" onclick="addListingSuggestedTag('Performances')">Performances</button>
+                        </div>
+                    </div>
+
+                    <div class="profile-card">
+                        <h2><i class="fas fa-clock"></i> Availability</h2>
+                        <div class="availability-grid">
+                            <div class="day"><input type="checkbox" id="listMon" checked><label for="listMon">Mon</label></div>
+                            <div class="day"><input type="checkbox" id="listTue" checked><label for="listTue">Tue</label></div>
+                            <div class="day"><input type="checkbox" id="listWed" checked><label for="listWed">Wed</label></div>
+                            <div class="day"><input type="checkbox" id="listThu" checked><label for="listThu">Thu</label></div>
+                            <div class="day"><input type="checkbox" id="listFri" checked><label for="listFri">Fri</label></div>
+                            <div class="day"><input type="checkbox" id="listSat"><label for="listSat">Sat</label></div>
+                            <div class="day"><input type="checkbox" id="listSun"><label for="listSun">Sun</label></div>
+                        </div>
+                    </div>
+
+                    <div class="profile-card">
+                        <h2><i class="fas fa-images"></i> Gallery</h2>
+                        <p class="empty-text" style="margin-bottom:16px">Upload photos to your gallery (max 6)</p>
+                        <div class="gallery-upload-grid" id="galleryUploadGrid">
+                            <div class="gallery-upload-item" onclick="document.getElementById('galleryInput').click()">
+                                <i class="fas fa-plus"></i>
+                                <span>Add Photo</span>
+                            </div>
+                        </div>
+                        <input type="file" id="galleryInput" accept="image/*" style="display:none" onchange="addGalleryImage(this)">
+                    </div>
+
+                    <div class="profile-card">
+                        <h2><i class="fas fa-image"></i> Profile Photo</h2>
+                        <div class="photo-upload">
+                            <div class="photo-preview" id="listingPhotoPreview">
+                                <i class="fas fa-camera"></i>
+                                <span>Click to upload</span>
+                            </div>
+                            <input type="file" id="listingPhotoInput" accept="image/*" onchange="previewPhoto(this, 'listingPhotoPreview')">
+                        </div>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="button" class="btn btn-secondary" onclick="navigateTo('provider-directory')">Cancel</button>
+                        <button type="submit" class="btn btn-primary provider-btn" id="listingSubmitBtn">Publish Listing</button>
+                    </div>
+                </form>
             </div>
         </div>
 

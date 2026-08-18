@@ -2047,3 +2047,378 @@ h1, h2, h3, h4 {
 .tag button:hover {
     opacity: 1;
 }
+
+/* ============================================
+   DIRECTORY - Filter System
+   ============================================ */
+.directory-filters {
+    margin-bottom: 24px;
+}
+
+.filter-tabs {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 16px;
+}
+
+.filter-tab {
+    padding: 10px 20px;
+    border: 2px solid #e2e8f0;
+    border-radius: 12px;
+    background: white;
+    cursor: pointer;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #64748b;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.filter-tab:hover {
+    border-color: #818cf8;
+    color: #818cf8;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(129, 140, 248, 0.2);
+}
+
+.filter-tab.active {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    border-color: transparent;
+    color: white;
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+    transform: translateY(-2px);
+}
+
+.filter-bar {
+    display: flex;
+    gap: 12px;
+}
+
+.filter-bar input,
+.filter-bar select {
+    padding: 10px 16px;
+    border: 2px solid #e2e8f0;
+    border-radius: 10px;
+    font-size: 0.9rem;
+    background: white;
+    transition: all 0.2s;
+}
+
+.filter-bar input {
+    flex: 1;
+}
+
+.filter-bar input:focus,
+.filter-bar select:focus {
+    outline: none;
+    border-color: #818cf8;
+    box-shadow: 0 0 0 3px rgba(129, 140, 248, 0.15);
+}
+
+.directory-stats {
+    color: #94a3b8;
+    font-size: 0.9rem;
+    margin-bottom: 16px;
+    padding: 0 4px;
+}
+
+.directory-stats span {
+    font-weight: 700;
+    color: #667eea;
+}
+
+/* ============================================
+   DIRECTORY - Profile Cards
+   ============================================ */
+.directory-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+    gap: 20px;
+}
+
+.directory-card {
+    background: white;
+    border-radius: 20px;
+    overflow: hidden;
+    cursor: pointer;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+    border: 1px solid #f1f5f9;
+    animation: fadeInUp 0.5s ease forwards;
+    opacity: 0;
+}
+
+.directory-card:hover {
+    transform: translateY(-8px) scale(1.01);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.12);
+    border-color: #818cf8;
+}
+
+.directory-card-photo {
+    width: 100%;
+    height: 200px;
+    overflow: hidden;
+    background: linear-gradient(135deg, #f1f5f9, #e2e8f0);
+}
+
+.directory-card-photo img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.5s ease;
+}
+
+.directory-card:hover .directory-card-photo img {
+    transform: scale(1.08);
+}
+
+.directory-card-icon {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 3rem;
+    color: white;
+}
+
+.directory-card-body {
+    padding: 20px;
+}
+
+.directory-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 8px;
+}
+
+.directory-card-header h3 {
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: #1e293b;
+    margin: 0;
+}
+
+.directory-type-badge {
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    white-space: nowrap;
+}
+
+.directory-card-location {
+    color: #64748b;
+    font-size: 0.85rem;
+    margin: 0 0 12px 0;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.directory-card-location i {
+    color: #818cf8;
+    font-size: 0.75rem;
+}
+
+.directory-card-tags {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    margin-bottom: 16px;
+}
+
+.mini-tag {
+    background: #f1f5f9;
+    color: #64748b;
+    padding: 4px 10px;
+    border-radius: 8px;
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+
+.directory-card-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 12px;
+    border-top: 1px solid #f1f5f9;
+}
+
+.directory-card-rate {
+    font-weight: 700;
+    color: #667eea;
+    font-size: 0.95rem;
+}
+
+/* ============================================
+   DIRECTORY - View Page
+   ============================================ */
+.directory-gallery {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 12px;
+}
+
+.gallery-item {
+    border-radius: 12px;
+    overflow: hidden;
+    aspect-ratio: 1;
+}
+
+.gallery-item img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+}
+
+.gallery-item:hover img {
+    transform: scale(1.05);
+}
+
+.availability-view {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.day-badge {
+    padding: 8px 16px;
+    border-radius: 10px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    transition: all 0.2s;
+}
+
+.day-active {
+    background: #d1fae5;
+    color: #065f46;
+}
+
+.day-inactive {
+    background: #f1f5f9;
+    color: #94a3b8;
+}
+
+/* ============================================
+   DIRECTORY - Gallery Upload (Provider CRUD)
+   ============================================ */
+.gallery-upload-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: 12px;
+}
+
+.gallery-upload-item {
+    aspect-ratio: 1;
+    border: 2px dashed #e2e8f0;
+    border-radius: 12px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    color: #94a3b8;
+    gap: 8px;
+    position: relative;
+    overflow: hidden;
+}
+
+.gallery-upload-item:hover {
+    border-color: #818cf8;
+    color: #818cf8;
+    background: #f0f0ff;
+}
+
+.gallery-upload-item.has-image {
+    border: none;
+    cursor: default;
+}
+
+.gallery-upload-item.has-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.gallery-upload-item i {
+    font-size: 1.5rem;
+}
+
+.gallery-upload-item span {
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.gallery-remove {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: rgba(239, 68, 68, 0.9);
+    color: white;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.7rem;
+    transition: all 0.2s;
+    opacity: 0;
+}
+
+.gallery-upload-item.has-image:hover .gallery-remove {
+    opacity: 1;
+}
+
+.gallery-remove:hover {
+    background: #dc2626;
+    transform: scale(1.1);
+}
+
+/* ============================================
+   DIRECTORY - Listings Manager (Provider Page)
+   ============================================ */
+.profiles-section {
+    margin-top: 24px;
+}
+
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+}
+
+.section-header h2 {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #1e293b;
+    margin: 0;
+}
+
+.filter-group select {
+    padding: 8px 16px;
+    border: 2px solid #e2e8f0;
+    border-radius: 10px;
+    font-size: 0.85rem;
+    background: white;
+    cursor: pointer;
+}
+
+.list-card-tags {
+    display: flex;
+    gap: 4px;
+    flex-wrap: wrap;
+    margin-top: 4px;
+}
