@@ -8,13 +8,13 @@ document.addEventListener('DOMContentLoaded', function() {
     function openSidebar() {
         sidebar.classList.remove('hidden');
         menuToggle.classList.remove('visible');
-        overlay.classList.remove('active');
+        overlay.classList.add('active');
     }
 
     function closeSidebar() {
         sidebar.classList.add('hidden');
         menuToggle.classList.add('visible');
-        overlay.classList.add('active');
+        overlay.classList.remove('active');
     }
 
     menuToggle.addEventListener('click', openSidebar);
