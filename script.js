@@ -637,6 +637,11 @@ function renderDirectory() {
         filtered = filtered.filter(l => l.category === currentDirectoryFilter);
     }
 
+    const locationVal = document.getElementById('directoryLocationFilter')?.value || '';
+    if (locationVal) {
+        filtered = filtered.filter(l => l.location && l.location.toLowerCase().includes(locationVal.toLowerCase()));
+    }
+
     const searchVal = (document.getElementById('directorySearch')?.value || '').toLowerCase();
     if (searchVal) {
         filtered = filtered.filter(l =>

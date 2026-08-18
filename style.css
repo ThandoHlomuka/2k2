@@ -2422,3 +2422,35 @@ h1, h2, h3, h4 {
     flex-wrap: wrap;
     margin-top: 4px;
 }
+
+/* ============================================
+   LOCATION FILTER STYLES
+   ============================================ */
+.filter-bar select {
+    min-width: 180px;
+}
+
+.filter-bar select optgroup {
+    font-weight: 700;
+    color: #1e293b;
+    font-style: normal;
+    background: #f8fafc;
+}
+
+.filter-bar select option {
+    font-weight: 400;
+    color: #334155;
+    padding: 8px 12px;
+}
+
+.filter-bar select option[value=""] {
+    color: #94a3b8;
+}
+
+#directoryLocationFilter {
+    background: white url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%2364748b' viewBox='0 0 16 16'%3E%3Cpath d='M8 11L3 6h10l-5 5z'/%3E%3C/svg%3E") no-repeat right 12px center;
+    padding-right: 36px;
+    appearance: none;
+    -webkit-appearance: none;
+    cursor: pointer;
+}
