@@ -68,6 +68,14 @@ document.addEventListener('DOMContentLoaded', function() {
     // Tags input
     document.getElementById('userTagsInput')?.addEventListener('keydown', handleUserTagInput);
     document.getElementById('providerTagsInput')?.addEventListener('keydown', handleProviderTagInput);
+
+    // Auto-detect page and render
+    const isProviderPage = window.location.pathname.includes('provider.html');
+    if (isProviderPage) {
+        document.getElementById('providerProfilesList') && renderProviderProfiles();
+    } else {
+        document.getElementById('userProfilesList') && renderUserProfiles();
+    }
 });
 
 function closeSidebar() {
