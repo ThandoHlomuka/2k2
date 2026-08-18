@@ -19,7 +19,7 @@ document.addEventListener('DOMContentLoaded', function() {
     menuToggle.addEventListener('click', openSidebar);
     closeBtn.addEventListener('click', closeSidebar);
 
-    // Page navigation
+    // Page navigation with animation
     navItems.forEach(item => {
         item.addEventListener('click', function(e) {
             e.preventDefault();
@@ -28,8 +28,14 @@ document.addEventListener('DOMContentLoaded', function() {
             navItems.forEach(i => i.classList.remove('active'));
             this.classList.add('active');
 
-            pages.forEach(page => page.classList.remove('active'));
-            document.getElementById(`page-${pageId}`).classList.add('active');
+            pages.forEach(page => {
+                page.classList.remove('active');
+                page.style.animation = 'none';
+            });
+
+            const targetPage = document.getElementById(`page-${pageId}`);
+            targetPage.classList.add('active');
+            targetPage.style.animation = 'pageFadeIn 0.5s ease';
         });
     });
 
@@ -56,7 +62,8 @@ document.addEventListener('DOMContentLoaded', function() {
             servicesList.appendChild(newService);
 
             newService.querySelector('.btn-remove').addEventListener('click', function() {
-                newService.remove();
+                newService.style.animation = 'serviceSlide 0.3s ease reverse';
+                setTimeout(() => newService.remove(), 300);
             });
         });
     }
@@ -64,16 +71,82 @@ document.addEventListener('DOMContentLoaded', function() {
     // Remove existing service items
     document.querySelectorAll('.btn-remove').forEach(btn => {
         btn.addEventListener('click', function() {
-            this.closest('.service-item').remove();
+            const item = this.closest('.service-item');
+            item.style.animation = 'serviceSlide 0.3s ease reverse';
+            setTimeout(() => item.remove(), 300);
         });
     });
 
-    // Save profile buttons
+    // Toast notification function
+    function showToast(message, type = 'success') {
+        const toast = document.createElement('div');
+        toast.className = 'toast';
+        toast.innerHTML = `<i class="fas fa-${type === 'success' ? 'check-circle' : 'info-circle'}"></i> ${message}`;
+        document.body.appendChild(toast);
+        
+        setTimeout(() => {
+            toast.style.animation = 'toastSlide 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55) reverse';
+            setTimeout(() => toast.remove(), 500);
+        }, 3000);
+    }
+
+    // Save profile buttons with animation
     document.getElementById('saveGeneralProfile')?.addEventListener('click', function() {
-        alert('General User profile saved!');
+        this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+        setTimeout(() => {
+            this.innerHTML = '<i class="fas fa-check"></i> Saved!';
+            showToast('General User profile saved successfully!');
+            setTimeout(() => {
+                this.innerHTML = 'Save Profile';
+            }, 2000);
+        }, 1500);
     });
 
     document.getElementById('saveProviderProfile')?.addEventListener('click', function() {
-        alert('Service Provider profile saved!');
+        this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+        setTimeout(() => {
+            this.innerHTML = '<i class="fas fa-check"></i> Saved!';
+            showToast('Service Provider profile saved successfully!');
+            setTimeout(() => {
+                this.innerHTML = 'Save Profile';
+            }, 2000);
+        }, 1500);
+    });
+
+    // Tag click animation
+    document.querySelectorAll('.tag').forEach(tag => {
+        tag.addEventListener('click', function() {
+            this.style.transform = 'scale(0.95)';
+            setTimeout(() => {
+                this.style.transform = '';
+                this.classList.toggle('selected');
+            }, 100);
+        });
+    });
+
+    // Stat counter animation
+    document.querySelectorAll('.stat-value').forEach(stat => {
+        const target = parseInt(stat.textContent) || 0;
+        let current = 0;
+        const increment = target / 30;
+        const timer = setInterval(() => {
+            current += increment;
+            if (current >= target) {
+                stat.textContent = target;
+                clearInterval(timer);
+            } else {
+                stat.textContent = Math.floor(current);
+            }
+        }, 50);
+    });
+
+    // Input focus effects
+    document.querySelectorAll('input, textarea, select').forEach(input => {
+        input.addEventListener('focus', function() {
+            this.parentElement.style.transform = 'translateY(-2px)';
+        });
+        input.addEventListener('blur', function() {
+            this.parentElement.style.transform = '';
+        });
     });
 });
