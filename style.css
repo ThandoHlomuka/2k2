@@ -2495,7 +2495,140 @@ h1, h2, h3, h4 {
 }
 
 /* ============================================
-   RESPONSIVE - Venue filters on mobile
+   ADS - Browse Grid
+   ============================================ */
+.ads-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+    gap: 20px;
+}
+
+.ad-card {
+    background: white;
+    border-radius: 16px;
+    padding: 24px;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05);
+    border: 1px solid #f1f5f9;
+    animation: fadeInUp 0.5s ease forwards;
+    opacity: 0;
+}
+
+.ad-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.1);
+    border-color: #e0e7ff;
+}
+
+.ad-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.ad-card-category {
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.ad-card-date {
+    color: #94a3b8;
+    font-size: 0.8rem;
+}
+
+.ad-card-title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #1e293b;
+    margin: 0 0 10px 0;
+    line-height: 1.3;
+}
+
+.ad-card-body {
+    color: #64748b;
+    font-size: 0.9rem;
+    line-height: 1.6;
+    margin: 0 0 14px 0;
+}
+
+.ad-card-meta {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+    margin-bottom: 12px;
+    font-size: 0.82rem;
+    color: #64748b;
+}
+
+.ad-card-meta span {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.ad-card-meta i {
+    color: #818cf8;
+    font-size: 0.75rem;
+}
+
+.ad-card-tags {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
+/* ============================================
+   ADS - Detail View
+   ============================================ */
+.ad-view-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+}
+
+.ad-view-date {
+    color: #94a3b8;
+    font-size: 0.85rem;
+}
+
+.ad-view-title {
+    font-size: 1.6rem;
+    font-weight: 800;
+    color: #1e293b;
+    margin: 0 0 16px 0;
+    line-height: 1.3;
+}
+
+.ad-view-meta {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+    font-size: 0.9rem;
+    color: #64748b;
+}
+
+.ad-view-meta span {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.ad-view-meta i {
+    color: #818cf8;
+}
+
+/* ============================================
+   RESPONSIVE
    ============================================ */
 @media (max-width: 768px) {
     .filter-tabs {
@@ -2520,11 +2653,20 @@ h1, h2, h3, h4 {
         width: 100%;
     }
 
-    .directory-grid {
+    .directory-grid,
+    .ads-grid {
         grid-template-columns: 1fr;
     }
 
     #page-provider-venue-create .form-grid {
         grid-template-columns: 1fr;
+    }
+
+    .ad-card {
+        padding: 18px;
+    }
+
+    .ad-view-title {
+        font-size: 1.3rem;
     }
 }

@@ -50,6 +50,16 @@
                 <span>New Venue</span>
             </a>
             <div class="nav-divider"></div>
+            <span class="nav-section-title">Personal Ads</span>
+            <a href="#" class="nav-item" data-page="provider-ads">
+                <i class="fas fa-bullhorn"></i>
+                <span>My Ads</span>
+            </a>
+            <a href="#" class="nav-item" data-page="provider-ads-create">
+                <i class="fas fa-pen-to-square"></i>
+                <span>Post an Ad</span>
+            </a>
+            <div class="nav-divider"></div>
             <span class="nav-section-title">Switch Portal</span>
             <a href="index.html" class="nav-item">
                 <i class="fas fa-user"></i>
@@ -689,6 +699,216 @@
                     <button class="btn btn-secondary" onclick="closeDeleteModal()">Cancel</button>
                     <button class="btn btn-danger" onclick="confirmDelete()">Delete</button>
                 </div>
+            </div>
+        </div>
+
+        <!-- My Ads (Provider) -->
+        <div class="page" id="page-provider-ads">
+            <div class="container">
+                <div class="dashboard-header">
+                    <div>
+                        <h1>My Ads</h1>
+                        <p>Manage your personal ads</p>
+                    </div>
+                    <button class="btn btn-primary provider-btn" onclick="navigateTo('provider-ads-create')">
+                        <i class="fas fa-pen-to-square"></i> Post Ad
+                    </button>
+                </div>
+
+                <div class="profiles-section">
+                    <div class="section-header">
+                        <h2>Your Ads</h2>
+                        <div class="filter-group">
+                            <select id="providerAdsFilter" onchange="filterProviderAds()">
+                                <option value="all">All</option>
+                                <option value="personal">Personal</option>
+                                <option value="services-offered">Services Offered</option>
+                                <option value="services-wanted">Services Wanted</option>
+                                <option value="general">General</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="profiles-grid" id="providerAdsList"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Post an Ad (Provider) -->
+        <div class="page" id="page-provider-ads-create">
+            <div class="container">
+                <div class="form-header">
+                    <button class="btn-back" onclick="navigateTo('provider-ads')">
+                        <i class="fas fa-arrow-left"></i> Back
+                    </button>
+                    <h1 id="providerAdFormTitle">Post an Ad</h1>
+                </div>
+
+                <form id="providerAdForm" onsubmit="handleProviderAdSubmit(event)">
+                    <input type="hidden" id="providerAdId" value="">
+                    <input type="hidden" id="providerAdAuthor" value="">
+
+                    <div class="profile-card">
+                        <h2><i class="fas fa-bullhorn"></i> Ad Details</h2>
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label>Title *</label>
+                                <input type="text" id="providerAdTitle" placeholder="Ad headline" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Category *</label>
+                                <select id="providerAdCategory" required>
+                                    <option value="">Select category</option>
+                                    <option value="personal">Personal</option>
+                                    <option value="services-offered">Services Offered</option>
+                                    <option value="services-wanted">Services Wanted</option>
+                                    <option value="general">General</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Contact Name *</label>
+                                <input type="text" id="providerAdContactName" placeholder="Your name or alias" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Phone</label>
+                                <input type="tel" id="providerAdPhone" placeholder="Contact phone">
+                            </div>
+                            <div class="form-group">
+                                <label>Location *</label>
+                                <select id="providerAdLocation" required>
+                                    <option value="">Select location</option>
+                                    <optgroup label="Gauteng">
+                                        <option value="Johannesburg">Johannesburg</option>
+                                        <option value="Pretoria">Pretoria</option>
+                                        <option value="Sandton">Sandton</option>
+                                        <option value="Randburg">Randburg</option>
+                                        <option value="Roodepoort">Roodepoort</option>
+                                        <option value="Soweto">Soweto</option>
+                                        <option value="Midrand">Midrand</option>
+                                        <option value="Centurion">Centurion</option>
+                                        <option value="Benoni">Benoni</option>
+                                        <option value="Boksburg">Boksburg</option>
+                                        <option value="Brakpan">Brakpan</option>
+                                        <option value="Germiston">Germiston</option>
+                                        <option value="Kempton Park">Kempton Park</option>
+                                        <option value="Alberton">Alberton</option>
+                                        <option value="Vanderbijlpark">Vanderbijlpark</option>
+                                        <option value="Vereeniging">Vereeniging</option>
+                                        <option value="Krugersdorp">Krugersdorp</option>
+                                        <option value="Springs">Springs</option>
+                                    </optgroup>
+                                    <optgroup label="Western Cape">
+                                        <option value="Cape Town">Cape Town</option>
+                                        <option value="Stellenbosch">Stellenbosch</option>
+                                        <option value="Paarl">Paarl</option>
+                                        <option value="George">George</option>
+                                        <option value="Worcester">Worcester</option>
+                                        <option value="Hermanus">Hermanus</option>
+                                        <option value="Somerset West">Somerset West</option>
+                                        <option value="Strand">Strand</option>
+                                        <option value="Camps Bay">Camps Bay</option>
+                                        <option value="Claremont">Claremont</option>
+                                        <option value="Bellville">Bellville</option>
+                                        <option value="Mossel Bay">Mossel Bay</option>
+                                        <option value="Oudtshoorn">Oudtshoorn</option>
+                                        <option value="Saldanha Bay">Saldanha Bay</option>
+                                    </optgroup>
+                                    <optgroup label="KwaZulu-Natal">
+                                        <option value="Durban">Durban</option>
+                                        <option value="Pietermaritzburg">Pietermaritzburg</option>
+                                        <option value="Umhlanga">Umhlanga</option>
+                                        <option value="Richards Bay">Richards Bay</option>
+                                        <option value="Newcastle">Newcastle</option>
+                                        <option value="Port Shepstone">Port Shepstone</option>
+                                        <option value="Ladysmith">Ladysmith</option>
+                                        <option value="Pinetown">Pinetown</option>
+                                        <option value="Ballito">Ballito</option>
+                                        <option value="Margate">Margate</option>
+                                    </optgroup>
+                                    <optgroup label="Eastern Cape">
+                                        <option value="Port Elizabeth">Port Elizabeth (Gqeberha)</option>
+                                        <option value="East London">East London</option>
+                                        <option value="Grahamstown">Grahamstown (Makhanda)</option>
+                                        <option value="Mthatha">Mthatha</option>
+                                        <option value="Queenstown">Queenstown (Komani)</option>
+                                        <option value="Jeffreys Bay">Jeffreys Bay</option>
+                                    </optgroup>
+                                    <optgroup label="Free State">
+                                        <option value="Bloemfontein">Bloemfontein</option>
+                                        <option value="Welkom">Welkom</option>
+                                        <option value="Bethlehem">Bethlehem</option>
+                                        <option value="Harrismith">Harrismith</option>
+                                    </optgroup>
+                                    <optgroup label="Mpumalanga">
+                                        <option value="Nelspruit">Nelspruit (Mbombela)</option>
+                                        <option value="Witbank">Witbank (Emalahleni)</option>
+                                        <option value="Middelburg">Middelburg</option>
+                                        <option value="Secunda">Secunda</option>
+                                        <option value="Hazyview">Hazyview</option>
+                                    </optgroup>
+                                    <optgroup label="Limpopo">
+                                        <option value="Polokwane">Polokwane</option>
+                                        <option value="Thohoyandou">Thohoyandou</option>
+                                        <option value="Tzaneen">Tzaneen</option>
+                                        <option value="Mokopane">Mokopane</option>
+                                    </optgroup>
+                                    <optgroup label="North West">
+                                        <option value="Rustenburg">Rustenburg</option>
+                                        <option value="Mahikeng">Mahikeng</option>
+                                        <option value="Potchefstroom">Potchefstroom</option>
+                                        <option value="Klerksdorp">Klerksdorp</option>
+                                        <option value="Brits">Brits</option>
+                                    </optgroup>
+                                    <optgroup label="Northern Cape">
+                                        <option value="Kimberley">Kimberley</option>
+                                        <option value="Upington">Upington</option>
+                                        <option value="Springbok">Springbok</option>
+                                        <option value="De Aar">De Aar</option>
+                                    </optgroup>
+                                </select>
+                            </div>
+                            <div class="form-group full-width">
+                                <label>Description *</label>
+                                <textarea id="providerAdBody" placeholder="Write your ad description..." rows="5" required></textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="profile-card">
+                        <h2><i class="fas fa-tag"></i> Tags</h2>
+                        <div class="tags-input-container">
+                            <div class="tags-display" id="providerAdTagsDisplay"></div>
+                            <input type="text" id="providerAdTagsInput" placeholder="Type and press Enter to add tag">
+                        </div>
+                        <div class="suggested-tags">
+                            <span class="tag-label">Popular:</span>
+                            <button type="button" class="tag-suggestion provider-suggestion" onclick="addProviderAdSuggestedTag('Discreet')">Discreet</button>
+                            <button type="button" class="tag-suggestion provider-suggestion" onclick="addProviderAdSuggestedTag('Available Now')">Available Now</button>
+                            <button type="button" class="tag-suggestion provider-suggestion" onclick="addProviderAdSuggestedTag('Over 18')">Over 18</button>
+                            <button type="button" class="tag-suggestion provider-suggestion" onclick="addProviderAdSuggestedTag('Outcalls')">Outcalls</button>
+                            <button type="button" class="tag-suggestion provider-suggestion" onclick="addProviderAdSuggestedTag('Incalls')">Incalls</button>
+                            <button type="button" class="tag-suggestion provider-suggestion" onclick="addProviderAdSuggestedTag('24/7')">24/7</button>
+                            <button type="button" class="tag-suggestion provider-suggestion" onclick="addProviderAdSuggestedTag('Verified')">Verified</button>
+                            <button type="button" class="tag-suggestion provider-suggestion" onclick="addProviderAdSuggestedTag('Non-Smoker')">Non-Smoker</button>
+                        </div>
+                    </div>
+
+                    <div class="profile-card">
+                        <h2><i class="fas fa-images"></i> Photos</h2>
+                        <p class="empty-text" style="margin-bottom:16px">Add up to 4 photos to your ad</p>
+                        <div class="gallery-upload-grid" id="providerAdGalleryUploadGrid">
+                            <div class="gallery-upload-item" onclick="document.getElementById('providerAdGalleryInput').click()">
+                                <i class="fas fa-plus"></i>
+                                <span>Add Photo</span>
+                            </div>
+                        </div>
+                        <input type="file" id="providerAdGalleryInput" accept="image/*" style="display:none" onchange="addProviderAdGalleryImage(this)">
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="button" class="btn btn-secondary" onclick="navigateTo('provider-ads')">Cancel</button>
+                        <button type="submit" class="btn btn-primary provider-btn" id="providerAdSubmitBtn">Publish Ad</button>
+                    </div>
+                </form>
             </div>
         </div>
 

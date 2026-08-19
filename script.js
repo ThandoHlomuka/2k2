@@ -13,7 +13,9 @@ const Storage = {
     setListings: (data) => localStorage.setItem('k2_listings', JSON.stringify(data)),
     getVenues: () => JSON.parse(localStorage.getItem('k2_venues') || '[]'),
     setVenues: (data) => localStorage.setItem('k2_venues', JSON.stringify(data)),
-    clearAll: () => { localStorage.removeItem('k2_users'); localStorage.removeItem('k2_providers'); localStorage.removeItem('k2_listings'); localStorage.removeItem('k2_venues'); }
+    getAds: () => JSON.parse(localStorage.getItem('k2_ads') || '[]'),
+    setAds: (data) => localStorage.setItem('k2_ads', JSON.stringify(data)),
+    clearAll: () => { localStorage.removeItem('k2_users'); localStorage.removeItem('k2_providers'); localStorage.removeItem('k2_listings'); localStorage.removeItem('k2_venues'); localStorage.removeItem('k2_ads'); }
 };
 
 const DIRECTORY_TYPES = {
@@ -33,10 +35,18 @@ const VENUE_TYPES = {
     'other': { label: 'Other', icon: 'fa-ellipsis', color: '#64748b' }
 };
 
+const AD_CATEGORIES = {
+    'personal': { label: 'Personal', icon: 'fa-heart', color: '#ec4899' },
+    'services-offered': { label: 'Services Offered', icon: 'fa-hand-holding-heart', color: '#8b5cf6' },
+    'services-wanted': { label: 'Services Wanted', icon: 'fa-search', color: '#3b82f6' },
+    'general': { label: 'General', icon: 'fa-tag', color: '#64748b' }
+};
+
 let currentViewUserId = null;
 let currentViewProviderId = null;
 let currentViewListingId = null;
 let currentViewVenueId = null;
+let currentViewAdId = null;
 let deleteTarget = { type: null, id: null };
 let userTags = [];
 let providerTags = [];
@@ -46,6 +56,11 @@ let currentDirectoryFilter = 'all';
 let venueTags = [];
 let venueGallery = [];
 let currentVenueDirectoryFilter = 'all';
+let adTags = [];
+let adGallery = [];
+let currentAdsFilter = 'all';
+let providerAdTags = [];
+let providerAdGallery = [];
 
 // ==========================================
 // Navigation
@@ -78,6 +93,11 @@ function navigateTo(page) {
     if (page === 'venue-directory') renderVenueDirectory();
     if (page === 'provider-venue-directory') renderVenueListings();
     if (page === 'provider-venue-create') resetVenueForm();
+    if (page === 'ads-browse') renderAdsBrowse();
+    if (page === 'ads-create') resetAdForm();
+    if (page === 'user-ads') renderUserAds();
+    if (page === 'provider-ads') renderProviderAds();
+    if (page === 'provider-ads-create') resetProviderAdForm();
 }
 
 // ==========================================
@@ -105,8 +125,11 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('providerTagsInput')?.addEventListener('keydown', handleProviderTagInput);
     document.getElementById('listingTagsInput')?.addEventListener('keydown', handleListingTagInput);
     document.getElementById('venueTagsInput')?.addEventListener('keydown', handleVenueTagInput);
+    document.getElementById('adTagsInput')?.addEventListener('keydown', handleAdTagInput);
+    document.getElementById('providerAdTagsInput')?.addEventListener('keydown', handleProviderAdTagInput);
     document.getElementById('directorySearch')?.addEventListener('keydown', (e) => { if (e.key === 'Enter') searchDirectory(); });
     document.getElementById('venueSearch')?.addEventListener('keydown', (e) => { if (e.key === 'Enter') searchVenueDirectory(); });
+    document.getElementById('adsSearch')?.addEventListener('keydown', (e) => { if (e.key === 'Enter') searchAds(); });
 
     // Auto-detect page and render
     const isProviderPage = window.location.pathname.includes('provider.html');
@@ -114,10 +137,13 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('providerProfilesList') && renderProviderProfiles();
         document.getElementById('listingsList') && renderListings();
         document.getElementById('venueListingsList') && renderVenueListings();
+        document.getElementById('providerAdsList') && renderProviderAds();
     } else {
         document.getElementById('userProfilesList') && renderUserProfiles();
         document.getElementById('directoryList') && renderDirectory();
         document.getElementById('venueDirectoryList') && renderVenueDirectory();
+        document.getElementById('adsBrowseList') && renderAdsBrowse();
+        document.getElementById('userAdsList') && renderUserAds();
     }
 });
 
@@ -1001,6 +1027,19 @@ confirmDelete = function() {
         navigateTo('provider-venue-directory');
         return;
     }
+    if (deleteTarget.type === 'ad') {
+        const ads = Storage.getAds().filter(a => a.id !== deleteTarget.id);
+        Storage.setAds(ads);
+        showToast('Ad deleted.', 'info');
+        currentViewAdId = null;
+        closeDeleteModal();
+        if (window.location.pathname.includes('provider.html')) {
+            navigateTo('provider-ads');
+        } else {
+            navigateTo('user-ads');
+        }
+        return;
+    }
     _origConfirmDelete();
 };
 
@@ -1339,4 +1378,479 @@ function renderVenueGalleryUpload() {
     }
 
     container.innerHTML = html;
+}
+
+// ==========================================
+// ADS - BROWSE (General User Page)
+// ==========================================
+function renderAdsBrowse() {
+    const ads = Storage.getAds();
+    const container = document.getElementById('adsBrowseList');
+    if (!container) return;
+
+    let filtered = ads.filter(a => a.status === 'active');
+
+    if (currentAdsFilter !== 'all') {
+        filtered = filtered.filter(a => a.category === currentAdsFilter);
+    }
+
+    const locationVal = document.getElementById('adsLocationFilter')?.value || '';
+    if (locationVal) {
+        filtered = filtered.filter(a => a.location && a.location.toLowerCase().includes(locationVal.toLowerCase()));
+    }
+
+    const searchVal = (document.getElementById('adsSearch')?.value || '').toLowerCase();
+    if (searchVal) {
+        filtered = filtered.filter(a =>
+            a.title.toLowerCase().includes(searchVal) ||
+            a.body.toLowerCase().includes(searchVal) ||
+            a.contactName.toLowerCase().includes(searchVal) ||
+            (a.tags || []).some(t => t.toLowerCase().includes(searchVal))
+        );
+    }
+
+    const sortVal = document.getElementById('adsSort')?.value || 'newest';
+    filtered.sort((a, b) => {
+        if (sortVal === 'newest') return new Date(b.createdAt) - new Date(a.createdAt);
+        if (sortVal === 'oldest') return new Date(a.createdAt) - new Date(b.createdAt);
+        if (sortVal === 'title-asc') return a.title.localeCompare(b.title);
+        if (sortVal === 'title-desc') return b.title.localeCompare(a.title);
+        return 0;
+    });
+
+    document.getElementById('adsCount').textContent = filtered.length;
+
+    if (filtered.length === 0) {
+        container.innerHTML = `<div class="empty-state"><i class="fas fa-bullhorn"></i><h3>No ads found</h3><p>Try adjusting your filters or post a new ad</p></div>`;
+        return;
+    }
+
+    container.innerHTML = filtered.map((a, i) => {
+        const cat = AD_CATEGORIES[a.category] || {};
+        const hasPhotos = a.gallery && a.gallery.length > 0;
+        return `
+        <div class="ad-card" style="animation-delay:${i * 0.05}s" onclick="viewAd('${a.id}')">
+            <div class="ad-card-header">
+                <span class="ad-card-category" style="background:${cat.color}20; color:${cat.color}"><i class="fas ${cat.icon || 'fa-tag'}"></i> ${cat.label || a.category}</span>
+                <span class="ad-card-date">${formatDate(a.createdAt)}</span>
+            </div>
+            <h3 class="ad-card-title">${a.title}</h3>
+            <p class="ad-card-body">${a.body.length > 120 ? a.body.substring(0, 120) + '...' : a.body}</p>
+            <div class="ad-card-meta">
+                <span><i class="fas fa-user"></i> ${a.contactName}</span>
+                <span><i class="fas fa-map-marker-alt"></i> ${a.location}</span>
+                ${hasPhotos ? `<span><i class="fas fa-images"></i> ${a.gallery.length}</span>` : ''}
+            </div>
+            <div class="ad-card-tags">${(a.tags || []).slice(0, 3).map(t => `<span class="mini-tag">${t}</span>`).join('')}</div>
+        </div>`;
+    }).join('');
+}
+
+function filterAds(type) {
+    currentAdsFilter = type;
+    document.querySelectorAll('#page-ads-browse .filter-tab').forEach(t => t.classList.remove('active'));
+    event.target.closest('.filter-tab').classList.add('active');
+    renderAdsBrowse();
+}
+
+function searchAds() { renderAdsBrowse(); }
+
+function viewAd(id) {
+    const ads = Storage.getAds();
+    const a = ads.find(item => item.id === id);
+    if (!a) return;
+    currentViewAdId = id;
+
+    const cat = AD_CATEGORIES[a.category] || {};
+
+    document.getElementById('adViewTitle').textContent = a.title;
+    document.getElementById('adViewDate').textContent = formatDate(a.createdAt);
+    document.getElementById('adViewAuthor').textContent = a.contactName;
+    document.getElementById('adViewLocation').textContent = a.location;
+    document.getElementById('adViewPhone').textContent = a.phone || '-';
+    document.getElementById('adViewPhoneWrap').style.display = a.phone ? 'flex' : 'none';
+    document.getElementById('adViewBody').textContent = a.body;
+
+    const typeBadge = document.getElementById('adViewType');
+    typeBadge.textContent = cat.label || a.category;
+    typeBadge.style.background = (cat.color || '#64748b') + '20';
+    typeBadge.style.color = cat.color || '#64748b';
+
+    const tagsContainer = document.getElementById('adViewTags');
+    if (a.tags && a.tags.length > 0) {
+        tagsContainer.innerHTML = a.tags.map(t => `<span class="tag">${t}</span>`).join('');
+    } else {
+        tagsContainer.innerHTML = '<span class="tag empty-tag">No tags</span>';
+    }
+
+    const galleryContainer = document.getElementById('adViewGallery');
+    if (a.gallery && a.gallery.length > 0) {
+        galleryContainer.innerHTML = a.gallery.map(img => `<div class="gallery-item"><img src="${img}" alt=""></div>`).join('');
+    } else {
+        galleryContainer.innerHTML = '<p class="empty-text">No photos attached</p>';
+    }
+
+    navigateTo('ad-view');
+}
+
+// ==========================================
+// ADS - CRUD (General User Page)
+// ==========================================
+function resetAdForm() {
+    const form = document.getElementById('adForm');
+    if (!form) return;
+    form.reset();
+    document.getElementById('adId').value = '';
+    document.getElementById('adAuthor').value = '';
+    document.getElementById('adFormTitle').textContent = 'Post an Ad';
+    document.getElementById('adSubmitBtn').textContent = 'Publish Ad';
+    adTags = [];
+    adGallery = [];
+    renderAdTags();
+    renderAdGalleryUpload();
+}
+
+function handleAdSubmit(e) {
+    e.preventDefault();
+    const id = document.getElementById('adId').value;
+    const now = new Date().toISOString();
+
+    const ad = {
+        id: id || generateId(),
+        title: document.getElementById('adTitle').value,
+        category: document.getElementById('adCategory').value,
+        contactName: document.getElementById('adContactName').value,
+        phone: document.getElementById('adPhone').value,
+        location: document.getElementById('adLocation').value,
+        body: document.getElementById('adBody').value,
+        tags: [...adTags],
+        gallery: [...adGallery],
+        author: document.getElementById('adAuthor').value || 'user-' + Date.now(),
+        status: 'active',
+        updatedAt: now
+    };
+
+    const ads = Storage.getAds();
+    if (id) {
+        const idx = ads.findIndex(a => a.id === id);
+        if (idx !== -1) { ad.createdAt = ads[idx].createdAt; ad.author = ads[idx].author; ads[idx] = ad; }
+        showToast('Ad updated successfully!');
+    } else {
+        ad.createdAt = now;
+        ads.push(ad);
+        showToast('Ad published successfully!');
+    }
+    Storage.setAds(ads);
+    navigateTo('user-ads');
+}
+
+function renderUserAds(filter = 'all') {
+    const ads = Storage.getAds();
+    const container = document.getElementById('userAdsList');
+    if (!container) return;
+
+    const filtered = filter === 'all' ? ads : ads.filter(a => a.category === filter);
+
+    if (filtered.length === 0) {
+        container.innerHTML = `<div class="empty-state"><i class="fas fa-bullhorn"></i><h3>No ads yet</h3><p>Post your first ad to get started</p><button class="btn btn-primary" onclick="navigateTo('ads-create')">Post Ad</button></div>`;
+        return;
+    }
+
+    container.innerHTML = filtered.map((a, i) => {
+        const cat = AD_CATEGORIES[a.category] || {};
+        return `
+        <div class="profile-list-card" style="animation-delay:${i * 0.1}s">
+            <div class="list-card-avatar" style="background:${cat.color}20; color:${cat.color}">
+                <i class="fas ${cat.icon || 'fa-tag'}"></i>
+            </div>
+            <div class="list-card-info">
+                <h3>${a.title}</h3>
+                <p>${cat.label || a.category} &middot; ${a.location}</p>
+                <div class="list-card-tags">${(a.tags || []).slice(0, 3).map(t => `<span class="mini-tag">${t}</span>`).join('')}</div>
+            </div>
+            <div class="list-card-actions">
+                <span class="status-badge status-${a.status}">${a.status}</span>
+                <button class="btn-icon" onclick="event.stopPropagation(); editAdById('${a.id}', 'user')"><i class="fas fa-edit"></i></button>
+                <button class="btn-icon danger-icon" onclick="event.stopPropagation(); promptDeleteAd('${a.id}')"><i class="fas fa-trash"></i></button>
+            </div>
+        </div>`;
+    }).join('');
+}
+
+function filterUserAds() { renderUserAds(document.getElementById('userAdsFilter').value); }
+
+function editAdById(id, source) {
+    const ads = Storage.getAds();
+    const a = ads.find(item => item.id === id);
+    if (!a) return;
+    if (source === 'provider') {
+        populateProviderAdForm(a);
+        navigateTo('provider-ads-create');
+    } else {
+        populateAdForm(a);
+        navigateTo('ads-create');
+    }
+}
+
+function populateAdForm(a) {
+    document.getElementById('adId').value = a.id;
+    document.getElementById('adTitle').value = a.title || '';
+    document.getElementById('adCategory').value = a.category || '';
+    document.getElementById('adContactName').value = a.contactName || '';
+    document.getElementById('adPhone').value = a.phone || '';
+    document.getElementById('adLocation').value = a.location || '';
+    document.getElementById('adBody').value = a.body || '';
+    document.getElementById('adAuthor').value = a.author || '';
+    document.getElementById('adFormTitle').textContent = 'Edit Ad';
+    document.getElementById('adSubmitBtn').textContent = 'Update Ad';
+
+    adTags = [...(a.tags || [])];
+    adGallery = [...(a.gallery || [])];
+    renderAdTags();
+    renderAdGalleryUpload();
+}
+
+function promptDeleteAd(id) {
+    deleteTarget = { type: 'ad', id };
+    document.getElementById('deleteModalText').textContent = 'This will permanently delete this ad.';
+    document.getElementById('deleteModal').classList.add('active');
+}
+
+// ==========================================
+// ADS - Tags (User Page)
+// ==========================================
+function handleAdTagInput(e) {
+    if (e.key === 'Enter') {
+        e.preventDefault();
+        const val = e.target.value.trim();
+        if (val && !adTags.includes(val)) { adTags.push(val); renderAdTags(); }
+        e.target.value = '';
+    }
+}
+
+function addAdSuggestedTag(tag) {
+    if (!adTags.includes(tag)) { adTags.push(tag); renderAdTags(); }
+}
+
+function removeAdTag(index) { adTags.splice(index, 1); renderAdTags(); }
+
+function renderAdTags() {
+    const container = document.getElementById('adTagsDisplay');
+    if (!container) return;
+    container.innerHTML = adTags.map((t, i) => `<span class="tag provider-tag">${t}<button type="button" onclick="removeAdTag(${i})"><i class="fas fa-times"></i></button></span>`).join('');
+}
+
+// ==========================================
+// ADS - Gallery (User Page)
+// ==========================================
+function addAdGalleryImage(input) {
+    if (input.files && input.files[0] && adGallery.length < 4) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            adGallery.push(e.target.result);
+            renderAdGalleryUpload();
+        };
+        reader.readAsDataURL(input.files[0]);
+    }
+    input.value = '';
+}
+
+function removeAdGalleryImage(index) {
+    adGallery.splice(index, 1);
+    renderAdGalleryUpload();
+}
+
+function renderAdGalleryUpload() {
+    const container = document.getElementById('adGalleryUploadGrid');
+    if (!container) return;
+
+    let html = adGallery.map((img, i) => `
+        <div class="gallery-upload-item has-image">
+            <img src="${img}" alt="">
+            <button class="gallery-remove" onclick="event.stopPropagation(); removeAdGalleryImage(${i})"><i class="fas fa-times"></i></button>
+        </div>
+    `).join('');
+
+    if (adGallery.length < 4) {
+        html += `<div class="gallery-upload-item" onclick="document.getElementById('adGalleryInput').click()"><i class="fas fa-plus"></i><span>Add Photo</span></div>`;
+    }
+
+    container.innerHTML = html;
+}
+
+// ==========================================
+// ADS - CRUD (Provider Page)
+// ==========================================
+function resetProviderAdForm() {
+    const form = document.getElementById('providerAdForm');
+    if (!form) return;
+    form.reset();
+    document.getElementById('providerAdId').value = '';
+    document.getElementById('providerAdAuthor').value = '';
+    document.getElementById('providerAdFormTitle').textContent = 'Post an Ad';
+    document.getElementById('providerAdSubmitBtn').textContent = 'Publish Ad';
+    providerAdTags = [];
+    providerAdGallery = [];
+    renderProviderAdTags();
+    renderProviderAdGalleryUpload();
+}
+
+function handleProviderAdSubmit(e) {
+    e.preventDefault();
+    const id = document.getElementById('providerAdId').value;
+    const now = new Date().toISOString();
+
+    const ad = {
+        id: id || generateId(),
+        title: document.getElementById('providerAdTitle').value,
+        category: document.getElementById('providerAdCategory').value,
+        contactName: document.getElementById('providerAdContactName').value,
+        phone: document.getElementById('providerAdPhone').value,
+        location: document.getElementById('providerAdLocation').value,
+        body: document.getElementById('providerAdBody').value,
+        tags: [...providerAdTags],
+        gallery: [...providerAdGallery],
+        author: document.getElementById('providerAdAuthor').value || 'provider-' + Date.now(),
+        source: 'provider',
+        status: 'active',
+        updatedAt: now
+    };
+
+    const ads = Storage.getAds();
+    if (id) {
+        const idx = ads.findIndex(a => a.id === id);
+        if (idx !== -1) { ad.createdAt = ads[idx].createdAt; ad.author = ads[idx].author; ads[idx] = ad; }
+        showToast('Ad updated successfully!');
+    } else {
+        ad.createdAt = now;
+        ads.push(ad);
+        showToast('Ad published successfully!');
+    }
+    Storage.setAds(ads);
+    navigateTo('provider-ads');
+}
+
+function renderProviderAds(filter = 'all') {
+    const ads = Storage.getAds().filter(a => a.author && (a.author.startsWith('provider') || a.source === 'provider'));
+    const container = document.getElementById('providerAdsList');
+    if (!container) return;
+
+    const filtered = filter === 'all' ? ads : ads.filter(a => a.category === filter);
+
+    if (filtered.length === 0) {
+        container.innerHTML = `<div class="empty-state"><i class="fas fa-bullhorn"></i><h3>No ads yet</h3><p>Post your first ad to get started</p><button class="btn btn-primary provider-btn" onclick="navigateTo('provider-ads-create')">Post Ad</button></div>`;
+        return;
+    }
+
+    container.innerHTML = filtered.map((a, i) => {
+        const cat = AD_CATEGORIES[a.category] || {};
+        return `
+        <div class="profile-list-card" style="animation-delay:${i * 0.1}s">
+            <div class="list-card-avatar" style="background:${cat.color}20; color:${cat.color}">
+                <i class="fas ${cat.icon || 'fa-tag'}"></i>
+            </div>
+            <div class="list-card-info">
+                <h3>${a.title}</h3>
+                <p>${cat.label || a.category} &middot; ${a.location}</p>
+                <div class="list-card-tags">${(a.tags || []).slice(0, 3).map(t => `<span class="mini-tag">${t}</span>`).join('')}</div>
+            </div>
+            <div class="list-card-actions">
+                <span class="status-badge status-${a.status}">${a.status}</span>
+                <button class="btn-icon" onclick="event.stopPropagation(); editAdById('${a.id}', 'provider')"><i class="fas fa-edit"></i></button>
+                <button class="btn-icon danger-icon" onclick="event.stopPropagation(); promptDeleteAd('${a.id}')"><i class="fas fa-trash"></i></button>
+            </div>
+        </div>`;
+    }).join('');
+}
+
+function filterProviderAds() { renderProviderAds(document.getElementById('providerAdsFilter').value); }
+
+function populateProviderAdForm(a) {
+    document.getElementById('providerAdId').value = a.id;
+    document.getElementById('providerAdTitle').value = a.title || '';
+    document.getElementById('providerAdCategory').value = a.category || '';
+    document.getElementById('providerAdContactName').value = a.contactName || '';
+    document.getElementById('providerAdPhone').value = a.phone || '';
+    document.getElementById('providerAdLocation').value = a.location || '';
+    document.getElementById('providerAdBody').value = a.body || '';
+    document.getElementById('providerAdAuthor').value = a.author || '';
+    document.getElementById('providerAdFormTitle').textContent = 'Edit Ad';
+    document.getElementById('providerAdSubmitBtn').textContent = 'Update Ad';
+
+    providerAdTags = [...(a.tags || [])];
+    providerAdGallery = [...(a.gallery || [])];
+    renderProviderAdTags();
+    renderProviderAdGalleryUpload();
+}
+
+// ==========================================
+// ADS - Tags (Provider Page)
+// ==========================================
+function handleProviderAdTagInput(e) {
+    if (e.key === 'Enter') {
+        e.preventDefault();
+        const val = e.target.value.trim();
+        if (val && !providerAdTags.includes(val)) { providerAdTags.push(val); renderProviderAdTags(); }
+        e.target.value = '';
+    }
+}
+
+function addProviderAdSuggestedTag(tag) {
+    if (!providerAdTags.includes(tag)) { providerAdTags.push(tag); renderProviderAdTags(); }
+}
+
+function removeProviderAdTag(index) { providerAdTags.splice(index, 1); renderProviderAdTags(); }
+
+function renderProviderAdTags() {
+    const container = document.getElementById('providerAdTagsDisplay');
+    if (!container) return;
+    container.innerHTML = providerAdTags.map((t, i) => `<span class="tag provider-tag">${t}<button type="button" onclick="removeProviderAdTag(${i})"><i class="fas fa-times"></i></button></span>`).join('');
+}
+
+// ==========================================
+// ADS - Gallery (Provider Page)
+// ==========================================
+function addProviderAdGalleryImage(input) {
+    if (input.files && input.files[0] && providerAdGallery.length < 4) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            providerAdGallery.push(e.target.result);
+            renderProviderAdGalleryUpload();
+        };
+        reader.readAsDataURL(input.files[0]);
+    }
+    input.value = '';
+}
+
+function removeProviderAdGalleryImage(index) {
+    providerAdGallery.splice(index, 1);
+    renderProviderAdGalleryUpload();
+}
+
+function renderProviderAdGalleryUpload() {
+    const container = document.getElementById('providerAdGalleryUploadGrid');
+    if (!container) return;
+
+    let html = providerAdGallery.map((img, i) => `
+        <div class="gallery-upload-item has-image">
+            <img src="${img}" alt="">
+            <button class="gallery-remove" onclick="event.stopPropagation(); removeProviderAdGalleryImage(${i})"><i class="fas fa-times"></i></button>
+        </div>
+    `).join('');
+
+    if (providerAdGallery.length < 4) {
+        html += `<div class="gallery-upload-item" onclick="document.getElementById('providerAdGalleryInput').click()"><i class="fas fa-plus"></i><span>Add Photo</span></div>`;
+    }
+
+    container.innerHTML = html;
+}
+
+// ==========================================
+// UTILITY - Date Formatter
+// ==========================================
+function formatDate(iso) {
+    if (!iso) return '-';
+    const d = new Date(iso);
+    const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    return `${months[d.getMonth()]} ${d.getDate()}, ${d.getFullYear()}`;
 }
