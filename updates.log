@@ -110,3 +110,19 @@ Date: 2026-08-18
 - Updated DOMContentLoaded and navigateTo for services pages
 - Commit: d22d226
 
+Date: 2026-08-19
+========================================
+
+[FEATURE] Booking System & Tip Jar
+- Added booking modal with full form (name, email, phone, date, time, service type, notes)
+- Added tip jar modal with quick-amount buttons (R50/R100/R250/R500) and custom amount
+- Added "Book Provider" and "Tip Jar" buttons on both profiles and services directory views
+- Added "My Bookings" page to index.html with status filter (pending/confirmed/completed/cancelled)
+- Added "Bookings Received" page to provider.html with confirm/decline/complete/delete actions
+- Added "Tips Received" page to provider.html with total tips badge
+- Added BOOKING_STATUSES constant, Storage.getBookings/setBookings, Storage.getTips/setTips
+- Added all CRUD functions: openBookingModal, handleBookingSubmit, openTipModal, handleTipSubmit
+- Added renderUserBookings, renderProviderBookings, renderProviderTips, updateBookingStatus
+- Added booking/tip responsive CSS, tip quick-amount buttons, booking card styles
+- Commit: 868cfe1
+

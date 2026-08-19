@@ -73,3 +73,12 @@ END OF DEBUG LOG
 - Updated confirmDelete, DOMContentLoaded, navigateTo for services
 - Pushed to GitHub: d22d226
 
+[INFO] Booking System & Tip Jar Feature
+- Added booking modal, tip jar modal with quick-amount buttons
+- Added Book/Tip buttons on profiles and services directory views
+- Added My Bookings, Bookings Received, Tips Received pages
+- Added BOOKING_STATUSES, Storage.getBookings/setBookings, Storage.getTips/setTips
+- Added full CRUD: booking submit, status updates, tip submit, render functions
+- Added responsive CSS for booking cards, tip cards, action rows
+- Pushed to GitHub: 868cfe1
+
