@@ -60,6 +60,16 @@
                 <span>New Service</span>
             </a>
             <div class="nav-divider"></div>
+            <span class="nav-section-title">Content</span>
+            <a href="#" class="nav-item" data-page="provider-content">
+                <i class="fas fa-photo-film"></i>
+                <span>My Content</span>
+            </a>
+            <a href="#" class="nav-item" data-page="provider-content-create">
+                <i class="fas fa-plus-circle"></i>
+                <span>New Content</span>
+            </a>
+            <div class="nav-divider"></div>
             <span class="nav-section-title">Personal Ads</span>
             <a href="#" class="nav-item" data-page="provider-ads">
                 <i class="fas fa-bullhorn"></i>
@@ -729,6 +739,111 @@
                     <button class="btn btn-secondary" onclick="closeDeleteModal()">Cancel</button>
                     <button class="btn btn-danger" onclick="confirmDelete()">Delete</button>
                 </div>
+            </div>
+        </div>
+
+        <!-- My Content (Provider) -->
+        <div class="page" id="page-provider-content">
+            <div class="container">
+                <div class="dashboard-header">
+                    <div>
+                        <h1>My Content</h1>
+                        <p>Manage your published content</p>
+                    </div>
+                    <button class="btn btn-primary provider-btn" onclick="navigateTo('provider-content-create')"><i class="fas fa-plus"></i> New Content</button>
+                </div>
+                <div class="profiles-section">
+                    <div class="section-header">
+                        <h2>Content</h2>
+                        <div class="filter-group">
+                            <select id="providerContentFilter" onchange="filterProviderContent()">
+                                <option value="all">All</option>
+                                <option value="video">Videos</option>
+                                <option value="image">Images</option>
+                                <option value="gif">GIFs</option>
+                                <option value="audio">Audio (ASMR)</option>
+                                <option value="podcast">Podcasts</option>
+                                <option value="story">Stories</option>
+                                <option value="book">Books</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="profiles-grid" id="providerContentList"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Create/Edit Content -->
+        <div class="page" id="page-provider-content-create">
+            <div class="container">
+                <div class="form-header">
+                    <button class="btn-back" onclick="navigateTo('provider-content')"><i class="fas fa-arrow-left"></i> Back</button>
+                    <h1 id="contentFormTitle">New Content</h1>
+                </div>
+                <form id="contentForm" onsubmit="handleContentSubmit(event)">
+                    <input type="hidden" id="contentId" value="">
+                    <div class="profile-card">
+                        <h2><i class="fas fa-info-circle"></i> Content Details</h2>
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label>Title *</label>
+                                <input type="text" id="contentTitle" placeholder="Content title" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Type *</label>
+                                <select id="contentType" required>
+                                    <option value="">Select type</option>
+                                    <option value="video">Video</option>
+                                    <option value="image">Image</option>
+                                    <option value="gif">GIF</option>
+                                    <option value="audio">Audio (ASMR)</option>
+                                    <option value="podcast">Podcast</option>
+                                    <option value="story">Story</option>
+                                    <option value="book">Book</option>
+                                </select>
+                            </div>
+                            <div class="form-group full-width">
+                                <label>Description *</label>
+                                <textarea id="contentDescription" placeholder="Describe your content..." rows="3" required></textarea>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="profile-card">
+                        <h2><i class="fas fa-upload"></i> Media Upload</h2>
+                        <p class="empty-text" style="margin-bottom:16px">Upload your content file (max 50MB)</p>
+                        <div class="content-upload-area" id="contentUploadArea">
+                            <div class="content-upload-placeholder" onclick="document.getElementById('contentFileInput').click()">
+                                <i class="fas fa-cloud-upload-alt"></i>
+                                <span>Click to upload or drag & drop</span>
+                                <small id="contentUploadHint">Supports video, image, GIF, audio files</small>
+                            </div>
+                            <div class="content-upload-preview" id="contentUploadPreview" style="display:none"></div>
+                        </div>
+                        <input type="file" id="contentFileInput" style="display:none" onchange="handleContentFileSelect(this)">
+                        <input type="hidden" id="contentFileData">
+                        <input type="hidden" id="contentFileType">
+                    </div>
+                    <div class="profile-card">
+                        <h2><i class="fas fa-tag"></i> Tags</h2>
+                        <div class="tags-input-container">
+                            <div class="tags-display" id="contentTagsDisplay"></div>
+                            <input type="text" id="contentTagsInput" placeholder="Type and press Enter to add tag">
+                        </div>
+                        <div class="suggested-tags">
+                            <span class="tag-label">Popular:</span>
+                            <button type="button" class="tag-suggestion provider-suggestion" onclick="addContentSuggestedTag('Exclusive')">Exclusive</button>
+                            <button type="button" class="tag-suggestion provider-suggestion" onclick="addContentSuggestedTag('Behind The Scenes')">Behind The Scenes</button>
+                            <button type="button" class="tag-suggestion provider-suggestion" onclick="addContentSuggestedTag('Tutorial')">Tutorial</button>
+                            <button type="button" class="tag-suggestion provider-suggestion" onclick="addContentSuggestedTag('Premium')">Premium</button>
+                            <button type="button" class="tag-suggestion provider-suggestion" onclick="addContentSuggestedTag('New')">New</button>
+                            <button type="button" class="tag-suggestion provider-suggestion" onclick="addContentSuggestedTag('Trending')">Trending</button>
+                        </div>
+                    </div>
+                    <div class="form-actions">
+                        <button type="button" class="btn btn-secondary" onclick="navigateTo('provider-content')">Cancel</button>
+                        <button type="submit" class="btn btn-primary provider-btn" id="contentSubmitBtn">Publish Content</button>
+                    </div>
+                </form>
             </div>
         </div>
 

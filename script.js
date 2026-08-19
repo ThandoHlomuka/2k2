@@ -31,7 +31,9 @@ const Storage = {
     setTopUpRequests: (data) => localStorage.setItem('k2_topup_requests', JSON.stringify(data)),
     getWithdrawalRequests: () => JSON.parse(localStorage.getItem('k2_withdrawal_requests') || '[]'),
     setWithdrawalRequests: (data) => localStorage.setItem('k2_withdrawal_requests', JSON.stringify(data)),
-    clearAll: () => { ['k2_users','k2_providers','k2_listings','k2_venues','k2_ads','k2_services','k2_bookings','k2_tips','k2_service_types','k2_wallets','k2_transactions','k2_topup_requests','k2_withdrawal_requests'].forEach(k => localStorage.removeItem(k)); }
+    getContent: () => JSON.parse(localStorage.getItem('k2_content') || '[]'),
+    setContent: (data) => localStorage.setItem('k2_content', JSON.stringify(data)),
+    clearAll: () => { ['k2_users','k2_providers','k2_listings','k2_venues','k2_ads','k2_services','k2_bookings','k2_tips','k2_service_types','k2_wallets','k2_transactions','k2_topup_requests','k2_withdrawal_requests','k2_content'].forEach(k => localStorage.removeItem(k)); }
 };
 
 const DIRECTORY_TYPES = {
@@ -65,6 +67,16 @@ const BOOKING_STATUSES = {
     'confirmed': { label: 'Confirmed', color: '#10b981', icon: 'fa-check-circle' },
     'completed': { label: 'Completed', color: '#3b82f6', icon: 'fa-flag-checkered' },
     'cancelled': { label: 'Cancelled', color: '#ef4444', icon: 'fa-ban' }
+};
+
+const CONTENT_TYPES = {
+    'video': { label: 'Videos', icon: 'fa-video', color: '#ef4444', accept: 'video/*' },
+    'image': { label: 'Images', icon: 'fa-image', color: '#ec4899', accept: 'image/*' },
+    'gif': { label: 'GIFs', icon: 'fa-icons', color: '#f59e0b', accept: 'image/gif' },
+    'audio': { label: 'Audio (ASMR)', icon: 'fa-headphones', color: '#8b5cf6', accept: 'audio/*' },
+    'podcast': { label: 'Podcasts', icon: 'fa-podcast', color: '#3b82f6', accept: 'audio/*' },
+    'story': { label: 'Stories', icon: 'fa-book-open', color: '#10b981', accept: '' },
+    'book': { label: 'Books', icon: 'fa-book', color: '#06b6d4', accept: '' }
 };
 
 // ==========================================
@@ -234,6 +246,8 @@ let currentBookingProviderType = null;
 let currentBookingFilter = 'all';
 let currentServiceViewId = null;
 let currentWalletTab = 'overview';
+let currentContentFilter = 'all';
+let currentContentViewId = null;
 
 // ==========================================
 // Navigation
@@ -279,6 +293,9 @@ function navigateTo(page) {
     if (page === 'provider-tips') renderProviderTips();
     if (page === 'user-wallet') renderUserWallet();
     if (page === 'provider-wallet') renderProviderWallet();
+    if (page === 'content-directory') renderContentDirectory();
+    if (page === 'provider-content') renderProviderContent();
+    if (page === 'provider-content-create') resetContentForm();
 }
 
 // ==========================================
@@ -309,6 +326,7 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('adTagsInput')?.addEventListener('keydown', handleAdTagInput);
     document.getElementById('providerAdTagsInput')?.addEventListener('keydown', handleProviderAdTagInput);
     document.getElementById('serviceTagsInput')?.addEventListener('keydown', handleServiceTagInput);
+    document.getElementById('contentTagsInput')?.addEventListener('keydown', handleContentTagInput);
     document.getElementById('directorySearch')?.addEventListener('keydown', (e) => { if (e.key === 'Enter') searchDirectory(); });
     document.getElementById('venueSearch')?.addEventListener('keydown', (e) => { if (e.key === 'Enter') searchVenueDirectory(); });
     document.getElementById('adsSearch')?.addEventListener('keydown', (e) => { if (e.key === 'Enter') searchAds(); });
@@ -325,6 +343,7 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('providerBookingsList') && renderProviderBookings();
         document.getElementById('providerTipsList') && renderProviderTips();
         document.getElementById('providerWalletBalance') && renderProviderWallet();
+        document.getElementById('providerContentList') && renderProviderContent();
         if (document.getElementById('serviceCategory')) updateServiceCategorySelect();
     } else {
         document.getElementById('userProfilesList') && renderUserProfiles();
@@ -335,6 +354,7 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('servicesDirectoryList') && renderServicesDirectory();
         document.getElementById('userBookingsList') && renderUserBookings();
         document.getElementById('userWalletBalance') && renderUserWallet();
+        document.getElementById('contentDirectoryList') && renderContentDirectory();
     }
 });
 
@@ -1249,6 +1269,14 @@ confirmDelete = function() {
         } else {
             navigateTo('user-bookings');
         }
+        return;
+    }
+    if (deleteTarget.type === 'content') {
+        const content = Storage.getContent().filter(c => c.id !== deleteTarget.id);
+        Storage.setContent(content);
+        showToast('Content deleted.', 'info');
+        closeDeleteModal();
+        navigateTo('provider-content');
         return;
     }
     _origConfirmDelete();
@@ -2930,4 +2958,305 @@ function processWithdraw() {
     closeWithdrawModal();
     showToast(`Withdrawal request of R${amount.toFixed(2)} submitted. Awaiting admin approval.`, 'info');
     renderProviderWallet();
+}
+
+// ==========================================
+// CONTENT DIRECTORY
+// ==========================================
+let contentTags = [];
+
+function handleContentTagInput(e) {
+    if (e.key === 'Enter') {
+        e.preventDefault();
+        const val = e.target.value.trim();
+        if (val && !contentTags.includes(val)) { contentTags.push(val); renderContentTags(); }
+        e.target.value = '';
+    }
+}
+
+function renderContentDirectory() {
+    const content = Storage.getContent();
+    let filtered = currentContentFilter === 'all' ? [...content] : content.filter(c => c.type === currentContentFilter);
+
+    const search = document.getElementById('contentSearch')?.value?.toLowerCase() || '';
+    if (search) filtered = filtered.filter(c => c.title.toLowerCase().includes(search) || c.description.toLowerCase().includes(search) || (c.tags || []).some(t => t.toLowerCase().includes(search)));
+
+    const sort = document.getElementById('contentSort')?.value || 'newest';
+    if (sort === 'newest') filtered.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    else if (sort === 'oldest') filtered.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+    else if (sort === 'title-asc') filtered.sort((a, b) => a.title.localeCompare(b.title));
+    else if (sort === 'title-desc') filtered.sort((a, b) => b.title.localeCompare(a.title));
+
+    const countEl = document.getElementById('contentDirectoryCount');
+    if (countEl) countEl.textContent = filtered.length;
+
+    // Update filter tabs active state
+    document.querySelectorAll('#contentFilterTabs .filter-tab').forEach(tab => {
+        tab.classList.toggle('active', tab.getAttribute('onclick')?.includes(`'${currentContentFilter}'`));
+    });
+
+    const container = document.getElementById('contentDirectoryList');
+    if (!container) return;
+
+    if (filtered.length === 0) {
+        container.innerHTML = '<div class="empty-section"><i class="fas fa-photo-film"></i><p>No content found</p><span>Check back later for new content</span></div>';
+        return;
+    }
+
+    container.innerHTML = filtered.map(c => {
+        const type = CONTENT_TYPES[c.type] || { label: c.type, icon: 'fa-file', color: '#64748b' };
+        const providers = [...Storage.getListings(), ...Storage.getServices()];
+        const author = providers.find(p => p.id === c.providerId);
+        const authorName = author ? author.name : 'Unknown Creator';
+        const hasMedia = c.fileData && c.fileData.length > 100;
+        return `
+            <div class="content-card profile-card" onclick="viewContent('${c.id}')">
+                ${hasMedia ? `<div class="content-card-thumb"><div class="content-thumb-icon" style="background:${type.color}22;color:${type.color}"><i class="fas ${type.icon}"></i></div></div>` : `<div class="content-card-icon" style="background:${type.color}22;color:${type.color}"><i class="fas ${type.icon}"></i></div>`}
+                <h3 class="content-card-title">${c.title}</h3>
+                <p class="content-card-desc">${(c.description || '').substring(0, 80)}${(c.description || '').length > 80 ? '...' : ''}</p>
+                <div class="content-card-footer">
+                    <span class="badge" style="background:${type.color}22;color:${type.color};border:1px solid ${type.color}44"><i class="fas ${type.icon}"></i> ${type.label}</span>
+                    <span class="content-card-author"><i class="fas fa-user"></i> ${authorName}</span>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+function filterContentDirectory(type) {
+    currentContentFilter = type;
+    renderContentDirectory();
+}
+
+function searchContentDirectory() { renderContentDirectory(); }
+
+function viewContent(id) {
+    const content = Storage.getContent();
+    const item = content.find(c => c.id === id);
+    if (!item) { showToast('Content not found.', 'error'); return; }
+
+    currentContentViewId = id;
+    const type = CONTENT_TYPES[item.type] || { label: item.type, icon: 'fa-file', color: '#64748b' };
+    const providers = [...Storage.getListings(), ...Storage.getServices()];
+    const author = providers.find(p => p.id === item.providerId);
+    const authorName = author ? author.name : 'Unknown Creator';
+
+    document.getElementById('contentDetailViewType').innerHTML = `<i class="fas ${type.icon}"></i> ${type.label}`;
+    document.getElementById('contentDetailViewType').style.background = `${type.color}22`;
+    document.getElementById('contentDetailViewType').style.color = type.color;
+    document.getElementById('contentDetailViewType').style.border = `1px solid ${type.color}44`;
+    document.getElementById('contentDetailViewTitle').textContent = item.title;
+    document.getElementById('contentDetailViewDate').textContent = formatDate(item.createdAt);
+    document.getElementById('contentDetailViewAuthor').textContent = `By ${authorName}`;
+    document.getElementById('contentDetailViewBody').innerHTML = item.description ? `<p>${item.description.replace(/\n/g, '<br>')}</p>` : '<p class="empty-text">No description</p>';
+
+    // Media player
+    const mediaContainer = document.getElementById('contentDetailMedia');
+    if (item.fileData && item.fileData.length > 100) {
+        if (item.type === 'video') {
+            mediaContainer.innerHTML = `<div class="content-media-player"><video controls preload="metadata" class="content-video-player"><source src="${item.fileData}" type="${item.fileType || 'video/mp4'}"></video></div>`;
+        } else if (item.type === 'audio' || item.type === 'podcast') {
+            mediaContainer.innerHTML = `<div class="content-media-player audio-player"><div class="audio-icon-wrap"><i class="fas fa-headphones"></i></div><audio controls preload="metadata" class="content-audio-player"><source src="${item.fileData}" type="${item.fileType || 'audio/mpeg'}"></audio></div>`;
+        } else if (item.type === 'image') {
+            mediaContainer.innerHTML = `<div class="content-media-player"><img src="${item.fileData}" alt="${item.title}" class="content-image-player"></div>`;
+        } else if (item.type === 'gif') {
+            mediaContainer.innerHTML = `<div class="content-media-player"><img src="${item.fileData}" alt="${item.title}" class="content-gif-player"></div>`;
+        } else {
+            mediaContainer.innerHTML = `<div class="content-media-player"><div class="content-file-download"><i class="fas fa-file"></i><span>Attached file</span><a href="${item.fileData}" download="${item.title}" class="btn btn-primary btn-sm"><i class="fas fa-download"></i> Download</a></div></div>`;
+        }
+    } else {
+        mediaContainer.innerHTML = '';
+    }
+
+    // Tags
+    const tagsContainer = document.getElementById('contentDetailViewTags');
+    if (item.tags && item.tags.length > 0) {
+        tagsContainer.innerHTML = item.tags.map(t => `<span class="tag-chip">${t}</span>`).join('');
+    } else {
+        tagsContainer.innerHTML = '';
+    }
+
+    navigateTo('content-view');
+}
+
+// ==========================================
+// PROVIDER CONTENT CRUD
+// ==========================================
+function renderProviderContent() {
+    const content = Storage.getContent();
+    const filter = document.getElementById('providerContentFilter')?.value || 'all';
+    const filtered = filter === 'all' ? [...content] : content.filter(c => c.type === filter);
+    filtered.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+    const container = document.getElementById('providerContentList');
+    if (!container) return;
+
+    if (filtered.length === 0) {
+        container.innerHTML = '<div class="empty-section"><i class="fas fa-photo-film"></i><p>No content yet</p><span>Create your first content item to get started</span></div>';
+        return;
+    }
+
+    container.innerHTML = filtered.map(c => {
+        const type = CONTENT_TYPES[c.type] || { label: c.type, icon: 'fa-file', color: '#64748b' };
+        return `
+            <div class="provider-card profile-card">
+                <div class="provider-card-icon" style="background:${type.color}22;color:${type.color}"><i class="fas ${type.icon}"></i></div>
+                <div class="provider-card-info">
+                    <h3>${c.title}</h3>
+                    <span class="provider-card-type"><i class="fas ${type.icon}"></i> ${type.label}</span>
+                </div>
+                <div class="provider-card-actions">
+                    <button class="btn btn-secondary btn-sm" onclick="editContent('${c.id}')"><i class="fas fa-edit"></i> Edit</button>
+                    <button class="btn btn-danger btn-sm" onclick="deleteContent('${c.id}')"><i class="fas fa-trash"></i></button>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+function filterProviderContent() { renderProviderContent(); }
+
+function resetContentForm() {
+    document.getElementById('contentFormTitle').textContent = 'New Content';
+    document.getElementById('contentSubmitBtn').textContent = 'Publish Content';
+    document.getElementById('contentId').value = '';
+    document.getElementById('contentTitle').value = '';
+    document.getElementById('contentType').value = '';
+    document.getElementById('contentDescription').value = '';
+    document.getElementById('contentFileData').value = '';
+    document.getElementById('contentFileType').value = '';
+    document.getElementById('contentFileInput').value = '';
+    document.getElementById('contentUploadPreview').style.display = 'none';
+    document.getElementById('contentUploadArea').querySelector('.content-upload-placeholder').style.display = '';
+    contentTags = [];
+    renderContentTags();
+}
+
+function handleContentFileSelect(input) {
+    const file = input.files[0];
+    if (!file) return;
+    if (file.size > 52428800) { showToast('File too large. Max 50MB.', 'error'); input.value = ''; return; }
+
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        document.getElementById('contentFileData').value = e.target.result;
+        document.getElementById('contentFileType').value = file.type;
+        const preview = document.getElementById('contentUploadPreview');
+        const placeholder = document.getElementById('contentUploadArea').querySelector('.content-upload-placeholder');
+        placeholder.style.display = 'none';
+        preview.style.display = '';
+        const type = document.getElementById('contentType').value;
+        if (type === 'video') {
+            preview.innerHTML = `<video controls preload="metadata" class="content-upload-preview-media"><source src="${e.target.result}" type="${file.type}"></video><button class="btn btn-danger btn-sm" onclick="clearContentFile()" style="margin-top:8px"><i class="fas fa-times"></i> Remove</button>`;
+        } else if (type === 'audio' || type === 'podcast') {
+            preview.innerHTML = `<div class="content-upload-audio-preview"><i class="fas fa-headphones"></i><audio controls preload="metadata" class="content-upload-preview-media"><source src="${e.target.result}" type="${file.type}"></audio></div><button class="btn btn-danger btn-sm" onclick="clearContentFile()" style="margin-top:8px"><i class="fas fa-times"></i> Remove</button>`;
+        } else if (type === 'image' || type === 'gif') {
+            preview.innerHTML = `<img src="${e.target.result}" alt="Preview" class="content-upload-preview-image"><button class="btn btn-danger btn-sm" onclick="clearContentFile()" style="margin-top:8px"><i class="fas fa-times"></i> Remove</button>`;
+        } else {
+            preview.innerHTML = `<div class="content-upload-file-preview"><i class="fas fa-file"></i><span>${file.name}</span></div><button class="btn btn-danger btn-sm" onclick="clearContentFile()" style="margin-top:8px"><i class="fas fa-times"></i> Remove</button>`;
+        }
+    };
+    reader.readAsDataURL(file);
+}
+
+function clearContentFile() {
+    document.getElementById('contentFileData').value = '';
+    document.getElementById('contentFileType').value = '';
+    document.getElementById('contentFileInput').value = '';
+    document.getElementById('contentUploadPreview').style.display = 'none';
+    document.getElementById('contentUploadArea').querySelector('.content-upload-placeholder').style.display = '';
+}
+
+function renderContentTags() {
+    const container = document.getElementById('contentTagsDisplay');
+    if (!container) return;
+    container.innerHTML = contentTags.map((tag, i) => `<span class="tag-chip removable" onclick="removeContentTag(${i})"><i class="fas fa-times"></i> ${tag}</span>`).join('');
+}
+
+function removeContentTag(index) { contentTags.splice(index, 1); renderContentTags(); }
+
+function addContentSuggestedTag(tag) {
+    if (!contentTags.includes(tag)) { contentTags.push(tag); renderContentTags(); }
+}
+
+function handleContentSubmit(e) {
+    e.preventDefault();
+    const id = document.getElementById('contentId').value;
+    const title = document.getElementById('contentTitle').value.trim();
+    const type = document.getElementById('contentType').value;
+    const description = document.getElementById('contentDescription').value.trim();
+    const fileData = document.getElementById('contentFileData').value;
+    const fileType = document.getElementById('contentFileType').value;
+
+    if (!title || !type || !description) { showToast('Please fill in all required fields.', 'error'); return; }
+
+    const content = Storage.getContent();
+    if (id) {
+        const idx = content.findIndex(c => c.id === id);
+        if (idx !== -1) {
+            content[idx].title = title;
+            content[idx].type = type;
+            content[idx].description = description;
+            if (fileData) { content[idx].fileData = fileData; content[idx].fileType = fileType; }
+            content[idx].tags = [...contentTags];
+            content[idx].updatedAt = new Date().toISOString();
+        }
+        showToast('Content updated!', 'success');
+    } else {
+        content.push({
+            id: generateId(),
+            title, type, description,
+            fileData: fileData || '',
+            fileType: fileType || '',
+            tags: [...contentTags],
+            providerId: currentProvider?.id || 'unknown',
+            createdAt: new Date().toISOString()
+        });
+        showToast('Content published!', 'success');
+    }
+    Storage.setContent(content);
+    navigateTo('provider-content');
+}
+
+function editContent(id) {
+    const content = Storage.getContent();
+    const item = content.find(c => c.id === id);
+    if (!item) return;
+
+    document.getElementById('contentFormTitle').textContent = 'Edit Content';
+    document.getElementById('contentSubmitBtn').textContent = 'Save Changes';
+    document.getElementById('contentId').value = item.id;
+    document.getElementById('contentTitle').value = item.title;
+    document.getElementById('contentType').value = item.type;
+    document.getElementById('contentDescription').value = item.description || '';
+    contentTags = [...(item.tags || [])];
+
+    if (item.fileData && item.fileData.length > 100) {
+        document.getElementById('contentFileData').value = item.fileData;
+        document.getElementById('contentFileType').value = item.fileType || '';
+        const preview = document.getElementById('contentUploadPreview');
+        const placeholder = document.getElementById('contentUploadArea').querySelector('.content-upload-placeholder');
+        placeholder.style.display = 'none';
+        preview.style.display = '';
+        if (item.type === 'video') {
+            preview.innerHTML = `<video controls preload="metadata" class="content-upload-preview-media"><source src="${item.fileData}" type="${item.fileType}"></video><button class="btn btn-danger btn-sm" onclick="clearContentFile()" style="margin-top:8px"><i class="fas fa-times"></i> Remove</button>`;
+        } else if (item.type === 'audio' || item.type === 'podcast') {
+            preview.innerHTML = `<div class="content-upload-audio-preview"><i class="fas fa-headphones"></i><audio controls preload="metadata" class="content-upload-preview-media"><source src="${item.fileData}" type="${item.fileType}"></audio></div><button class="btn btn-danger btn-sm" onclick="clearContentFile()" style="margin-top:8px"><i class="fas fa-times"></i> Remove</button>`;
+        } else if (item.type === 'image' || item.type === 'gif') {
+            preview.innerHTML = `<img src="${item.fileData}" alt="Preview" class="content-upload-preview-image"><button class="btn btn-danger btn-sm" onclick="clearContentFile()" style="margin-top:8px"><i class="fas fa-times"></i> Remove</button>`;
+        } else {
+            preview.innerHTML = `<div class="content-upload-file-preview"><i class="fas fa-file"></i><span>Attached file</span></div><button class="btn btn-danger btn-sm" onclick="clearContentFile()" style="margin-top:8px"><i class="fas fa-times"></i> Remove</button>`;
+        }
+    }
+
+    renderContentTags();
+    navigateTo('provider-content-create');
+}
+
+function deleteContent(id) {
+    deleteTarget = { type: 'content', id };
+    const modal = document.getElementById('deleteModal');
+    const text = document.getElementById('deleteModalText');
+    text.textContent = 'Are you sure you want to delete this content? This action cannot be undone.';
+    modal.classList.add('active');
 }
