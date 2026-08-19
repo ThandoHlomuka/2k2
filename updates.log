@@ -96,3 +96,17 @@ END OF UPDATES LOG
 - Added Admin Portal link to both index.html and provider.html sidebars
 - Commit: b0106cc
 
+Date: 2026-08-18
+========================================
+
+[FEATURE] Services Directory
+- Added Services Directory browse page to index.html (13 filter categories)
+- Added SA Location filter (9 provinces, 150+ cities) to services directory
+- Added service detail view with cover photo, gallery, tags, availability
+- Added My Services / New Service CRUD pages to provider.html
+- Added all service functions: render, filter, search, CRUD, tag/gallery handlers
+- Added STORAGE.getServices/setServices to Storage abstraction
+- Updated confirmDelete to handle service deletions
+- Updated DOMContentLoaded and navigateTo for services pages
+- Commit: d22d226
+
