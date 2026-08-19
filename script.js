@@ -318,6 +318,8 @@ function navigateTo(page) {
     if (page === 'events-directory') renderEventsDirectory();
     if (page === 'provider-events') renderProviderEvents();
     if (page === 'provider-event-create') resetEventForm();
+    if (page === 'user-settings') loadUserSettings();
+    if (page === 'provider-settings') loadProviderSettings();
 }
 
 // ==========================================
@@ -3303,6 +3305,103 @@ function renderProviderAnalytics() {
             }
         });
     }
+}
+
+// ==========================================
+// SETTINGS
+// ==========================================
+function getUserSettings() { return JSON.parse(localStorage.getItem('k2_user_settings') || '{}'); }
+function setUserSettings(s) { localStorage.setItem('k2_user_settings', JSON.stringify(s)); }
+function getProviderSettings() { return JSON.parse(localStorage.getItem('k2_provider_settings') || '{}'); }
+function setProviderSettings(s) { localStorage.setItem('k2_provider_settings', JSON.stringify(s)); }
+function getAdminSettings() { return JSON.parse(localStorage.getItem('k2_admin_settings') || '{}'); }
+function setAdminSettings(s) { localStorage.setItem('k2_admin_settings', JSON.stringify(s)); }
+
+function loadUserSettings() {
+    const s = getUserSettings();
+    if (document.getElementById('userSettingTheme')) document.getElementById('userSettingTheme').value = s.theme || 'light';
+    if (document.getElementById('userSettingVisibility')) document.getElementById('userSettingVisibility').checked = s.visibility !== false;
+    if (document.getElementById('userSettingOnlineStatus')) document.getElementById('userSettingOnlineStatus').checked = s.onlineStatus !== false;
+    if (document.getElementById('userSettingShowPhone')) document.getElementById('userSettingShowPhone').checked = s.showPhone === true;
+    if (document.getElementById('userSettingBookingNotifs')) document.getElementById('userSettingBookingNotifs').checked = s.bookingNotifs !== false;
+    if (document.getElementById('userSettingTipNotifs')) document.getElementById('userSettingTipNotifs').checked = s.tipNotifs !== false;
+    if (document.getElementById('userSettingEventNotifs')) document.getElementById('userSettingEventNotifs').checked = s.eventNotifs !== false;
+    if (document.getElementById('userSettingLanguage')) document.getElementById('userSettingLanguage').value = s.language || 'en';
+    if (document.getElementById('userSettingCurrency')) document.getElementById('userSettingCurrency').value = s.currency || 'ZAR';
+}
+
+function saveUserSettings() {
+    const s = {
+        theme: document.getElementById('userSettingTheme')?.value || 'light',
+        visibility: document.getElementById('userSettingVisibility')?.checked !== false,
+        onlineStatus: document.getElementById('userSettingOnlineStatus')?.checked !== false,
+        showPhone: document.getElementById('userSettingShowPhone')?.checked === true,
+        bookingNotifs: document.getElementById('userSettingBookingNotifs')?.checked !== false,
+        tipNotifs: document.getElementById('userSettingTipNotifs')?.checked !== false,
+        eventNotifs: document.getElementById('userSettingEventNotifs')?.checked !== false,
+        language: document.getElementById('userSettingLanguage')?.value || 'en',
+        currency: document.getElementById('userSettingCurrency')?.value || 'ZAR'
+    };
+    setUserSettings(s);
+    showToast('Settings saved!');
+}
+
+function loadProviderSettings() {
+    const s = getProviderSettings();
+    if (document.getElementById('providerSettingTheme')) document.getElementById('providerSettingTheme').value = s.theme || 'light';
+    if (document.getElementById('providerSettingAutoConfirm')) document.getElementById('providerSettingAutoConfirm').checked = s.autoConfirm === true;
+    if (document.getElementById('providerSettingBookingWindow')) document.getElementById('providerSettingBookingWindow').value = s.bookingWindow || '14';
+    if (document.getElementById('providerSettingRequireDeposit')) document.getElementById('providerSettingRequireDeposit').checked = s.requireDeposit === true;
+    if (document.getElementById('providerSettingAvailability')) document.getElementById('providerSettingAvailability').value = s.availability || 'all';
+    if (document.getElementById('providerSettingInstantResponse')) document.getElementById('providerSettingInstantResponse').checked = s.instantResponse !== false;
+    if (document.getElementById('providerSettingMinPayout')) document.getElementById('providerSettingMinPayout').value = s.minPayout || 100;
+    if (document.getElementById('providerSettingPayoutFreq')) document.getElementById('providerSettingPayoutFreq').value = s.payoutFreq || 'monthly';
+    if (document.getElementById('providerSettingBookingAlerts')) document.getElementById('providerSettingBookingAlerts').checked = s.bookingAlerts !== false;
+    if (document.getElementById('providerSettingTipAlerts')) document.getElementById('providerSettingTipAlerts').checked = s.tipAlerts !== false;
+    if (document.getElementById('providerSettingReviewAlerts')) document.getElementById('providerSettingReviewAlerts').checked = s.reviewAlerts !== false;
+    if (document.getElementById('providerSettingWalletAlerts')) document.getElementById('providerSettingWalletAlerts').checked = s.walletAlerts !== false;
+}
+
+function saveProviderSettings() {
+    const s = {
+        theme: document.getElementById('providerSettingTheme')?.value || 'light',
+        autoConfirm: document.getElementById('providerSettingAutoConfirm')?.checked === true,
+        bookingWindow: document.getElementById('providerSettingBookingWindow')?.value || '14',
+        requireDeposit: document.getElementById('providerSettingRequireDeposit')?.checked === true,
+        availability: document.getElementById('providerSettingAvailability')?.value || 'all',
+        instantResponse: document.getElementById('providerSettingInstantResponse')?.checked !== false,
+        minPayout: parseInt(document.getElementById('providerSettingMinPayout')?.value) || 100,
+        payoutFreq: document.getElementById('providerSettingPayoutFreq')?.value || 'monthly',
+        bookingAlerts: document.getElementById('providerSettingBookingAlerts')?.checked !== false,
+        tipAlerts: document.getElementById('providerSettingTipAlerts')?.checked !== false,
+        reviewAlerts: document.getElementById('providerSettingReviewAlerts')?.checked !== false,
+        walletAlerts: document.getElementById('providerSettingWalletAlerts')?.checked !== false
+    };
+    setProviderSettings(s);
+    showToast('Settings saved!');
+}
+
+function loadAdminSettings() {
+    const s = getAdminSettings();
+    if (document.getElementById('adminSettingTheme')) document.getElementById('adminSettingTheme').value = s.theme || 'light';
+    if (document.getElementById('adminSettingSidebar')) document.getElementById('adminSettingSidebar').value = s.sidebar || 'expanded';
+    if (document.getElementById('adminSettingSiteName')) document.getElementById('adminSettingSiteName').value = s.siteName || '2K2';
+    if (document.getElementById('adminSettingBookingFee')) document.getElementById('adminSettingBookingFee').value = s.bookingFee || 50;
+    if (document.getElementById('adminSettingMaintenance')) document.getElementById('adminSettingMaintenance').checked = s.maintenance === true;
+    if (document.getElementById('adminSettingName')) document.getElementById('adminSettingName').value = s.adminName || 'Administrator';
+}
+
+function saveAdminSettings() {
+    const s = {
+        theme: document.getElementById('adminSettingTheme')?.value || 'light',
+        sidebar: document.getElementById('adminSettingSidebar')?.value || 'expanded',
+        siteName: document.getElementById('adminSettingSiteName')?.value || '2K2',
+        bookingFee: parseInt(document.getElementById('adminSettingBookingFee')?.value) || 50,
+        maintenance: document.getElementById('adminSettingMaintenance')?.checked === true,
+        adminName: document.getElementById('adminSettingName')?.value || 'Administrator'
+    };
+    setAdminSettings(s);
+    showToast('Settings saved!');
 }
 
 // ==========================================

@@ -116,7 +116,7 @@
                 <span>Admin Portal</span>
             </a>
             <div class="nav-divider"></div>
-            <a href="#" class="nav-item" data-page="settings">
+            <a href="#" class="nav-item" data-page="provider-settings">
                 <i class="fas fa-cog"></i>
                 <span>Settings</span>
             </a>
@@ -1872,6 +1872,105 @@
                 <div class="modal-actions">
                     <button class="btn btn-secondary" onclick="closeWithdrawModal()">Cancel</button>
                     <button class="btn btn-primary" onclick="processWithdraw()"><i class="fas fa-check"></i> Confirm Withdrawal</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Provider Settings -->
+        <div class="page" id="page-provider-settings">
+            <div class="container">
+                <div class="dashboard-header">
+                    <div><h1>Settings</h1><p>Manage your provider preferences</p></div>
+                </div>
+                <div class="profile-card settings-card">
+                    <h2><i class="fas fa-palette"></i> Appearance</h2>
+                    <div class="settings-grid">
+                        <div class="settings-item">
+                            <div class="settings-info"><span class="settings-label">Theme</span><span class="settings-desc">Choose your preferred theme</span></div>
+                            <select id="providerSettingTheme" onchange="saveProviderSettings()">
+                                <option value="light">Light</option>
+                                <option value="dark">Dark</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="profile-card settings-card" style="margin-top:20px">
+                    <h2><i class="fas fa-calendar-check"></i> Booking Rules</h2>
+                    <div class="settings-grid">
+                        <div class="settings-item">
+                            <div class="settings-info"><span class="settings-label">Auto-Confirm Bookings</span><span class="settings-desc">Automatically confirm new bookings</span></div>
+                            <label class="toggle-switch"><input type="checkbox" id="providerSettingAutoConfirm" onchange="saveProviderSettings()"><span class="toggle-slider"></span></label>
+                        </div>
+                        <div class="settings-item">
+                            <div class="settings-info"><span class="settings-label">Booking Window</span><span class="settings-desc">Days in advance clients can book</span></div>
+                            <select id="providerSettingBookingWindow" onchange="saveProviderSettings()">
+                                <option value="7">7 Days</option>
+                                <option value="14" selected>14 Days</option>
+                                <option value="30">30 Days</option>
+                                <option value="60">60 Days</option>
+                            </select>
+                        </div>
+                        <div class="settings-item">
+                            <div class="settings-info"><span class="settings-label">Require Deposit</span><span class="settings-desc">Require upfront deposit for bookings</span></div>
+                            <label class="toggle-switch"><input type="checkbox" id="providerSettingRequireDeposit" onchange="saveProviderSettings()"><span class="toggle-slider"></span></label>
+                        </div>
+                    </div>
+                </div>
+                <div class="profile-card settings-card" style="margin-top:20px">
+                    <h2><i class="fas fa-clock"></i> Availability</h2>
+                    <div class="settings-grid">
+                        <div class="settings-item">
+                            <div class="settings-info"><span class="settings-label">Default Availability</span><span class="settings-desc">Set your standard working days</span></div>
+                            <select id="providerSettingAvailability" onchange="saveProviderSettings()">
+                                <option value="weekdays">Weekdays Only</option>
+                                <option value="weekends">Weekends Only</option>
+                                <option value="all" selected>All Days</option>
+                                <option value="custom">Custom</option>
+                            </select>
+                        </div>
+                        <div class="settings-item">
+                            <div class="settings-info"><span class="settings-label">Instant Response</span><span class="settings-desc">Reply to inquiries within 1 hour</span></div>
+                            <label class="toggle-switch"><input type="checkbox" id="providerSettingInstantResponse" checked onchange="saveProviderSettings()"><span class="toggle-slider"></span></label>
+                        </div>
+                    </div>
+                </div>
+                <div class="profile-card settings-card" style="margin-top:20px">
+                    <h2><i class="fas fa-money-bill-wave"></i> Payout Settings</h2>
+                    <div class="settings-grid">
+                        <div class="settings-item">
+                            <div class="settings-info"><span class="settings-label">Minimum Payout</span><span class="settings-desc">Minimum amount for withdrawal (R)</span></div>
+                            <input type="number" id="providerSettingMinPayout" value="100" min="0" onchange="saveProviderSettings()">
+                        </div>
+                        <div class="settings-item">
+                            <div class="settings-info"><span class="settings-label">Payout Frequency</span><span class="settings-desc">How often you receive payouts</span></div>
+                            <select id="providerSettingPayoutFreq" onchange="saveProviderSettings()">
+                                <option value="weekly">Weekly</option>
+                                <option value="biweekly">Bi-Weekly</option>
+                                <option value="monthly" selected>Monthly</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="profile-card settings-card" style="margin-top:20px">
+                    <h2><i class="fas fa-bell"></i> Notifications</h2>
+                    <div class="settings-grid">
+                        <div class="settings-item">
+                            <div class="settings-info"><span class="settings-label">New Booking Alerts</span><span class="settings-desc">Get notified for new bookings</span></div>
+                            <label class="toggle-switch"><input type="checkbox" id="providerSettingBookingAlerts" checked onchange="saveProviderSettings()"><span class="toggle-slider"></span></label>
+                        </div>
+                        <div class="settings-item">
+                            <div class="settings-info"><span class="settings-label">Tip Alerts</span><span class="settings-desc">Get notified for new tips</span></div>
+                            <label class="toggle-switch"><input type="checkbox" id="providerSettingTipAlerts" checked onchange="saveProviderSettings()"><span class="toggle-slider"></span></label>
+                        </div>
+                        <div class="settings-item">
+                            <div class="settings-info"><span class="settings-label">Review Alerts</span><span class="settings-desc">Get notified for new reviews</span></div>
+                            <label class="toggle-switch"><input type="checkbox" id="providerSettingReviewAlerts" checked onchange="saveProviderSettings()"><span class="toggle-slider"></span></label>
+                        </div>
+                        <div class="settings-item">
+                            <div class="settings-info"><span class="settings-label">Wallet Alerts</span><span class="settings-desc">Get notified for wallet activity</span></div>
+                            <label class="toggle-switch"><input type="checkbox" id="providerSettingWalletAlerts" checked onchange="saveProviderSettings()"><span class="toggle-slider"></span></label>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
