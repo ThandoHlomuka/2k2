@@ -80,6 +80,12 @@
                 <span>Tips Received</span>
             </a>
             <div class="nav-divider"></div>
+            <span class="nav-section-title">Wallet</span>
+            <a href="#" class="nav-item" data-page="provider-wallet">
+                <i class="fas fa-wallet"></i>
+                <span>My Earnings</span>
+            </a>
+            <div class="nav-divider"></div>
             <span class="nav-section-title">Switch Portal</span>
             <a href="index.html" class="nav-item">
                 <i class="fas fa-user"></i>
@@ -745,18 +751,6 @@
                         <div class="filter-group">
                             <select id="providerServicesFilter" onchange="filterProviderServices()">
                                 <option value="all">All</option>
-                                <option value="photography">Photography</option>
-                                <option value="videography">Videography</option>
-                                <option value="content-creation">Content Creation</option>
-                                <option value="dj-music">DJ / Music</option>
-                                <option value="catering">Catering</option>
-                                <option value="event-planning">Event Planning</option>
-                                <option value="hair-beauty">Hair & Beauty</option>
-                                <option value="fitness">Fitness</option>
-                                <option value="massage">Massage</option>
-                                <option value="cleaning">Cleaning</option>
-                                <option value="transport">Transport</option>
-                                <option value="other-service">Other</option>
                             </select>
                         </div>
                     </div>
@@ -788,19 +782,6 @@
                             <div class="form-group">
                                 <label>Category *</label>
                                 <select id="serviceCategory" required>
-                                    <option value="">Select category</option>
-                                    <option value="photography">Photography</option>
-                                    <option value="videography">Videography</option>
-                                    <option value="content-creation">Content Creation</option>
-                                    <option value="dj-music">DJ / Music</option>
-                                    <option value="catering">Catering</option>
-                                    <option value="event-planning">Event Planning</option>
-                                    <option value="hair-beauty">Hair & Beauty</option>
-                                    <option value="fitness">Fitness</option>
-                                    <option value="massage">Massage</option>
-                                    <option value="cleaning">Cleaning</option>
-                                    <option value="transport">Transport</option>
-                                    <option value="other-service">Other</option>
                                 </select>
                             </div>
                             <div class="form-group">
@@ -1546,6 +1527,74 @@
                 </div>
                 <div class="profiles-section">
                     <div class="profiles-grid" id="providerTipsList"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Provider Wallet / Earnings -->
+        <div class="page" id="page-provider-wallet">
+            <div class="container">
+                <div class="dashboard-header">
+                    <div>
+                        <h1>My Earnings</h1>
+                        <p>Track your income and withdraw funds</p>
+                    </div>
+                </div>
+                <div class="wallet-balance-card provider-wallet-card" id="providerWalletBalanceCard">
+                    <div class="wallet-balance-inner">
+                        <div class="wallet-balance-label">Earnings Balance</div>
+                        <div class="wallet-balance-amount" id="providerWalletBalance">R0.00</div>
+                        <div class="wallet-balance-meta">Last updated: <span id="providerWalletUpdated">-</span></div>
+                    </div>
+                    <div class="wallet-balance-decoration"></div>
+                </div>
+                <div class="wallet-actions-row">
+                    <button class="btn btn-primary wallet-action-btn" onclick="openWithdrawModal()"><i class="fas fa-money-bill-wave"></i> Withdraw</button>
+                    <button class="btn btn-secondary wallet-action-btn" onclick="renderProviderWallet()"><i class="fas fa-sync-alt"></i> Refresh</button>
+                </div>
+                <div class="wallet-stats-row">
+                    <div class="wallet-stat-card">
+                        <div class="wallet-stat-icon green"><i class="fas fa-arrow-down"></i></div>
+                        <div class="wallet-stat-info">
+                            <span class="wallet-stat-value" id="providerWalletIncome">R0.00</span>
+                            <span class="wallet-stat-label">Earned</span>
+                        </div>
+                    </div>
+                    <div class="wallet-stat-card">
+                        <div class="wallet-stat-icon red"><i class="fas fa-arrow-up"></i></div>
+                        <div class="wallet-stat-info">
+                            <span class="wallet-stat-value" id="providerWalletWithdrawn">R0.00</span>
+                            <span class="wallet-stat-label">Withdrawn</span>
+                        </div>
+                    </div>
+                    <div class="wallet-stat-card">
+                        <div class="wallet-stat-icon blue"><i class="fas fa-receipt"></i></div>
+                        <div class="wallet-stat-info">
+                            <span class="wallet-stat-value" id="providerWalletTxns">0</span>
+                            <span class="wallet-stat-label">Transactions</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="profile-card">
+                    <h2><i class="fas fa-history"></i> Earnings History</h2>
+                    <div class="wallet-transactions" id="providerWalletTransactions"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Withdraw Modal -->
+        <div class="modal-overlay" id="withdrawModal">
+            <div class="modal">
+                <div class="modal-icon" style="background: linear-gradient(135deg, #3b82f6, #2563eb);"><i class="fas fa-money-bill-wave"></i></div>
+                <h2>Withdraw Funds</h2>
+                <p>Available: <strong id="withdrawAvailable">R0.00</strong></p>
+                <div class="form-group" style="margin:16px 0">
+                    <label>Amount (ZAR) *</label>
+                    <input type="number" id="withdrawAmount" placeholder="Enter amount" min="1" step="0.01" required>
+                </div>
+                <div class="modal-actions">
+                    <button class="btn btn-secondary" onclick="closeWithdrawModal()">Cancel</button>
+                    <button class="btn btn-primary" onclick="processWithdraw()"><i class="fas fa-check"></i> Confirm Withdrawal</button>
                 </div>
             </div>
         </div>

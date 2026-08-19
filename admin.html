@@ -75,6 +75,10 @@
                 <i class="fas fa-bullhorn"></i>
                 <span>Ads</span>
             </a>
+            <a href="#" class="nav-item" data-page="admin-wallets">
+                <i class="fas fa-wallet"></i>
+                <span>Wallets</span>
+            </a>
             <div class="nav-divider"></div>
             <span class="nav-section-title">System</span>
             <a href="#" class="nav-item" data-page="admin-logs">
@@ -148,6 +152,27 @@
                         <div class="stat-info">
                             <span class="stat-number" id="adminAdCount">0</span>
                             <span class="stat-label">Ads</span>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background:#f0fdf4;color:#10b981"><i class="fas fa-concierge-bell"></i></div>
+                        <div class="stat-info">
+                            <span class="stat-number" id="adminServiceCount">0</span>
+                            <span class="stat-label">Services</span>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background:#ede9fe;color:#8b5cf6"><i class="fas fa-calendar-check"></i></div>
+                        <div class="stat-info">
+                            <span class="stat-number" id="adminBookingCount">0</span>
+                            <span class="stat-label">Bookings</span>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background:#fef2f2;color:#ef4444"><i class="fas fa-wallet"></i></div>
+                        <div class="stat-info">
+                            <span class="stat-number" id="adminWalletTotal">R0</span>
+                            <span class="stat-label">In Wallets</span>
                         </div>
                     </div>
                 </div>
@@ -245,6 +270,84 @@
                         <thead><tr><th>Title</th><th>Category</th><th>Contact</th><th>Location</th><th>Status</th><th>Created</th><th>Actions</th></tr></thead>
                         <tbody></tbody>
                     </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Wallet Management -->
+        <div class="page" id="page-admin-wallets">
+            <div class="container">
+                <div class="dashboard-header">
+                    <div><h1>Wallet Management</h1><p>Manage all user and provider wallets</p></div>
+                </div>
+                <div class="stats-row" id="adminWalletStats">
+                    <div class="stat-card">
+                        <div class="stat-icon green-bg"><i class="fas fa-coins"></i></div>
+                        <div class="stat-info">
+                            <span class="stat-number" id="adminTotalBalance">R0.00</span>
+                            <span class="stat-label">Total Balance</span>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon blue-bg"><i class="fas fa-exchange-alt"></i></div>
+                        <div class="stat-info">
+                            <span class="stat-number" id="adminTotalTxns">0</span>
+                            <span class="stat-label">Transactions</span>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon purple-bg"><i class="fas fa-wallet"></i></div>
+                        <div class="stat-info">
+                            <span class="stat-number" id="adminTotalWallets">0</span>
+                            <span class="stat-label">Active Wallets</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="profile-card">
+                    <h2><i class="fas fa-search"></i> Adjust Balance</h2>
+                    <div class="form-grid" style="margin-top:12px;gap:12px">
+                        <div class="form-group">
+                            <label>Owner Type</label>
+                            <select id="adminWalletOwnerType">
+                                <option value="user">General User</option>
+                                <option value="provider">Service Provider</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Owner ID</label>
+                            <input type="text" id="adminWalletOwnerId" placeholder="User/Provider ID">
+                        </div>
+                        <div class="form-group">
+                            <label>New Balance (ZAR)</label>
+                            <input type="number" id="adminWalletNewBalance" placeholder="Set new balance" step="0.01">
+                        </div>
+                        <div class="form-group full-width">
+                            <label>Reason</label>
+                            <input type="text" id="adminWalletReason" placeholder="Reason for adjustment">
+                        </div>
+                    </div>
+                    <div style="margin-top:16px;display:flex;gap:10px;flex-wrap:wrap">
+                        <button class="btn btn-primary" onclick="adminAdjustBalanceAction()"><i class="fas fa-save"></i> Set Balance</button>
+                        <button class="btn btn-secondary" onclick="adminLookupWallet()"><i class="fas fa-search"></i> Lookup Wallet</button>
+                    </div>
+                </div>
+                <div class="profile-card" style="margin-top:20px">
+                    <h2><i class="fas fa-wallet"></i> All Wallets</h2>
+                    <div class="admin-table-wrap" style="margin-top:12px">
+                        <table class="admin-table" id="adminWalletsTable">
+                            <thead><tr><th>Owner</th><th>Type</th><th>Balance</th><th>Updated</th><th>Actions</th></tr></thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="profile-card" style="margin-top:20px">
+                    <h2><i class="fas fa-history"></i> All Transactions</h2>
+                    <div class="admin-table-wrap" style="margin-top:12px">
+                        <table class="admin-table" id="adminTransactionsTable">
+                            <thead><tr><th>Date</th><th>Owner</th><th>Type</th><th>Amount</th><th>Balance After</th><th>Description</th><th>Actions</th></tr></thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </div>

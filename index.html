@@ -64,6 +64,12 @@
                 <span>My Bookings</span>
             </a>
             <div class="nav-divider"></div>
+            <span class="nav-section-title">Wallet</span>
+            <a href="#" class="nav-item" data-page="user-wallet">
+                <i class="fas fa-wallet"></i>
+                <span>My Wallet</span>
+            </a>
+            <div class="nav-divider"></div>
             <span class="nav-section-title">Switch Portal</span>
             <a href="provider.html" class="nav-item">
                 <i class="fas fa-briefcase"></i>
@@ -691,6 +697,79 @@
             </div>
         </div>
 
+        <!-- User Wallet -->
+        <div class="page" id="page-user-wallet">
+            <div class="container">
+                <div class="dashboard-header">
+                    <div>
+                        <h1>My Wallet</h1>
+                        <p>Manage your funds and transactions</p>
+                    </div>
+                </div>
+                <div class="wallet-balance-card" id="userWalletBalanceCard">
+                    <div class="wallet-balance-inner">
+                        <div class="wallet-balance-label">Available Balance</div>
+                        <div class="wallet-balance-amount" id="userWalletBalance">R0.00</div>
+                        <div class="wallet-balance-meta">Last updated: <span id="userWalletUpdated">-</span></div>
+                    </div>
+                    <div class="wallet-balance-decoration"></div>
+                </div>
+                <div class="wallet-actions-row">
+                    <button class="btn btn-primary wallet-action-btn" onclick="openTopUpModal()"><i class="fas fa-plus-circle"></i> Top Up</button>
+                    <button class="btn btn-secondary wallet-action-btn" onclick="renderUserWallet()"><i class="fas fa-sync-alt"></i> Refresh</button>
+                </div>
+                <div class="wallet-stats-row">
+                    <div class="wallet-stat-card">
+                        <div class="wallet-stat-icon green"><i class="fas fa-arrow-down"></i></div>
+                        <div class="wallet-stat-info">
+                            <span class="wallet-stat-value" id="userWalletIncome">R0.00</span>
+                            <span class="wallet-stat-label">Received</span>
+                        </div>
+                    </div>
+                    <div class="wallet-stat-card">
+                        <div class="wallet-stat-icon red"><i class="fas fa-arrow-up"></i></div>
+                        <div class="wallet-stat-info">
+                            <span class="wallet-stat-value" id="userWalletSpent">R0.00</span>
+                            <span class="wallet-stat-label">Spent</span>
+                        </div>
+                    </div>
+                    <div class="wallet-stat-card">
+                        <div class="wallet-stat-icon blue"><i class="fas fa-receipt"></i></div>
+                        <div class="wallet-stat-info">
+                            <span class="wallet-stat-value" id="userWalletTxns">0</span>
+                            <span class="wallet-stat-label">Transactions</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="profile-card">
+                    <h2><i class="fas fa-history"></i> Transaction History</h2>
+                    <div class="wallet-transactions" id="userWalletTransactions"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Top Up Modal -->
+        <div class="modal-overlay" id="topUpModal">
+            <div class="modal">
+                <div class="modal-icon" style="background: linear-gradient(135deg, #10b981, #059669);"><i class="fas fa-plus-circle"></i></div>
+                <h2>Top Up Wallet</h2>
+                <div class="tip-amounts">
+                    <button type="button" class="tip-quick" onclick="setTopUpAmount(100)">R100</button>
+                    <button type="button" class="tip-quick" onclick="setTopUpAmount(250)">R250</button>
+                    <button type="button" class="tip-quick" onclick="setTopUpAmount(500)">R500</button>
+                    <button type="button" class="tip-quick" onclick="setTopUpAmount(1000)">R1000</button>
+                </div>
+                <div class="form-group" style="margin:16px 0">
+                    <label>Amount (ZAR) *</label>
+                    <input type="number" id="topUpAmount" placeholder="Enter amount" min="1" step="0.01" required>
+                </div>
+                <div class="modal-actions">
+                    <button class="btn btn-secondary" onclick="closeTopUpModal()">Cancel</button>
+                    <button class="btn btn-primary" onclick="processTopUp()" style="background: linear-gradient(135deg, #10b981, #059669);"><i class="fas fa-check"></i> Confirm Top Up</button>
+                </div>
+            </div>
+        </div>
+
         <!-- Services Directory Browse -->
         <div class="page" id="page-services-directory">
             <div class="container">
@@ -702,20 +781,8 @@
                 </div>
 
                 <div class="directory-filters">
-                    <div class="filter-tabs">
+                    <div class="filter-tabs" id="servicesFilterTabs">
                         <button class="filter-tab active" onclick="filterServicesDirectory('all')">All</button>
-                        <button class="filter-tab" onclick="filterServicesDirectory('photography')"><i class="fas fa-camera"></i> Photography</button>
-                        <button class="filter-tab" onclick="filterServicesDirectory('videography')"><i class="fas fa-video"></i> Videography</button>
-                        <button class="filter-tab" onclick="filterServicesDirectory('content-creation')"><i class="fas fa-palette"></i> Content Creation</button>
-                        <button class="filter-tab" onclick="filterServicesDirectory('dj-music')"><i class="fas fa-headphones"></i> DJ / Music</button>
-                        <button class="filter-tab" onclick="filterServicesDirectory('catering')"><i class="fas fa-utensils"></i> Catering</button>
-                        <button class="filter-tab" onclick="filterServicesDirectory('event-planning')"><i class="fas fa-calendar-check"></i> Event Planning</button>
-                        <button class="filter-tab" onclick="filterServicesDirectory('hair-beauty')"><i class="fas fa-spa"></i> Hair & Beauty</button>
-                        <button class="filter-tab" onclick="filterServicesDirectory('fitness')"><i class="fas fa-dumbbell"></i> Fitness</button>
-                        <button class="filter-tab" onclick="filterServicesDirectory('massage')"><i class="fas fa-hands"></i> Massage</button>
-                        <button class="filter-tab" onclick="filterServicesDirectory('cleaning')"><i class="fas fa-broom"></i> Cleaning</button>
-                        <button class="filter-tab" onclick="filterServicesDirectory('transport')"><i class="fas fa-car"></i> Transport</button>
-                        <button class="filter-tab" onclick="filterServicesDirectory('other-service')"><i class="fas fa-ellipsis"></i> Other</button>
                     </div>
                     <div class="filter-bar">
                         <input type="text" id="servicesSearch" placeholder="Search by name, location, or tag..." oninput="searchServicesDirectory()">

@@ -33,6 +33,7 @@ function navigateTo(page) {
     if (page === 'admin-listings') renderAdminListings();
     if (page === 'admin-venues') renderAdminVenues();
     if (page === 'admin-ads') renderAdminAds();
+    if (page === 'admin-wallets') renderAdminWallets();
     if (page === 'admin-logs') renderAdminLogs();
 
     const sidebar = document.getElementById('sidebar');
@@ -148,12 +149,20 @@ function renderAdminDashboard() {
     const listings = Storage.getListings();
     const venues = Storage.getVenues();
     const ads = Storage.getAds();
+    const services = Storage.getServices();
+    const bookings = Storage.getBookings();
+    const wallets = Storage.getWallets();
 
     document.getElementById('adminUserCount').textContent = users.length;
     document.getElementById('adminProviderCount').textContent = providers.length;
     document.getElementById('adminListingCount').textContent = listings.length;
     document.getElementById('adminVenueCount').textContent = venues.length;
     document.getElementById('adminAdCount').textContent = ads.length;
+    document.getElementById('adminServiceCount').textContent = services.length;
+    document.getElementById('adminBookingCount').textContent = bookings.length;
+
+    const totalWallet = wallets.reduce((s, w) => s + w.balance, 0);
+    document.getElementById('adminWalletTotal').textContent = `R${Math.round(totalWallet)}`;
 
     // Bar chart
     const chartData = [
@@ -161,7 +170,9 @@ function renderAdminDashboard() {
         { label: 'Providers', value: providers.length, color: '#8b5cf6' },
         { label: 'Listings', value: listings.length, color: '#ec4899' },
         { label: 'Venues', value: venues.length, color: '#3b82f6' },
-        { label: 'Ads', value: ads.length, color: '#f59e0b' }
+        { label: 'Ads', value: ads.length, color: '#f59e0b' },
+        { label: 'Services', value: services.length, color: '#10b981' },
+        { label: 'Bookings', value: bookings.length, color: '#06b6d4' }
     ];
     const maxVal = Math.max(...chartData.map(d => d.value), 1);
 
@@ -178,8 +189,10 @@ function renderAdminDashboard() {
         ...providers.map(p => ({ type: 'provider', name: p.name || p.email, date: p.createdAt, color: '#8b5cf6' })),
         ...listings.map(l => ({ type: 'listing', name: l.name, date: l.createdAt, color: '#ec4899' })),
         ...venues.map(v => ({ type: 'venue', name: v.name, date: v.createdAt, color: '#3b82f6' })),
-        ...ads.map(a => ({ type: 'ad', name: a.title, date: a.createdAt, color: '#f59e0b' }))
-    ].sort((a, b) => new Date(b.date) - new Date(a.date)).slice(0, 8);
+        ...ads.map(a => ({ type: 'ad', name: a.title, date: a.createdAt, color: '#f59e0b' })),
+        ...services.map(s => ({ type: 'service', name: s.name, date: s.createdAt, color: '#10b981' })),
+        ...bookings.map(b => ({ type: 'booking', name: `${b.clientName} → ${b.serviceType}`, date: b.createdAt, color: '#06b6d4' }))
+    ].sort((a, b) => new Date(b.date) - new Date(a.date)).slice(0, 10);
 
     document.getElementById('adminActivityFeed').innerHTML = allItems.length === 0
         ? '<p style="color:#94a3b8;font-size:0.88rem;padding:12px 0">No activity yet</p>'
@@ -467,6 +480,9 @@ function renderAdminLogs() {
     const listings = Storage.getListings();
     const venues = Storage.getVenues();
     const ads = Storage.getAds();
+    const services = Storage.getServices();
+    const bookings = Storage.getBookings();
+    const tips = Storage.getTips();
 
     const latest = (arr) => arr.length > 0 ? fmtDate(arr.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))[0].createdAt) : '-';
 
@@ -477,7 +493,10 @@ function renderAdminLogs() {
             { entity: 'Providers', total: providers.length, active: providers.length, latest: latest(providers) },
             { entity: 'Listings', total: listings.length, active: listings.filter(l => l.status === 'active').length, latest: latest(listings) },
             { entity: 'Venues', total: venues.length, active: venues.filter(v => v.status === 'active').length, latest: latest(venues) },
-            { entity: 'Ads', total: ads.length, active: ads.filter(a => a.status === 'active').length, latest: latest(ads) }
+            { entity: 'Ads', total: ads.length, active: ads.filter(a => a.status === 'active').length, latest: latest(ads) },
+            { entity: 'Services', total: services.length, active: services.length, latest: latest(services) },
+            { entity: 'Bookings', total: bookings.length, active: bookings.filter(b => b.status === 'pending').length, latest: latest(bookings) },
+            { entity: 'Tips', total: tips.length, active: tips.length, latest: latest(tips) }
         ].map(r => `
             <tr>
                 <td><strong>${r.entity}</strong></td>
@@ -492,7 +511,7 @@ function renderAdminLogs() {
     const info = document.getElementById('adminStorageInfo');
     if (info) {
         let html = '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px">';
-        ['k2_users', 'k2_providers', 'k2_listings', 'k2_venues', 'k2_ads'].forEach(key => {
+        ['k2_users', 'k2_providers', 'k2_listings', 'k2_venues', 'k2_ads', 'k2_services', 'k2_bookings', 'k2_tips', 'k2_wallets', 'k2_transactions'].forEach(key => {
             const raw = localStorage.getItem(key) || '[]';
             const bytes = new Blob([raw]).size;
             const kb = (bytes / 1024).toFixed(1);
@@ -513,6 +532,12 @@ function adminExportData() {
         listings: Storage.getListings(),
         venues: Storage.getVenues(),
         ads: Storage.getAds(),
+        services: Storage.getServices(),
+        bookings: Storage.getBookings(),
+        tips: Storage.getTips(),
+        customServiceTypes: Storage.getCustomServiceTypes(),
+        wallets: Storage.getWallets(),
+        transactions: Storage.getTransactions(),
         exportedAt: new Date().toISOString()
     };
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
@@ -533,6 +558,142 @@ function adminClearAllData() {
             renderAdminDashboard();
         }
     }
+}
+
+// ==========================================
+// WALLET MANAGEMENT
+// ==========================================
+function renderAdminWallets() {
+    const wallets = getAllWallets();
+    const txns = getAllTransactions();
+
+    // Stats
+    const totalBalance = wallets.reduce((sum, w) => sum + w.balance, 0);
+    document.getElementById('adminTotalBalance').textContent = `R${totalBalance.toFixed(2)}`;
+    document.getElementById('adminTotalTxns').textContent = txns.length;
+    document.getElementById('adminTotalWallets').textContent = wallets.length;
+
+    // Wallets table
+    const wTbody = document.querySelector('#adminWalletsTable tbody');
+    if (wTbody) {
+        if (wallets.length === 0) {
+            wTbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:#94a3b8;padding:40px">No wallets yet</td></tr>';
+        } else {
+            wTbody.innerHTML = wallets.map(w => {
+                let ownerName = w.ownerId;
+                if (w.ownerType === 'user') ownerName = 'General User';
+                else if (w.ownerType === 'provider') {
+                    const providers = Storage.getProviders();
+                    const p = providers.find(x => x.id === w.ownerId);
+                    ownerName = p ? p.name : w.ownerId;
+                }
+                return `
+                    <tr>
+                        <td><strong>${truncate(ownerName, 25)}</strong><br><span style="font-size:0.75rem;color:#94a3b8">${w.ownerId}</span></td>
+                        <td><span class="badge" style="background:${w.ownerType === 'user' ? '#667eea22; color:#667eea' : '#8b5cf622; color:#8b5cf6'}">${w.ownerType}</span></td>
+                        <td><strong>R${w.balance.toFixed(2)}</strong></td>
+                        <td>${fmtDate(w.updatedAt)}</td>
+                        <td>
+                            <div class="admin-actions">
+                                <button class="btn btn-secondary btn-xs" onclick="adminViewWalletTxns('${w.ownerType}','${w.ownerId}')"><i class="fas fa-history"></i></button>
+                                <button class="btn btn-secondary btn-xs" onclick="adminEditWalletBalance('${w.ownerType}','${w.ownerId}',${w.balance})"><i class="fas fa-edit"></i></button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+    }
+
+    // Transactions table
+    const tTbody = document.querySelector('#adminTransactionsTable tbody');
+    if (tTbody) {
+        if (txns.length === 0) {
+            tTbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:#94a3b8;padding:40px">No transactions yet</td></tr>';
+        } else {
+            tTbody.innerHTML = txns.slice(0, 50).map(t => {
+                const typeColors = { 'top-up': '#10b981', 'tip-sent': '#f59e0b', 'tip-received': '#10b981', 'booking-fee': '#ef4444', 'booking-confirmed': '#3b82f6', 'withdrawal': '#8b5cf6', 'admin-adjust': '#64748b', 'refund': '#06b6d4' };
+                const typeLabels = { 'top-up': 'Top Up', 'tip-sent': 'Tip Sent', 'tip-received': 'Tip Received', 'booking-fee': 'Booking Fee', 'booking-confirmed': 'Booking Confirmed', 'withdrawal': 'Withdrawal', 'admin-adjust': 'Admin Adjust', 'refund': 'Refund' };
+                const color = typeColors[t.type] || '#64748b';
+                const label = typeLabels[t.type] || t.type;
+                return `
+                    <tr>
+                        <td>${fmtDate(t.createdAt)}</td>
+                        <td><span style="font-size:0.8rem;color:#94a3b8">${t.ownerType}: ${truncate(t.ownerId, 15)}</span></td>
+                        <td><span class="badge" style="background:${color}22; color:${color}; border:1px solid ${color}44">${label}</span></td>
+                        <td style="color:${t.amount >= 0 ? '#10b981' : '#ef4444'}; font-weight:700">${t.amount >= 0 ? '+' : ''}R${Math.abs(t.amount).toFixed(2)}</td>
+                        <td>R${t.newBalance.toFixed(2)}</td>
+                        <td class="truncate">${truncate(t.description, 30)}</td>
+                        <td>
+                            <div class="admin-actions">
+                                ${t.type !== 'refund' && t.type !== 'admin-adjust' ? `<button class="btn btn-secondary btn-xs" onclick="adminRefundAction('${t.id}','${truncate(t.description,20).replace(/'/g,"\\'")}')"><i class="fas fa-undo" style="color:#06b6d4"></i></button>` : ''}
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+    }
+}
+
+function adminViewWalletTxns(ownerType, ownerId) {
+    const txns = getWalletTransactions(ownerType, ownerId);
+    const wallet = getOrCreateWallet(ownerType, ownerId);
+    let html = `<h2><i class="fas fa-history" style="color:#667eea;margin-right:8px"></i> Transactions</h2>`;
+    html += `<div class="admin-view-row"><span class="label">Owner</span><span class="value">${ownerType}: ${ownerId}</span></div>`;
+    html += `<div class="admin-view-row"><span class="label">Balance</span><span class="value">R${wallet.balance.toFixed(2)}</span></div>`;
+    if (txns.length === 0) {
+        html += '<p style="color:#94a3b8;margin-top:16px">No transactions</p>';
+    } else {
+        html += '<div style="margin-top:16px;max-height:400px;overflow-y:auto">';
+        txns.forEach(t => {
+            html += `<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid #f1f5f9">
+                <div><div style="font-weight:600;font-size:0.88rem">${t.description || t.type}</div><div style="font-size:0.75rem;color:#94a3b8">${fmtDate(t.createdAt)}</div></div>
+                <div style="font-weight:700;color:${t.amount >= 0 ? '#10b981' : '#ef4444'}">${t.amount >= 0 ? '+' : ''}R${Math.abs(t.amount).toFixed(2)}</div>
+            </div>`;
+        });
+        html += '</div>';
+    }
+    showAdminView(html);
+}
+
+function adminEditWalletBalance(ownerType, ownerId, currentBalance) {
+    const newBalance = prompt(`Set new balance for ${ownerType}:${ownerId}\nCurrent: R${currentBalance.toFixed(2)}`, currentBalance);
+    if (newBalance !== null && !isNaN(parseFloat(newBalance))) {
+        adminAdjustBalance(ownerType, ownerId, parseFloat(newBalance), 'Admin balance correction');
+        showToast('Balance updated.');
+        renderAdminWallets();
+    }
+}
+
+function adminAdjustBalanceAction() {
+    const ownerType = document.getElementById('adminWalletOwnerType').value;
+    const ownerId = document.getElementById('adminWalletOwnerId').value.trim();
+    const newBalance = parseFloat(document.getElementById('adminWalletNewBalance').value);
+    const reason = document.getElementById('adminWalletReason').value.trim() || 'Admin adjustment';
+
+    if (!ownerId) { showToast('Please enter an Owner ID.', 'error'); return; }
+    if (isNaN(newBalance) || newBalance < 0) { showToast('Please enter a valid balance.', 'error'); return; }
+
+    adminAdjustBalance(ownerType, ownerId, newBalance, reason);
+    showToast('Balance adjusted successfully.');
+    renderAdminWallets();
+}
+
+function adminLookupWallet() {
+    const ownerType = document.getElementById('adminWalletOwnerType').value;
+    const ownerId = document.getElementById('adminWalletOwnerId').value.trim();
+    if (!ownerId) { showToast('Please enter an Owner ID.', 'error'); return; }
+    const wallet = getOrCreateWallet(ownerType, ownerId);
+    document.getElementById('adminWalletNewBalance').value = wallet.balance;
+    showToast(`Wallet found. Balance: R${wallet.balance.toFixed(2)}`, 'info');
+}
+
+function adminRefundAction(txnId, description) {
+    if (!confirm(`Refund transaction: "${description}"?`)) return;
+    const success = adminRefundTransaction(txnId, 'Admin refund');
+    if (success) { showToast('Refund processed.'); renderAdminWallets(); }
+    else { showToast('Refund failed.', 'error'); }
 }
 
 // Sidebar toggle

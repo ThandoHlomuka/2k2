@@ -21,7 +21,13 @@ const Storage = {
     setBookings: (data) => localStorage.setItem('k2_bookings', JSON.stringify(data)),
     getTips: () => JSON.parse(localStorage.getItem('k2_tips') || '[]'),
     setTips: (data) => localStorage.setItem('k2_tips', JSON.stringify(data)),
-    clearAll: () => { ['k2_users','k2_providers','k2_listings','k2_venues','k2_ads','k2_services','k2_bookings','k2_tips'].forEach(k => localStorage.removeItem(k)); }
+    getCustomServiceTypes: () => JSON.parse(localStorage.getItem('k2_service_types') || '[]'),
+    setCustomServiceTypes: (data) => localStorage.setItem('k2_service_types', JSON.stringify(data)),
+    getWallets: () => JSON.parse(localStorage.getItem('k2_wallets') || '[]'),
+    setWallets: (data) => localStorage.setItem('k2_wallets', JSON.stringify(data)),
+    getTransactions: () => JSON.parse(localStorage.getItem('k2_transactions') || '[]'),
+    setTransactions: (data) => localStorage.setItem('k2_transactions', JSON.stringify(data)),
+    clearAll: () => { ['k2_users','k2_providers','k2_listings','k2_venues','k2_ads','k2_services','k2_bookings','k2_tips','k2_service_types','k2_wallets','k2_transactions'].forEach(k => localStorage.removeItem(k)); }
 };
 
 const DIRECTORY_TYPES = {
@@ -48,20 +54,7 @@ const AD_CATEGORIES = {
     'general': { label: 'General', icon: 'fa-tag', color: '#64748b' }
 };
 
-const SERVICE_TYPES = {
-    'photography': { label: 'Photography', icon: 'fa-camera', color: '#ec4899' },
-    'videography': { label: 'Videography', icon: 'fa-video', color: '#8b5cf6' },
-    'content-creation': { label: 'Content Creation', icon: 'fa-palette', color: '#f59e0b' },
-    'dj-music': { label: 'DJ / Music', icon: 'fa-headphones', color: '#6366f1' },
-    'catering': { label: 'Catering', icon: 'fa-utensils', color: '#10b981' },
-    'event-planning': { label: 'Event Planning', icon: 'fa-calendar-check', color: '#3b82f6' },
-    'hair-beauty': { label: 'Hair & Beauty', icon: 'fa-spa', color: '#f472b6' },
-    'fitness': { label: 'Fitness', icon: 'fa-dumbbell', color: '#ef4444' },
-    'massage': { label: 'Massage', icon: 'fa-hands', color: '#06b6d4' },
-    'cleaning': { label: 'Cleaning', icon: 'fa-broom', color: '#84cc16' },
-    'transport': { label: 'Transport', icon: 'fa-car', color: '#f97316' },
-    'other-service': { label: 'Other', icon: 'fa-ellipsis', color: '#64748b' }
-};
+const SERVICE_TYPES = {}; // Replaced by dynamic custom service types
 
 const BOOKING_STATUSES = {
     'pending': { label: 'Pending', color: '#f59e0b', icon: 'fa-clock' },
@@ -69,6 +62,144 @@ const BOOKING_STATUSES = {
     'completed': { label: 'Completed', color: '#3b82f6', icon: 'fa-flag-checkered' },
     'cancelled': { label: 'Cancelled', color: '#ef4444', icon: 'fa-ban' }
 };
+
+// ==========================================
+// CUSTOM SERVICE TYPES
+// ==========================================
+const SERVICE_TYPE_ICONS = ['fa-camera','fa-video','fa-palette','fa-headphones','fa-utensils','fa-calendar-check','fa-spa','fa-dumbbell','fa-hands','fa-broom','fa-car','fa-music','fa-microphone','fa-paint-brush','fa-cut','fa-bolt','fa-leaf','fa-gem','fa-star','fa-heart','fa-fire','fa-moon','fa-sun','fa-cloud','fa-mountain','fa-umbrella-beach','fa-city','fa-house-chimney','fa-shield-halved','fa-graduation-cap','fa-laptop-code','fa-chart-line'];
+const SERVICE_TYPE_COLORS = ['#ec4899','#8b5cf6','#f59e0b','#6366f1','#10b981','#3b82f6','#f472b6','#ef4444','#06b6d4','#84cc16','#f97316','#e11d48','#7c3aed','#0891b2','#059669','#d97706','#2563eb','#be185d','#c026d3','#0d9488'];
+
+function getAllServiceTypes() {
+    return Storage.getCustomServiceTypes();
+}
+
+function addCustomServiceType(name) {
+    const types = Storage.getCustomServiceTypes();
+    const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+    if (types.find(t => t.slug === slug)) return types.find(t => t.slug === slug);
+    const icon = SERVICE_TYPE_ICONS[types.length % SERVICE_TYPE_ICONS.length];
+    const color = SERVICE_TYPE_COLORS[types.length % SERVICE_TYPE_COLORS.length];
+    const newType = { slug, label: name.trim(), icon, color, createdAt: new Date().toISOString() };
+    types.push(newType);
+    Storage.setCustomServiceTypes(types);
+    return newType;
+}
+
+function getServiceTypeBySlug(slug) {
+    return getAllServiceTypes().find(t => t.slug === slug) || { label: slug, icon: 'fa-concierge-bell', color: '#64748b' };
+}
+
+function getMostUsedServiceType() {
+    const services = Storage.getServices();
+    if (services.length === 0) return '';
+    const counts = {};
+    services.forEach(s => { counts[s.category] = (counts[s.category] || 0) + 1; });
+    return Object.entries(counts).sort((a, b) => b[1] - a[1])[0]?.[0] || '';
+}
+
+function getServiceTypeSelectHTML(selectedValue) {
+    const types = getAllServiceTypes();
+    let html = '<option value="">Select category</option>';
+    types.forEach(t => {
+        html += `<option value="${t.slug}" ${t.slug === selectedValue ? 'selected' : ''}>${t.label}</option>`;
+    });
+    html += '<option value="__custom__">+ Add New Category</option>';
+    return html;
+}
+
+function getServiceTypeFilterHTML() {
+    const types = getAllServiceTypes();
+    let html = '<button class="filter-tab active" onclick="filterServicesDirectory(\'all\')">All</button>';
+    types.forEach(t => {
+        html += `<button class="filter-tab" onclick="filterServicesDirectory('${t.slug}')"><i class="fas ${t.icon}"></i> ${t.label}</button>`;
+    });
+    if (types.length === 0) {
+        html = '<p style="color:var(--text-muted);font-size:0.85rem;padding:8px 0">No service types yet. Create a service to add categories.</p>';
+    }
+    return html;
+}
+
+// ==========================================
+// WALLET SYSTEM
+// ==========================================
+function getWalletId(ownerType, ownerId) { return `wallet_${ownerType}_${ownerId}`; }
+
+function getOrCreateWallet(ownerType, ownerId) {
+    const wallets = Storage.getWallets();
+    const walletId = getWalletId(ownerType, ownerId);
+    let wallet = wallets.find(w => w.id === walletId);
+    if (!wallet) {
+        wallet = { id: walletId, ownerType, ownerId, balance: 0, currency: 'ZAR', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() };
+        wallets.push(wallet);
+        Storage.setWallets(wallets);
+    }
+    return wallet;
+}
+
+function getWalletBalance(ownerType, ownerId) {
+    return getOrCreateWallet(ownerType, ownerId).balance;
+}
+
+function adjustWallet(ownerType, ownerId, amount, type, description, meta = {}) {
+    const wallets = Storage.getWallets();
+    const walletId = getWalletId(ownerType, ownerId);
+    let wallet = wallets.find(w => w.id === walletId);
+    if (!wallet) {
+        wallet = { id: walletId, ownerType, ownerId, balance: 0, currency: 'ZAR', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() };
+        wallets.push(wallet);
+    }
+    const prevBalance = wallet.balance;
+    wallet.balance = Math.round((wallet.balance + amount) * 100) / 100;
+    if (wallet.balance < 0) wallet.balance = 0;
+    wallet.updatedAt = new Date().toISOString();
+    Storage.setWallets(wallets);
+
+    const transactions = Storage.getTransactions();
+    transactions.push({
+        id: generateId(),
+        walletId,
+        ownerType,
+        ownerId,
+        type,
+        amount,
+        prevBalance,
+        newBalance: wallet.balance,
+        description,
+        meta,
+        createdAt: new Date().toISOString()
+    });
+    Storage.setTransactions(transactions);
+    return wallet.balance;
+}
+
+function getWalletTransactions(ownerType, ownerId) {
+    const walletId = getWalletId(ownerType, ownerId);
+    return Storage.getTransactions().filter(t => t.walletId === walletId).sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+}
+
+function getAllWallets() {
+    return Storage.getWallets().sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt));
+}
+
+function getAllTransactions() {
+    return Storage.getTransactions().sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+}
+
+function adminAdjustBalance(ownerType, ownerId, newAmount, reason) {
+    const wallet = getOrCreateWallet(ownerType, ownerId);
+    const diff = newAmount - wallet.balance;
+    adjustWallet(ownerType, ownerId, diff, 'admin-adjust', reason || 'Admin balance adjustment');
+    return getOrCreateWallet(ownerType, ownerId).balance;
+}
+
+function adminRefundTransaction(txnId, reason) {
+    const transactions = Storage.getTransactions();
+    const txn = transactions.find(t => t.id === txnId);
+    if (!txn) return false;
+    if (txn.type === 'refund') return false;
+    adjustWallet(txn.ownerType, txn.ownerId, Math.abs(txn.amount), 'refund', reason || `Refund for: ${txn.description}`, { originalTxnId: txnId });
+    return true;
+}
 
 let currentViewUserId = null;
 let currentViewProviderId = null;
@@ -98,6 +229,7 @@ let currentBookingProviderId = null;
 let currentBookingProviderType = null;
 let currentBookingFilter = 'all';
 let currentServiceViewId = null;
+let currentWalletTab = 'overview';
 
 // ==========================================
 // Navigation
@@ -141,6 +273,8 @@ function navigateTo(page) {
     if (page === 'user-bookings') renderUserBookings();
     if (page === 'provider-bookings') renderProviderBookings();
     if (page === 'provider-tips') renderProviderTips();
+    if (page === 'user-wallet') renderUserWallet();
+    if (page === 'provider-wallet') renderProviderWallet();
 }
 
 // ==========================================
@@ -186,6 +320,8 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('providerServicesList') && renderProviderServices();
         document.getElementById('providerBookingsList') && renderProviderBookings();
         document.getElementById('providerTipsList') && renderProviderTips();
+        document.getElementById('providerWalletBalance') && renderProviderWallet();
+        if (document.getElementById('serviceCategory')) updateServiceCategorySelect();
     } else {
         document.getElementById('userProfilesList') && renderUserProfiles();
         document.getElementById('directoryList') && renderDirectory();
@@ -194,6 +330,7 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('userAdsList') && renderUserAds();
         document.getElementById('servicesDirectoryList') && renderServicesDirectory();
         document.getElementById('userBookingsList') && renderUserBookings();
+        document.getElementById('userWalletBalance') && renderUserWallet();
     }
 });
 
@@ -1934,11 +2071,15 @@ function renderServicesDirectory() {
     const location = document.getElementById('servicesLocationFilter')?.value || '';
     const sortBy = document.getElementById('servicesSort')?.value || 'newest';
 
+    // Re-render filter tabs dynamically
+    const filterContainer = document.querySelector('#page-services-directory .filter-tabs');
+    if (filterContainer) filterContainer.innerHTML = getServiceTypeFilterHTML();
+
     let filtered = services.filter(s => {
         if (currentServicesFilter !== 'all' && s.category !== currentServicesFilter) return false;
         if (location && s.location !== location) return false;
         if (search) {
-            const searchFields = [s.name, s.email, s.phone, s.location, s.rate, s.bio, ...(s.tags || [])].join(' ').toLowerCase();
+            const searchFields = [s.name, s.email, s.phone, s.location, s.rate, s.bio, s.category, ...(s.tags || [])].join(' ').toLowerCase();
             if (!searchFields.includes(search)) return false;
         }
         return true;
@@ -1961,7 +2102,7 @@ function renderServicesDirectory() {
     }
 
     container.innerHTML = filtered.map(s => {
-        const cat = SERVICE_TYPES[s.category] || SERVICE_TYPES['other-service'];
+        const cat = getServiceTypeBySlug(s.category);
         return `
             <div class="directory-card profile-card-hover" onclick="viewServiceDirectory('${s.id}')">
                 <div class="dir-avatar">
@@ -2006,7 +2147,7 @@ function viewServiceDirectory(id) {
     if (!s) return;
     currentServiceViewId = id;
 
-    const cat = SERVICE_TYPES[s.category] || SERVICE_TYPES['other-service'];
+    const cat = getServiceTypeBySlug(s.category);
 
     const avatar = document.getElementById('svcViewAvatar');
     if (s.coverPhoto) { avatar.src = s.coverPhoto; avatar.style.display = 'block'; }
@@ -2066,6 +2207,19 @@ function renderProviderServices() {
     const filter = document.getElementById('providerServicesFilter')?.value || 'all';
     const filtered = filter === 'all' ? services : services.filter(s => s.category === filter);
 
+    // Populate filter dropdown dynamically
+    const filterSelect = document.getElementById('providerServicesFilter');
+    if (filterSelect && !filterSelect._dynamicPopulated) {
+        const types = getAllServiceTypes();
+        types.forEach(t => {
+            const opt = document.createElement('option');
+            opt.value = t.slug;
+            opt.textContent = t.label;
+            filterSelect.appendChild(opt);
+        });
+        filterSelect._dynamicPopulated = true;
+    }
+
     const container = document.getElementById('providerServicesList');
     if (!container) return;
 
@@ -2075,7 +2229,7 @@ function renderProviderServices() {
     }
 
     container.innerHTML = filtered.map(s => {
-        const cat = SERVICE_TYPES[s.category] || SERVICE_TYPES['other-service'];
+        const cat = getServiceTypeBySlug(s.category);
         return `
             <div class="profile-card profile-card-hover">
                 <div class="profile-header">
@@ -2114,6 +2268,36 @@ function resetServiceForm() {
     renderServiceTags();
     renderServiceGalleryUpload();
     renderServicePhotoPreview();
+    // Auto-fill category based on most used
+    const mostUsed = getMostUsedServiceType();
+    if (mostUsed) {
+        const catSelect = document.getElementById('serviceCategory');
+        if (catSelect) {
+            const types = getAllServiceTypes();
+            const opt = types.find(t => t.slug === mostUsed);
+            if (opt) catSelect.value = mostUsed;
+        }
+    }
+    updateServiceCategorySelect();
+}
+
+function updateServiceCategorySelect() {
+    const catSelect = document.getElementById('serviceCategory');
+    if (!catSelect) return;
+    const currentVal = catSelect.value;
+    catSelect.innerHTML = getServiceTypeSelectHTML(currentVal);
+    catSelect.onchange = function() {
+        if (this.value === '__custom__') {
+            const name = prompt('Enter new service category name:');
+            if (name && name.trim()) {
+                const newType = addCustomServiceType(name.trim());
+                updateServiceCategorySelect();
+                this.value = newType.slug;
+            } else {
+                this.value = currentVal || '';
+            }
+        }
+    };
 }
 
 function renderServicePhotoPreview() {
@@ -2222,18 +2406,21 @@ function editService(id) {
     document.getElementById('serviceFormTitle').textContent = 'Edit Service';
     document.getElementById('serviceSubmitBtn').textContent = 'Update Service';
     document.getElementById('serviceName').value = s.name || '';
-    document.getElementById('serviceCategory').value = s.category || '';
+    document.getElementById('serviceBio').value = s.bio || '';
     document.getElementById('serviceEmail').value = s.email || '';
     document.getElementById('servicePhone').value = s.phone || '';
     document.getElementById('serviceLocation').value = s.location || '';
     document.getElementById('serviceRate').value = s.rate || '';
     document.getElementById('serviceWebsite').value = s.website || '';
-    document.getElementById('serviceBio').value = s.bio || '';
 
     serviceTags = [...(s.tags || [])];
     serviceGallery = [...(s.gallery || [])];
     renderServiceTags();
     renderServiceGalleryUpload();
+
+    // Set category with dynamic select
+    updateServiceCategorySelect();
+    document.getElementById('serviceCategory').value = s.category || '';
 
     if (s.coverPhoto) {
         const preview = document.getElementById('servicePhotoPreview');
@@ -2293,11 +2480,14 @@ function handleBookingSubmit(e) {
         createdAt: new Date().toISOString()
     };
 
+    // Deduct booking fee from user wallet
+    adjustWallet('user', 'general', -50, 'booking-fee', `Booking request sent to provider`, { bookingId: booking.id });
+
     const bookings = Storage.getBookings();
     bookings.push(booking);
     Storage.setBookings(bookings);
     closeBookingModal();
-    showToast('Booking request sent!', 'success');
+    showToast('Booking request sent! R50 booking fee deducted.', 'success');
 }
 
 // ==========================================
@@ -2335,6 +2525,10 @@ function handleTipSubmit(e) {
     };
 
     if (tip.amount <= 0) { showToast('Please enter a valid amount.', 'error'); return; }
+
+    // Deduct from user wallet, credit provider wallet
+    adjustWallet('user', 'general', -tip.amount, 'tip-sent', `Tip sent to provider`, { tipId: tip.id, providerId: tip.providerId });
+    adjustWallet('provider', tip.providerId, tip.amount, 'tip-received', `Tip received from ${tip.tipperName}`, { tipId: tip.id, tipperName: tip.tipperName });
 
     const tips = Storage.getTips();
     tips.push(tip);
@@ -2483,6 +2677,12 @@ function updateBookingStatus(id, status) {
     if (booking) {
         booking.status = status;
         Storage.setBookings(bookings);
+
+        // Credit provider wallet on confirmation
+        if (status === 'confirmed') {
+            adjustWallet('provider', booking.providerId, 50, 'booking-confirmed', `Booking confirmed from ${booking.clientName}`, { bookingId: booking.id });
+        }
+
         showToast(`Booking ${status}.`, 'success');
         renderProviderBookings();
     }
@@ -2531,4 +2731,148 @@ function renderProviderTips() {
             </div>
         </div>
     `).join('');
+}
+
+// ==========================================
+// WALLET PAGES
+// ==========================================
+function renderUserWallet() {
+    const wallet = getOrCreateWallet('user', 'general');
+    document.getElementById('userWalletBalance').textContent = `R${wallet.balance.toFixed(2)}`;
+    document.getElementById('userWalletUpdated').textContent = formatDate(wallet.updatedAt);
+
+    const txns = getWalletTransactions('user', 'general');
+    const income = txns.filter(t => t.amount > 0).reduce((s, t) => s + t.amount, 0);
+    const spent = txns.filter(t => t.amount < 0).reduce((s, t) => s + Math.abs(t.amount), 0);
+
+    document.getElementById('userWalletIncome').textContent = `R${income.toFixed(2)}`;
+    document.getElementById('userWalletSpent').textContent = `R${spent.toFixed(2)}`;
+    document.getElementById('userWalletTxns').textContent = txns.length;
+
+    const container = document.getElementById('userWalletTransactions');
+    if (!container) return;
+
+    if (txns.length === 0) {
+        container.innerHTML = '<div class="empty-section"><i class="fas fa-receipt"></i><p>No transactions yet</p><span>Top up your wallet to get started</span></div>';
+        return;
+    }
+
+    container.innerHTML = txns.map(t => {
+        const typeColors = { 'top-up': '#10b981', 'tip-sent': '#f59e0b', 'tip-received': '#10b981', 'booking-fee': '#ef4444', 'booking-confirmed': '#3b82f6', 'withdrawal': '#8b5cf6', 'admin-adjust': '#64748b', 'refund': '#06b6d4' };
+        const typeLabels = { 'top-up': 'Top Up', 'tip-sent': 'Tip Sent', 'tip-received': 'Tip Received', 'booking-fee': 'Booking Fee', 'booking-confirmed': 'Booking Confirmed', 'withdrawal': 'Withdrawal', 'admin-adjust': 'Admin Adjust', 'refund': 'Refund' };
+        const color = typeColors[t.type] || '#64748b';
+        const label = typeLabels[t.type] || t.type;
+        return `
+            <div class="txn-row">
+                <div class="txn-icon" style="background:${color}22; color:${color}"><i class="fas fa-${t.amount >= 0 ? 'arrow-down' : 'arrow-up'}"></i></div>
+                <div class="txn-info">
+                    <div class="txn-desc">${t.description || label}</div>
+                    <div class="txn-meta">${label} &middot; ${formatDate(t.createdAt)}</div>
+                </div>
+                <div class="txn-amount ${t.amount >= 0 ? 'positive' : 'negative'}">${t.amount >= 0 ? '+' : ''}R${Math.abs(t.amount).toFixed(2)}</div>
+            </div>
+        `;
+    }).join('');
+}
+
+function openTopUpModal() { document.getElementById('topUpModal').classList.add('active'); }
+function closeTopUpModal() { document.getElementById('topUpModal').classList.remove('active'); document.getElementById('topUpAmount').value = ''; }
+function setTopUpAmount(amt) { document.getElementById('topUpAmount').value = amt; }
+
+function processTopUp() {
+    const amount = parseFloat(document.getElementById('topUpAmount').value);
+    if (!amount || amount <= 0) { showToast('Enter a valid amount.', 'error'); return; }
+    adjustWallet('user', 'general', amount, 'top-up', `Wallet top-up of R${amount.toFixed(2)}`);
+    closeTopUpModal();
+    showToast(`R${amount.toFixed(2)} added to wallet!`, 'success');
+    renderUserWallet();
+}
+
+function renderProviderWallet() {
+    const providers = [...Storage.getListings().map(l => l.id), ...Storage.getServices().map(s => s.id)];
+    let totalBalance = 0;
+    let totalIncome = 0;
+    let totalWithdrawn = 0;
+    let totalTxns = 0;
+    let allProviderTxns = [];
+
+    providers.forEach(pid => {
+        const wallet = getOrCreateWallet('provider', pid);
+        totalBalance += wallet.balance;
+        const txns = getWalletTransactions('provider', pid);
+        allProviderTxns = allProviderTxns.concat(txns);
+        txns.forEach(t => {
+            if (t.amount > 0) totalIncome += t.amount;
+            else totalWithdrawn += Math.abs(t.amount);
+        });
+    });
+    totalTxns = allProviderTxns.length;
+
+    document.getElementById('providerWalletBalance').textContent = `R${totalBalance.toFixed(2)}`;
+    document.getElementById('providerWalletUpdated').textContent = new Date().toLocaleDateString();
+    document.getElementById('providerWalletIncome').textContent = `R${totalIncome.toFixed(2)}`;
+    document.getElementById('providerWalletWithdrawn').textContent = `R${totalWithdrawn.toFixed(2)}`;
+    document.getElementById('providerWalletTxns').textContent = totalTxns;
+
+    allProviderTxns.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+    const container = document.getElementById('providerWalletTransactions');
+    if (!container) return;
+
+    if (allProviderTxns.length === 0) {
+        container.innerHTML = '<div class="empty-section"><i class="fas fa-receipt"></i><p>No earnings yet</p><span>Tips and bookings will appear here</span></div>';
+        return;
+    }
+
+    container.innerHTML = allProviderTxns.slice(0, 30).map(t => {
+        const typeColors = { 'top-up': '#10b981', 'tip-sent': '#f59e0b', 'tip-received': '#10b981', 'booking-fee': '#ef4444', 'booking-confirmed': '#3b82f6', 'withdrawal': '#8b5cf6', 'admin-adjust': '#64748b', 'refund': '#06b6d4' };
+        const typeLabels = { 'top-up': 'Top Up', 'tip-sent': 'Tip Sent', 'tip-received': 'Tip Received', 'booking-fee': 'Booking Fee', 'booking-confirmed': 'Booking Confirmed', 'withdrawal': 'Withdrawal', 'admin-adjust': 'Admin Adjust', 'refund': 'Refund' };
+        const color = typeColors[t.type] || '#64748b';
+        const label = typeLabels[t.type] || t.type;
+        return `
+            <div class="txn-row">
+                <div class="txn-icon" style="background:${color}22; color:${color}"><i class="fas fa-${t.amount >= 0 ? 'arrow-down' : 'arrow-up'}"></i></div>
+                <div class="txn-info">
+                    <div class="txn-desc">${t.description || label}</div>
+                    <div class="txn-meta">${label} &middot; ${formatDate(t.createdAt)}</div>
+                </div>
+                <div class="txn-amount ${t.amount >= 0 ? 'positive' : 'negative'}">${t.amount >= 0 ? '+' : ''}R${Math.abs(t.amount).toFixed(2)}</div>
+            </div>
+        `;
+    }).join('');
+}
+
+function openWithdrawModal() {
+    const providers = [...Storage.getListings().map(l => l.id), ...Storage.getServices().map(s => s.id)];
+    let totalBalance = 0;
+    providers.forEach(pid => { totalBalance += getOrCreateWallet('provider', pid).balance; });
+    document.getElementById('withdrawAvailable').textContent = `R${totalBalance.toFixed(2)}`;
+    document.getElementById('withdrawModal').classList.add('active');
+}
+
+function closeWithdrawModal() { document.getElementById('withdrawModal').classList.remove('active'); document.getElementById('withdrawAmount').value = ''; }
+
+function processWithdraw() {
+    const amount = parseFloat(document.getElementById('withdrawAmount').value);
+    if (!amount || amount <= 0) { showToast('Enter a valid amount.', 'error'); return; }
+
+    const providers = [...Storage.getListings().map(l => l.id), ...Storage.getServices().map(s => s.id)];
+    let totalBalance = 0;
+    providers.forEach(pid => { totalBalance += getOrCreateWallet('provider', pid).balance; });
+
+    if (amount > totalBalance) { showToast('Insufficient balance.', 'error'); return; }
+
+    let remaining = amount;
+    providers.forEach(pid => {
+        const wallet = getOrCreateWallet('provider', pid);
+        if (wallet.balance > 0 && remaining > 0) {
+            const withdrawFromThis = Math.min(wallet.balance, remaining);
+            adjustWallet('provider', pid, -withdrawFromThis, 'withdrawal', `Withdrawal of R${withdrawFromThis.toFixed(2)}`);
+            remaining -= withdrawFromThis;
+        }
+    });
+
+    closeWithdrawModal();
+    showToast(`R${amount.toFixed(2)} withdrawal processed.`, 'success');
+    renderProviderWallet();
 }
