@@ -82,3 +82,16 @@ END OF DEBUG LOG
 - Added responsive CSS for booking cards, tip cards, action rows
 - Pushed to GitHub: 868cfe1
 
+[INFO] Custom Service Types + Wallet System
+- Removed hardcoded SERVICE_TYPES, added dynamic custom service type system
+- Added addCustomServiceType, getAllServiceTypes, getServiceTypeBySlug, getMostUsedServiceType
+- Added "Add New Category" option in service select dropdowns
+- Added wallet system: getOrCreateWallet, adjustWallet, getWalletTransactions, getAllWallets
+- Connected bookings (R50 fee) and tips to wallet system (deduct/credit)
+- Added My Wallet, My Earnings, Top Up, Withdraw modals
+- Added admin wallet management: adjust balance, view transactions, refund, lookup
+- Added wallet CSS with animated balance, stat cards, transaction rows
+- Updated admin dashboard with services/bookings/wallet stats
+- Updated admin export to include all new data types
+- Pushed to GitHub: 159c68a
+

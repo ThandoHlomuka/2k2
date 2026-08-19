@@ -126,3 +126,24 @@ Date: 2026-08-19
 - Added booking/tip responsive CSS, tip quick-amount buttons, booking card styles
 - Commit: 868cfe1
 
+Date: 2026-08-19
+========================================
+
+[FEATURE] Custom Service Types
+- Removed all hardcoded SERVICE_TYPES from filters, forms, and views
+- Added custom service type CRUD: addCustomServiceType, getAllServiceTypes, getServiceTypeBySlug
+- Added "Add New Category" option in service type select dropdowns
+- Auto-fill category on service form based on most used service type
+- Dynamic filter tabs on services directory page
+- Dynamic filter dropdown on provider services page
+
+[FEATURE] Wallet System
+- Added wallet storage: Storage.getWallets/setWallets, getTransactions/setTransactions
+- Added wallet CRUD: getOrCreateWallet, adjustWallet, getWalletBalance, getWalletTransactions
+- Added wallet transactions: top-up, tip-sent, tip-received, booking-fee, booking-confirmed, withdrawal, admin-adjust, refund
+- Connected bookings (R50 fee deducted on submit, R50 credited on confirm) and tips (deducted from user, credited to provider)
+- Added My Wallet page (index.html) with balance card, stats, top-up modal, transaction history
+- Added My Earnings page (provider.html) with balance card, earnings stats, withdraw modal, transaction history
+- Added wallet CSS with animated balance card, stat cards, transaction rows, responsive styles
+- Commit: 159c68a
+
