@@ -35,6 +35,10 @@
                 <i class="fas fa-address-book"></i>
                 <span>Profiles</span>
             </a>
+            <a href="#" class="nav-item" data-page="venue-directory">
+                <i class="fas fa-store"></i>
+                <span>Venues</span>
+            </a>
             <div class="nav-divider"></div>
             <span class="nav-section-title">Switch Portal</span>
             <a href="provider.html" class="nav-item">
@@ -535,6 +539,248 @@
                 <div class="modal-actions">
                     <button class="btn btn-secondary" onclick="closeDeleteModal()">Cancel</button>
                     <button class="btn btn-danger" onclick="confirmDelete()">Delete</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Venue Directory Browse -->
+        <div class="page" id="page-venue-directory">
+            <div class="container">
+                <div class="dashboard-header">
+                    <div>
+                        <h1>Venues Directory</h1>
+                        <p>Discover venues across South Africa</p>
+                    </div>
+                </div>
+
+                <div class="directory-filters">
+                    <div class="filter-tabs">
+                        <button class="filter-tab active" onclick="filterVenueDirectory('all')">All</button>
+                        <button class="filter-tab" onclick="filterVenueDirectory('nightclub')"><i class="fas fa-moon"></i> Nightclub</button>
+                        <button class="filter-tab" onclick="filterVenueDirectory('lounge')"><i class="fas fa-couch"></i> Lounge</button>
+                        <button class="filter-tab" onclick="filterVenueDirectory('restaurant')"><i class="fas fa-utensils"></i> Restaurant</button>
+                        <button class="filter-tab" onclick="filterVenueDirectory('hotel')"><i class="fas fa-bed"></i> Hotel</button>
+                        <button class="filter-tab" onclick="filterVenueDirectory('event-space')"><i class="fas fa-calendar-alt"></i> Event Space</button>
+                        <button class="filter-tab" onclick="filterVenueDirectory('private-venue')"><i class="fas fa-key"></i> Private Venue</button>
+                        <button class="filter-tab" onclick="filterVenueDirectory('beach-club')"><i class="fas fa-umbrella-beach"></i> Beach Club</button>
+                        <button class="filter-tab" onclick="filterVenueDirectory('rooftop')"><i class="fas fa-city"></i> Rooftop Bar</button>
+                    </div>
+                    <div class="filter-bar">
+                        <input type="text" id="venueSearch" placeholder="Search by name, location, or tag..." oninput="searchVenueDirectory()">
+                        <select id="venueLocationFilter" onchange="searchVenueDirectory()">
+                            <option value="">All Locations</option>
+                            <optgroup label="Gauteng">
+                                <option value="Johannesburg">Johannesburg</option>
+                                <option value="Pretoria">Pretoria</option>
+                                <option value="Sandton">Sandton</option>
+                                <option value="Randburg">Randburg</option>
+                                <option value="Roodepoort">Roodepoort</option>
+                                <option value="Soweto">Soweto</option>
+                                <option value="Midrand">Midrand</option>
+                                <option value="Centurion">Centurion</option>
+                                <option value="Benoni">Benoni</option>
+                                <option value="Boksburg">Boksburg</option>
+                                <option value="Brakpan">Brakpan</option>
+                                <option value="Germiston">Germiston</option>
+                                <option value="Kempton Park">Kempton Park</option>
+                                <option value="Alberton">Alberton</option>
+                                <option value="Vanderbijlpark">Vanderbijlpark</option>
+                                <option value="Vereeniging">Vereeniging</option>
+                                <option value="Krugersdorp">Krugersdorp</option>
+                                <option value="Springs">Springs</option>
+                            </optgroup>
+                            <optgroup label="Western Cape">
+                                <option value="Cape Town">Cape Town</option>
+                                <option value="Stellenbosch">Stellenbosch</option>
+                                <option value="Paarl">Paarl</option>
+                                <option value="George">George</option>
+                                <option value="Worcester">Worcester</option>
+                                <option value="Hermanus">Hermanus</option>
+                                <option value="Somerset West">Somerset West</option>
+                                <option value="Strand">Strand</option>
+                                <option value="Camps Bay">Camps Bay</option>
+                                <option value="Claremont">Claremont</option>
+                                <option value="Bellville">Bellville</option>
+                                <option value="Khayelitsha">Khayelitsha</option>
+                                <option value="Mitchells Plain">Mitchells Plain</option>
+                                <option value="Mossel Bay">Mossel Bay</option>
+                                <option value="Oudtshoorn">Oudtshoorn</option>
+                                <option value="Saldanha Bay">Saldanha Bay</option>
+                                <option value="Swellendam">Swellendam</option>
+                                <option value="Caledon">Caledon</option>
+                            </optgroup>
+                            <optgroup label="KwaZulu-Natal">
+                                <option value="Durban">Durban</option>
+                                <option value="Pietermaritzburg">Pietermaritzburg</option>
+                                <option value="Umhlanga">Umhlanga</option>
+                                <option value="Richards Bay">Richards Bay</option>
+                                <option value="Newcastle">Newcastle</option>
+                                <option value="Port Shepstone">Port Shepstone</option>
+                                <option value="Ladysmith">Ladysmith</option>
+                                <option value="Dundee">Dundee</option>
+                                <option value="Pinetown">Pinetown</option>
+                                <option value="Westville">Westville</option>
+                                <option value="Phoenix">Phoenix</option>
+                                <option value="Chatsworth">Chatsworth</option>
+                                <option value="Umlazi">Umlazi</option>
+                                <option value="Amanzimtoti">Amanzimtoti</option>
+                                <option value="Margate">Margate</option>
+                                <option value="Ballito">Ballito</option>
+                                <option value="Scottburgh">Scottburgh</option>
+                                <option value="Howick">Howick</option>
+                            </optgroup>
+                            <optgroup label="Eastern Cape">
+                                <option value="Port Elizabeth">Port Elizabeth (Gqeberha)</option>
+                                <option value="East London">East London</option>
+                                <option value="Grahamstown">Grahamstown (Makhanda)</option>
+                                <option value="Mthatha">Mthatha</option>
+                                <option value="Queenstown">Queenstown (Komani)</option>
+                                <option value="Graaff-Reinet">Graaff-Reinet</option>
+                                <option value="Jeffreys Bay">Jeffreys Bay</option>
+                                <option value="Port Alfred">Port Alfred</option>
+                                <option value="St Francis Bay">St Francis Bay</option>
+                                <option value="Kariega">Kariega</option>
+                                <option value="Butterworth">Butterworth</option>
+                                <option value="Centani">Centani</option>
+                            </optgroup>
+                            <optgroup label="Free State">
+                                <option value="Bloemfontein">Bloemfontein</option>
+                                <option value="Welkom">Welkom</option>
+                                <option value="Bethlehem">Bethlehem</option>
+                                <option value="Sasolburg">Sasolburg</option>
+                                <option value="Kroonstad">Kroonstad</option>
+                                <option value="Brandfort">Brandfort</option>
+                                <option value="Harrismith">Harrismith</option>
+                                <option value="Parys">Parys</option>
+                                <option value="Senekal">Senekal</option>
+                                <option value="Thaba Nchu">Thaba Nchu</option>
+                            </optgroup>
+                            <optgroup label="Mpumalanga">
+                                <option value="Nelspruit">Nelspruit (Mbombela)</option>
+                                <option value="Witbank">Witbank (Emalahleni)</option>
+                                <option value="Middelburg">Middelburg</option>
+                                <option value="Secunda">Secunda</option>
+                                <option value="Standerton">Standerton</option>
+                                <option value="Ermelo">Ermelo</option>
+                                <option value="Bethal">Bethal</option>
+                                <option value="Barberton">Barberton</option>
+                                <option value="Hazyview">Hazyview</option>
+                                <option value="White River">White River</option>
+                                <option value="Sabie">Sabie</option>
+                                <option value="Graskop">Graskop</option>
+                            </optgroup>
+                            <optgroup label="Limpopo">
+                                <option value="Polokwane">Polokwane</option>
+                                <option value="Thohoyandou">Thohoyandou</option>
+                                <option value="Tzaneen">Tzaneen</option>
+                                <option value="Mokopane">Mokopane</option>
+                                <option value="Lephalale">Lephalale</option>
+                                <option value="Musina">Musina</option>
+                                <option value="Bela-Bela">Bela-Bela</option>
+                                <option value="Modimolle">Modimolle</option>
+                                <option value="Haenertsburg">Haenertsburg</option>
+                                <option value="Louis Trichardt">Louis Trichardt</option>
+                                <option value="Phalaborwa">Phalaborwa</option>
+                                <option value="Giyani">Giyani</option>
+                            </optgroup>
+                            <optgroup label="North West">
+                                <option value="Rustenburg">Rustenburg</option>
+                                <option value="Mahikeng">Mahikeng</option>
+                                <option value="Potchefstroom">Potchefstroom</option>
+                                <option value="Klerksdorp">Klerksdorp</option>
+                                <option value="Brits">Brits</option>
+                                <option value="Rietfontein">Rietfontein</option>
+                                <option value="Lichtenburg">Lichtenburg</option>
+                                <option value="Vryburg">Vryburg</option>
+                                <option value="Schweizer-Reneke">Schweizer-Reneke</option>
+                                <option value="Ventersdorp">Ventersdorp</option>
+                            </optgroup>
+                            <optgroup label="Northern Cape">
+                                <option value="Kimberley">Kimberley</option>
+                                <option value="Upington">Upington</option>
+                                <option value="Springbok">Springbok</option>
+                                <option value="De Aar">De Aar</option>
+                                <option value="Colesberg">Colesberg</option>
+                                <option value="Griquatown">Griquatown</option>
+                                <option value="Kathu">Kathu</option>
+                                <option value="Kuruman">Kuruman</option>
+                                <option value="Postmasburg">Postmasburg</option>
+                                <option value="Calvinia">Calvinia</option>
+                            </optgroup>
+                        </select>
+                        <select id="venueSort" onchange="searchVenueDirectory()">
+                            <option value="newest">Newest</option>
+                            <option value="oldest">Oldest</option>
+                            <option value="name-asc">Name A-Z</option>
+                            <option value="name-desc">Name Z-A</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="directory-stats" id="venueDirectoryStats">
+                    <span id="venueDirectoryCount">0</span> venues found
+                </div>
+
+                <div class="profiles-grid directory-grid" id="venueDirectoryList"></div>
+            </div>
+        </div>
+
+        <!-- Venue Detail View -->
+        <div class="page" id="page-venue-directory-view">
+            <div class="container">
+                <div class="form-header">
+                    <button class="btn-back" onclick="navigateTo('venue-directory')">
+                        <i class="fas fa-arrow-left"></i> Back to Venues
+                    </button>
+                    <h1>Venue Details</h1>
+                </div>
+
+                <div class="view-profile" id="venueViewContent">
+                    <div class="profile-card view-header-card">
+                        <div class="view-avatar" id="venueViewAvatar">
+                            <img id="venViewAvatar" src="" alt="" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'">
+                            <div class="avatar-placeholder" style="display:none"><i class="fas fa-store"></i></div>
+                        </div>
+                        <div class="view-basic-info">
+                            <h1 id="venViewName">-</h1>
+                            <span class="badge" id="venViewType">-</span>
+                            <p id="venViewLocation" class="view-email"><i class="fas fa-map-marker-alt"></i> -</p>
+                        </div>
+                    </div>
+
+                    <div class="view-grid">
+                        <div class="profile-card">
+                            <h2><i class="fas fa-info-circle"></i> Details</h2>
+                            <div class="detail-row"><span class="detail-label">Category</span><span class="detail-value" id="venViewCategory">-</span></div>
+                            <div class="detail-row"><span class="detail-label">Email</span><span class="detail-value" id="venViewEmail">-</span></div>
+                            <div class="detail-row"><span class="detail-label">Phone</span><span class="detail-value" id="venViewPhone">-</span></div>
+                            <div class="detail-row"><span class="detail-label">Cover Charge</span><span class="detail-value" id="venViewRate">-</span></div>
+                            <div class="detail-row"><span class="detail-label">Capacity</span><span class="detail-value" id="venViewCapacity">-</span></div>
+                        </div>
+                        <div class="profile-card">
+                            <h2><i class="fas fa-file-alt"></i> About</h2>
+                            <p id="venViewBio" class="view-bio">-</p>
+                            <div class="detail-row" style="margin-top:16px">
+                                <span class="detail-label">Website</span>
+                                <a href="#" id="venViewWebsite" target="_blank" class="detail-link">-</a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="profile-card">
+                        <h2><i class="fas fa-tag"></i> Features</h2>
+                        <div class="tags-container" id="venViewTags"><span class="tag empty-tag">No features listed</span></div>
+                    </div>
+
+                    <div class="profile-card">
+                        <h2><i class="fas fa-images"></i> Gallery</h2>
+                        <div class="directory-gallery" id="venViewGallery"></div>
+                    </div>
+
+                    <div class="profile-card">
+                        <h2><i class="fas fa-clock"></i> Hours</h2>
+                        <div class="availability-view" id="venViewHours"></div>
+                    </div>
                 </div>
             </div>
         </div>
