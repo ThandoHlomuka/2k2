@@ -27,7 +27,11 @@ const Storage = {
     setWallets: (data) => localStorage.setItem('k2_wallets', JSON.stringify(data)),
     getTransactions: () => JSON.parse(localStorage.getItem('k2_transactions') || '[]'),
     setTransactions: (data) => localStorage.setItem('k2_transactions', JSON.stringify(data)),
-    clearAll: () => { ['k2_users','k2_providers','k2_listings','k2_venues','k2_ads','k2_services','k2_bookings','k2_tips','k2_service_types','k2_wallets','k2_transactions'].forEach(k => localStorage.removeItem(k)); }
+    getTopUpRequests: () => JSON.parse(localStorage.getItem('k2_topup_requests') || '[]'),
+    setTopUpRequests: (data) => localStorage.setItem('k2_topup_requests', JSON.stringify(data)),
+    getWithdrawalRequests: () => JSON.parse(localStorage.getItem('k2_withdrawal_requests') || '[]'),
+    setWithdrawalRequests: (data) => localStorage.setItem('k2_withdrawal_requests', JSON.stringify(data)),
+    clearAll: () => { ['k2_users','k2_providers','k2_listings','k2_venues','k2_ads','k2_services','k2_bookings','k2_tips','k2_service_types','k2_wallets','k2_transactions','k2_topup_requests','k2_withdrawal_requests'].forEach(k => localStorage.removeItem(k)); }
 };
 
 const DIRECTORY_TYPES = {
@@ -2749,6 +2753,26 @@ function renderUserWallet() {
     document.getElementById('userWalletSpent').textContent = `R${spent.toFixed(2)}`;
     document.getElementById('userWalletTxns').textContent = txns.length;
 
+    // Pending top-up requests
+    const pendingRequests = Storage.getTopUpRequests().filter(r => r.status === 'pending');
+    const pendingContainer = document.getElementById('userPendingRequests');
+    if (pendingContainer) {
+        if (pendingRequests.length === 0) {
+            pendingContainer.innerHTML = '';
+        } else {
+            pendingContainer.innerHTML = '<div class="profile-card pending-requests-card"><h2><i class="fas fa-hourglass-half"></i> Pending Requests</h2>' +
+                pendingRequests.map(r => `
+                    <div class="pending-request-row">
+                        <div class="pending-request-info">
+                            <span class="badge" style="background:#f59e0b22;color:#f59e0b;border:1px solid #f59e0b44"><i class="fas fa-clock"></i> Pending</span>
+                            <span>Top-up of <strong>R${r.amount.toFixed(2)}</strong></span>
+                        </div>
+                        <span class="pending-request-date">Submitted ${formatDate(r.createdAt)}</span>
+                    </div>
+                `).join('') + '</div>';
+        }
+    }
+
     const container = document.getElementById('userWalletTransactions');
     if (!container) return;
 
@@ -2782,9 +2806,19 @@ function setTopUpAmount(amt) { document.getElementById('topUpAmount').value = am
 function processTopUp() {
     const amount = parseFloat(document.getElementById('topUpAmount').value);
     if (!amount || amount <= 0) { showToast('Enter a valid amount.', 'error'); return; }
-    adjustWallet('user', 'general', amount, 'top-up', `Wallet top-up of R${amount.toFixed(2)}`);
+
+    const requests = Storage.getTopUpRequests();
+    requests.push({
+        id: generateId(),
+        ownerType: 'user',
+        ownerId: 'general',
+        amount,
+        status: 'pending',
+        createdAt: new Date().toISOString()
+    });
+    Storage.setTopUpRequests(requests);
     closeTopUpModal();
-    showToast(`R${amount.toFixed(2)} added to wallet!`, 'success');
+    showToast(`Top-up request of R${amount.toFixed(2)} submitted. Awaiting admin approval.`, 'info');
     renderUserWallet();
 }
 
@@ -2813,6 +2847,26 @@ function renderProviderWallet() {
     document.getElementById('providerWalletIncome').textContent = `R${totalIncome.toFixed(2)}`;
     document.getElementById('providerWalletWithdrawn').textContent = `R${totalWithdrawn.toFixed(2)}`;
     document.getElementById('providerWalletTxns').textContent = totalTxns;
+
+    // Pending withdrawal requests
+    const pendingRequests = Storage.getWithdrawalRequests().filter(r => r.status === 'pending');
+    const pendingContainer = document.getElementById('providerPendingRequests');
+    if (pendingContainer) {
+        if (pendingRequests.length === 0) {
+            pendingContainer.innerHTML = '';
+        } else {
+            pendingContainer.innerHTML = '<div class="profile-card pending-requests-card"><h2><i class="fas fa-hourglass-half"></i> Pending Withdrawals</h2>' +
+                pendingRequests.map(r => `
+                    <div class="pending-request-row">
+                        <div class="pending-request-info">
+                            <span class="badge" style="background:#f59e0b22;color:#f59e0b;border:1px solid #f59e0b44"><i class="fas fa-clock"></i> Pending</span>
+                            <span>Withdrawal of <strong>R${r.amount.toFixed(2)}</strong></span>
+                        </div>
+                        <span class="pending-request-date">Submitted ${formatDate(r.createdAt)}</span>
+                    </div>
+                `).join('') + '</div>';
+        }
+    }
 
     allProviderTxns.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
@@ -2862,17 +2916,18 @@ function processWithdraw() {
 
     if (amount > totalBalance) { showToast('Insufficient balance.', 'error'); return; }
 
-    let remaining = amount;
-    providers.forEach(pid => {
-        const wallet = getOrCreateWallet('provider', pid);
-        if (wallet.balance > 0 && remaining > 0) {
-            const withdrawFromThis = Math.min(wallet.balance, remaining);
-            adjustWallet('provider', pid, -withdrawFromThis, 'withdrawal', `Withdrawal of R${withdrawFromThis.toFixed(2)}`);
-            remaining -= withdrawFromThis;
-        }
+    const requests = Storage.getWithdrawalRequests();
+    requests.push({
+        id: generateId(),
+        ownerType: 'provider',
+        ownerId: providers[0] || 'unknown',
+        amount,
+        providerIds: providers,
+        status: 'pending',
+        createdAt: new Date().toISOString()
     });
-
+    Storage.setWithdrawalRequests(requests);
     closeWithdrawModal();
-    showToast(`R${amount.toFixed(2)} withdrawal processed.`, 'success');
+    showToast(`Withdrawal request of R${amount.toFixed(2)} submitted. Awaiting admin approval.`, 'info');
     renderProviderWallet();
 }

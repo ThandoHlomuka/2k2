@@ -3386,3 +3386,53 @@ h1, h2, h3, h4 {
     .wallet-stat-card { padding: 16px; }
     .txn-amount { font-size: 0.9rem; }
 }
+
+/* Pending Requests */
+.pending-requests-card h2 {
+    margin-bottom: 12px;
+}
+
+.pending-request-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border, #f1f5f9);
+}
+
+.pending-request-row:last-child { border-bottom: none; }
+
+.pending-request-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 0.9rem;
+}
+
+.pending-request-date {
+    font-size: 0.8rem;
+    color: var(--text-muted, #94a3b8);
+}
+
+.admin-request-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 14px 0;
+    border-bottom: 1px solid #f1f5f9;
+    gap: 12px;
+}
+
+.admin-request-row:last-child { border-bottom: none; }
+
+.admin-request-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    flex: 1;
+}
+
+.admin-request-info strong {
+    font-size: 1.05rem;
+}

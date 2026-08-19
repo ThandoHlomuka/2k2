@@ -538,6 +538,8 @@ function adminExportData() {
         customServiceTypes: Storage.getCustomServiceTypes(),
         wallets: Storage.getWallets(),
         transactions: Storage.getTransactions(),
+        topUpRequests: Storage.getTopUpRequests(),
+        withdrawalRequests: Storage.getWithdrawalRequests(),
         exportedAt: new Date().toISOString()
     };
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
@@ -566,12 +568,54 @@ function adminClearAllData() {
 function renderAdminWallets() {
     const wallets = getAllWallets();
     const txns = getAllTransactions();
+    const topUpReqs = Storage.getTopUpRequests();
+    const withdrawReqs = Storage.getWithdrawalRequests();
+    const pendingReqs = [...topUpReqs.filter(r => r.status === 'pending'), ...withdrawReqs.filter(r => r.status === 'pending')];
 
     // Stats
     const totalBalance = wallets.reduce((sum, w) => sum + w.balance, 0);
     document.getElementById('adminTotalBalance').textContent = `R${totalBalance.toFixed(2)}`;
     document.getElementById('adminTotalTxns').textContent = txns.length;
     document.getElementById('adminTotalWallets').textContent = wallets.length;
+    document.getElementById('adminPendingRequests').textContent = pendingReqs.length;
+
+    // Pending requests
+    const reqContainer = document.getElementById('adminPendingRequestsList');
+    if (reqContainer) {
+        if (pendingReqs.length === 0) {
+            reqContainer.innerHTML = '<p style="color:#94a3b8;font-size:0.88rem;padding:12px 0">No pending requests</p>';
+        } else {
+            reqContainer.innerHTML = pendingReqs.map(r => {
+                const isTopUp = topUpReqs.includes(r);
+                const typeLabel = isTopUp ? 'Top-Up' : 'Withdrawal';
+                const typeColor = isTopUp ? '#10b981' : '#8b5cf6';
+                const typeIcon = isTopUp ? 'fa-plus-circle' : 'fa-money-bill-wave';
+                let ownerLabel = r.ownerType + ': ' + r.ownerId;
+                if (r.ownerType === 'user') ownerLabel = 'General User';
+                else if (r.ownerType === 'provider') {
+                    const providers = Storage.getProviders();
+                    const p = providers.find(x => x.id === r.ownerId);
+                    ownerLabel = p ? p.name : r.ownerId;
+                }
+                return `
+                    <div class="admin-request-row">
+                        <div class="admin-request-info">
+                            <span class="badge" style="background:${typeColor}22;color:${typeColor};border:1px solid ${typeColor}44"><i class="fas ${typeIcon}"></i> ${typeLabel}</span>
+                            <div>
+                                <strong>R${r.amount.toFixed(2)}</strong>
+                                <span style="color:#94a3b8;font-size:0.82rem;margin-left:8px">${ownerLabel}</span>
+                            </div>
+                            <span style="color:#94a3b8;font-size:0.8rem">${fmtDate(r.createdAt)}</span>
+                        </div>
+                        <div class="admin-actions">
+                            <button class="btn btn-primary btn-xs" style="background:#10b981;border:none" onclick="adminApproveRequest('${isTopUp ? 'topup' : 'withdrawal'}','${r.id}')"><i class="fas fa-check"></i> Approve</button>
+                            <button class="btn btn-danger btn-xs" onclick="adminRejectRequest('${isTopUp ? 'topup' : 'withdrawal'}','${r.id}')"><i class="fas fa-times"></i> Reject</button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+    }
 
     // Wallets table
     const wTbody = document.querySelector('#adminWalletsTable tbody');
@@ -694,6 +738,61 @@ function adminRefundAction(txnId, description) {
     const success = adminRefundTransaction(txnId, 'Admin refund');
     if (success) { showToast('Refund processed.'); renderAdminWallets(); }
     else { showToast('Refund failed.', 'error'); }
+}
+
+function adminApproveRequest(type, reqId) {
+    if (type === 'topup') {
+        const requests = Storage.getTopUpRequests();
+        const req = requests.find(r => r.id === reqId);
+        if (!req || req.status !== 'pending') return;
+        req.status = 'approved';
+        req.approvedAt = new Date().toISOString();
+        Storage.setTopUpRequests(requests);
+        adjustWallet(req.ownerType, req.ownerId, req.amount, 'top-up', `Top-up approved (R${req.amount.toFixed(2)})`);
+        showToast(`Top-up of R${req.amount.toFixed(2)} approved!`);
+    } else if (type === 'withdrawal') {
+        const requests = Storage.getWithdrawalRequests();
+        const req = requests.find(r => r.id === reqId);
+        if (!req || req.status !== 'pending') return;
+        req.status = 'approved';
+        req.approvedAt = new Date().toISOString();
+        Storage.setWithdrawalRequests(requests);
+        // Deduct from each provider wallet proportionally
+        const providerIds = req.providerIds || [];
+        let remaining = req.amount;
+        providerIds.forEach(pid => {
+            const wallet = getOrCreateWallet('provider', pid);
+            if (wallet.balance > 0 && remaining > 0) {
+                const deduct = Math.min(wallet.balance, remaining);
+                adjustWallet('provider', pid, -deduct, 'withdrawal', `Withdrawal approved (R${deduct.toFixed(2)})`);
+                remaining -= deduct;
+            }
+        });
+        showToast(`Withdrawal of R${req.amount.toFixed(2)} approved!`);
+    }
+    renderAdminWallets();
+}
+
+function adminRejectRequest(type, reqId) {
+    if (!confirm('Reject this request?')) return;
+    if (type === 'topup') {
+        const requests = Storage.getTopUpRequests();
+        const req = requests.find(r => r.id === reqId);
+        if (!req) return;
+        req.status = 'rejected';
+        req.rejectedAt = new Date().toISOString();
+        Storage.setTopUpRequests(requests);
+        showToast('Top-up request rejected.', 'info');
+    } else if (type === 'withdrawal') {
+        const requests = Storage.getWithdrawalRequests();
+        const req = requests.find(r => r.id === reqId);
+        if (!req) return;
+        req.status = 'rejected';
+        req.rejectedAt = new Date().toISOString();
+        Storage.setWithdrawalRequests(requests);
+        showToast('Withdrawal request rejected.', 'info');
+    }
+    renderAdminWallets();
 }
 
 // Sidebar toggle
