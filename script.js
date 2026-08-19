@@ -1027,8 +1027,10 @@ function viewDirectoryListing(id) {
     const days = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
     const dayLabels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
     const availContainer = document.getElementById('dirViewAvailability');
-    availContainer.innerHTML = days.map((d, i) => `<span class="day-badge ${l.availability?.[d] ? 'day-active' : 'day-inactive'}">${dayLabels[i]}</span>`).join('');
+    availContainer.innerHTML = days.map((d, i) => '<span class="day-badge ' + (l.availability?.[d] ? 'day-active' : 'day-inactive') + '">' + dayLabels[i] + '</span>').join('');
 
+    renderReviewsList('profile', id);
+    initStarRating('profileStarRating');
     navigateTo('directory-view');
 }
 
@@ -1437,8 +1439,10 @@ function viewVenueDirectory(id) {
     const days = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
     const dayLabels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
     const availContainer = document.getElementById('venViewHours');
-    availContainer.innerHTML = days.map((d, i) => `<span class="day-badge ${v.hours?.[d] ? 'day-active' : 'day-inactive'}">${dayLabels[i]}</span>`).join('');
+    availContainer.innerHTML = days.map((d, i) => '<span class="day-badge ' + (v.hours?.[d] ? 'day-active' : 'day-inactive') + '">' + dayLabels[i] + '</span>').join('');
 
+    renderReviewsList('venue', id);
+    initStarRating('venueStarRating');
     navigateTo('venue-directory-view');
 }
 
@@ -3115,6 +3119,10 @@ function viewContent(id) {
     // Comments
     renderContentComments(id);
 
+    // Reviews
+    renderReviewsList('content', id);
+    initStarRating('contentStarRating');
+
     navigateTo('content-view');
 }
 
@@ -3398,6 +3406,107 @@ function shareContent() {
 }
 
 // ==========================================
+// REVIEW / RATING SYSTEM
+// ==========================================
+function initStarRating(containerId) {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+    const stars = container.querySelectorAll('.fa-star');
+    stars.forEach(star => {
+        star.addEventListener('click', () => {
+            const rating = parseInt(star.dataset.star);
+            container.dataset.rating = rating;
+            stars.forEach((s, i) => { s.classList.toggle('active', i < rating); });
+        });
+        star.addEventListener('mouseenter', () => {
+            const rating = parseInt(star.dataset.star);
+            stars.forEach((s, i) => { s.classList.toggle('hover', i < rating); });
+        });
+        star.addEventListener('mouseleave', () => {
+            stars.forEach(s => s.classList.remove('hover'));
+        });
+    });
+}
+
+function getReviewsForTarget(targetType, targetId) {
+    return Storage.getReviews().filter(r => r.targetType === targetType && r.targetId === targetId);
+}
+
+function getAverageRating(targetType, targetId) {
+    const reviews = getReviewsForTarget(targetType, targetId);
+    if (reviews.length === 0) return { avg: 0, count: 0 };
+    const avg = reviews.reduce((s, r) => s + r.rating, 0) / reviews.length;
+    return { avg: Math.round(avg * 10) / 10, count: reviews.length };
+}
+
+function getRatingBadgeHtml(targetType, targetId) {
+    const { avg, count } = getAverageRating(targetType, targetId);
+    if (count === 0) return '';
+    return `<span class="rating-badge"><i class="fas fa-star"></i> ${avg} <span class="rating-badge-count">(${count})</span></span>`;
+}
+
+function renderReviewsList(targetType, targetId) {
+    const reviews = getReviewsForTarget(targetType, targetId);
+    reviews.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+    const summaryEl = document.getElementById(targetType + 'ReviewSummary');
+    const listEl = document.getElementById(targetType + 'ReviewsList');
+
+    if (summaryEl) {
+        const { avg, count } = getAverageRating(targetType, targetId);
+        if (count === 0) {
+            summaryEl.innerHTML = '<p class="empty-text">No reviews yet. Be the first!</p>';
+        } else {
+            const starsHtml = Array.from({length: 5}, (_, i) => '<i class="fas fa-star" style="color:' + (i < Math.round(avg) ? '#f59e0b' : '#e2e8f0') + '"></i>').join('');
+            summaryEl.innerHTML = '<div class="review-average"><span class="review-avg-number">' + avg + '</span><div class="review-avg-stars">' + starsHtml + '</div><span class="review-avg-count">' + count + ' review' + (count !== 1 ? 's' : '') + '</span></div>';
+        }
+    }
+
+    if (listEl) {
+        if (reviews.length === 0) {
+            listEl.innerHTML = '';
+        } else {
+            listEl.innerHTML = reviews.map(r => {
+                const stars = Array.from({length: 5}, (_, i) => '<i class="fas fa-star" style="color:' + (i < r.rating ? '#f59e0b' : '#e2e8f0') + '"></i>').join('');
+                return '<div class="review-item"><div class="review-item-header"><div class="review-item-stars">' + stars + '</div><span class="review-item-author">' + (r.authorName || 'Anonymous') + '</span><span class="review-item-date">' + formatDate(r.createdAt) + '</span></div><p class="review-item-text">' + r.text + '</p></div>';
+            }).join('');
+        }
+    }
+}
+
+function submitReview(targetType, targetId) {
+    const container = document.getElementById(targetType + 'StarRating');
+    const textEl = document.getElementById(targetType + 'ReviewText');
+    if (!container || !textEl) return;
+
+    const rating = parseInt(container.dataset.rating);
+    const text = textEl.value.trim();
+
+    if (!rating || rating < 1) { showToast('Please select a star rating.', 'error'); return; }
+    if (!text) { showToast('Please write a review.', 'error'); return; }
+
+    const reviews = Storage.getReviews();
+    reviews.push({
+        id: generateId(),
+        targetType: targetType,
+        targetId: targetId,
+        rating: rating,
+        text: text,
+        authorName: 'General User',
+        flagged: false,
+        createdAt: new Date().toISOString()
+    });
+    Storage.setReviews(reviews);
+
+    container.dataset.rating = 0;
+    container.querySelectorAll('.fa-star').forEach(s => { s.classList.remove('active'); s.classList.remove('hover'); });
+    textEl.value = '';
+
+    renderReviewsList(targetType, targetId);
+    showToast('Review submitted!');
+}
+
+// ==========================================
 // EVENTS DIRECTORY
 // ==========================================
 let eventTags = [];
@@ -3525,6 +3634,8 @@ function viewEvent(id) {
         tagsContainer.innerHTML = '';
     }
 
+    renderReviewsList('event', id);
+    initStarRating('eventStarRating');
     navigateTo('event-view');
 }
 
