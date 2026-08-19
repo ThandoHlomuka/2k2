@@ -18,3 +18,50 @@ Date: 2026-08-18
 ========================================
 END OF DEBUG LOG
 ========================================
+
+## 2026-08-18 - Profiles Directory
+- index.html: added directory nav, browse page, filter tabs, directory grid, detail view page
+- provider.html: added directory nav, My Listings page, New Listing CRUD form
+- script.js: added Storage.getListings/setListings, DIRECTORY_TYPES, directory CRUD functions, tag/gallery support
+- style.css: added filter tabs, directory cards, gallery upload grid, type badges, day badges
+- All 5 profile types working: Content Creator, Model, Exotic Dancer, Escort, Nude Chef
+- Pushed to GitHub: a9478b6
+
+
+
+## 2026-08-18 - SA Locations Filter
+- index.html: added location dropdown with all SA provinces and cities in optgroups
+- provider.html: changed location input to dropdown with same SA locations
+- script.js: added locationVal filter to renderDirectory function
+- style.css: added location filter styling with custom dropdown arrow
+- Pushed to GitHub: 98cfac6
+
+
+
+## 2026-08-18 - Venues Directory
+- index.html: added Venues nav, browse page with 8 category filter tabs, SA location filter, detail view
+- provider.html: added Venues nav (My Venues + New Venue), CRUD form, gallery upload, SA locations
+- script.js: added Storage.getVenues/setVenues, VENUE_TYPES, full venue CRUD, tag/gallery/CRUD functions
+- style.css: added venue capacity badge, responsive filter styles, mobile breakpoints
+- Pushed to GitHub: dd062b2
+
+
+
+## 2026-08-18 - Personal Ads Section
+- index.html: added Ads nav (Browse Ads, Post Ad, My Ads), browse page, create form, ad detail view, my ads page
+- provider.html: added Ads nav (My Ads, Post Ad), my ads page with filter, create form with SA locations
+- script.js: added Storage.getAds/setAds, AD_CATEGORIES, full ad CRUD for both pages, gallery (4 photos), tags, delete handler
+- style.css: added ad cards grid, ad detail view, category badges, responsive styles
+- Pushed to GitHub: 5af78f4
+
+
+
+## 2026-08-18 - Admin Portal
+- admin.html: full admin page with sidebar, 8 management pages, view modal, delete modal
+- admin.js: navigation, toast, delete/view modals, dashboard rendering, bar chart, activity feed
+- admin.js: CRUD render/view/delete for all 5 entities (users, providers, listings, venues, ads)
+- admin.js: logs page with entity summary table, storage info, export/clear tools
+- index.html + provider.html: added Admin Portal link in Switch Portal section
+- style.css: admin badge, table styles, chart, quick actions, view modal
+- Pushed to GitHub: b0106cc
+

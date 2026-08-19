@@ -34,3 +34,65 @@ Date: 2026-08-18
 ========================================
 END OF UPDATES LOG
 ========================================
+
+## 2026-08-18 - Profiles Directory Feature
+- Added 'Profiles' directory page (browseable from General User page)
+- Filter system: All, Content Creator, Model, Exotic Dancer, Escort, Nude Chef
+- Search by name, location, or tags with sort options
+- Profile detail view with gallery, availability, specialties
+- Provider CRUD: My Listings page, New Listing form
+- Gallery upload (max 6 photos), tag system, availability checkboxes
+- 5 profile types: Content Creator, Model, Exotic Dancer, Escort, Nude Chef
+- Directory CSS: animated cards, filter tabs, gallery grid, type badges
+- Commit: a9478b6
+
+
+
+## 2026-08-18 - SA Locations Filter
+- Added all 9 SA provinces with 150+ cities to directory location filter
+- Provinces: Gauteng, Western Cape, KZN, Eastern Cape, Free State, Mpumalanga, Limpopo, North West, Northern Cape
+- Location filter on index.html browse page
+- Location dropdown on provider.html listing form
+- Commit: 98cfac6
+
+
+
+## 2026-08-18 - Venues Directory
+- Added 'Venues' directory page (browseable from General User page)
+- 8 venue categories: Nightclub, Lounge, Restaurant, Hotel, Event Space, Private Venue, Beach Club, Rooftop Bar
+- Filter system with all 9 SA provinces + search + sort
+- Venue detail view with gallery, hours, capacity, features
+- Provider CRUD: My Venues page, New Venue form with cover photo + 8 gallery slots
+- Capacity field, cover charge, venue-specific suggested tags (VIP, Live Music, Shisha, etc.)
+- Commit: dd062b2
+
+
+
+## 2026-08-18 - Personal Ads Section
+- Added classified/personal ads feature to both pages
+- 4 ad categories: Personal, Services Offered, Services Wanted, General
+- Browse Ads page with filter tabs, SA location search, sort
+- Post/Edit Ad form: title, category, contact name, phone, location, description, tags, 4 photos
+- My Ads page on both General User and Service Provider pages
+- Ad detail view with category badge, date, contact info, description, tags, gallery
+- 8 suggested ad tags: Discreet, Available Now, Over 18, Outcalls, Incalls, 24/7, Verified, Non-Smoker
+- Full CRUD: create, edit, delete with confirmation modal
+- Ads CSS: ad cards, ad grid, detail view, responsive
+- Commit: 5af78f4
+
+
+
+## 2026-08-18 - Admin Portal
+- Created comprehensive admin portal (admin.html + admin.js)
+- Admin sidebar: Dashboard, Users, Providers, Listings, Venues, Ads, Logs, Settings
+- Dashboard overview: 5 stat cards, bar chart, activity feed, quick action buttons
+- User Management: table view, view details modal, delete with confirmation
+- Provider Management: table view, view details modal, delete with confirmation
+- Listing Management: table with category badges, status, view/delete
+- Venue Management: table with category badges, capacity, status, view/delete
+- Ad Management: table with category badges, contact info, status, view/delete
+- System Logs: entity summary table, storage info per entity
+- Settings: Export All Data (JSON), Clear All Data (with double confirmation)
+- Added Admin Portal link to both index.html and provider.html sidebars
+- Commit: b0106cc
+
