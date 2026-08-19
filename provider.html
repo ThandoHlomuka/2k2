@@ -70,6 +70,16 @@
                 <span>Post an Ad</span>
             </a>
             <div class="nav-divider"></div>
+            <span class="nav-section-title">Bookings & Tips</span>
+            <a href="#" class="nav-item" data-page="provider-bookings">
+                <i class="fas fa-calendar-check"></i>
+                <span>Bookings</span>
+            </a>
+            <a href="#" class="nav-item" data-page="provider-tips">
+                <i class="fas fa-hand-holding-heart"></i>
+                <span>Tips Received</span>
+            </a>
+            <div class="nav-divider"></div>
             <span class="nav-section-title">Switch Portal</span>
             <a href="index.html" class="nav-item">
                 <i class="fas fa-user"></i>
@@ -1492,6 +1502,51 @@
                         <button type="submit" class="btn btn-primary provider-btn" id="venueSubmitBtn">Publish Venue</button>
                     </div>
                 </form>
+            </div>
+        </div>
+
+        <!-- Provider Bookings -->
+        <div class="page" id="page-provider-bookings">
+            <div class="container">
+                <div class="dashboard-header">
+                    <div>
+                        <h1>Bookings Received</h1>
+                        <p>Manage incoming booking requests</p>
+                    </div>
+                </div>
+                <div class="profiles-section">
+                    <div class="section-header">
+                        <h2>Bookings</h2>
+                        <div class="filter-group">
+                            <select id="providerBookingsFilter" onchange="filterProviderBookings()">
+                                <option value="all">All</option>
+                                <option value="pending">Pending</option>
+                                <option value="confirmed">Confirmed</option>
+                                <option value="completed">Completed</option>
+                                <option value="cancelled">Cancelled</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="profiles-grid" id="providerBookingsList"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Provider Tips -->
+        <div class="page" id="page-provider-tips">
+            <div class="container">
+                <div class="dashboard-header">
+                    <div>
+                        <h1>Tips Received</h1>
+                        <p>See the support from your community</p>
+                    </div>
+                    <div class="tips-total-badge">
+                        <i class="fas fa-coins"></i> Total: <span id="providerTipsTotal">R0.00</span>
+                    </div>
+                </div>
+                <div class="profiles-section">
+                    <div class="profiles-grid" id="providerTipsList"></div>
+                </div>
             </div>
         </div>
 

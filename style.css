@@ -2899,6 +2899,47 @@ h1, h2, h3, h4 {
         font-size: 1.3rem;
     }
 
+    .view-actions-row {
+        flex-direction: column;
+    }
+
+    .view-actions-row .btn {
+        width: 100%;
+    }
+
+    .booking-card-body {
+        grid-template-columns: 1fr;
+    }
+
+    .booking-card-footer {
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .booking-actions {
+        width: 100%;
+        justify-content: flex-end;
+    }
+
+    .tips-total-badge {
+        font-size: 0.95rem;
+        padding: 8px 16px;
+    }
+
+    .tip-amounts {
+        gap: 6px;
+    }
+
+    .tip-quick {
+        padding: 8px 14px;
+        font-size: 0.9rem;
+    }
+
+    .modal-lg {
+        max-width: 100%;
+    }
+}
+
     .filter-tabs {
         gap: 6px;
     }
@@ -2910,3 +2951,218 @@ h1, h2, h3, h4 {
 }
 
 /* Services directory uses same cards as profiles/venues/ads - no extra styles needed */
+
+/* ==========================================
+   BOOKING & TIP JAR STYLES
+   ========================================== */
+
+.modal-lg {
+    max-width: 560px;
+}
+
+.view-actions-row {
+    display: flex;
+    gap: 10px;
+    margin-top: 12px;
+    flex-wrap: wrap;
+}
+
+.view-actions-row .btn {
+    flex: 1;
+    min-width: 140px;
+    padding: 10px 16px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    border-radius: 10px;
+    transition: all 0.3s ease;
+}
+
+.view-actions-row .btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+}
+
+.view-actions-row .btn-primary {
+    background: linear-gradient(135deg, #3b82f6, #2563eb);
+    color: white;
+    border: none;
+}
+
+.view-actions-row .btn-secondary {
+    background: linear-gradient(135deg, #f59e0b, #d97706);
+    color: white;
+    border: none;
+}
+
+/* Tip Amount Buttons */
+.tip-amounts {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    margin: 16px 0;
+    flex-wrap: wrap;
+}
+
+.tip-quick {
+    padding: 10px 20px;
+    border: 2px solid #f59e0b;
+    background: transparent;
+    color: #f59e0b;
+    border-radius: 10px;
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.tip-quick:hover {
+    background: linear-gradient(135deg, #f59e0b, #d97706);
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(245, 158, 11, 0.3);
+}
+
+/* Booking Cards */
+.booking-card {
+    padding: 0;
+    overflow: hidden;
+}
+
+.booking-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border);
+}
+
+.booking-provider {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 600;
+    font-size: 1rem;
+}
+
+.booking-provider i {
+    color: var(--primary);
+}
+
+.booking-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.booking-card-body {
+    padding: 16px 20px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+}
+
+.booking-detail {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+}
+
+.booking-detail i {
+    color: var(--primary);
+    width: 16px;
+    text-align: center;
+    font-size: 0.8rem;
+}
+
+.booking-notes {
+    grid-column: 1 / -1;
+    padding-top: 8px;
+    border-top: 1px solid var(--border);
+    font-style: italic;
+}
+
+.booking-card-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 20px;
+    background: var(--bg-secondary);
+    border-top: 1px solid var(--border);
+}
+
+.booking-date {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+}
+
+.booking-actions {
+    display: flex;
+    gap: 6px;
+}
+
+/* Tip Cards */
+.tip-card {
+    padding: 0;
+    overflow: hidden;
+    border: 1px solid #f59e0b33;
+}
+
+.tip-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 20px;
+    background: linear-gradient(135deg, #f59e0b11, #d9770611);
+    border-bottom: 1px solid #f59e0b22;
+}
+
+.tip-amount {
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: #d97706;
+}
+
+.tip-from {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-weight: 600;
+    color: var(--text-secondary);
+}
+
+.tip-card-body {
+    padding: 16px 20px;
+}
+
+.tip-message {
+    font-style: italic;
+    color: var(--text-secondary);
+    margin-bottom: 8px;
+    line-height: 1.5;
+}
+
+.tip-date {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+}
+
+/* Tips Total Badge */
+.tips-total-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 20px;
+    background: linear-gradient(135deg, #f59e0b, #d97706);
+    color: white;
+    border-radius: 12px;
+    font-weight: 700;
+    font-size: 1.1rem;
+    box-shadow: 0 4px 15px rgba(245, 158, 11, 0.3);
+}

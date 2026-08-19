@@ -58,6 +58,12 @@
                 <span>My Ads</span>
             </a>
             <div class="nav-divider"></div>
+            <span class="nav-section-title">Bookings</span>
+            <a href="#" class="nav-item" data-page="user-bookings">
+                <i class="fas fa-calendar-check"></i>
+                <span>My Bookings</span>
+            </a>
+            <div class="nav-divider"></div>
             <span class="nav-section-title">Switch Portal</span>
             <a href="provider.html" class="nav-item">
                 <i class="fas fa-briefcase"></i>
@@ -514,6 +520,10 @@
                             <span class="badge" id="dirViewType">-</span>
                             <p id="dirViewLocation" class="view-email"><i class="fas fa-map-marker-alt"></i> -</p>
                         </div>
+                        <div class="view-actions-row">
+                            <button class="btn btn-primary" id="dirBookBtn" onclick="openBookingModal(currentViewListingId, 'listing')"><i class="fas fa-calendar-plus"></i> Book Provider</button>
+                            <button class="btn btn-secondary" id="dirTipBtn" onclick="openTipModal(currentViewListingId, 'listing', document.getElementById('dirViewName').textContent)"><i class="fas fa-hand-holding-heart"></i> Tip Jar</button>
+                        </div>
                     </div>
 
                     <div class="view-grid">
@@ -561,6 +571,122 @@
                 <div class="modal-actions">
                     <button class="btn btn-secondary" onclick="closeDeleteModal()">Cancel</button>
                     <button class="btn btn-danger" onclick="confirmDelete()">Delete</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Booking Modal -->
+        <div class="modal-overlay" id="bookingModal">
+            <div class="modal modal-lg">
+                <div class="modal-icon" style="background: linear-gradient(135deg, #3b82f6, #2563eb);"><i class="fas fa-calendar-plus"></i></div>
+                <h2>Book Provider</h2>
+                <form id="bookingForm" onsubmit="handleBookingSubmit(event)">
+                    <div class="form-grid" style="gap:12px; margin:16px 0;">
+                        <div class="form-group">
+                            <label>Your Name *</label>
+                            <input type="text" id="bookingClientName" placeholder="Full name" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Email *</label>
+                            <input type="email" id="bookingClientEmail" placeholder="Email address" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Phone</label>
+                            <input type="tel" id="bookingClientPhone" placeholder="Phone number">
+                        </div>
+                        <div class="form-group">
+                            <label>Service Type *</label>
+                            <select id="bookingServiceType" required>
+                                <option value="">Select service</option>
+                                <option value="Consultation">Consultation</option>
+                                <option value="Full Service">Full Service</option>
+                                <option value="Half Day">Half Day</option>
+                                <option value="Full Day">Full Day</option>
+                                <option value="Hourly">Hourly</option>
+                                <option value="Custom">Custom (discuss later)</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Preferred Date *</label>
+                            <input type="date" id="bookingDate" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Preferred Time *</label>
+                            <input type="time" id="bookingTime" required>
+                        </div>
+                        <div class="form-group full-width">
+                            <label>Notes</label>
+                            <textarea id="bookingNotes" placeholder="Any details or special requests..." rows="3"></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-actions">
+                        <button type="button" class="btn btn-secondary" onclick="closeBookingModal()">Cancel</button>
+                        <button type="submit" class="btn btn-primary"><i class="fas fa-paper-plane"></i> Send Booking Request</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Tip Jar Modal -->
+        <div class="modal-overlay" id="tipModal">
+            <div class="modal">
+                <div class="modal-icon" style="background: linear-gradient(135deg, #f59e0b, #d97706);"><i class="fas fa-hand-holding-heart"></i></div>
+                <h2>Send a Tip</h2>
+                <p>Support <strong id="tipProviderName">-</strong></p>
+                <form id="tipForm" onsubmit="handleTipSubmit(event)">
+                    <div class="tip-amounts">
+                        <button type="button" class="tip-quick" onclick="setTipAmount(50)">R50</button>
+                        <button type="button" class="tip-quick" onclick="setTipAmount(100)">R100</button>
+                        <button type="button" class="tip-quick" onclick="setTipAmount(250)">R250</button>
+                        <button type="button" class="tip-quick" onclick="setTipAmount(500)">R500</button>
+                    </div>
+                    <div class="form-group" style="margin:12px 0;">
+                        <label>Amount (ZAR) *</label>
+                        <input type="number" id="tipAmount" placeholder="Enter amount" min="1" step="0.01" required>
+                    </div>
+                    <div class="form-group" style="margin-bottom:12px;">
+                        <label>Your Name *</label>
+                        <input type="text" id="tipperName" placeholder="Your name" required>
+                    </div>
+                    <div class="form-group" style="margin-bottom:12px;">
+                        <label>Email *</label>
+                        <input type="email" id="tipperEmail" placeholder="Email address" required>
+                    </div>
+                    <div class="form-group" style="margin-bottom:16px;">
+                        <label>Message (optional)</label>
+                        <textarea id="tipMessage" placeholder="Leave a kind message..." rows="2"></textarea>
+                    </div>
+                    <div class="modal-actions">
+                        <button type="button" class="btn btn-secondary" onclick="closeTipModal()">Cancel</button>
+                        <button type="submit" class="btn btn-primary" style="background: linear-gradient(135deg, #f59e0b, #d97706);"><i class="fas fa-heart"></i> Send Tip</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- My Bookings (User) -->
+        <div class="page" id="page-user-bookings">
+            <div class="container">
+                <div class="dashboard-header">
+                    <div>
+                        <h1>My Bookings</h1>
+                        <p>Track your booking requests</p>
+                    </div>
+                </div>
+                <div class="profiles-section">
+                    <div class="section-header">
+                        <h2>Bookings</h2>
+                        <div class="filter-group">
+                            <select id="userBookingsFilter" onchange="filterUserBookings()">
+                                <option value="all">All</option>
+                                <option value="pending">Pending</option>
+                                <option value="confirmed">Confirmed</option>
+                                <option value="completed">Completed</option>
+                                <option value="cancelled">Cancelled</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="profiles-grid" id="userBookingsList"></div>
                 </div>
             </div>
         </div>
@@ -698,6 +824,10 @@
                             <h1 id="svcViewName">-</h1>
                             <span class="badge" id="svcViewType">-</span>
                             <p id="svcViewLocation" class="view-email"><i class="fas fa-map-marker-alt"></i> -</p>
+                        </div>
+                        <div class="view-actions-row">
+                            <button class="btn btn-primary" id="svcBookBtn" onclick="openBookingModal(currentServiceViewId, 'service')"><i class="fas fa-calendar-plus"></i> Book Service</button>
+                            <button class="btn btn-secondary" id="svcTipBtn" onclick="openTipModal(currentServiceViewId, 'service', document.getElementById('svcViewName').textContent)"><i class="fas fa-hand-holding-heart"></i> Tip Jar</button>
                         </div>
                     </div>
 

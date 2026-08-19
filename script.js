@@ -17,7 +17,11 @@ const Storage = {
     setAds: (data) => localStorage.setItem('k2_ads', JSON.stringify(data)),
     getServices: () => JSON.parse(localStorage.getItem('k2_services') || '[]'),
     setServices: (data) => localStorage.setItem('k2_services', JSON.stringify(data)),
-    clearAll: () => { ['k2_users','k2_providers','k2_listings','k2_venues','k2_ads','k2_services'].forEach(k => localStorage.removeItem(k)); }
+    getBookings: () => JSON.parse(localStorage.getItem('k2_bookings') || '[]'),
+    setBookings: (data) => localStorage.setItem('k2_bookings', JSON.stringify(data)),
+    getTips: () => JSON.parse(localStorage.getItem('k2_tips') || '[]'),
+    setTips: (data) => localStorage.setItem('k2_tips', JSON.stringify(data)),
+    clearAll: () => { ['k2_users','k2_providers','k2_listings','k2_venues','k2_ads','k2_services','k2_bookings','k2_tips'].forEach(k => localStorage.removeItem(k)); }
 };
 
 const DIRECTORY_TYPES = {
@@ -59,6 +63,13 @@ const SERVICE_TYPES = {
     'other-service': { label: 'Other', icon: 'fa-ellipsis', color: '#64748b' }
 };
 
+const BOOKING_STATUSES = {
+    'pending': { label: 'Pending', color: '#f59e0b', icon: 'fa-clock' },
+    'confirmed': { label: 'Confirmed', color: '#10b981', icon: 'fa-check-circle' },
+    'completed': { label: 'Completed', color: '#3b82f6', icon: 'fa-flag-checkered' },
+    'cancelled': { label: 'Cancelled', color: '#ef4444', icon: 'fa-ban' }
+};
+
 let currentViewUserId = null;
 let currentViewProviderId = null;
 let currentViewListingId = null;
@@ -83,6 +94,10 @@ let serviceGallery = [];
 let currentServicesFilter = 'all';
 let providerServiceTags = [];
 let providerServiceGallery = [];
+let currentBookingProviderId = null;
+let currentBookingProviderType = null;
+let currentBookingFilter = 'all';
+let currentServiceViewId = null;
 
 // ==========================================
 // Navigation
@@ -123,6 +138,9 @@ function navigateTo(page) {
     if (page === 'services-directory') renderServicesDirectory();
     if (page === 'provider-services') renderProviderServices();
     if (page === 'provider-service-create') resetServiceForm();
+    if (page === 'user-bookings') renderUserBookings();
+    if (page === 'provider-bookings') renderProviderBookings();
+    if (page === 'provider-tips') renderProviderTips();
 }
 
 // ==========================================
@@ -166,6 +184,8 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('venueListingsList') && renderVenueListings();
         document.getElementById('providerAdsList') && renderProviderAds();
         document.getElementById('providerServicesList') && renderProviderServices();
+        document.getElementById('providerBookingsList') && renderProviderBookings();
+        document.getElementById('providerTipsList') && renderProviderTips();
     } else {
         document.getElementById('userProfilesList') && renderUserProfiles();
         document.getElementById('directoryList') && renderDirectory();
@@ -173,6 +193,7 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('adsBrowseList') && renderAdsBrowse();
         document.getElementById('userAdsList') && renderUserAds();
         document.getElementById('servicesDirectoryList') && renderServicesDirectory();
+        document.getElementById('userBookingsList') && renderUserBookings();
     }
 });
 
@@ -1077,6 +1098,18 @@ confirmDelete = function() {
         navigateTo('provider-services');
         return;
     }
+    if (deleteTarget.type === 'booking') {
+        const bookings = Storage.getBookings().filter(b => b.id !== deleteTarget.id);
+        Storage.setBookings(bookings);
+        showToast('Booking deleted.', 'info');
+        closeDeleteModal();
+        if (window.location.pathname.includes('provider.html')) {
+            navigateTo('provider-bookings');
+        } else {
+            navigateTo('user-bookings');
+        }
+        return;
+    }
     _origConfirmDelete();
 };
 
@@ -1971,6 +2004,7 @@ function viewServiceDirectory(id) {
     const services = Storage.getServices();
     const s = services.find(x => x.id === id);
     if (!s) return;
+    currentServiceViewId = id;
 
     const cat = SERVICE_TYPES[s.category] || SERVICE_TYPES['other-service'];
 
@@ -2224,4 +2258,277 @@ function deleteService(id) {
     const text = document.getElementById('deleteModalText');
     text.textContent = 'Are you sure you want to delete this service? This action cannot be undone.';
     modal.classList.add('active');
+}
+
+// ==========================================
+// BOOKING MODAL
+// ==========================================
+function openBookingModal(providerId, providerType) {
+    currentBookingProviderId = providerId;
+    currentBookingProviderType = providerType;
+    document.getElementById('bookingModal').classList.add('active');
+}
+
+function closeBookingModal() {
+    document.getElementById('bookingModal').classList.remove('active');
+    document.getElementById('bookingForm').reset();
+    currentBookingProviderId = null;
+    currentBookingProviderType = null;
+}
+
+function handleBookingSubmit(e) {
+    e.preventDefault();
+    const booking = {
+        id: generateId(),
+        providerId: currentBookingProviderId,
+        providerType: currentBookingProviderType,
+        clientName: document.getElementById('bookingClientName').value.trim(),
+        clientEmail: document.getElementById('bookingClientEmail').value.trim(),
+        clientPhone: document.getElementById('bookingClientPhone').value.trim(),
+        date: document.getElementById('bookingDate').value,
+        time: document.getElementById('bookingTime').value,
+        serviceType: document.getElementById('bookingServiceType').value,
+        notes: document.getElementById('bookingNotes').value.trim(),
+        status: 'pending',
+        createdAt: new Date().toISOString()
+    };
+
+    const bookings = Storage.getBookings();
+    bookings.push(booking);
+    Storage.setBookings(bookings);
+    closeBookingModal();
+    showToast('Booking request sent!', 'success');
+}
+
+// ==========================================
+// TIP JAR MODAL
+// ==========================================
+function openTipModal(providerId, providerType, providerName) {
+    currentBookingProviderId = providerId;
+    currentBookingProviderType = providerType;
+    document.getElementById('tipProviderName').textContent = providerName;
+    document.getElementById('tipModal').classList.add('active');
+}
+
+function closeTipModal() {
+    document.getElementById('tipModal').classList.remove('active');
+    document.getElementById('tipForm').reset();
+    currentBookingProviderId = null;
+    currentBookingProviderType = null;
+}
+
+function setTipAmount(amount) {
+    document.getElementById('tipAmount').value = amount;
+}
+
+function handleTipSubmit(e) {
+    e.preventDefault();
+    const tip = {
+        id: generateId(),
+        providerId: currentBookingProviderId,
+        providerType: currentBookingProviderType,
+        tipperName: document.getElementById('tipperName').value.trim(),
+        tipperEmail: document.getElementById('tipperEmail').value.trim(),
+        amount: parseFloat(document.getElementById('tipAmount').value) || 0,
+        message: document.getElementById('tipMessage').value.trim(),
+        createdAt: new Date().toISOString()
+    };
+
+    if (tip.amount <= 0) { showToast('Please enter a valid amount.', 'error'); return; }
+
+    const tips = Storage.getTips();
+    tips.push(tip);
+    Storage.setTips(tips);
+    closeTipModal();
+    showToast(`Tip of R${tip.amount.toFixed(2)} sent!`, 'success');
+}
+
+// ==========================================
+// USER BOOKINGS
+// ==========================================
+function renderUserBookings() {
+    const bookings = Storage.getBookings();
+    const filter = document.getElementById('userBookingsFilter')?.value || 'all';
+    const filtered = filter === 'all' ? bookings : bookings.filter(b => b.status === filter);
+    const sorted = [...filtered].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+    const container = document.getElementById('userBookingsList');
+    if (!container) return;
+
+    if (sorted.length === 0) {
+        container.innerHTML = '<div class="empty-section"><i class="fas fa-calendar-check"></i><p>No bookings yet</p><span>Book a provider from the directory</span></div>';
+        return;
+    }
+
+    container.innerHTML = sorted.map(b => {
+        const status = BOOKING_STATUSES[b.status] || BOOKING_STATUSES['pending'];
+        const providers = b.providerType === 'service' ? Storage.getServices() : Storage.getListings();
+        const provider = providers.find(p => p.id === b.providerId);
+        const providerName = provider ? provider.name : 'Unknown Provider';
+
+        return `
+            <div class="booking-card profile-card">
+                <div class="booking-card-header">
+                    <div class="booking-provider">
+                        <i class="fas ${b.providerType === 'service' ? 'fa-concierge-bell' : 'fa-user-tie'}"></i>
+                        <span>${providerName}</span>
+                    </div>
+                    <span class="booking-status" style="background:${status.color}22; color:${status.color}; border:1px solid ${status.color}44;">
+                        <i class="fas ${status.icon}"></i> ${status.label}
+                    </span>
+                </div>
+                <div class="booking-card-body">
+                    <div class="booking-detail"><i class="fas fa-calendar"></i> ${b.date || '-'}</div>
+                    <div class="booking-detail"><i class="fas fa-clock"></i> ${b.time || '-'}</div>
+                    <div class="booking-detail"><i class="fas fa-tag"></i> ${b.serviceType || '-'}</div>
+                    ${b.notes ? `<div class="booking-detail booking-notes"><i class="fas fa-comment"></i> ${b.notes}</div>` : ''}
+                </div>
+                <div class="booking-card-footer">
+                    <span class="booking-date">Booked ${formatDate(b.createdAt)}</span>
+                    ${b.status === 'pending' ? `<button class="btn btn-danger btn-sm" onclick="cancelBooking('${b.id}')"><i class="fas fa-times"></i> Cancel</button>` : ''}
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+function filterUserBookings() { renderUserBookings(); }
+
+function cancelBooking(id) {
+    const bookings = Storage.getBookings();
+    const booking = bookings.find(b => b.id === id);
+    if (booking) {
+        booking.status = 'cancelled';
+        Storage.setBookings(bookings);
+        showToast('Booking cancelled.', 'info');
+        if (window.location.pathname.includes('provider.html')) {
+            renderProviderBookings();
+        } else {
+            renderUserBookings();
+        }
+    }
+}
+
+// ==========================================
+// PROVIDER BOOKINGS
+// ==========================================
+function renderProviderBookings() {
+    const listings = Storage.getListings();
+    const services = Storage.getServices();
+    const allProviders = [...listings.map(l => ({...l, _type: 'listing'})), ...services.map(s => ({...s, _type: 'service'}))];
+    const providerIds = allProviders.map(p => p.id);
+
+    const bookings = Storage.getBookings().filter(b => providerIds.includes(b.providerId));
+    const filter = document.getElementById('providerBookingsFilter')?.value || 'all';
+    const filtered = filter === 'all' ? bookings : bookings.filter(b => b.status === filter);
+    const sorted = [...filtered].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+    const container = document.getElementById('providerBookingsList');
+    if (!container) return;
+
+    if (sorted.length === 0) {
+        container.innerHTML = '<div class="empty-section"><i class="fas fa-calendar-check"></i><p>No bookings received</p><span>Bookings from clients will appear here</span></div>';
+        return;
+    }
+
+    container.innerHTML = sorted.map(b => {
+        const status = BOOKING_STATUSES[b.status] || BOOKING_STATUSES['pending'];
+        const providers = b.providerType === 'service' ? services : listings;
+        const provider = providers.find(p => p.id === b.providerId);
+        const providerName = provider ? provider.name : 'Unknown';
+
+        return `
+            <div class="booking-card profile-card">
+                <div class="booking-card-header">
+                    <div class="booking-provider">
+                        <i class="fas fa-user"></i>
+                        <span>${b.clientName}</span>
+                    </div>
+                    <span class="booking-status" style="background:${status.color}22; color:${status.color}; border:1px solid ${status.color}44;">
+                        <i class="fas ${status.icon}"></i> ${status.label}
+                    </span>
+                </div>
+                <div class="booking-card-body">
+                    <div class="booking-detail"><i class="fas fa-building"></i> For: ${providerName}</div>
+                    <div class="booking-detail"><i class="fas fa-envelope"></i> ${b.clientEmail}</div>
+                    <div class="booking-detail"><i class="fas fa-phone"></i> ${b.clientPhone || '-'}</div>
+                    <div class="booking-detail"><i class="fas fa-calendar"></i> ${b.date || '-'}</div>
+                    <div class="booking-detail"><i class="fas fa-clock"></i> ${b.time || '-'}</div>
+                    <div class="booking-detail"><i class="fas fa-tag"></i> ${b.serviceType || '-'}</div>
+                    ${b.notes ? `<div class="booking-detail booking-notes"><i class="fas fa-comment"></i> ${b.notes}</div>` : ''}
+                </div>
+                <div class="booking-card-footer">
+                    <span class="booking-date">Received ${formatDate(b.createdAt)}</span>
+                    <div class="booking-actions">
+                        ${b.status === 'pending' ? `
+                            <button class="btn btn-primary btn-sm" onclick="updateBookingStatus('${b.id}', 'confirmed')"><i class="fas fa-check"></i> Confirm</button>
+                            <button class="btn btn-danger btn-sm" onclick="updateBookingStatus('${b.id}', 'cancelled')"><i class="fas fa-times"></i> Decline</button>
+                        ` : ''}
+                        ${b.status === 'confirmed' ? `
+                            <button class="btn btn-primary btn-sm" onclick="updateBookingStatus('${b.id}', 'completed')"><i class="fas fa-flag-checkered"></i> Complete</button>
+                        ` : ''}
+                        <button class="btn btn-secondary btn-sm" onclick="deleteBooking('${b.id}')"><i class="fas fa-trash"></i></button>
+                    </div>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+function filterProviderBookings() { renderProviderBookings(); }
+
+function updateBookingStatus(id, status) {
+    const bookings = Storage.getBookings();
+    const booking = bookings.find(b => b.id === id);
+    if (booking) {
+        booking.status = status;
+        Storage.setBookings(bookings);
+        showToast(`Booking ${status}.`, 'success');
+        renderProviderBookings();
+    }
+}
+
+function deleteBooking(id) {
+    deleteTarget = { type: 'booking', id: id };
+    const modal = document.getElementById('deleteModal');
+    const text = document.getElementById('deleteModalText');
+    text.textContent = 'Are you sure you want to delete this booking? This action cannot be undone.';
+    modal.classList.add('active');
+}
+
+// ==========================================
+// PROVIDER TIPS
+// ==========================================
+function renderProviderTips() {
+    const listings = Storage.getListings();
+    const services = Storage.getServices();
+    const allProviders = [...listings.map(l => l.id), ...services.map(s => s.id)];
+
+    const tips = Storage.getTips().filter(t => allProviders.includes(t.providerId));
+    const sorted = [...tips].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    const totalTips = tips.reduce((sum, t) => sum + (t.amount || 0), 0);
+
+    const totalEl = document.getElementById('providerTipsTotal');
+    if (totalEl) totalEl.textContent = `R${totalTips.toFixed(2)}`;
+
+    const container = document.getElementById('providerTipsList');
+    if (!container) return;
+
+    if (sorted.length === 0) {
+        container.innerHTML = '<div class="empty-section"><i class="fas fa-hand-holding-heart"></i><p>No tips received yet</p><span>Tips from supporters will appear here</span></div>';
+        return;
+    }
+
+    container.innerHTML = sorted.map(t => `
+        <div class="tip-card profile-card">
+            <div class="tip-card-header">
+                <div class="tip-amount">R${(t.amount || 0).toFixed(2)}</div>
+                <div class="tip-from"><i class="fas fa-user"></i> ${t.tipperName}</div>
+            </div>
+            <div class="tip-card-body">
+                ${t.message ? `<p class="tip-message">"${t.message}"</p>` : ''}
+                <span class="tip-date">${formatDate(t.createdAt)}</span>
+            </div>
+        </div>
+    `).join('');
 }
