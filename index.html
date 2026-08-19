@@ -771,6 +771,34 @@
                 <div class="profile-card">
                     <h2><i class="fas fa-history"></i> Transaction History</h2>
                     <div class="wallet-transactions" id="userWalletTransactions"></div>
+
+                    <div class="wallet-analytics-section" id="userWalletAnalytics">
+                        <h2><i class="fas fa-chart-pie"></i> Spending Analytics</h2>
+                        <div class="analytics-filters">
+                            <select id="userAnalyticsPeriod" onchange="renderUserAnalytics()">
+                                <option value="all">All Time</option>
+                                <option value="7">Last 7 Days</option>
+                                <option value="30">Last 30 Days</option>
+                                <option value="90">Last 90 Days</option>
+                            </select>
+                        </div>
+                        <div class="analytics-grid">
+                            <div class="analytics-chart-card">
+                                <h3>Spending by Category</h3>
+                                <div class="chart-wrap"><canvas id="userSpendingByTypeChart"></canvas></div>
+                            </div>
+                            <div class="analytics-chart-card">
+                                <h3>Spending Over Time</h3>
+                                <div class="chart-wrap"><canvas id="userSpendingOverTimeChart"></canvas></div>
+                            </div>
+                        </div>
+                        <div class="analytics-stats-row">
+                            <div class="analytics-stat"><span class="analytics-stat-label">Total Spent</span><span class="analytics-stat-value" id="userAnalyticsTotalSpent">R0</span></div>
+                            <div class="analytics-stat"><span class="analytics-stat-label">Avg Transaction</span><span class="analytics-stat-value" id="userAnalyticsAvgTxn">R0</span></div>
+                            <div class="analytics-stat"><span class="analytics-stat-label">Top Category</span><span class="analytics-stat-value" id="userAnalyticsTopCategory">-</span></div>
+                            <div class="analytics-stat"><span class="analytics-stat-label">Transactions</span><span class="analytics-stat-value" id="userAnalyticsTxnCount">0</span></div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -1779,6 +1807,7 @@
         <div class="toast-container" id="toastContainer"></div>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
     <script src="script.js"></script>
 </body>
 </html>

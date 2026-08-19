@@ -2818,6 +2818,8 @@ function renderUserWallet() {
     document.getElementById('userWalletSpent').textContent = `R${spent.toFixed(2)}`;
     document.getElementById('userWalletTxns').textContent = txns.length;
 
+    renderUserAnalytics();
+
     // Pending top-up requests
     const pendingRequests = Storage.getTopUpRequests().filter(r => r.status === 'pending');
     const pendingContainer = document.getElementById('userPendingRequests');
@@ -2912,6 +2914,8 @@ function renderProviderWallet() {
     document.getElementById('providerWalletIncome').textContent = `R${totalIncome.toFixed(2)}`;
     document.getElementById('providerWalletWithdrawn').textContent = `R${totalWithdrawn.toFixed(2)}`;
     document.getElementById('providerWalletTxns').textContent = totalTxns;
+
+    renderProviderAnalytics();
 
     // Pending withdrawal requests
     const pendingRequests = Storage.getWithdrawalRequests().filter(r => r.status === 'pending');
@@ -3124,6 +3128,181 @@ function viewContent(id) {
     initStarRating('contentStarRating');
 
     navigateTo('content-view');
+}
+
+// ==========================================
+// WALLET ANALYTICS
+// ==========================================
+let userSpendingByTypeChart = null;
+let userSpendingOverTimeChart = null;
+let providerEarningsByTypeChart = null;
+let providerEarningsOverTimeChart = null;
+
+const TYPE_COLORS = {
+    'top-up': '#10b981', 'tip-sent': '#f59e0b', 'tip-received': '#f59e0b',
+    'booking-fee': '#ef4444', 'booking-confirmed': '#3b82f6', 'withdrawal': '#8b5cf6',
+    'admin-adjust': '#64748b', 'refund': '#06b6d4'
+};
+
+const TYPE_LABELS = {
+    'top-up': 'Top Up', 'tip-sent': 'Tips Sent', 'tip-received': 'Tips Received',
+    'booking-fee': 'Booking Fees', 'booking-confirmed': 'Booking Income',
+    'withdrawal': 'Withdrawals', 'admin-adjust': 'Admin Adjust', 'refund': 'Refunds'
+};
+
+function filterTxnsByPeriod(txns, period) {
+    if (period === 'all') return txns;
+    const days = parseInt(period);
+    const cutoff = new Date();
+    cutoff.setDate(cutoff.getDate() - days);
+    return txns.filter(t => new Date(t.createdAt) >= cutoff);
+}
+
+function renderUserAnalytics() {
+    const txns = filterTxnsByPeriod(getWalletTransactions('user', 'general'), document.getElementById('userAnalyticsPeriod')?.value || 'all');
+    const spentTxns = txns.filter(t => t.amount < 0);
+
+    const totalSpent = spentTxns.reduce((s, t) => s + Math.abs(t.amount), 0);
+    const avgTxn = spentTxns.length > 0 ? totalSpent / spentTxns.length : 0;
+
+    document.getElementById('userAnalyticsTotalSpent').textContent = 'R' + totalSpent.toFixed(0);
+    document.getElementById('userAnalyticsAvgTxn').textContent = 'R' + avgTxn.toFixed(0);
+    document.getElementById('userAnalyticsTxnCount').textContent = spentTxns.length;
+
+    const typeCounts = {};
+    spentTxns.forEach(t => { typeCounts[t.type] = (typeCounts[t.type] || 0) + Math.abs(t.amount); });
+    const topType = Object.entries(typeCounts).sort((a, b) => b[1] - a[1])[0];
+    document.getElementById('userAnalyticsTopCategory').textContent = topType ? (TYPE_LABELS[topType[0]] || topType[0]) : '-';
+
+    // Spending by Type (Doughnut)
+    const byTypeLabels = Object.keys(typeCounts).map(k => TYPE_LABELS[k] || k);
+    const byTypeData = Object.values(typeCounts);
+    const byTypeColors = Object.keys(typeCounts).map(k => TYPE_COLORS[k] || '#64748b');
+
+    if (userSpendingByTypeChart) userSpendingByTypeChart.destroy();
+    const ctx1 = document.getElementById('userSpendingByTypeChart');
+    if (ctx1) {
+        userSpendingByTypeChart = new Chart(ctx1, {
+            type: 'doughnut',
+            data: { labels: byTypeLabels, datasets: [{ data: byTypeData, backgroundColor: byTypeColors, borderWidth: 2, borderColor: '#fff' }] },
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                cutout: '65%',
+                plugins: { legend: { position: 'bottom', labels: { padding: 16, usePointStyle: true, font: { size: 12 } } } },
+                animation: { animateRotate: true, duration: 1200, easing: 'easeOutQuart' }
+            }
+        });
+    }
+
+    // Spending Over Time (Line)
+    const daily = {};
+    spentTxns.forEach(t => {
+        const d = new Date(t.createdAt).toLocaleDateString('en-ZA', { day: 'numeric', month: 'short' });
+        daily[d] = (daily[d] || 0) + Math.abs(t.amount);
+    });
+    const timeLabels = Object.keys(daily);
+    const timeData = Object.values(daily);
+
+    if (userSpendingOverTimeChart) userSpendingOverTimeChart.destroy();
+    const ctx2 = document.getElementById('userSpendingOverTimeChart');
+    if (ctx2) {
+        userSpendingOverTimeChart = new Chart(ctx2, {
+            type: 'line',
+            data: {
+                labels: timeLabels,
+                datasets: [{
+                    label: 'Spending', data: timeData,
+                    borderColor: '#ef4444', backgroundColor: 'rgba(239,68,68,0.08)',
+                    fill: true, tension: 0.4, borderWidth: 2.5,
+                    pointBackgroundColor: '#ef4444', pointRadius: 4, pointHoverRadius: 7
+                }]
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    y: { beginAtZero: true, grid: { color: '#f1f5f9' }, ticks: { callback: v => 'R' + v, font: { size: 11 } } },
+                    x: { grid: { display: false }, ticks: { font: { size: 11 } } }
+                },
+                animation: { duration: 1000, easing: 'easeOutQuart' }
+            }
+        });
+    }
+}
+
+function renderProviderAnalytics() {
+    const providerIds = [...Storage.getListings().map(l => l.id), ...Storage.getServices().map(s => s.id)];
+    let allTxns = [];
+    providerIds.forEach(pid => { allTxns = allTxns.concat(getWalletTransactions('provider', pid)); });
+    const txns = filterTxnsByPeriod(allTxns, document.getElementById('providerAnalyticsPeriod')?.value || 'all');
+    const earnedTxns = txns.filter(t => t.amount > 0);
+
+    const totalEarned = earnedTxns.reduce((s, t) => s + t.amount, 0);
+    const avgTxn = earnedTxns.length > 0 ? totalEarned / earnedTxns.length : 0;
+
+    document.getElementById('providerAnalyticsTotalEarned').textContent = 'R' + totalEarned.toFixed(0);
+    document.getElementById('providerAnalyticsAvgTxn').textContent = 'R' + avgTxn.toFixed(0);
+    document.getElementById('providerAnalyticsTxnCount').textContent = earnedTxns.length;
+
+    const typeCounts = {};
+    earnedTxns.forEach(t => { typeCounts[t.type] = (typeCounts[t.type] || 0) + t.amount; });
+    const topType = Object.entries(typeCounts).sort((a, b) => b[1] - a[1])[0];
+    document.getElementById('providerAnalyticsTopSource').textContent = topType ? (TYPE_LABELS[topType[0]] || topType[0]) : '-';
+
+    // Earnings by Type (Doughnut)
+    const byTypeLabels = Object.keys(typeCounts).map(k => TYPE_LABELS[k] || k);
+    const byTypeData = Object.values(typeCounts);
+    const byTypeColors = Object.keys(typeCounts).map(k => TYPE_COLORS[k] || '#64748b');
+
+    if (providerEarningsByTypeChart) providerEarningsByTypeChart.destroy();
+    const ctx1 = document.getElementById('providerEarningsByTypeChart');
+    if (ctx1) {
+        providerEarningsByTypeChart = new Chart(ctx1, {
+            type: 'doughnut',
+            data: { labels: byTypeLabels, datasets: [{ data: byTypeData, backgroundColor: byTypeColors, borderWidth: 2, borderColor: '#fff' }] },
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                cutout: '65%',
+                plugins: { legend: { position: 'bottom', labels: { padding: 16, usePointStyle: true, font: { size: 12 } } } },
+                animation: { animateRotate: true, duration: 1200, easing: 'easeOutQuart' }
+            }
+        });
+    }
+
+    // Earnings Over Time (Line)
+    const daily = {};
+    earnedTxns.forEach(t => {
+        const d = new Date(t.createdAt).toLocaleDateString('en-ZA', { day: 'numeric', month: 'short' });
+        daily[d] = (daily[d] || 0) + t.amount;
+    });
+    const timeLabels = Object.keys(daily);
+    const timeData = Object.values(daily);
+
+    if (providerEarningsOverTimeChart) providerEarningsOverTimeChart.destroy();
+    const ctx2 = document.getElementById('providerEarningsOverTimeChart');
+    if (ctx2) {
+        providerEarningsOverTimeChart = new Chart(ctx2, {
+            type: 'line',
+            data: {
+                labels: timeLabels,
+                datasets: [{
+                    label: 'Earnings', data: timeData,
+                    borderColor: '#10b981', backgroundColor: 'rgba(16,185,129,0.08)',
+                    fill: true, tension: 0.4, borderWidth: 2.5,
+                    pointBackgroundColor: '#10b981', pointRadius: 4, pointHoverRadius: 7
+                }]
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    y: { beginAtZero: true, grid: { color: '#f1f5f9' }, ticks: { callback: v => 'R' + v, font: { size: 11 } } },
+                    x: { grid: { display: false }, ticks: { font: { size: 11 } } }
+                },
+                animation: { duration: 1000, easing: 'easeOutQuart' }
+            }
+        });
+    }
 }
 
 // ==========================================
