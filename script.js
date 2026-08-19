@@ -41,7 +41,13 @@ const Storage = {
     setContentReactions: (data) => localStorage.setItem('k2_content_reactions', JSON.stringify(data)),
     getReviews: () => JSON.parse(localStorage.getItem('k2_reviews') || '[]'),
     setReviews: (data) => localStorage.setItem('k2_reviews', JSON.stringify(data)),
-    clearAll: () => { ['k2_users','k2_providers','k2_listings','k2_venues','k2_ads','k2_services','k2_bookings','k2_tips','k2_service_types','k2_wallets','k2_transactions','k2_topup_requests','k2_withdrawal_requests','k2_content','k2_events','k2_content_comments','k2_content_reactions','k2_reviews'].forEach(k => localStorage.removeItem(k)); }
+    getForumThreads: () => JSON.parse(localStorage.getItem('k2_forum_threads') || '[]'),
+    setForumThreads: (data) => localStorage.setItem('k2_forum_threads', JSON.stringify(data)),
+    getForumReplies: () => JSON.parse(localStorage.getItem('k2_forum_replies') || '[]'),
+    setForumReplies: (data) => localStorage.setItem('k2_forum_replies', JSON.stringify(data)),
+    getForumLikes: () => JSON.parse(localStorage.getItem('k2_forum_likes') || '[]'),
+    setForumLikes: (data) => localStorage.setItem('k2_forum_likes', JSON.stringify(data)),
+    clearAll: () => { ['k2_users','k2_providers','k2_listings','k2_venues','k2_ads','k2_services','k2_bookings','k2_tips','k2_service_types','k2_wallets','k2_transactions','k2_topup_requests','k2_withdrawal_requests','k2_content','k2_events','k2_content_comments','k2_content_reactions','k2_reviews','k2_forum_threads','k2_forum_replies','k2_forum_likes'].forEach(k => localStorage.removeItem(k)); }
 };
 
 const DIRECTORY_TYPES = {
@@ -581,6 +587,15 @@ function confirmDelete() {
         showToast('Business profile deleted.', 'info');
         currentViewProviderId = null;
         navigateTo('provider-dashboard');
+    } else if (deleteTarget.type === 'forum-thread') {
+        const threads = Storage.getForumThreads().filter(t => t.id !== deleteTarget.id);
+        Storage.setForumThreads(threads);
+        const replies = Storage.getForumReplies().filter(r => r.threadId !== deleteTarget.id);
+        Storage.setForumReplies(replies);
+        showToast('Thread deleted.', 'info');
+        currentForumViewId = null;
+        navigateTo('forum-browse');
+        renderForumThreads();
     }
     closeDeleteModal();
 }
@@ -4046,4 +4061,385 @@ function deleteEvent(id) {
     const text = document.getElementById('deleteModalText');
     text.textContent = 'Are you sure you want to delete this event? This action cannot be undone.';
     modal.classList.add('active');
+}
+
+// ==========================================
+// FORUM SYSTEM
+// ==========================================
+const FORUM_CATEGORIES = {
+    'general': { label: 'General Discussion', icon: 'fa-comments', color: '#3b82f6' },
+    'events': { label: 'Events', icon: 'fa-calendar-days', color: '#8b5cf6' },
+    'tips': { label: 'Tips & Tricks', icon: 'fa-lightbulb', color: '#10b981' },
+    'providers': { label: 'Providers Showcase', icon: 'fa-user-tie', color: '#ec4899' },
+    'safety': { label: 'Safety', icon: 'fa-shield-halved', color: '#ef4444' },
+    'newcomers': { label: 'New Members', icon: 'fa-hand-wave', color: '#f59e0b' },
+    'offtopic': { label: 'Off-Topic', icon: 'fa-ellipsis', color: '#64748b' }
+};
+
+let currentForumFilter = 'all';
+let currentForumViewId = null;
+
+function renderForumThreads() {
+    const threads = Storage.getForumThreads();
+    const replies = Storage.getForumReplies();
+    const likes = Storage.getForumLikes();
+    const search = document.getElementById('forumSearch')?.value?.toLowerCase() || '';
+    const sort = document.getElementById('forumSort')?.value || 'newest';
+
+    let filtered = [...threads];
+
+    if (currentForumFilter !== 'all') {
+        filtered = filtered.filter(t => t.category === currentForumFilter);
+    }
+
+    if (search) {
+        filtered = filtered.filter(t =>
+            t.title.toLowerCase().includes(search) ||
+            t.body.toLowerCase().includes(search) ||
+            (t.tags || []).some(tag => tag.toLowerCase().includes(search)) ||
+            t.author.toLowerCase().includes(search)
+        );
+    }
+
+    filtered.sort((a, b) => {
+        if (a.pinned && !b.pinned) return -1;
+        if (!a.pinned && b.pinned) return 1;
+        const aLikes = likes.filter(l => l.targetId === a.id && l.type === 'thread').length;
+        const bLikes = likes.filter(l => l.targetId === b.id && l.type === 'thread').length;
+        const aReplies = replies.filter(r => r.threadId === a.id).length;
+        const bReplies = replies.filter(r => r.threadId === b.id).length;
+        switch (sort) {
+            case 'oldest': return new Date(a.createdAt) - new Date(b.createdAt);
+            case 'popular': return bLikes - aLikes;
+            case 'replies': return bReplies - aReplies;
+            default: return new Date(b.createdAt) - new Date(a.createdAt);
+        }
+    });
+
+    const count = filtered.length;
+    const countEl = document.getElementById('forumCount');
+    if (countEl) countEl.textContent = count;
+
+    const container = document.getElementById('forumThreadsList');
+    if (!container) return;
+
+    if (filtered.length === 0) {
+        container.innerHTML = '<div class="forum-empty"><i class="fas fa-comments"></i><h3>No threads found</h3><p>Be the first to start a conversation in the community forum!</p></div>';
+        return;
+    }
+
+    container.innerHTML = filtered.map(thread => {
+        const cat = FORUM_CATEGORIES[thread.category] || { label: thread.category, icon: 'fa-comment', color: '#64748b' };
+        const threadLikes = likes.filter(l => l.targetId === thread.id && l.type === 'thread').length;
+        const threadReplies = replies.filter(r => r.threadId === thread.id).length;
+        const isLiked = likes.some(l => l.targetId === thread.id && l.type === 'thread' && l.userId === 'current');
+        const tagsHtml = (thread.tags || []).slice(0, 3).map(t => `<span class="forum-tag">${t}</span>`).join('');
+        const timeAgo = getTimeAgo(thread.createdAt);
+
+        return `
+            <div class="forum-thread-card${thread.pinned ? ' pinned' : ''}${thread.locked ? ' locked' : ''}" onclick="viewForumThread('${thread.id}')">
+                <div class="forum-thread-card-inner">
+                    <div class="forum-thread-votes" onclick="event.stopPropagation()">
+                        <button class="forum-vote-btn${isLiked ? ' liked' : ''}" onclick="toggleForumLike('${thread.id}', 'thread', this)" title="Like">
+                            <i class="fas fa-arrow-up"></i>
+                        </button>
+                        <span class="forum-vote-count">${threadLikes}</span>
+                    </div>
+                    <div class="forum-thread-content">
+                        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:6px">
+                            <span class="forum-thread-category-badge" style="background:${cat.color}18;color:${cat.color}"><i class="fas ${cat.icon}"></i> ${cat.label}</span>
+                            ${thread.pinned ? '<span class="forum-pin-badge"><i class="fas fa-thumbtack"></i> Pinned</span>' : ''}
+                            ${thread.locked ? '<span class="forum-lock-badge"><i class="fas fa-lock"></i> Locked</span>' : ''}
+                        </div>
+                        <h3 class="forum-thread-title">${escapeHtml(thread.title)}</h3>
+                        <p class="forum-thread-excerpt">${escapeHtml(thread.body)}</p>
+                        <div class="forum-thread-meta">
+                            <span><i class="fas fa-user"></i> ${escapeHtml(thread.author)}</span>
+                            <span><i class="fas fa-clock"></i> ${timeAgo}</span>
+                            <span><i class="fas fa-comment"></i> ${threadReplies} ${threadReplies === 1 ? 'reply' : 'replies'}</span>
+                            <span><i class="fas fa-eye"></i> ${thread.views || 0} views</span>
+                        </div>
+                        ${tagsHtml ? `<div class="forum-thread-tags">${tagsHtml}</div>` : ''}
+                    </div>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+function filterForum(category) {
+    currentForumFilter = category;
+    const tabs = document.querySelectorAll('#page-forum-browse .filter-tab, #page-forum-browse .filter-tab');
+    document.querySelectorAll('.filter-tab').forEach(tab => {
+        if (tab.closest('#page-forum-browse') || tab.closest('.directory-filters')) {
+            tab.classList.remove('active');
+        }
+    });
+    if (event && event.target) {
+        event.target.closest('.filter-tab')?.classList.add('active');
+    }
+    renderForumThreads();
+}
+
+function searchForum() { renderForumThreads(); }
+
+function viewForumThread(id) {
+    const threads = Storage.getForumThreads();
+    const thread = threads.find(t => t.id === id);
+    if (!thread) return;
+
+    currentForumViewId = id;
+
+    const replies = Storage.getForumReplies();
+    const likes = Storage.getForumLikes();
+    const cat = FORUM_CATEGORIES[thread.category] || { label: thread.category, icon: 'fa-comment', color: '#64748b' };
+    const threadLikes = likes.filter(l => l.targetId === id && l.type === 'thread').length;
+    const isLiked = likes.some(l => l.targetId === id && l.type === 'thread' && l.userId === 'current');
+    const threadReplies = replies.filter(r => r.threadId === id);
+    const tagsHtml = (thread.tags || []).map(t => `<span class="forum-tag">${t}</span>`).join('');
+    const createdStr = new Date(thread.createdAt).toLocaleDateString('en-ZA', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+
+    const titleEl = document.getElementById('forumViewTitle');
+    if (titleEl) titleEl.textContent = thread.title;
+
+    const fullEl = document.getElementById('forumThreadFull');
+    if (fullEl) {
+        fullEl.innerHTML = `
+            <div class="forum-thread-full-header">
+                <span class="forum-thread-full-category" style="background:${cat.color}18;color:${cat.color}"><i class="fas ${cat.icon}"></i> ${cat.label}</span>
+                ${thread.pinned ? '<span class="forum-pin-badge" style="margin-left:8px"><i class="fas fa-thumbtack"></i> Pinned</span>' : ''}
+                ${thread.locked ? '<span class="forum-lock-badge" style="margin-left:8px"><i class="fas fa-lock"></i> Locked</span>' : ''}
+                <h1 class="forum-thread-full-title">${escapeHtml(thread.title)}</h1>
+                <div class="forum-thread-full-meta">
+                    <span><i class="fas fa-user"></i> ${escapeHtml(thread.author)}</span>
+                    <span><i class="fas fa-clock"></i> ${createdStr}</span>
+                    <span><i class="fas fa-eye"></i> ${thread.views || 0} views</span>
+                </div>
+            </div>
+            <div class="forum-thread-full-body">
+                <p>${escapeHtml(thread.body)}</p>
+            </div>
+            ${tagsHtml ? `<div class="forum-thread-full-tags">${tagsHtml}</div>` : ''}
+            <div class="forum-thread-full-actions">
+                <button class="btn btn-secondary btn-sm" onclick="toggleForumLike('${id}', 'thread', this); viewForumThread('${id}')" style="display:inline-flex;align-items:center;gap:6px;${isLiked ? 'background:linear-gradient(135deg,#3b82f6,#2563eb);color:white;border:none' : ''}">
+                    <i class="fas fa-thumbs-up"></i> ${threadLikes} ${threadLikes === 1 ? 'Like' : 'Likes'}
+                </button>
+                <button class="btn btn-secondary btn-sm" onclick="document.getElementById('forumReplyBody').focus()" style="display:inline-flex;align-items:center;gap:6px">
+                    <i class="fas fa-reply"></i> Reply
+                </button>
+                ${!thread.locked ? `<button class="btn btn-danger btn-sm" onclick="deleteForumThread('${id}')" style="display:inline-flex;align-items:center;gap:6px"><i class="fas fa-trash"></i> Delete</button>` : ''}
+            </div>
+        `;
+    }
+
+    const replyCountEl = document.getElementById('forumReplyCount');
+    if (replyCountEl) replyCountEl.textContent = `(${threadReplies.length})`;
+
+    const repliesList = document.getElementById('forumRepliesList');
+    if (repliesList) {
+        if (threadReplies.length === 0) {
+            repliesList.innerHTML = '<p style="color:var(--text-muted, #94a3b8);font-style:italic;padding:10px 0">No replies yet. Be the first to reply!</p>';
+        } else {
+            repliesList.innerHTML = threadReplies.map(reply => {
+                const initials = reply.author.split(' ').map(w => w[0]).join('').substring(0, 2).toUpperCase();
+                const replyLikes = likes.filter(l => l.targetId === reply.id && l.type === 'reply').length;
+                const isReplyLiked = likes.some(l => l.targetId === reply.id && l.type === 'reply' && l.userId === 'current');
+                const replyTime = getTimeAgo(reply.createdAt);
+                return `
+                    <div class="forum-reply-item">
+                        <div class="forum-reply-avatar">${initials}</div>
+                        <div class="forum-reply-content">
+                            <div class="forum-reply-header">
+                                <span class="forum-reply-author">${escapeHtml(reply.author)}</span>
+                                <span class="forum-reply-time">${replyTime}</span>
+                            </div>
+                            <p class="forum-reply-body">${escapeHtml(reply.body)}</p>
+                            <div class="forum-reply-actions">
+                                <button class="forum-reply-action-btn${isReplyLiked ? ' liked' : ''}" onclick="toggleForumLike('${reply.id}', 'reply', this); viewForumThread('${id}')">
+                                    <i class="fas fa-thumbs-up"></i> ${replyLikes}
+                                </button>
+                                <button class="forum-reply-action-btn" onclick="deleteForumReply('${reply.id}', '${id}')">
+                                    <i class="fas fa-trash"></i> Delete
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+    }
+
+    thread.views = (thread.views || 0) + 1;
+    Storage.setForumThreads(threads);
+
+    navigateTo('forum-view');
+}
+
+function handleForumThreadSubmit(e) {
+    e.preventDefault();
+    const id = document.getElementById('forumThreadId').value;
+    const title = document.getElementById('forumThreadTitle').value.trim();
+    const category = document.getElementById('forumThreadCategory').value;
+    const author = document.getElementById('forumThreadAuthor').value.trim();
+    const body = document.getElementById('forumThreadBody').value.trim();
+    const tagsStr = document.getElementById('forumThreadTags').value.trim();
+    const tags = tagsStr ? tagsStr.split(',').map(t => t.trim()).filter(Boolean) : [];
+
+    if (!title || !category || !author || !body) { showToast('Please fill in all required fields.', 'error'); return; }
+
+    const threads = Storage.getForumThreads();
+    if (id) {
+        const idx = threads.findIndex(t => t.id === id);
+        if (idx !== -1) {
+            threads[idx].title = title;
+            threads[idx].category = category;
+            threads[idx].author = author;
+            threads[idx].body = body;
+            threads[idx].tags = tags;
+            threads[idx].updatedAt = new Date().toISOString();
+        }
+        showToast('Thread updated!', 'success');
+    } else {
+        threads.push({
+            id: generateId(), title, category, author, body, tags,
+            views: 0, pinned: false, locked: false,
+            createdAt: new Date().toISOString()
+        });
+        showToast('Thread posted!', 'success');
+    }
+    Storage.setForumThreads(threads);
+    navigateTo('forum-browse');
+    renderForumThreads();
+}
+
+function submitForumReply() {
+    if (!currentForumViewId) return;
+    const author = document.getElementById('forumReplyAuthor').value.trim();
+    const body = document.getElementById('forumReplyBody').value.trim();
+
+    if (!author || !body) { showToast('Please fill in your name and reply.', 'error'); return; }
+
+    const threads = Storage.getForumThreads();
+    const thread = threads.find(t => t.id === currentForumViewId);
+    if (thread && thread.locked) { showToast('This thread is locked.', 'error'); return; }
+
+    const replies = Storage.getForumReplies();
+    replies.push({
+        id: generateId(), threadId: currentForumViewId, author, body,
+        createdAt: new Date().toISOString()
+    });
+    Storage.setForumReplies(replies);
+
+    document.getElementById('forumReplyBody').value = '';
+    showToast('Reply posted!', 'success');
+    viewForumThread(currentForumViewId);
+}
+
+function toggleForumLike(targetId, type, btn) {
+    const likes = Storage.getForumLikes();
+    const existingIdx = likes.findIndex(l => l.targetId === targetId && l.type === type && l.userId === 'current');
+    if (existingIdx !== -1) {
+        likes.splice(existingIdx, 1);
+    } else {
+        likes.push({ id: generateId(), targetId, type, userId: 'current', createdAt: new Date().toISOString() });
+    }
+    Storage.setForumLikes(likes);
+    if (btn) {
+        const isNowLiked = likes.some(l => l.targetId === targetId && l.type === type && l.userId === 'current');
+        btn.classList.toggle('liked', isNowLiked);
+        const countEl = btn.nextElementSibling;
+        if (countEl && countEl.classList.contains('forum-vote-count')) {
+            countEl.textContent = likes.filter(l => l.targetId === targetId && l.type === type).length;
+        }
+    }
+}
+
+function deleteForumThread(id) {
+    deleteTarget = { type: 'forum-thread', id };
+    const modal = document.getElementById('deleteModal');
+    const text = document.getElementById('deleteModalText');
+    text.textContent = 'Are you sure you want to delete this thread and all its replies?';
+    modal.classList.add('active');
+}
+
+function deleteForumReply(replyId, threadId) {
+    const replies = Storage.getForumReplies();
+    const filtered = replies.filter(r => r.id !== replyId);
+    Storage.setForumReplies(filtered);
+    showToast('Reply deleted.', 'success');
+    viewForumThread(threadId);
+}
+
+function renderUserForumThreads() {
+    const threads = Storage.getForumThreads();
+    const replies = Storage.getForumReplies();
+    const likes = Storage.getForumLikes();
+    const userThreads = threads.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+    const container = document.getElementById('userForumThreadsList');
+    if (!container) return;
+
+    if (userThreads.length === 0) {
+        container.innerHTML = '<div class="forum-empty"><i class="fas fa-comments"></i><h3>No threads yet</h3><p>Start a discussion in the community forum!</p></div>';
+        return;
+    }
+
+    container.innerHTML = userThreads.map(thread => {
+        const cat = FORUM_CATEGORIES[thread.category] || { label: thread.category, icon: 'fa-comment', color: '#64748b' };
+        const threadLikes = likes.filter(l => l.targetId === thread.id && l.type === 'thread').length;
+        const threadReplies = replies.filter(r => r.threadId === thread.id).length;
+        const timeAgo = getTimeAgo(thread.createdAt);
+
+        return `
+            <div class="forum-thread-card${thread.pinned ? ' pinned' : ''}${thread.locked ? ' locked' : ''}" onclick="viewForumThread('${thread.id}')">
+                <div class="forum-thread-card-inner">
+                    <div class="forum-thread-votes" onclick="event.stopPropagation()">
+                        <button class="forum-vote-btn" onclick="toggleForumLike('${thread.id}', 'thread', this)"><i class="fas fa-arrow-up"></i></button>
+                        <span class="forum-vote-count">${threadLikes}</span>
+                    </div>
+                    <div class="forum-thread-content">
+                        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:6px">
+                            <span class="forum-thread-category-badge" style="background:${cat.color}18;color:${cat.color}"><i class="fas ${cat.icon}"></i> ${cat.label}</span>
+                            ${thread.pinned ? '<span class="forum-pin-badge"><i class="fas fa-thumbtack"></i> Pinned</span>' : ''}
+                            ${thread.locked ? '<span class="forum-lock-badge"><i class="fas fa-lock"></i> Locked</span>' : ''}
+                        </div>
+                        <h3 class="forum-thread-title">${escapeHtml(thread.title)}</h3>
+                        <p class="forum-thread-excerpt">${escapeHtml(thread.body)}</p>
+                        <div class="forum-thread-meta">
+                            <span><i class="fas fa-clock"></i> ${timeAgo}</span>
+                            <span><i class="fas fa-comment"></i> ${threadReplies} replies</span>
+                            <span><i class="fas fa-eye"></i> ${thread.views || 0} views</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+function resetForumForm() {
+    document.getElementById('forumFormTitle').textContent = 'New Thread';
+    document.getElementById('forumThreadSubmitBtn').textContent = 'Post Thread';
+    document.getElementById('forumThreadId').value = '';
+    document.getElementById('forumThreadTitle').value = '';
+    document.getElementById('forumThreadCategory').value = '';
+    document.getElementById('forumThreadAuthor').value = '';
+    document.getElementById('forumThreadBody').value = '';
+    document.getElementById('forumThreadTags').value = '';
+}
+
+function getTimeAgo(dateStr) {
+    const now = new Date();
+    const date = new Date(dateStr);
+    const diff = Math.floor((now - date) / 1000);
+    if (diff < 60) return 'Just now';
+    if (diff < 3600) return Math.floor(diff / 60) + 'm ago';
+    if (diff < 86400) return Math.floor(diff / 3600) + 'h ago';
+    if (diff < 2592000) return Math.floor(diff / 86400) + 'd ago';
+    return date.toLocaleDateString('en-ZA', { day: 'numeric', month: 'short', year: 'numeric' });
+}
+
+function escapeHtml(str) {
+    if (!str) return '';
+    return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }

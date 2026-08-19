@@ -80,6 +80,20 @@
                 <span>New Event</span>
             </a>
             <div class="nav-divider"></div>
+            <span class="nav-section-title">Forum</span>
+            <a href="#" class="nav-item" data-page="forum-browse">
+                <i class="fas fa-comments"></i>
+                <span>Browse Forum</span>
+            </a>
+            <a href="#" class="nav-item" data-page="forum-create">
+                <i class="fas fa-plus-circle"></i>
+                <span>New Thread</span>
+            </a>
+            <a href="#" class="nav-item" data-page="user-forum-threads">
+                <i class="fas fa-list"></i>
+                <span>My Threads</span>
+            </a>
+            <div class="nav-divider"></div>
             <span class="nav-section-title">Personal Ads</span>
             <a href="#" class="nav-item" data-page="provider-ads">
                 <i class="fas fa-bullhorn"></i>
@@ -1975,10 +1989,160 @@
             </div>
         </div>
 
+        <!-- Forum Browse -->
+        <div class="page" id="page-forum-browse">
+            <div class="container">
+                <div class="dashboard-header">
+                    <div>
+                        <h1>Community Forum</h1>
+                        <p>Discuss, share, and connect with the community</p>
+                    </div>
+                    <button class="btn btn-primary" onclick="navigateTo('forum-create')">
+                        <i class="fas fa-plus"></i> New Thread
+                    </button>
+                </div>
+
+                <div class="directory-filters">
+                    <div class="filter-tabs">
+                        <button class="filter-tab active" onclick="filterForum('all')"><i class="fas fa-globe"></i> All</button>
+                        <button class="filter-tab" onclick="filterForum('general')"><i class="fas fa-comments"></i> General</button>
+                        <button class="filter-tab" onclick="filterForum('events')"><i class="fas fa-calendar-days"></i> Events</button>
+                        <button class="filter-tab" onclick="filterForum('tips')"><i class="fas fa-lightbulb"></i> Tips & Tricks</button>
+                        <button class="filter-tab" onclick="filterForum('providers')"><i class="fas fa-user-tie"></i> Providers</button>
+                        <button class="filter-tab" onclick="filterForum('safety')"><i class="fas fa-shield-halved"></i> Safety</button>
+                        <button class="filter-tab" onclick="filterForum('newcomers')"><i class="fas fa-hand-wave"></i> New Members</button>
+                        <button class="filter-tab" onclick="filterForum('offtopic')"><i class="fas fa-ellipsis"></i> Off-Topic</button>
+                    </div>
+                    <div class="filter-bar">
+                        <input type="text" id="forumSearch" placeholder="Search threads..." oninput="searchForum()">
+                        <select id="forumSort" onchange="searchForum()">
+                            <option value="newest">Newest</option>
+                            <option value="oldest">Oldest</option>
+                            <option value="popular">Most Liked</option>
+                            <option value="replies">Most Replies</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="directory-stats" id="forumStats">
+                    <span id="forumCount">0</span> threads found
+                </div>
+
+                <div class="forum-threads-list" id="forumThreadsList"></div>
+            </div>
+        </div>
+
+        <!-- Forum Create/Edit Thread -->
+        <div class="page" id="page-forum-create">
+            <div class="container">
+                <div class="form-header">
+                    <button class="btn-back" onclick="navigateTo('forum-browse')">
+                        <i class="fas fa-arrow-left"></i> Back
+                    </button>
+                    <h1 id="forumFormTitle">New Thread</h1>
+                </div>
+
+                <form id="forumThreadForm" onsubmit="handleForumThreadSubmit(event)">
+                    <input type="hidden" id="forumThreadId" value="">
+
+                    <div class="profile-card">
+                        <h2><i class="fas fa-pen-to-square"></i> Thread Details</h2>
+                        <div class="form-grid">
+                            <div class="form-group full-width">
+                                <label>Title *</label>
+                                <input type="text" id="forumThreadTitle" placeholder="Give your thread a descriptive title" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Category *</label>
+                                <select id="forumThreadCategory" required>
+                                    <option value="">Select category</option>
+                                    <option value="general">General Discussion</option>
+                                    <option value="events">Events</option>
+                                    <option value="tips">Tips & Tricks</option>
+                                    <option value="providers">Providers Showcase</option>
+                                    <option value="safety">Safety</option>
+                                    <option value="newcomers">New Members</option>
+                                    <option value="offtopic">Off-Topic</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Your Name *</label>
+                                <input type="text" id="forumThreadAuthor" placeholder="Display name" required>
+                            </div>
+                        </div>
+                        <div class="form-group" style="margin-top:16px">
+                            <label>Body *</label>
+                            <textarea id="forumThreadBody" placeholder="Write your thread content..." rows="10" required></textarea>
+                        </div>
+                        <div class="form-group" style="margin-top:12px">
+                            <label>Tags (comma-separated)</label>
+                            <input type="text" id="forumThreadTags" placeholder="e.g. advice, venue, cape-town">
+                        </div>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="button" class="btn btn-secondary" onclick="navigateTo('forum-browse')">Cancel</button>
+                        <button type="submit" class="btn btn-primary" id="forumThreadSubmitBtn">Post Thread</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Forum Thread View -->
+        <div class="page" id="page-forum-view">
+            <div class="container">
+                <div class="form-header">
+                    <button class="btn-back" onclick="navigateTo('forum-browse')">
+                        <i class="fas fa-arrow-left"></i> Back to Forum
+                    </button>
+                    <h1 id="forumViewTitle">Thread</h1>
+                </div>
+
+                <div class="forum-thread-full" id="forumThreadFull"></div>
+
+                <div class="profile-card" style="margin-top:20px">
+                    <h2><i class="fas fa-reply"></i> Replies <span id="forumReplyCount"></span></h2>
+                    <div class="forum-reply-form" style="padding:20px 24px; border-bottom:1px solid var(--border, #f1f5f9)">
+                        <div class="form-grid" style="grid-template-columns:1fr 1fr; gap:10px; margin-bottom:10px">
+                            <div class="form-group">
+                                <label>Your Name *</label>
+                                <input type="text" id="forumReplyAuthor" placeholder="Display name" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Email (optional)</label>
+                                <input type="email" id="forumReplyEmail" placeholder="Email">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <textarea id="forumReplyBody" placeholder="Write your reply..." rows="4" required style="width:100%;padding:10px 14px;border:1px solid var(--border, #e2e8f0);border-radius:10px;font-family:inherit;font-size:0.9rem;resize:none;outline:none;background:var(--card-bg, white);color:var(--text-primary, #1e293b)"></textarea>
+                        </div>
+                        <button class="btn btn-primary btn-sm" onclick="submitForumReply()" style="margin-top:8px"><i class="fas fa-paper-plane"></i> Post Reply</button>
+                    </div>
+                    <div class="forum-replies-list" id="forumRepliesList" style="padding:20px 24px"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- My Forum Threads -->
+        <div class="page" id="page-user-forum-threads">
+            <div class="container">
+                <div class="dashboard-header">
+                    <div>
+                        <h1>My Forum Threads</h1>
+                        <p>Threads you have created</p>
+                    </div>
+                    <button class="btn btn-primary" onclick="navigateTo('forum-create')">
+                        <i class="fas fa-plus"></i> New Thread
+                    </button>
+                </div>
+                <div class="forum-threads-list" id="userForumThreadsList"></div>
+            </div>
+        </div>
+
         <div class="toast-container" id="toastContainer"></div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
-    <script src="script.js?v=2"></script>
+    <script src="script.js?v=3"></script>
 </body>
 </html>

@@ -37,6 +37,7 @@ function navigateTo(page) {
     if (page === 'admin-events') renderAdminEvents();
     if (page === 'admin-reviews') renderAdminReviews();
     if (page === 'admin-wallets') renderAdminWallets();
+    if (page === 'admin-forum') renderAdminForum();
     if (page === 'admin-logs') renderAdminLogs();
 
     const sidebar = document.getElementById('sidebar');
@@ -101,6 +102,15 @@ function confirmDelete() {
         Storage.setAds(Storage.getAds().filter(a => a.id !== id));
         showToast('Ad deleted.');
         renderAdminAds();
+    } else if (type === 'forum-thread') {
+        Storage.setForumThreads(Storage.getForumThreads().filter(t => t.id !== id));
+        Storage.setForumReplies(Storage.getForumReplies().filter(r => r.threadId !== id));
+        showToast('Thread deleted.');
+        renderAdminForum();
+    } else if (type === 'forum-reply') {
+        Storage.setForumReplies(Storage.getForumReplies().filter(r => r.id !== id));
+        showToast('Reply deleted.');
+        renderAdminForum();
     }
     closeDeleteModal();
 }
@@ -971,3 +981,123 @@ document.getElementById('closeBtn')?.addEventListener('click', () => {
     document.getElementById('sidebar').classList.remove('active');
     document.getElementById('mainContent').classList.remove('shifted');
 });
+
+// ==========================================
+// FORUM ADMIN
+// ==========================================
+let currentAdminForumFilter = 'all';
+
+function filterAdminForum(filter) {
+    currentAdminForumFilter = filter;
+    document.querySelectorAll('#page-admin-forum .filter-tab').forEach(t => t.classList.remove('active'));
+    if (event && event.target) event.target.closest('.filter-tab')?.classList.add('active');
+    renderAdminForum();
+}
+
+function renderAdminForum() {
+    const threads = Storage.getForumThreads();
+    const replies = Storage.getForumReplies();
+    const search = document.getElementById('adminForumSearch')?.value?.toLowerCase() || '';
+
+    let filtered = [...threads];
+
+    if (currentAdminForumFilter === 'pinned') {
+        filtered = filtered.filter(t => t.pinned);
+    } else if (currentAdminForumFilter === 'locked') {
+        filtered = filtered.filter(t => t.locked);
+    }
+
+    if (search) {
+        filtered = filtered.filter(t =>
+            t.title.toLowerCase().includes(search) ||
+            t.author.toLowerCase().includes(search) ||
+            t.body.toLowerCase().includes(search)
+        );
+    }
+
+    filtered.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+    const tbody = document.getElementById('adminForumTableBody');
+    if (!tbody) return;
+
+    if (filtered.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="8" class="empty-cell">No forum threads found</td></tr>';
+        return;
+    }
+
+    const FORUM_CATS = {
+        'general': { label: 'General', color: '#3b82f6' },
+        'events': { label: 'Events', color: '#8b5cf6' },
+        'tips': { label: 'Tips', color: '#10b981' },
+        'providers': { label: 'Providers', color: '#ec4899' },
+        'safety': { label: 'Safety', color: '#ef4444' },
+        'newcomers': { label: 'New Members', color: '#f59e0b' },
+        'offtopic': { label: 'Off-Topic', color: '#64748b' }
+    };
+
+    tbody.innerHTML = filtered.map(thread => {
+        const cat = FORUM_CATS[thread.category] || { label: thread.category, color: '#64748b' };
+        const threadReplies = replies.filter(r => r.threadId === thread.id).length;
+        const likes = Storage.getForumLikes();
+        const threadLikes = likes.filter(l => l.targetId === thread.id && l.type === 'thread').length;
+        const date = new Date(thread.createdAt).toLocaleDateString('en-ZA', { day: 'numeric', month: 'short', year: 'numeric' });
+
+        let statusBadges = '';
+        if (thread.pinned) statusBadges += '<span class="forum-pin-badge" style="margin-right:4px"><i class="fas fa-thumbtack"></i> Pinned</span>';
+        if (thread.locked) statusBadges += '<span class="forum-lock-badge"><i class="fas fa-lock"></i> Locked</span>';
+        if (!thread.pinned && !thread.locked) statusBadges = '<span style="color:var(--text-muted, #94a3b8);font-size:0.8rem">Active</span>';
+
+        return `
+            <tr>
+                <td class="truncate" style="max-width:250px"><strong>${escapeHtml(thread.title)}</strong></td>
+                <td>${escapeHtml(thread.author)}</td>
+                <td><span style="background:${cat.color}18;color:${cat.color};padding:3px 8px;border-radius:8px;font-size:0.75rem;font-weight:600">${cat.label}</span></td>
+                <td>${threadReplies}</td>
+                <td>${threadLikes}</td>
+                <td>${statusBadges}</td>
+                <td>${date}</td>
+                <td>
+                    <div class="admin-actions">
+                        <button class="btn btn-secondary btn-xs" onclick="adminTogglePin('${thread.id}')" title="${thread.pinned ? 'Unpin' : 'Pin'}">
+                            <i class="fas fa-thumbtack"></i>
+                        </button>
+                        <button class="btn btn-secondary btn-xs" onclick="adminToggleLock('${thread.id}')" title="${thread.locked ? 'Unlock' : 'Lock'}">
+                            <i class="fas fa-${thread.locked ? 'lock-open' : 'lock'}"></i>
+                        </button>
+                        <button class="btn btn-danger btn-xs" onclick="adminDeleteForumThread('${thread.id}')" title="Delete">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </td>
+            </tr>
+        `;
+    }).join('');
+}
+
+function adminTogglePin(id) {
+    const threads = Storage.getForumThreads();
+    const thread = threads.find(t => t.id === id);
+    if (!thread) return;
+    thread.pinned = !thread.pinned;
+    Storage.setForumThreads(threads);
+    showToast(thread.pinned ? 'Thread pinned.' : 'Thread unpinned.');
+    renderAdminForum();
+}
+
+function adminToggleLock(id) {
+    const threads = Storage.getForumThreads();
+    const thread = threads.find(t => t.id === id);
+    if (!thread) return;
+    thread.locked = !thread.locked;
+    Storage.setForumThreads(threads);
+    showToast(thread.locked ? 'Thread locked.' : 'Thread unlocked.');
+    renderAdminForum();
+}
+
+function adminDeleteForumThread(id) {
+    adminDeleteTarget = { type: 'forum-thread', id };
+    const modal = document.getElementById('deleteModal');
+    const text = document.getElementById('deleteModalText');
+    text.textContent = 'Delete this thread and all its replies? This cannot be undone.';
+    modal.classList.add('active');
+}

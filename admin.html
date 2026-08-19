@@ -87,6 +87,10 @@
                 <i class="fas fa-star"></i>
                 <span>Reviews</span>
             </a>
+            <a href="#" class="nav-item" data-page="admin-forum">
+                <i class="fas fa-comments"></i>
+                <span>Forum</span>
+            </a>
             <a href="#" class="nav-item" data-page="admin-wallets">
                 <i class="fas fa-wallet"></i>
                 <span>Wallets</span>
@@ -590,6 +594,49 @@
             </div>
         </div>
 
+        <!-- Forum Management -->
+        <div class="page" id="page-admin-forum">
+            <div class="container">
+                <div class="dashboard-header">
+                    <div>
+                        <h1><i class="fas fa-comments"></i> Forum Management</h1>
+                        <p>Moderate threads, replies, and categories</p>
+                    </div>
+                </div>
+
+                <div class="directory-filters">
+                    <div class="filter-tabs">
+                        <button class="filter-tab active" onclick="filterAdminForum('all')"><i class="fas fa-globe"></i> All</button>
+                        <button class="filter-tab" onclick="filterAdminForum('threads')"><i class="fas fa-comment"></i> Threads</button>
+                        <button class="filter-tab" onclick="filterAdminForum('replies')"><i class="fas fa-reply"></i> Replies</button>
+                        <button class="filter-tab" onclick="filterAdminForum('pinned')"><i class="fas fa-thumbtack"></i> Pinned</button>
+                        <button class="filter-tab" onclick="filterAdminForum('locked')"><i class="fas fa-lock"></i> Locked</button>
+                    </div>
+                    <div class="filter-bar">
+                        <input type="text" id="adminForumSearch" placeholder="Search forum..." oninput="filterAdminForum(currentAdminForumFilter)">
+                    </div>
+                </div>
+
+                <div class="admin-table-wrap">
+                    <table class="admin-table" id="adminForumTable">
+                        <thead>
+                            <tr>
+                                <th>Thread</th>
+                                <th>Author</th>
+                                <th>Category</th>
+                                <th>Replies</th>
+                                <th>Likes</th>
+                                <th>Status</th>
+                                <th>Date</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="adminForumTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
         <!-- View Modal -->
         <div class="admin-view-modal" id="adminViewModal">
             <div class="admin-view-content" id="adminViewContent"></div>
@@ -611,7 +658,7 @@
         <div class="toast-container" id="toastContainer"></div>
     </div>
 
-    <script src="script.js?v=2"></script>
+    <script src="script.js?v=3"></script>
     <script src="admin.js"></script>
 </body>
 </html>
