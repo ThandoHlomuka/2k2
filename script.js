@@ -3836,7 +3836,7 @@ function renderEventsDirectory() {
     if (!container) return;
 
     if (filtered.length === 0) {
-        container.innerHTML = '<div class="empty-section"><i class="fas fa-calendar-star"></i><p>No events found</p><span>Check back later for upcoming events</span></div>';
+        container.innerHTML = '<div class="empty-section"><i class="fas fa-calendar-days"></i><p>No events found</p><span>Check back later for upcoming events</span></div>';
         return;
     }
 
@@ -3930,7 +3930,7 @@ function renderProviderEvents() {
     if (!container) return;
 
     if (filtered.length === 0) {
-        container.innerHTML = '<div class="empty-section"><i class="fas fa-calendar-star"></i><p>No events yet</p><span>Create your first event to get started</span></div>';
+        container.innerHTML = '<div class="empty-section"><i class="fas fa-calendar-days"></i><p>No events yet</p><span>Create your first event to get started</span></div>';
         return;
     }
 
