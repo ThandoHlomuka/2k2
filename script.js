@@ -25,14 +25,12 @@ const DIRECTORY_TYPES = {
 };
 
 const VENUE_TYPES = {
-    'nightclub': { label: 'Nightclub', icon: 'fa-moon', color: '#6366f1' },
-    'lounge': { label: 'Lounge', icon: 'fa-couch', color: '#8b5cf6' },
-    'restaurant': { label: 'Restaurant', icon: 'fa-utensils', color: '#f59e0b' },
+    'bnb': { label: 'B&B', icon: 'fa-house-chimney', color: '#10b981' },
+    'lodge': { label: 'Lodge', icon: 'fa-campground', color: '#f59e0b' },
     'hotel': { label: 'Hotel', icon: 'fa-bed', color: '#3b82f6' },
-    'event-space': { label: 'Event Space', icon: 'fa-calendar-alt', color: '#ec4899' },
-    'private-venue': { label: 'Private Venue', icon: 'fa-key', color: '#10b981' },
-    'beach-club': { label: 'Beach Club', icon: 'fa-umbrella-beach', color: '#06b6d4' },
-    'rooftop': { label: 'Rooftop Bar', icon: 'fa-city', color: '#f97316' }
+    'fetish-club': { label: 'Fetish Club', icon: 'fa-mask', color: '#8b5cf6' },
+    'nightclub': { label: 'Nightclub', icon: 'fa-moon', color: '#6366f1' },
+    'other': { label: 'Other', icon: 'fa-ellipsis', color: '#64748b' }
 };
 
 let currentViewUserId = null;
