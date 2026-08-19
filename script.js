@@ -15,7 +15,9 @@ const Storage = {
     setVenues: (data) => localStorage.setItem('k2_venues', JSON.stringify(data)),
     getAds: () => JSON.parse(localStorage.getItem('k2_ads') || '[]'),
     setAds: (data) => localStorage.setItem('k2_ads', JSON.stringify(data)),
-    clearAll: () => { localStorage.removeItem('k2_users'); localStorage.removeItem('k2_providers'); localStorage.removeItem('k2_listings'); localStorage.removeItem('k2_venues'); localStorage.removeItem('k2_ads'); }
+    getServices: () => JSON.parse(localStorage.getItem('k2_services') || '[]'),
+    setServices: (data) => localStorage.setItem('k2_services', JSON.stringify(data)),
+    clearAll: () => { ['k2_users','k2_providers','k2_listings','k2_venues','k2_ads','k2_services'].forEach(k => localStorage.removeItem(k)); }
 };
 
 const DIRECTORY_TYPES = {
@@ -42,6 +44,21 @@ const AD_CATEGORIES = {
     'general': { label: 'General', icon: 'fa-tag', color: '#64748b' }
 };
 
+const SERVICE_TYPES = {
+    'photography': { label: 'Photography', icon: 'fa-camera', color: '#ec4899' },
+    'videography': { label: 'Videography', icon: 'fa-video', color: '#8b5cf6' },
+    'content-creation': { label: 'Content Creation', icon: 'fa-palette', color: '#f59e0b' },
+    'dj-music': { label: 'DJ / Music', icon: 'fa-headphones', color: '#6366f1' },
+    'catering': { label: 'Catering', icon: 'fa-utensils', color: '#10b981' },
+    'event-planning': { label: 'Event Planning', icon: 'fa-calendar-check', color: '#3b82f6' },
+    'hair-beauty': { label: 'Hair & Beauty', icon: 'fa-spa', color: '#f472b6' },
+    'fitness': { label: 'Fitness', icon: 'fa-dumbbell', color: '#ef4444' },
+    'massage': { label: 'Massage', icon: 'fa-hands', color: '#06b6d4' },
+    'cleaning': { label: 'Cleaning', icon: 'fa-broom', color: '#84cc16' },
+    'transport': { label: 'Transport', icon: 'fa-car', color: '#f97316' },
+    'other-service': { label: 'Other', icon: 'fa-ellipsis', color: '#64748b' }
+};
+
 let currentViewUserId = null;
 let currentViewProviderId = null;
 let currentViewListingId = null;
@@ -61,6 +78,11 @@ let adGallery = [];
 let currentAdsFilter = 'all';
 let providerAdTags = [];
 let providerAdGallery = [];
+let serviceTags = [];
+let serviceGallery = [];
+let currentServicesFilter = 'all';
+let providerServiceTags = [];
+let providerServiceGallery = [];
 
 // ==========================================
 // Navigation
@@ -98,6 +120,9 @@ function navigateTo(page) {
     if (page === 'user-ads') renderUserAds();
     if (page === 'provider-ads') renderProviderAds();
     if (page === 'provider-ads-create') resetProviderAdForm();
+    if (page === 'services-directory') renderServicesDirectory();
+    if (page === 'provider-services') renderProviderServices();
+    if (page === 'provider-service-create') resetServiceForm();
 }
 
 // ==========================================
@@ -127,9 +152,11 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('venueTagsInput')?.addEventListener('keydown', handleVenueTagInput);
     document.getElementById('adTagsInput')?.addEventListener('keydown', handleAdTagInput);
     document.getElementById('providerAdTagsInput')?.addEventListener('keydown', handleProviderAdTagInput);
+    document.getElementById('serviceTagsInput')?.addEventListener('keydown', handleServiceTagInput);
     document.getElementById('directorySearch')?.addEventListener('keydown', (e) => { if (e.key === 'Enter') searchDirectory(); });
     document.getElementById('venueSearch')?.addEventListener('keydown', (e) => { if (e.key === 'Enter') searchVenueDirectory(); });
     document.getElementById('adsSearch')?.addEventListener('keydown', (e) => { if (e.key === 'Enter') searchAds(); });
+    document.getElementById('servicesSearch')?.addEventListener('keydown', (e) => { if (e.key === 'Enter') searchServicesDirectory(); });
 
     // Auto-detect page and render
     const isProviderPage = window.location.pathname.includes('provider.html');
@@ -138,12 +165,14 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('listingsList') && renderListings();
         document.getElementById('venueListingsList') && renderVenueListings();
         document.getElementById('providerAdsList') && renderProviderAds();
+        document.getElementById('providerServicesList') && renderProviderServices();
     } else {
         document.getElementById('userProfilesList') && renderUserProfiles();
         document.getElementById('directoryList') && renderDirectory();
         document.getElementById('venueDirectoryList') && renderVenueDirectory();
         document.getElementById('adsBrowseList') && renderAdsBrowse();
         document.getElementById('userAdsList') && renderUserAds();
+        document.getElementById('servicesDirectoryList') && renderServicesDirectory();
     }
 });
 
@@ -1040,6 +1069,14 @@ confirmDelete = function() {
         }
         return;
     }
+    if (deleteTarget.type === 'service') {
+        const services = Storage.getServices().filter(s => s.id !== deleteTarget.id);
+        Storage.setServices(services);
+        showToast('Service deleted.', 'info');
+        closeDeleteModal();
+        navigateTo('provider-services');
+        return;
+    }
     _origConfirmDelete();
 };
 
@@ -1853,4 +1890,338 @@ function formatDate(iso) {
     const d = new Date(iso);
     const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
     return `${months[d.getMonth()]} ${d.getDate()}, ${d.getFullYear()}`;
+}
+
+// ==========================================
+// SERVICES DIRECTORY
+// ==========================================
+function renderServicesDirectory() {
+    const services = Storage.getServices();
+    const search = (document.getElementById('servicesSearch')?.value || '').toLowerCase();
+    const location = document.getElementById('servicesLocationFilter')?.value || '';
+    const sortBy = document.getElementById('servicesSort')?.value || 'newest';
+
+    let filtered = services.filter(s => {
+        if (currentServicesFilter !== 'all' && s.category !== currentServicesFilter) return false;
+        if (location && s.location !== location) return false;
+        if (search) {
+            const searchFields = [s.name, s.email, s.phone, s.location, s.rate, s.bio, ...(s.tags || [])].join(' ').toLowerCase();
+            if (!searchFields.includes(search)) return false;
+        }
+        return true;
+    });
+
+    if (sortBy === 'newest') filtered.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    else if (sortBy === 'oldest') filtered.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+    else if (sortBy === 'name-asc') filtered.sort((a, b) => a.name.localeCompare(b.name));
+    else if (sortBy === 'name-desc') filtered.sort((a, b) => b.name.localeCompare(a.name));
+
+    const container = document.getElementById('servicesDirectoryList');
+    const countEl = document.getElementById('servicesDirectoryCount');
+    if (countEl) countEl.textContent = filtered.length;
+
+    if (!container) return;
+
+    if (filtered.length === 0) {
+        container.innerHTML = '<div class="empty-section"><i class="fas fa-concierge-bell"></i><p>No services found</p><span>Try adjusting your filters</span></div>';
+        return;
+    }
+
+    container.innerHTML = filtered.map(s => {
+        const cat = SERVICE_TYPES[s.category] || SERVICE_TYPES['other-service'];
+        return `
+            <div class="directory-card profile-card-hover" onclick="viewServiceDirectory('${s.id}')">
+                <div class="dir-avatar">
+                    ${s.coverPhoto
+                        ? `<img src="${s.coverPhoto}" alt="${s.name}">`
+                        : `<div class="avatar-placeholder"><i class="fas ${cat.icon}"></i></div>`
+                    }
+                </div>
+                <div class="dir-info">
+                    <h3>${s.name}</h3>
+                    <div class="dir-meta">
+                        <span class="badge" style="background: ${cat.color}22; color: ${cat.color}; border: 1px solid ${cat.color}44;">
+                            <i class="fas ${cat.icon}"></i> ${cat.label}
+                        </span>
+                    </div>
+                    <div class="dir-meta">
+                        <i class="fas fa-map-marker-alt"></i> ${s.location}
+                    </div>
+                    ${s.rate ? `<div class="dir-meta"><i class="fas fa-tag"></i> ${s.rate}</div>` : ''}
+                    <div class="dir-tags">
+                        ${(s.tags || []).slice(0, 4).map(t => `<span class="tag">${t}</span>`).join('')}
+                        ${(s.tags || []).length > 4 ? `<span class="tag tag-more">+${(s.tags || []).length - 4}</span>` : ''}
+                    </div>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+function filterServicesDirectory(category) {
+    currentServicesFilter = category;
+    document.querySelectorAll('#page-services-directory .filter-tab').forEach(t => t.classList.remove('active'));
+    event.currentTarget.classList.add('active');
+    renderServicesDirectory();
+}
+
+function searchServicesDirectory() { renderServicesDirectory(); }
+
+function viewServiceDirectory(id) {
+    const services = Storage.getServices();
+    const s = services.find(x => x.id === id);
+    if (!s) return;
+
+    const cat = SERVICE_TYPES[s.category] || SERVICE_TYPES['other-service'];
+
+    const avatar = document.getElementById('svcViewAvatar');
+    if (s.coverPhoto) { avatar.src = s.coverPhoto; avatar.style.display = 'block'; }
+    else { avatar.style.display = 'none'; }
+
+    document.getElementById('svcViewName').textContent = s.name;
+    const typeBadge = document.getElementById('svcViewType');
+    typeBadge.textContent = cat.label;
+    typeBadge.style.background = cat.color + '22';
+    typeBadge.style.color = cat.color;
+    typeBadge.style.border = '1px solid ' + cat.color + '44';
+    document.getElementById('svcViewLocation').innerHTML = `<i class="fas fa-map-marker-alt"></i> ${s.location}`;
+    document.getElementById('svcViewCategory').textContent = cat.label;
+    document.getElementById('svcViewEmail').textContent = s.email || '-';
+    document.getElementById('svcViewPhone').textContent = s.phone || '-';
+    document.getElementById('svcViewRate').textContent = s.rate || '-';
+    document.getElementById('svcViewBio').textContent = s.bio || 'No description provided.';
+    const website = document.getElementById('svcViewWebsite');
+    if (s.website) { website.href = s.website; website.textContent = s.website; }
+    else { website.href = '#'; website.textContent = '-'; }
+
+    const tagsContainer = document.getElementById('svcViewTags');
+    if (s.tags && s.tags.length) {
+        tagsContainer.innerHTML = s.tags.map(t => `<span class="tag">${t}</span>`).join('');
+    } else {
+        tagsContainer.innerHTML = '<span class="tag empty-tag">No specialties listed</span>';
+    }
+
+    const gallery = document.getElementById('svcViewGallery');
+    if (s.gallery && s.gallery.length) {
+        gallery.innerHTML = s.gallery.map((url, i) => `
+            <div class="directory-gallery-item" onclick="openPhotoModal('${url}', this)">
+                <img src="${url}" alt="Gallery ${i + 1}">
+            </div>
+        `).join('');
+    } else {
+        gallery.innerHTML = '<p class="empty-text">No gallery images</p>';
+    }
+
+    const avail = document.getElementById('svcViewAvailability');
+    if (s.availability) {
+        const days = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+        const keys = ['mon','tue','wed','thu','fri','sat','sun'];
+        avail.innerHTML = `<div class="availability-grid">${days.map((d, i) => `<div class="day ${s.availability[keys[i]] ? 'active' : 'inactive'}">${d}</div>`).join('')}</div>`;
+    } else {
+        avail.innerHTML = '<p class="empty-text">No availability set</p>';
+    }
+
+    navigateTo('service-directory-view');
+}
+
+// ==========================================
+// SERVICES - PROVIDER CRUD
+// ==========================================
+function renderProviderServices() {
+    const services = Storage.getServices();
+    const filter = document.getElementById('providerServicesFilter')?.value || 'all';
+    const filtered = filter === 'all' ? services : services.filter(s => s.category === filter);
+
+    const container = document.getElementById('providerServicesList');
+    if (!container) return;
+
+    if (filtered.length === 0) {
+        container.innerHTML = '<div class="empty-section"><i class="fas fa-concierge-bell"></i><p>No services yet</p><span>Add your first service offering</span></div>';
+        return;
+    }
+
+    container.innerHTML = filtered.map(s => {
+        const cat = SERVICE_TYPES[s.category] || SERVICE_TYPES['other-service'];
+        return `
+            <div class="profile-card profile-card-hover">
+                <div class="profile-header">
+                    <div class="profile-avatar">
+                        ${s.coverPhoto
+                            ? `<img src="${s.coverPhoto}" alt="${s.name}">`
+                            : `<div class="avatar-placeholder"><i class="fas ${cat.icon}"></i></div>`
+                        }
+                    </div>
+                    <div class="profile-info">
+                        <h3>${s.name}</h3>
+                        <span class="badge" style="background: ${cat.color}22; color: ${cat.color}; border: 1px solid ${cat.color}44;">
+                            <i class="fas ${cat.icon}"></i> ${cat.label}
+                        </span>
+                        <p><i class="fas fa-map-marker-alt"></i> ${s.location}</p>
+                    </div>
+                </div>
+                <div class="profile-actions">
+                    <button class="btn btn-secondary btn-sm" onclick="editService('${s.id}')"><i class="fas fa-edit"></i> Edit</button>
+                    <button class="btn btn-danger btn-sm" onclick="deleteService('${s.id}')"><i class="fas fa-trash"></i> Delete</button>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+function filterProviderServices() { renderProviderServices(); }
+
+function resetServiceForm() {
+    document.getElementById('serviceForm').reset();
+    document.getElementById('serviceId').value = '';
+    document.getElementById('serviceFormTitle').textContent = 'Add Service';
+    document.getElementById('serviceSubmitBtn').textContent = 'Publish Service';
+    serviceTags = [];
+    serviceGallery = [];
+    renderServiceTags();
+    renderServiceGalleryUpload();
+    renderServicePhotoPreview();
+}
+
+function renderServicePhotoPreview() {
+    const container = document.getElementById('servicePhotoPreview');
+    if (!container) return;
+    container.innerHTML = '<i class="fas fa-camera"></i><span>Click to upload</span>';
+    container.style.backgroundImage = '';
+}
+
+function renderServiceTags() {
+    const container = document.getElementById('serviceTagsDisplay');
+    if (!container) return;
+    container.innerHTML = serviceTags.map((t, i) =>
+        `<span class="tag tag-removable" onclick="removeServiceTag(${i})">${t} <i class="fas fa-times"></i></span>`
+    ).join('');
+}
+
+function removeServiceTag(i) { serviceTags.splice(i, 1); renderServiceTags(); }
+
+function handleServiceTagInput(e) {
+    if (e.key === 'Enter') { e.preventDefault(); addServiceTag(e.target.value); e.target.value = ''; }
+}
+
+function addServiceTag(value) {
+    const t = value.trim();
+    if (t && !serviceTags.includes(t)) { serviceTags.push(t); renderServiceTags(); }
+}
+
+function addServiceSuggestedTag(value) { addServiceTag(value); }
+
+function renderServiceGalleryUpload() {
+    const container = document.getElementById('serviceGalleryUploadGrid');
+    if (!container) return;
+    let html = serviceGallery.map((url, i) => `
+        <div class="gallery-upload-item has-image" onclick="event.stopPropagation()">
+            <img src="${url}" alt="Gallery ${i + 1}">
+            <button class="gallery-remove" onclick="event.stopPropagation(); removeServiceGalleryImage(${i})"><i class="fas fa-times"></i></button>
+        </div>
+    `).join('');
+    if (serviceGallery.length < 8) {
+        html += `<div class="gallery-upload-item" onclick="document.getElementById('serviceGalleryInput').click()"><i class="fas fa-plus"></i><span>Add Photo</span></div>`;
+    }
+    container.innerHTML = html;
+}
+
+function addServiceGalleryImage(input) {
+    if (!input.files || !input.files[0]) return;
+    const file = input.files[0];
+    if (file.size > 5 * 1024 * 1024) { showToast('File too large. Max 5MB.', 'error'); return; }
+    const reader = new FileReader();
+    reader.onload = (e) => { serviceGallery.push(e.target.result); renderServiceGalleryUpload(); };
+    reader.readAsDataURL(file);
+    input.value = '';
+}
+
+function removeServiceGalleryImage(i) { serviceGallery.splice(i, 1); renderServiceGalleryUpload(); }
+
+function handleServiceSubmit(e) {
+    e.preventDefault();
+    const id = document.getElementById('serviceId').value;
+    const serviceData = {
+        name: document.getElementById('serviceName').value.trim(),
+        category: document.getElementById('serviceCategory').value,
+        email: document.getElementById('serviceEmail').value.trim(),
+        phone: document.getElementById('servicePhone').value.trim(),
+        location: document.getElementById('serviceLocation').value,
+        rate: document.getElementById('serviceRate').value.trim(),
+        website: document.getElementById('serviceWebsite').value.trim(),
+        bio: document.getElementById('serviceBio').value.trim(),
+        tags: [...serviceTags],
+        gallery: [...serviceGallery],
+        coverPhoto: document.getElementById('servicePhotoPreview')?.style.backgroundImage?.replace(/^url\(["']?/, '').replace(/["']?\)$/, '') || null,
+        availability: {
+            mon: document.getElementById('svcMon')?.checked || false,
+            tue: document.getElementById('svcTue')?.checked || false,
+            wed: document.getElementById('svcWed')?.checked || false,
+            thu: document.getElementById('svcThu')?.checked || false,
+            fri: document.getElementById('svcFri')?.checked || false,
+            sat: document.getElementById('svcSat')?.checked || false,
+            sun: document.getElementById('svcSun')?.checked || false
+        }
+    };
+
+    const services = Storage.getServices();
+    if (id) {
+        const idx = services.findIndex(s => s.id === id);
+        if (idx !== -1) { services[idx] = { ...services[idx], ...serviceData, updatedAt: new Date().toISOString() }; }
+        showToast('Service updated!', 'success');
+    } else {
+        serviceData.id = generateId();
+        serviceData.createdAt = new Date().toISOString();
+        services.push(serviceData);
+        showToast('Service published!', 'success');
+    }
+    Storage.setServices(services);
+    navigateTo('provider-services');
+}
+
+function editService(id) {
+    const services = Storage.getServices();
+    const s = services.find(x => x.id === id);
+    if (!s) return;
+
+    navigateTo('provider-service-create');
+    document.getElementById('serviceId').value = s.id;
+    document.getElementById('serviceFormTitle').textContent = 'Edit Service';
+    document.getElementById('serviceSubmitBtn').textContent = 'Update Service';
+    document.getElementById('serviceName').value = s.name || '';
+    document.getElementById('serviceCategory').value = s.category || '';
+    document.getElementById('serviceEmail').value = s.email || '';
+    document.getElementById('servicePhone').value = s.phone || '';
+    document.getElementById('serviceLocation').value = s.location || '';
+    document.getElementById('serviceRate').value = s.rate || '';
+    document.getElementById('serviceWebsite').value = s.website || '';
+    document.getElementById('serviceBio').value = s.bio || '';
+
+    serviceTags = [...(s.tags || [])];
+    serviceGallery = [...(s.gallery || [])];
+    renderServiceTags();
+    renderServiceGalleryUpload();
+
+    if (s.coverPhoto) {
+        const preview = document.getElementById('servicePhotoPreview');
+        preview.style.backgroundImage = `url(${s.coverPhoto})`;
+        preview.innerHTML = '';
+    }
+
+    if (s.availability) {
+        if (document.getElementById('svcMon')) document.getElementById('svcMon').checked = s.availability.mon;
+        if (document.getElementById('svcTue')) document.getElementById('svcTue').checked = s.availability.tue;
+        if (document.getElementById('svcWed')) document.getElementById('svcWed').checked = s.availability.wed;
+        if (document.getElementById('svcThu')) document.getElementById('svcThu').checked = s.availability.thu;
+        if (document.getElementById('svcFri')) document.getElementById('svcFri').checked = s.availability.fri;
+        if (document.getElementById('svcSat')) document.getElementById('svcSat').checked = s.availability.sat;
+        if (document.getElementById('svcSun')) document.getElementById('svcSun').checked = s.availability.sun;
+    }
+}
+
+function deleteService(id) {
+    deleteTarget = { type: 'service', id: id };
+    const modal = document.getElementById('deleteModal');
+    const text = document.getElementById('deleteModalText');
+    text.textContent = 'Are you sure you want to delete this service? This action cannot be undone.';
+    modal.classList.add('active');
 }

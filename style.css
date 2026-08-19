@@ -2898,4 +2898,15 @@ h1, h2, h3, h4 {
     .ad-view-title {
         font-size: 1.3rem;
     }
+
+    .filter-tabs {
+        gap: 6px;
+    }
+
+    .filter-tab {
+        padding: 8px 12px;
+        font-size: 0.75rem;
+    }
 }
+
+/* Services directory uses same cards as profiles/venues/ads - no extra styles needed */

@@ -50,6 +50,16 @@
                 <span>New Venue</span>
             </a>
             <div class="nav-divider"></div>
+            <span class="nav-section-title">Services</span>
+            <a href="#" class="nav-item" data-page="provider-services">
+                <i class="fas fa-concierge-bell"></i>
+                <span>My Services</span>
+            </a>
+            <a href="#" class="nav-item" data-page="provider-service-create">
+                <i class="fas fa-plus-circle"></i>
+                <span>New Service</span>
+            </a>
+            <div class="nav-divider"></div>
             <span class="nav-section-title">Personal Ads</span>
             <a href="#" class="nav-item" data-page="provider-ads">
                 <i class="fas fa-bullhorn"></i>
@@ -703,6 +713,244 @@
                     <button class="btn btn-secondary" onclick="closeDeleteModal()">Cancel</button>
                     <button class="btn btn-danger" onclick="confirmDelete()">Delete</button>
                 </div>
+            </div>
+        </div>
+
+        <!-- My Services (Provider) -->
+        <div class="page" id="page-provider-services">
+            <div class="container">
+                <div class="dashboard-header">
+                    <div>
+                        <h1>My Services</h1>
+                        <p>Manage your service offerings</p>
+                    </div>
+                    <button class="btn btn-primary provider-btn" onclick="navigateTo('provider-service-create')">
+                        <i class="fas fa-plus"></i> New Service
+                    </button>
+                </div>
+
+                <div class="profiles-section">
+                    <div class="section-header">
+                        <h2>Services</h2>
+                        <div class="filter-group">
+                            <select id="providerServicesFilter" onchange="filterProviderServices()">
+                                <option value="all">All</option>
+                                <option value="photography">Photography</option>
+                                <option value="videography">Videography</option>
+                                <option value="content-creation">Content Creation</option>
+                                <option value="dj-music">DJ / Music</option>
+                                <option value="catering">Catering</option>
+                                <option value="event-planning">Event Planning</option>
+                                <option value="hair-beauty">Hair & Beauty</option>
+                                <option value="fitness">Fitness</option>
+                                <option value="massage">Massage</option>
+                                <option value="cleaning">Cleaning</option>
+                                <option value="transport">Transport</option>
+                                <option value="other-service">Other</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="profiles-grid" id="providerServicesList"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Create/Edit Service -->
+        <div class="page" id="page-provider-service-create">
+            <div class="container">
+                <div class="form-header">
+                    <button class="btn-back" onclick="navigateTo('provider-services')">
+                        <i class="fas fa-arrow-left"></i> Back
+                    </button>
+                    <h1 id="serviceFormTitle">Add Service</h1>
+                </div>
+
+                <form id="serviceForm" onsubmit="handleServiceSubmit(event)">
+                    <input type="hidden" id="serviceId" value="">
+
+                    <div class="profile-card">
+                        <h2><i class="fas fa-concierge-bell"></i> Service Information</h2>
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label>Service Name *</label>
+                                <input type="text" id="serviceName" placeholder="Your service name" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Category *</label>
+                                <select id="serviceCategory" required>
+                                    <option value="">Select category</option>
+                                    <option value="photography">Photography</option>
+                                    <option value="videography">Videography</option>
+                                    <option value="content-creation">Content Creation</option>
+                                    <option value="dj-music">DJ / Music</option>
+                                    <option value="catering">Catering</option>
+                                    <option value="event-planning">Event Planning</option>
+                                    <option value="hair-beauty">Hair & Beauty</option>
+                                    <option value="fitness">Fitness</option>
+                                    <option value="massage">Massage</option>
+                                    <option value="cleaning">Cleaning</option>
+                                    <option value="transport">Transport</option>
+                                    <option value="other-service">Other</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Email *</label>
+                                <input type="email" id="serviceEmail" placeholder="Contact email" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Phone</label>
+                                <input type="tel" id="servicePhone" placeholder="Contact phone">
+                            </div>
+                            <div class="form-group">
+                                <label>Location *</label>
+                                <select id="serviceLocation" required>
+                                    <option value="">Select location</option>
+                                    <optgroup label="Gauteng">
+                                        <option value="Johannesburg">Johannesburg</option>
+                                        <option value="Pretoria">Pretoria</option>
+                                        <option value="Sandton">Sandton</option>
+                                        <option value="Randburg">Randburg</option>
+                                        <option value="Roodepoort">Roodepoort</option>
+                                        <option value="Soweto">Soweto</option>
+                                        <option value="Midrand">Midrand</option>
+                                        <option value="Centurion">Centurion</option>
+                                        <option value="Benoni">Benoni</option>
+                                        <option value="Boksburg">Boksburg</option>
+                                        <option value="Kempton Park">Kempton Park</option>
+                                    </optgroup>
+                                    <optgroup label="Western Cape">
+                                        <option value="Cape Town">Cape Town</option>
+                                        <option value="Stellenbosch">Stellenbosch</option>
+                                        <option value="Paarl">Paarl</option>
+                                        <option value="George">George</option>
+                                        <option value="Hermanus">Hermanus</option>
+                                        <option value="Somerset West">Somerset West</option>
+                                        <option value="Camps Bay">Camps Bay</option>
+                                    </optgroup>
+                                    <optgroup label="KwaZulu-Natal">
+                                        <option value="Durban">Durban</option>
+                                        <option value="Pietermaritzburg">Pietermaritzburg</option>
+                                        <option value="Umhlanga">Umhlanga</option>
+                                        <option value="Richards Bay">Richards Bay</option>
+                                        <option value="Newcastle">Newcastle</option>
+                                        <option value="Ballito">Ballito</option>
+                                    </optgroup>
+                                    <optgroup label="Eastern Cape">
+                                        <option value="Port Elizabeth">Port Elizabeth (Gqeberha)</option>
+                                        <option value="East London">East London</option>
+                                        <option value="Mthatha">Mthatha</option>
+                                        <option value="Jeffreys Bay">Jeffreys Bay</option>
+                                    </optgroup>
+                                    <optgroup label="Free State">
+                                        <option value="Bloemfontein">Bloemfontein</option>
+                                        <option value="Welkom">Welkom</option>
+                                        <option value="Bethlehem">Bethlehem</option>
+                                        <option value="Harrismith">Harrismith</option>
+                                    </optgroup>
+                                    <optgroup label="Mpumalanga">
+                                        <option value="Nelspruit">Nelspruit (Mbombela)</option>
+                                        <option value="Witbank">Witbank (Emalahleni)</option>
+                                        <option value="Middelburg">Middelburg</option>
+                                        <option value="Secunda">Secunda</option>
+                                    </optgroup>
+                                    <optgroup label="Limpopo">
+                                        <option value="Polokwane">Polokwane</option>
+                                        <option value="Thohoyandou">Thohoyandou</option>
+                                        <option value="Tzaneen">Tzaneen</option>
+                                        <option value="Mokopane">Mokopane</option>
+                                    </optgroup>
+                                    <optgroup label="North West">
+                                        <option value="Rustenburg">Rustenburg</option>
+                                        <option value="Mahikeng">Mahikeng</option>
+                                        <option value="Potchefstroom">Potchefstroom</option>
+                                        <option value="Klerksdorp">Klerksdorp</option>
+                                    </optgroup>
+                                    <optgroup label="Northern Cape">
+                                        <option value="Kimberley">Kimberley</option>
+                                        <option value="Upington">Upington</option>
+                                        <option value="Springbok">Springbok</option>
+                                    </optgroup>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Price</label>
+                                <input type="text" id="serviceRate" placeholder="e.g. R500/session">
+                            </div>
+                            <div class="form-group full-width">
+                                <label>Website</label>
+                                <input type="url" id="serviceWebsite" placeholder="https://yourservice.com">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="profile-card">
+                        <h2><i class="fas fa-file-alt"></i> Description</h2>
+                        <div class="form-group">
+                            <label>About This Service *</label>
+                            <textarea id="serviceBio" placeholder="Describe your service, experience, what you offer..." rows="4" required></textarea>
+                        </div>
+                    </div>
+
+                    <div class="profile-card">
+                        <h2><i class="fas fa-tag"></i> Specialties</h2>
+                        <div class="tags-input-container">
+                            <div class="tags-display" id="serviceTagsDisplay"></div>
+                            <input type="text" id="serviceTagsInput" placeholder="Type and press Enter to add specialty">
+                        </div>
+                        <div class="suggested-tags">
+                            <span class="tag-label">Popular:</span>
+                            <button type="button" class="tag-suggestion provider-suggestion" onclick="addServiceSuggestedTag('Portrait Photography')">Portrait</button>
+                            <button type="button" class="tag-suggestion provider-suggestion" onclick="addServiceSuggestedTag('Wedding Photography')">Wedding</button>
+                            <button type="button" class="tag-suggestion provider-suggestion" onclick="addServiceSuggestedTag('Event Coverage')">Events</button>
+                            <button type="button" class="tag-suggestion provider-suggestion" onclick="addServiceSuggestedTag('Corporate')">Corporate</button>
+                            <button type="button" class="tag-suggestion provider-suggestion" onclick="addServiceSuggestedTag('Mobile Service')">Mobile</button>
+                            <button type="button" class="tag-suggestion provider-suggestion" onclick="addServiceSuggestedTag('Same Day')">Same Day</button>
+                            <button type="button" class="tag-suggestion provider-suggestion" onclick="addServiceSuggestedTag('Group Bookings')">Groups</button>
+                            <button type="button" class="tag-suggestion provider-suggestion" onclick="addServiceSuggestedTag('Licensed')">Licensed</button>
+                        </div>
+                    </div>
+
+                    <div class="profile-card">
+                        <h2><i class="fas fa-clock"></i> Availability</h2>
+                        <div class="availability-grid">
+                            <div class="day"><input type="checkbox" id="svcMon" checked><label for="svcMon">Mon</label></div>
+                            <div class="day"><input type="checkbox" id="svcTue" checked><label for="svcTue">Tue</label></div>
+                            <div class="day"><input type="checkbox" id="svcWed" checked><label for="svcWed">Wed</label></div>
+                            <div class="day"><input type="checkbox" id="svcThu" checked><label for="svcThu">Thu</label></div>
+                            <div class="day"><input type="checkbox" id="svcFri" checked><label for="svcFri">Fri</label></div>
+                            <div class="day"><input type="checkbox" id="svcSat" checked><label for="svcSat">Sat</label></div>
+                            <div class="day"><input type="checkbox" id="svcSun"><label for="svcSun">Sun</label></div>
+                        </div>
+                    </div>
+
+                    <div class="profile-card">
+                        <h2><i class="fas fa-images"></i> Gallery</h2>
+                        <p class="empty-text" style="margin-bottom:16px">Upload portfolio photos (max 8)</p>
+                        <div class="gallery-upload-grid" id="serviceGalleryUploadGrid">
+                            <div class="gallery-upload-item" onclick="document.getElementById('serviceGalleryInput').click()">
+                                <i class="fas fa-plus"></i>
+                                <span>Add Photo</span>
+                            </div>
+                        </div>
+                        <input type="file" id="serviceGalleryInput" accept="image/*" style="display:none" onchange="addServiceGalleryImage(this)">
+                    </div>
+
+                    <div class="profile-card">
+                        <h2><i class="fas fa-image"></i> Cover Photo</h2>
+                        <div class="photo-upload">
+                            <div class="photo-preview" id="servicePhotoPreview">
+                                <i class="fas fa-camera"></i>
+                                <span>Click to upload</span>
+                            </div>
+                            <input type="file" id="servicePhotoInput" accept="image/*" onchange="previewPhoto(this, 'servicePhotoPreview')">
+                        </div>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="button" class="btn btn-secondary" onclick="navigateTo('provider-services')">Cancel</button>
+                        <button type="submit" class="btn btn-primary provider-btn" id="serviceSubmitBtn">Publish Service</button>
+                    </div>
+                </form>
             </div>
         </div>
 
