@@ -830,8 +830,22 @@
                         <h1 class="content-detail-title" id="contentDetailViewTitle">-</h1>
                         <p class="content-detail-author" id="contentDetailViewAuthor">-</p>
                         <div class="content-detail-media" id="contentDetailMedia"></div>
+                        <div class="content-reactions-bar" id="contentReactionsBar"></div>
                         <div class="content-detail-body" id="contentDetailViewBody"></div>
                         <div class="content-detail-tags" id="contentDetailViewTags"></div>
+                        <div class="content-engagement-bar">
+                            <button class="content-share-btn" onclick="shareContent()"><i class="fas fa-share-nodes"></i> Share</button>
+                        </div>
+                        <div class="content-comments-section" id="contentCommentsSection">
+                            <div class="content-comments-header">
+                                <h3><i class="fas fa-comments"></i> Comments <span id="contentCommentCount">(0)</span></h3>
+                            </div>
+                            <div class="content-comment-form">
+                                <textarea id="contentCommentInput" placeholder="Write a comment..." rows="2"></textarea>
+                                <button class="btn btn-primary btn-sm" onclick="submitContentComment()"><i class="fas fa-paper-plane"></i> Post</button>
+                            </div>
+                            <div class="content-comments-list" id="contentCommentsList"></div>
+                        </div>
                     </div>
                 </div>
             </div>

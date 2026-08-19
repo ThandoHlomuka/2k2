@@ -35,7 +35,11 @@ const Storage = {
     setContent: (data) => localStorage.setItem('k2_content', JSON.stringify(data)),
     getEvents: () => JSON.parse(localStorage.getItem('k2_events') || '[]'),
     setEvents: (data) => localStorage.setItem('k2_events', JSON.stringify(data)),
-    clearAll: () => { ['k2_users','k2_providers','k2_listings','k2_venues','k2_ads','k2_services','k2_bookings','k2_tips','k2_service_types','k2_wallets','k2_transactions','k2_topup_requests','k2_withdrawal_requests','k2_content','k2_events'].forEach(k => localStorage.removeItem(k)); }
+    getContentComments: () => JSON.parse(localStorage.getItem('k2_content_comments') || '[]'),
+    setContentComments: (data) => localStorage.setItem('k2_content_comments', JSON.stringify(data)),
+    getContentReactions: () => JSON.parse(localStorage.getItem('k2_content_reactions') || '[]'),
+    setContentReactions: (data) => localStorage.setItem('k2_content_reactions', JSON.stringify(data)),
+    clearAll: () => { ['k2_users','k2_providers','k2_listings','k2_venues','k2_ads','k2_services','k2_bookings','k2_tips','k2_service_types','k2_wallets','k2_transactions','k2_topup_requests','k2_withdrawal_requests','k2_content','k2_events','k2_content_comments','k2_content_reactions'].forEach(k => localStorage.removeItem(k)); }
 };
 
 const DIRECTORY_TYPES = {
@@ -3103,6 +3107,12 @@ function viewContent(id) {
         tagsContainer.innerHTML = '';
     }
 
+    // Reactions
+    renderContentReactions(id);
+
+    // Comments
+    renderContentComments(id);
+
     navigateTo('content-view');
 }
 
@@ -3286,6 +3296,103 @@ function deleteContent(id) {
     const text = document.getElementById('deleteModalText');
     text.textContent = 'Are you sure you want to delete this content? This action cannot be undone.';
     modal.classList.add('active');
+}
+
+// ==========================================
+// CONTENT REACTIONS & COMMENTS
+// ==========================================
+const REACTION_TYPES = [
+    { type: 'like', icon: 'fa-thumbs-up', label: 'Like', color: '#3b82f6' },
+    { type: 'love', icon: 'fa-heart', label: 'Love', color: '#ef4444' },
+    { type: 'fire', icon: 'fa-fire', label: 'Fire', color: '#f97316' },
+    { type: 'laugh', icon: 'fa-face-laugh-beam', label: 'Haha', color: '#f59e0b' },
+    { type: 'wow', icon: 'fa-face-surprise', label: 'Wow', color: '#8b5cf6' },
+    { type: 'sad', icon: 'fa-face-sad-tear', label: 'Sad', color: '#64748b' }
+];
+
+function renderContentReactions(contentId) {
+    const reactions = Storage.getContentReactions().filter(r => r.contentId === contentId);
+    const bar = document.getElementById('contentReactionsBar');
+    if (!bar) return;
+
+    const counts = {};
+    REACTION_TYPES.forEach(r => { counts[r.type] = 0; });
+    reactions.forEach(r => { if (counts[r.type] !== undefined) counts[r.type]++; });
+
+    bar.innerHTML = `<div class="reactions-row">${REACTION_TYPES.map(r => {
+        const count = counts[r.type];
+        return `<button class="reaction-btn" style="--reaction-color:${r.color}" onclick="toggleContentReaction('${contentId}','${r.type}')" title="${r.label}"><i class="fas ${r.icon}"></i>${count > 0 ? `<span class="reaction-count">${count}</span>` : ''}</button>`;
+    }).join('')}</div>`;
+}
+
+function toggleContentReaction(contentId, type) {
+    const reactions = Storage.getContentReactions();
+    const existing = reactions.find(r => r.contentId === contentId && r.type === type);
+    if (existing) {
+        const idx = reactions.indexOf(existing);
+        reactions.splice(idx, 1);
+    } else {
+        reactions.push({ id: generateId(), contentId, type, createdAt: new Date().toISOString() });
+    }
+    Storage.setContentReactions(reactions);
+    renderContentReactions(contentId);
+}
+
+function renderContentComments(contentId) {
+    const comments = Storage.getContentComments().filter(c => c.contentId === contentId);
+    comments.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+    const countEl = document.getElementById('contentCommentCount');
+    if (countEl) countEl.textContent = `(${comments.length})`;
+
+    const list = document.getElementById('contentCommentsList');
+    if (!list) return;
+
+    if (comments.length === 0) {
+        list.innerHTML = '<p class="empty-text" style="padding:12px 0;font-size:0.85rem">No comments yet. Be the first!</p>';
+        return;
+    }
+
+    list.innerHTML = comments.map(c => `
+        <div class="comment-item">
+            <div class="comment-avatar"><i class="fas fa-user"></i></div>
+            <div class="comment-body">
+                <div class="comment-header">
+                    <span class="comment-author">${c.authorName || 'Anonymous'}</span>
+                    <span class="comment-time">${formatDate(c.createdAt)}</span>
+                </div>
+                <p class="comment-text">${c.text}</p>
+            </div>
+        </div>
+    `).join('');
+}
+
+function submitContentComment() {
+    const input = document.getElementById('contentCommentInput');
+    const text = input.value.trim();
+    if (!text) return;
+
+    const comments = Storage.getContentComments();
+    comments.push({
+        id: generateId(),
+        contentId: currentContentViewId,
+        text,
+        authorName: 'General User',
+        createdAt: new Date().toISOString()
+    });
+    Storage.setContentComments(comments);
+    input.value = '';
+    renderContentComments(currentContentViewId);
+    showToast('Comment posted!');
+}
+
+function shareContent() {
+    if (navigator.share) {
+        navigator.share({ title: '2K2 Content', url: window.location.href });
+    } else {
+        navigator.clipboard.writeText(window.location.href);
+        showToast('Link copied to clipboard!');
+    }
 }
 
 // ==========================================
