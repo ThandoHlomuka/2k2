@@ -75,6 +75,18 @@
                 <i class="fas fa-bullhorn"></i>
                 <span>Ads</span>
             </a>
+            <a href="#" class="nav-item" data-page="admin-content">
+                <i class="fas fa-photo-film"></i>
+                <span>Content</span>
+            </a>
+            <a href="#" class="nav-item" data-page="admin-events">
+                <i class="fas fa-calendar-star"></i>
+                <span>Events</span>
+            </a>
+            <a href="#" class="nav-item" data-page="admin-reviews">
+                <i class="fas fa-star"></i>
+                <span>Reviews</span>
+            </a>
             <a href="#" class="nav-item" data-page="admin-wallets">
                 <i class="fas fa-wallet"></i>
                 <span>Wallets</span>
@@ -270,6 +282,128 @@
                         <thead><tr><th>Title</th><th>Category</th><th>Contact</th><th>Location</th><th>Status</th><th>Created</th><th>Actions</th></tr></thead>
                         <tbody></tbody>
                     </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Content Management -->
+        <div class="page" id="page-admin-content">
+            <div class="container">
+                <div class="dashboard-header">
+                    <div><h1>Content Management</h1><p>Manage all user-uploaded content</p></div>
+                </div>
+                <div class="admin-table-card profile-card">
+                    <div class="table-header">
+                        <h2><i class="fas fa-photo-film"></i> All Content (<span id="adminContentCount">0</span>)</h2>
+                        <div class="table-filters">
+                            <select id="adminContentFilter" onchange="renderAdminContent()">
+                                <option value="all">All Types</option>
+                                <option value="video">Videos</option>
+                                <option value="image">Images</option>
+                                <option value="gif">GIFs</option>
+                                <option value="audio">Audio</option>
+                                <option value="podcast">Podcasts</option>
+                                <option value="story">Stories</option>
+                                <option value="book">Books</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="admin-table-wrap">
+                        <table class="admin-table">
+                            <thead>
+                                <tr><th>Title</th><th>Type</th><th>Creator</th><th>Created</th><th>Actions</th></tr>
+                            </thead>
+                            <tbody id="adminContentTable"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Events Management -->
+        <div class="page" id="page-admin-events">
+            <div class="container">
+                <div class="dashboard-header">
+                    <div><h1>Events Management</h1><p>Manage all user-published events</p></div>
+                </div>
+                <div class="admin-table-card profile-card">
+                    <div class="table-header">
+                        <h2><i class="fas fa-calendar-star"></i> All Events (<span id="adminEventsCount">0</span>)</h2>
+                        <div class="table-filters">
+                            <select id="adminEventsFilter" onchange="renderAdminEvents()">
+                                <option value="all">All Types</option>
+                                <option value="party">Parties</option>
+                                <option value="g2g">G2G</option>
+                                <option value="club">Club Invites</option>
+                                <option value="fun">Fun Nights/Days</option>
+                                <option value="cookout">Cookout</option>
+                                <option value="other">Other</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="admin-table-wrap">
+                        <table class="admin-table">
+                            <thead>
+                                <tr><th>Name</th><th>Type</th><th>Date</th><th>Venue</th><th>Host</th><th>Actions</th></tr>
+                            </thead>
+                            <tbody id="adminEventsTable"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Reviews Management -->
+        <div class="page" id="page-admin-reviews">
+            <div class="container">
+                <div class="dashboard-header">
+                    <div><h1>Reviews Management</h1><p>Moderate all user reviews and ratings</p></div>
+                </div>
+                <div class="stats-row" id="adminReviewStats">
+                    <div class="stat-card">
+                        <div class="stat-icon yellow-bg"><i class="fas fa-star"></i></div>
+                        <div class="stat-info">
+                            <span class="stat-number" id="adminTotalReviews">0</span>
+                            <span class="stat-label">Total Reviews</span>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon green-bg"><i class="fas fa-check-circle"></i></div>
+                        <div class="stat-info">
+                            <span class="stat-number" id="adminAvgRating">0.0</span>
+                            <span class="stat-label">Average Rating</span>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon red-bg"><i class="fas fa-flag"></i></div>
+                        <div class="stat-info">
+                            <span class="stat-number" id="adminFlaggedReviews">0</span>
+                            <span class="stat-label">Flagged</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="admin-table-card profile-card">
+                    <div class="table-header">
+                        <h2><i class="fas fa-comments"></i> All Reviews</h2>
+                        <div class="table-filters">
+                            <select id="adminReviewsFilter" onchange="renderAdminReviews()">
+                                <option value="all">All</option>
+                                <option value="venue">Venues</option>
+                                <option value="profile">Profiles</option>
+                                <option value="event">Events</option>
+                                <option value="content">Content</option>
+                                <option value="flagged">Flagged</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="admin-table-wrap">
+                        <table class="admin-table">
+                            <thead>
+                                <tr><th>Rating</th><th>Review</th><th>Author</th><th>Target</th><th>Date</th><th>Actions</th></tr>
+                            </thead>
+                            <tbody id="adminReviewsTable"></tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </div>

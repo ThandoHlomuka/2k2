@@ -33,6 +33,9 @@ function navigateTo(page) {
     if (page === 'admin-listings') renderAdminListings();
     if (page === 'admin-venues') renderAdminVenues();
     if (page === 'admin-ads') renderAdminAds();
+    if (page === 'admin-content') renderAdminContent();
+    if (page === 'admin-events') renderAdminEvents();
+    if (page === 'admin-reviews') renderAdminReviews();
     if (page === 'admin-wallets') renderAdminWallets();
     if (page === 'admin-logs') renderAdminLogs();
 
@@ -152,6 +155,9 @@ function renderAdminDashboard() {
     const services = Storage.getServices();
     const bookings = Storage.getBookings();
     const wallets = Storage.getWallets();
+    const content = Storage.getContent();
+    const events = Storage.getEvents();
+    const reviews = Storage.getReviews();
 
     document.getElementById('adminUserCount').textContent = users.length;
     document.getElementById('adminProviderCount').textContent = providers.length;
@@ -172,7 +178,10 @@ function renderAdminDashboard() {
         { label: 'Venues', value: venues.length, color: '#3b82f6' },
         { label: 'Ads', value: ads.length, color: '#f59e0b' },
         { label: 'Services', value: services.length, color: '#10b981' },
-        { label: 'Bookings', value: bookings.length, color: '#06b6d4' }
+        { label: 'Content', value: content.length, color: '#ef4444' },
+        { label: 'Events', value: events.length, color: '#f97316' },
+        { label: 'Bookings', value: bookings.length, color: '#06b6d4' },
+        { label: 'Reviews', value: reviews.length, color: '#f59e0b' }
     ];
     const maxVal = Math.max(...chartData.map(d => d.value), 1);
 
@@ -525,6 +534,158 @@ function renderAdminLogs() {
 // ==========================================
 // ADMIN TOOLS
 // ==========================================
+// ==========================================
+// ADMIN - CONTENT MANAGEMENT
+// ==========================================
+function renderAdminContent() {
+    const content = Storage.getContent();
+    const filter = document.getElementById('adminContentFilter')?.value || 'all';
+    const filtered = filter === 'all' ? [...content] : content.filter(c => c.type === filter);
+    filtered.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+    document.getElementById('adminContentCount').textContent = filtered.length;
+    const tbody = document.getElementById('adminContentTable');
+    if (!tbody) return;
+
+    if (filtered.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" class="empty-cell">No content found</td></tr>';
+        return;
+    }
+
+    const providers = [...Storage.getListings(), ...Storage.getServices()];
+    tbody.innerHTML = filtered.map(c => {
+        const type = CONTENT_TYPES[c.type] || { label: c.type, icon: 'fa-file', color: '#64748b' };
+        const author = providers.find(p => p.id === c.providerId);
+        return `<tr>
+            <td><strong>${c.title}</strong></td>
+            <td><span class="badge" style="background:${type.color}22;color:${type.color};border:1px solid ${type.color}44"><i class="fas ${type.icon}"></i> ${type.label}</span></td>
+            <td>${author ? author.name : 'Unknown'}</td>
+            <td>${fmtDate(c.createdAt)}</td>
+            <td><button class="btn btn-danger btn-xs" onclick="adminDeleteContent('${c.id}')"><i class="fas fa-trash"></i></button></td>
+        </tr>`;
+    }).join('');
+}
+
+function adminDeleteContent(id) {
+    if (!confirm('Delete this content item?')) return;
+    const content = Storage.getContent().filter(c => c.id !== id);
+    Storage.setContent(content);
+    showToast('Content deleted.', 'info');
+    renderAdminContent();
+}
+
+// ==========================================
+// ADMIN - EVENTS MANAGEMENT
+// ==========================================
+function renderAdminEvents() {
+    const events = Storage.getEvents();
+    const filter = document.getElementById('adminEventsFilter')?.value || 'all';
+    const filtered = filter === 'all' ? [...events] : events.filter(e => e.type === filter);
+    filtered.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+    document.getElementById('adminEventsCount').textContent = filtered.length;
+    const tbody = document.getElementById('adminEventsTable');
+    if (!tbody) return;
+
+    if (filtered.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" class="empty-cell">No events found</td></tr>';
+        return;
+    }
+
+    const providers = [...Storage.getListings(), ...Storage.getServices()];
+    tbody.innerHTML = filtered.map(ev => {
+        const type = EVENT_TYPES[ev.type] || { label: ev.type, icon: 'fa-calendar', color: '#64748b' };
+        const host = providers.find(p => p.id === ev.providerId);
+        const eventDate = ev.eventDate ? new Date(ev.eventDate).toLocaleDateString('en-ZA', { day: 'numeric', month: 'short', year: 'numeric' }) : '-';
+        return `<tr>
+            <td><strong>${ev.name}</strong></td>
+            <td><span class="badge" style="background:${type.color}22;color:${type.color};border:1px solid ${type.color}44"><i class="fas ${type.icon}"></i> ${type.label}</span></td>
+            <td>${eventDate}</td>
+            <td>${ev.venue || '-'}</td>
+            <td>${host ? host.name : 'Unknown'}</td>
+            <td><button class="btn btn-danger btn-xs" onclick="adminDeleteEvent('${ev.id}')"><i class="fas fa-trash"></i></button></td>
+        </tr>`;
+    }).join('');
+}
+
+function adminDeleteEvent(id) {
+    if (!confirm('Delete this event?')) return;
+    const events = Storage.getEvents().filter(e => e.id !== id);
+    Storage.setEvents(events);
+    showToast('Event deleted.', 'info');
+    renderAdminEvents();
+}
+
+// ==========================================
+// ADMIN - REVIEWS MANAGEMENT
+// ==========================================
+function renderAdminReviews() {
+    const reviews = Storage.getReviews();
+    const filter = document.getElementById('adminReviewsFilter')?.value || 'all';
+    let filtered;
+    if (filter === 'flagged') {
+        filtered = reviews.filter(r => r.flagged);
+    } else if (filter === 'all') {
+        filtered = [...reviews];
+    } else {
+        filtered = reviews.filter(r => r.targetType === filter);
+    }
+    filtered.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+    const totalReviews = reviews.length;
+    const avgRating = totalReviews > 0 ? (reviews.reduce((s, r) => s + r.rating, 0) / totalReviews).toFixed(1) : '0.0';
+    const flagged = reviews.filter(r => r.flagged).length;
+
+    document.getElementById('adminTotalReviews').textContent = totalReviews;
+    document.getElementById('adminAvgRating').textContent = avgRating;
+    document.getElementById('adminFlaggedReviews').textContent = flagged;
+
+    const tbody = document.getElementById('adminReviewsTable');
+    if (!tbody) return;
+
+    if (filtered.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" class="empty-cell">No reviews found</td></tr>';
+        return;
+    }
+
+    tbody.innerHTML = filtered.map(r => {
+        const stars = Array.from({length: 5}, (_, i) => `<i class="fas fa-star" style="color:${i < r.rating ? '#f59e0b' : '#e2e8f0'}"></i>`).join('');
+        const targetType = r.targetType || 'unknown';
+        return `<tr${r.flagged ? ' style="background:#fef2f2"' : ''}>
+            <td><div class="review-stars-mini">${stars}</div></td>
+            <td><strong>${(r.text || '').substring(0, 60)}${(r.text || '').length > 60 ? '...' : ''}</strong></td>
+            <td>${r.authorName || 'Anonymous'}</td>
+            <td><span class="badge" style="background:#3b82f622;color:#3b82f6;border:1px solid #3b82f644">${targetType}</span></td>
+            <td>${fmtDate(r.createdAt)}</td>
+            <td>
+                <div class="admin-actions">
+                    <button class="btn btn-xs" style="background:${r.flagged ? '#10b981' : '#f59e0b'};color:white;border:none" onclick="adminToggleFlagReview('${r.id}')" title="${r.flagged ? 'Unflag' : 'Flag'}"><i class="fas fa-flag"></i></button>
+                    <button class="btn btn-danger btn-xs" onclick="adminDeleteReview('${r.id}')"><i class="fas fa-trash"></i></button>
+                </div>
+            </td>
+        </tr>`;
+    }).join('');
+}
+
+function adminToggleFlagReview(id) {
+    const reviews = Storage.getReviews();
+    const review = reviews.find(r => r.id === id);
+    if (review) {
+        review.flagged = !review.flagged;
+        Storage.setReviews(reviews);
+        showToast(review.flagged ? 'Review flagged.' : 'Review unflagged.', 'info');
+        renderAdminReviews();
+    }
+}
+
+function adminDeleteReview(id) {
+    if (!confirm('Delete this review?')) return;
+    const reviews = Storage.getReviews().filter(r => r.id !== id);
+    Storage.setReviews(reviews);
+    showToast('Review deleted.', 'info');
+    renderAdminReviews();
+}
+
 function adminExportData() {
     const data = {
         users: Storage.getUsers(),
@@ -542,6 +703,9 @@ function adminExportData() {
         withdrawalRequests: Storage.getWithdrawalRequests(),
         content: Storage.getContent(),
         events: Storage.getEvents(),
+        reviews: Storage.getReviews(),
+        contentComments: Storage.getContentComments(),
+        contentReactions: Storage.getContentReactions(),
         exportedAt: new Date().toISOString()
     };
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });

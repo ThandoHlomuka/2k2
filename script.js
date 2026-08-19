@@ -39,7 +39,9 @@ const Storage = {
     setContentComments: (data) => localStorage.setItem('k2_content_comments', JSON.stringify(data)),
     getContentReactions: () => JSON.parse(localStorage.getItem('k2_content_reactions') || '[]'),
     setContentReactions: (data) => localStorage.setItem('k2_content_reactions', JSON.stringify(data)),
-    clearAll: () => { ['k2_users','k2_providers','k2_listings','k2_venues','k2_ads','k2_services','k2_bookings','k2_tips','k2_service_types','k2_wallets','k2_transactions','k2_topup_requests','k2_withdrawal_requests','k2_content','k2_events','k2_content_comments','k2_content_reactions'].forEach(k => localStorage.removeItem(k)); }
+    getReviews: () => JSON.parse(localStorage.getItem('k2_reviews') || '[]'),
+    setReviews: (data) => localStorage.setItem('k2_reviews', JSON.stringify(data)),
+    clearAll: () => { ['k2_users','k2_providers','k2_listings','k2_venues','k2_ads','k2_services','k2_bookings','k2_tips','k2_service_types','k2_wallets','k2_transactions','k2_topup_requests','k2_withdrawal_requests','k2_content','k2_events','k2_content_comments','k2_content_reactions','k2_reviews'].forEach(k => localStorage.removeItem(k)); }
 };
 
 const DIRECTORY_TYPES = {

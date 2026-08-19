@@ -3437,6 +3437,29 @@ h1, h2, h3, h4 {
     font-size: 1.05rem;
 }
 
+/* Admin Table Extras */
+.empty-cell {
+    text-align: center;
+    padding: 32px 16px !important;
+    color: var(--text-muted, #94a3b8);
+    font-style: italic;
+}
+
+.review-stars-mini {
+    display: flex;
+    gap: 2px;
+    font-size: 0.8rem;
+}
+
+.review-stars-mini .fa-star {
+    transition: transform 0.2s ease;
+}
+
+.yellow-bg {
+    background: #f59e0b18;
+    color: #f59e0b;
+}
+
 /* ==========================================
    CONTENT DIRECTORY STYLES
    ========================================== */
