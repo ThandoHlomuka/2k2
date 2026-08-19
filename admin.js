@@ -541,6 +541,7 @@ function adminExportData() {
         topUpRequests: Storage.getTopUpRequests(),
         withdrawalRequests: Storage.getWithdrawalRequests(),
         content: Storage.getContent(),
+        events: Storage.getEvents(),
         exportedAt: new Date().toISOString()
     };
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });

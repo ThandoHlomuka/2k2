@@ -47,6 +47,10 @@
                 <i class="fas fa-photo-film"></i>
                 <span>Content</span>
             </a>
+            <a href="#" class="nav-item" data-page="events-directory">
+                <i class="fas fa-calendar-star"></i>
+                <span>Events</span>
+            </a>
             <div class="nav-divider"></div>
             <span class="nav-section-title">Personal Ads</span>
             <a href="#" class="nav-item" data-page="ads-browse">
@@ -828,6 +832,73 @@
                         <div class="content-detail-media" id="contentDetailMedia"></div>
                         <div class="content-detail-body" id="contentDetailViewBody"></div>
                         <div class="content-detail-tags" id="contentDetailViewTags"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Events Directory Browse -->
+        <div class="page" id="page-events-directory">
+            <div class="container">
+                <div class="dashboard-header">
+                    <div>
+                        <h1>Events Directory</h1>
+                        <p>Discover events across South Africa</p>
+                    </div>
+                </div>
+                <div class="directory-filters">
+                    <div class="filter-tabs" id="eventFilterTabs">
+                        <button class="filter-tab active" onclick="filterEventsDirectory('all')"><i class="fas fa-globe"></i> All</button>
+                        <button class="filter-tab" onclick="filterEventsDirectory('party')"><i class="fas fa-champagne-glasses"></i> Parties</button>
+                        <button class="filter-tab" onclick="filterEventsDirectory('g2g')"><i class="fas fa-people-arrows"></i> G2G</button>
+                        <button class="filter-tab" onclick="filterEventsDirectory('club')"><i class="fas fa-compact-disc"></i> Club Invites</button>
+                        <button class="filter-tab" onclick="filterEventsDirectory('fun')"><i class="fas fa-sun"></i> Fun Nights/Days</button>
+                        <button class="filter-tab" onclick="filterEventsDirectory('cookout')"><i class="fas fa-fire-burner"></i> Cookout</button>
+                        <button class="filter-tab" onclick="filterEventsDirectory('other')"><i class="fas fa-ellipsis"></i> Other</button>
+                    </div>
+                    <div class="filter-bar">
+                        <input type="text" id="eventSearch" placeholder="Search events..." oninput="searchEventsDirectory()">
+                        <select id="eventProvince" onchange="searchEventsDirectory()">
+                            <option value="">All Provinces</option>
+                            <option value="Eastern Cape">Eastern Cape</option>
+                            <option value="Free State">Free State</option>
+                            <option value="Gauteng">Gauteng</option>
+                            <option value="KwaZulu-Natal">KwaZulu-Natal</option>
+                            <option value="Limpopo">Limpopo</option>
+                            <option value="Mpumalanga">Mpumalanga</option>
+                            <option value="North West">North West</option>
+                            <option value="Northern Cape">Northern Cape</option>
+                            <option value="Western Cape">Western Cape</option>
+                        </select>
+                        <select id="eventSort" onchange="searchEventsDirectory()">
+                            <option value="newest">Newest</option>
+                            <option value="date-asc">Date (Earliest)</option>
+                            <option value="title-asc">Title A-Z</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="directory-stats"><span id="eventsDirectoryCount">0</span> events found</div>
+                <div class="content-grid" id="eventsDirectoryList"></div>
+            </div>
+        </div>
+
+        <!-- Event Detail View -->
+        <div class="page" id="page-event-view">
+            <div class="container">
+                <div class="form-header">
+                    <button class="btn-back" onclick="navigateTo('events-directory')"><i class="fas fa-arrow-left"></i> Back to Events</button>
+                    <h1>Event Details</h1>
+                </div>
+                <div class="view-profile" id="eventViewContent">
+                    <div class="profile-card event-detail-card">
+                        <div class="event-detail-header">
+                            <span class="badge" id="eventDetailViewType">-</span>
+                            <span class="event-detail-date" id="eventDetailViewDate">-</span>
+                        </div>
+                        <h1 class="event-detail-title" id="eventDetailViewTitle">-</h1>
+                        <div class="event-detail-meta" id="eventDetailViewMeta"></div>
+                        <div class="event-detail-body" id="eventDetailViewBody"></div>
+                        <div class="event-detail-tags" id="eventDetailViewTags"></div>
                     </div>
                 </div>
             </div>

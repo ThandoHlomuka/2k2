@@ -70,6 +70,16 @@
                 <span>New Content</span>
             </a>
             <div class="nav-divider"></div>
+            <span class="nav-section-title">Events</span>
+            <a href="#" class="nav-item" data-page="provider-events">
+                <i class="fas fa-calendar-star"></i>
+                <span>My Events</span>
+            </a>
+            <a href="#" class="nav-item" data-page="provider-event-create">
+                <i class="fas fa-plus-circle"></i>
+                <span>New Event</span>
+            </a>
+            <div class="nav-divider"></div>
             <span class="nav-section-title">Personal Ads</span>
             <a href="#" class="nav-item" data-page="provider-ads">
                 <i class="fas fa-bullhorn"></i>
@@ -842,6 +852,129 @@
                     <div class="form-actions">
                         <button type="button" class="btn btn-secondary" onclick="navigateTo('provider-content')">Cancel</button>
                         <button type="submit" class="btn btn-primary provider-btn" id="contentSubmitBtn">Publish Content</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- My Events (Provider) -->
+        <div class="page" id="page-provider-events">
+            <div class="container">
+                <div class="dashboard-header">
+                    <div>
+                        <h1>My Events</h1>
+                        <p>Manage your published events</p>
+                    </div>
+                    <button class="btn btn-primary provider-btn" onclick="navigateTo('provider-event-create')"><i class="fas fa-plus"></i> New Event</button>
+                </div>
+                <div class="profiles-section">
+                    <div class="section-header">
+                        <h2>Events</h2>
+                        <div class="filter-group">
+                            <select id="providerEventFilter" onchange="filterProviderEvents()">
+                                <option value="all">All</option>
+                                <option value="party">Parties</option>
+                                <option value="g2g">G2G</option>
+                                <option value="club">Club Invites</option>
+                                <option value="fun">Fun Nights/Days</option>
+                                <option value="cookout">Cookout</option>
+                                <option value="other">Other</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="profiles-grid" id="providerEventsList"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Create/Edit Event -->
+        <div class="page" id="page-provider-event-create">
+            <div class="container">
+                <div class="form-header">
+                    <button class="btn-back" onclick="navigateTo('provider-events')"><i class="fas fa-arrow-left"></i> Back</button>
+                    <h1 id="eventFormTitle">New Event</h1>
+                </div>
+                <form id="eventForm" onsubmit="handleEventSubmit(event)">
+                    <input type="hidden" id="eventId" value="">
+                    <div class="profile-card">
+                        <h2><i class="fas fa-info-circle"></i> Event Details</h2>
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label>Event Name *</label>
+                                <input type="text" id="eventName" placeholder="Event name" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Event Type *</label>
+                                <select id="eventType" required>
+                                    <option value="">Select type</option>
+                                    <option value="party">Party</option>
+                                    <option value="g2g">G2G</option>
+                                    <option value="club">Club Invite</option>
+                                    <option value="fun">Fun Night/Day</option>
+                                    <option value="cookout">Cookout</option>
+                                    <option value="other">Other</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Date *</label>
+                                <input type="date" id="eventDate" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Time *</label>
+                                <input type="time" id="eventTime" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Venue / Location *</label>
+                                <input type="text" id="eventVenue" placeholder="Venue name or address" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Province *</label>
+                                <select id="eventProvinceForm" required>
+                                    <option value="">Select province</option>
+                                    <option value="Eastern Cape">Eastern Cape</option>
+                                    <option value="Free State">Free State</option>
+                                    <option value="Gauteng">Gauteng</option>
+                                    <option value="KwaZulu-Natal">KwaZulu-Natal</option>
+                                    <option value="Limpopo">Limpopo</option>
+                                    <option value="Mpumalanga">Mpumalanga</option>
+                                    <option value="North West">North West</option>
+                                    <option value="Northern Cape">Northern Cape</option>
+                                    <option value="Western Cape">Western Cape</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Entry Fee</label>
+                                <input type="text" id="eventFee" placeholder="e.g. Free, R100, R50+">
+                            </div>
+                            <div class="form-group">
+                                <label>Dress Code</label>
+                                <input type="text" id="eventDressCode" placeholder="e.g. Smart Casual, All Black">
+                            </div>
+                            <div class="form-group full-width">
+                                <label>Description *</label>
+                                <textarea id="eventDescription" placeholder="Describe the event..." rows="3" required></textarea>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="profile-card">
+                        <h2><i class="fas fa-tag"></i> Tags</h2>
+                        <div class="tags-input-container">
+                            <div class="tags-display" id="eventTagsDisplay"></div>
+                            <input type="text" id="eventTagsInput" placeholder="Type and press Enter to add tag">
+                        </div>
+                        <div class="suggested-tags">
+                            <span class="tag-label">Popular:</span>
+                            <button type="button" class="tag-suggestion provider-suggestion" onclick="addEventSuggestedTag('VIP')">VIP</button>
+                            <button type="button" class="tag-suggestion provider-suggestion" onclick="addEventSuggestedTag('Live DJ')">Live DJ</button>
+                            <button type="button" class="tag-suggestion provider-suggestion" onclick="addEventSuggestedTag('BYOB')">BYOB</button>
+                            <button type="button" class="tag-suggestion provider-suggestion" onclick="addEventSuggestedTag('Open Bar')">Open Bar</button>
+                            <button type="button" class="tag-suggestion provider-suggestion" onclick="addEventSuggestedTag('18+ Only')">18+ Only</button>
+                            <button type="button" class="tag-suggestion provider-suggestion" onclick="addEventSuggestedTag('Free Entry')">Free Entry</button>
+                        </div>
+                    </div>
+                    <div class="form-actions">
+                        <button type="button" class="btn btn-secondary" onclick="navigateTo('provider-events')">Cancel</button>
+                        <button type="submit" class="btn btn-primary provider-btn" id="eventSubmitBtn">Publish Event</button>
                     </div>
                 </form>
             </div>

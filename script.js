@@ -33,7 +33,9 @@ const Storage = {
     setWithdrawalRequests: (data) => localStorage.setItem('k2_withdrawal_requests', JSON.stringify(data)),
     getContent: () => JSON.parse(localStorage.getItem('k2_content') || '[]'),
     setContent: (data) => localStorage.setItem('k2_content', JSON.stringify(data)),
-    clearAll: () => { ['k2_users','k2_providers','k2_listings','k2_venues','k2_ads','k2_services','k2_bookings','k2_tips','k2_service_types','k2_wallets','k2_transactions','k2_topup_requests','k2_withdrawal_requests','k2_content'].forEach(k => localStorage.removeItem(k)); }
+    getEvents: () => JSON.parse(localStorage.getItem('k2_events') || '[]'),
+    setEvents: (data) => localStorage.setItem('k2_events', JSON.stringify(data)),
+    clearAll: () => { ['k2_users','k2_providers','k2_listings','k2_venues','k2_ads','k2_services','k2_bookings','k2_tips','k2_service_types','k2_wallets','k2_transactions','k2_topup_requests','k2_withdrawal_requests','k2_content','k2_events'].forEach(k => localStorage.removeItem(k)); }
 };
 
 const DIRECTORY_TYPES = {
@@ -77,6 +79,15 @@ const CONTENT_TYPES = {
     'podcast': { label: 'Podcasts', icon: 'fa-podcast', color: '#3b82f6', accept: 'audio/*' },
     'story': { label: 'Stories', icon: 'fa-book-open', color: '#10b981', accept: '' },
     'book': { label: 'Books', icon: 'fa-book', color: '#06b6d4', accept: '' }
+};
+
+const EVENT_TYPES = {
+    'party': { label: 'Parties', icon: 'fa-champagne-glasses', color: '#ec4899' },
+    'g2g': { label: 'G2G', icon: 'fa-people-arrows', color: '#8b5cf6' },
+    'club': { label: 'Club Invites', icon: 'fa-compact-disc', color: '#3b82f6' },
+    'fun': { label: 'Fun Nights/Days', icon: 'fa-sun', color: '#f59e0b' },
+    'cookout': { label: 'Cookout', icon: 'fa-fire-burner', color: '#ef4444' },
+    'other': { label: 'Other', icon: 'fa-ellipsis', color: '#64748b' }
 };
 
 // ==========================================
@@ -248,6 +259,8 @@ let currentServiceViewId = null;
 let currentWalletTab = 'overview';
 let currentContentFilter = 'all';
 let currentContentViewId = null;
+let currentEventFilter = 'all';
+let currentEventViewId = null;
 
 // ==========================================
 // Navigation
@@ -296,6 +309,9 @@ function navigateTo(page) {
     if (page === 'content-directory') renderContentDirectory();
     if (page === 'provider-content') renderProviderContent();
     if (page === 'provider-content-create') resetContentForm();
+    if (page === 'events-directory') renderEventsDirectory();
+    if (page === 'provider-events') renderProviderEvents();
+    if (page === 'provider-event-create') resetEventForm();
 }
 
 // ==========================================
@@ -327,6 +343,7 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('providerAdTagsInput')?.addEventListener('keydown', handleProviderAdTagInput);
     document.getElementById('serviceTagsInput')?.addEventListener('keydown', handleServiceTagInput);
     document.getElementById('contentTagsInput')?.addEventListener('keydown', handleContentTagInput);
+    document.getElementById('eventTagsInput')?.addEventListener('keydown', handleEventTagInput);
     document.getElementById('directorySearch')?.addEventListener('keydown', (e) => { if (e.key === 'Enter') searchDirectory(); });
     document.getElementById('venueSearch')?.addEventListener('keydown', (e) => { if (e.key === 'Enter') searchVenueDirectory(); });
     document.getElementById('adsSearch')?.addEventListener('keydown', (e) => { if (e.key === 'Enter') searchAds(); });
@@ -344,6 +361,7 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('providerTipsList') && renderProviderTips();
         document.getElementById('providerWalletBalance') && renderProviderWallet();
         document.getElementById('providerContentList') && renderProviderContent();
+        document.getElementById('providerEventsList') && renderProviderEvents();
         if (document.getElementById('serviceCategory')) updateServiceCategorySelect();
     } else {
         document.getElementById('userProfilesList') && renderUserProfiles();
@@ -355,6 +373,7 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('userBookingsList') && renderUserBookings();
         document.getElementById('userWalletBalance') && renderUserWallet();
         document.getElementById('contentDirectoryList') && renderContentDirectory();
+        document.getElementById('eventsDirectoryList') && renderEventsDirectory();
     }
 });
 
@@ -1277,6 +1296,14 @@ confirmDelete = function() {
         showToast('Content deleted.', 'info');
         closeDeleteModal();
         navigateTo('provider-content');
+        return;
+    }
+    if (deleteTarget.type === 'event') {
+        const events = Storage.getEvents().filter(e => e.id !== deleteTarget.id);
+        Storage.setEvents(events);
+        showToast('Event deleted.', 'info');
+        closeDeleteModal();
+        navigateTo('provider-events');
         return;
     }
     _origConfirmDelete();
@@ -3258,5 +3285,267 @@ function deleteContent(id) {
     const modal = document.getElementById('deleteModal');
     const text = document.getElementById('deleteModalText');
     text.textContent = 'Are you sure you want to delete this content? This action cannot be undone.';
+    modal.classList.add('active');
+}
+
+// ==========================================
+// EVENTS DIRECTORY
+// ==========================================
+let eventTags = [];
+
+function handleEventTagInput(e) {
+    if (e.key === 'Enter') {
+        e.preventDefault();
+        const val = e.target.value.trim();
+        if (val && !eventTags.includes(val)) { eventTags.push(val); renderEventTags(); }
+        e.target.value = '';
+    }
+}
+
+function renderEventTags() {
+    const container = document.getElementById('eventTagsDisplay');
+    if (!container) return;
+    container.innerHTML = eventTags.map((t, i) => `<span class="tag-chip removable" onclick="removeEventTag(${i})"><i class="fas fa-times"></i> ${t}</span>`).join('');
+}
+
+function removeEventTag(index) { eventTags.splice(index, 1); renderEventTags(); }
+
+function addEventSuggestedTag(tag) {
+    if (!eventTags.includes(tag)) { eventTags.push(tag); renderEventTags(); }
+}
+
+function renderEventsDirectory() {
+    const events = Storage.getEvents();
+    let filtered = currentEventFilter === 'all' ? [...events] : events.filter(e => e.type === currentEventFilter);
+
+    const search = document.getElementById('eventSearch')?.value?.toLowerCase() || '';
+    if (search) filtered = filtered.filter(e => e.name.toLowerCase().includes(search) || e.description.toLowerCase().includes(search) || e.venue?.toLowerCase().includes(search) || (e.tags || []).some(t => t.toLowerCase().includes(search)));
+
+    const province = document.getElementById('eventProvince')?.value || '';
+    if (province) filtered = filtered.filter(e => e.province === province);
+
+    const sort = document.getElementById('eventSort')?.value || 'newest';
+    if (sort === 'newest') filtered.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    else if (sort === 'date-asc') filtered.sort((a, b) => new Date(a.eventDate) - new Date(b.eventDate));
+    else if (sort === 'title-asc') filtered.sort((a, b) => a.name.localeCompare(b.name));
+
+    const countEl = document.getElementById('eventsDirectoryCount');
+    if (countEl) countEl.textContent = filtered.length;
+
+    document.querySelectorAll('#eventFilterTabs .filter-tab').forEach(tab => {
+        tab.classList.toggle('active', tab.getAttribute('onclick')?.includes(`'${currentEventFilter}'`));
+    });
+
+    const container = document.getElementById('eventsDirectoryList');
+    if (!container) return;
+
+    if (filtered.length === 0) {
+        container.innerHTML = '<div class="empty-section"><i class="fas fa-calendar-star"></i><p>No events found</p><span>Check back later for upcoming events</span></div>';
+        return;
+    }
+
+    container.innerHTML = filtered.map(ev => {
+        const type = EVENT_TYPES[ev.type] || { label: ev.type, icon: 'fa-calendar', color: '#64748b' };
+        const providers = [...Storage.getListings(), ...Storage.getServices()];
+        const author = providers.find(p => p.id === ev.providerId);
+        const authorName = author ? author.name : 'Unknown Host';
+        const eventDate = ev.eventDate ? new Date(ev.eventDate).toLocaleDateString('en-ZA', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' }) : '';
+        return `
+            <div class="content-card profile-card event-grid-card" onclick="viewEvent('${ev.id}')">
+                <div class="content-card-thumb event-card-thumb" style="background:linear-gradient(135deg, ${type.color}22, ${type.color}08)">
+                    <div class="content-thumb-icon" style="background:${type.color}22;color:${type.color}"><i class="fas ${type.icon}"></i></div>
+                    ${ev.eventDate ? `<div class="event-card-date-badge"><span class="event-date-day">${new Date(ev.eventDate).getDate()}</span><span class="event-date-month">${new Date(ev.eventDate).toLocaleDateString('en-ZA', { month: 'short' })}</span></div>` : ''}
+                </div>
+                <h3 class="content-card-title">${ev.name}</h3>
+                <div class="event-card-info">
+                    ${ev.eventTime ? `<span><i class="fas fa-clock"></i> ${ev.eventTime}</span>` : ''}
+                    ${ev.venue ? `<span><i class="fas fa-location-dot"></i> ${ev.venue}</span>` : ''}
+                </div>
+                <p class="content-card-desc">${(ev.description || '').substring(0, 70)}${(ev.description || '').length > 70 ? '...' : ''}</p>
+                <div class="content-card-footer">
+                    <span class="badge" style="background:${type.color}22;color:${type.color};border:1px solid ${type.color}44"><i class="fas ${type.icon}"></i> ${type.label}</span>
+                    <span class="content-card-author"><i class="fas fa-user"></i> ${authorName}</span>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+function filterEventsDirectory(type) {
+    currentEventFilter = type;
+    renderEventsDirectory();
+}
+
+function searchEventsDirectory() { renderEventsDirectory(); }
+
+function viewEvent(id) {
+    const events = Storage.getEvents();
+    const ev = events.find(e => e.id === id);
+    if (!ev) { showToast('Event not found.', 'error'); return; }
+
+    currentEventViewId = id;
+    const type = EVENT_TYPES[ev.type] || { label: ev.type, icon: 'fa-calendar', color: '#64748b' };
+    const providers = [...Storage.getListings(), ...Storage.getServices()];
+    const author = providers.find(p => p.id === ev.providerId);
+    const authorName = author ? author.name : 'Unknown Host';
+
+    document.getElementById('eventDetailViewType').innerHTML = `<i class="fas ${type.icon}"></i> ${type.label}`;
+    document.getElementById('eventDetailViewType').style.background = `${type.color}22`;
+    document.getElementById('eventDetailViewType').style.color = type.color;
+    document.getElementById('eventDetailViewType').style.border = `1px solid ${type.color}44`;
+    document.getElementById('eventDetailViewTitle').textContent = ev.name;
+    document.getElementById('eventDetailViewDate').textContent = formatDate(ev.createdAt);
+
+    const eventDateStr = ev.eventDate ? new Date(ev.eventDate).toLocaleDateString('en-ZA', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }) : '';
+    document.getElementById('eventDetailViewMeta').innerHTML = `
+        <div class="event-meta-grid">
+            ${eventDateStr ? `<div class="event-meta-item"><i class="fas fa-calendar"></i><span>${eventDateStr}</span></div>` : ''}
+            ${ev.eventTime ? `<div class="event-meta-item"><i class="fas fa-clock"></i><span>${ev.eventTime}</span></div>` : ''}
+            ${ev.venue ? `<div class="event-meta-item"><i class="fas fa-location-dot"></i><span>${ev.venue}${ev.province ? ', ' + ev.province : ''}</span></div>` : ''}
+            ${ev.fee ? `<div class="event-meta-item"><i class="fas fa-ticket"></i><span>${ev.fee}</span></div>` : ''}
+            ${ev.dressCode ? `<div class="event-meta-item"><i class="fas fa-shirt"></i><span>${ev.dressCode}</span></div>` : ''}
+            <div class="event-meta-item"><i class="fas fa-user"></i><span>Hosted by ${authorName}</span></div>
+        </div>
+    `;
+    document.getElementById('eventDetailViewBody').innerHTML = ev.description ? `<p>${ev.description.replace(/\n/g, '<br>')}</p>` : '<p class="empty-text">No description</p>';
+
+    const tagsContainer = document.getElementById('eventDetailViewTags');
+    if (ev.tags && ev.tags.length > 0) {
+        tagsContainer.innerHTML = ev.tags.map(t => `<span class="tag-chip">${t}</span>`).join('');
+    } else {
+        tagsContainer.innerHTML = '';
+    }
+
+    navigateTo('event-view');
+}
+
+// ==========================================
+// PROVIDER EVENTS CRUD
+// ==========================================
+function renderProviderEvents() {
+    const events = Storage.getEvents();
+    const filter = document.getElementById('providerEventFilter')?.value || 'all';
+    const filtered = filter === 'all' ? [...events] : events.filter(e => e.type === filter);
+    filtered.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+    const container = document.getElementById('providerEventsList');
+    if (!container) return;
+
+    if (filtered.length === 0) {
+        container.innerHTML = '<div class="empty-section"><i class="fas fa-calendar-star"></i><p>No events yet</p><span>Create your first event to get started</span></div>';
+        return;
+    }
+
+    container.innerHTML = filtered.map(ev => {
+        const type = EVENT_TYPES[ev.type] || { label: ev.type, icon: 'fa-calendar', color: '#64748b' };
+        const eventDateStr = ev.eventDate ? new Date(ev.eventDate).toLocaleDateString('en-ZA', { day: 'numeric', month: 'short' }) : '';
+        return `
+            <div class="provider-card profile-card">
+                <div class="provider-card-icon" style="background:${type.color}22;color:${type.color}"><i class="fas ${type.icon}"></i></div>
+                <div class="provider-card-info">
+                    <h3>${ev.name}</h3>
+                    <span class="provider-card-type"><i class="fas ${type.icon}"></i> ${type.label}${eventDateStr ? ' &middot; ' + eventDateStr : ''}</span>
+                </div>
+                <div class="provider-card-actions">
+                    <button class="btn btn-secondary btn-sm" onclick="editEvent('${ev.id}')"><i class="fas fa-edit"></i> Edit</button>
+                    <button class="btn btn-danger btn-sm" onclick="deleteEvent('${ev.id}')"><i class="fas fa-trash"></i></button>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+function filterProviderEvents() { renderProviderEvents(); }
+
+function resetEventForm() {
+    document.getElementById('eventFormTitle').textContent = 'New Event';
+    document.getElementById('eventSubmitBtn').textContent = 'Publish Event';
+    document.getElementById('eventId').value = '';
+    document.getElementById('eventName').value = '';
+    document.getElementById('eventType').value = '';
+    document.getElementById('eventDate').value = '';
+    document.getElementById('eventTime').value = '';
+    document.getElementById('eventVenue').value = '';
+    document.getElementById('eventProvinceForm').value = '';
+    document.getElementById('eventFee').value = '';
+    document.getElementById('eventDressCode').value = '';
+    document.getElementById('eventDescription').value = '';
+    eventTags = [];
+    renderEventTags();
+}
+
+function handleEventSubmit(e) {
+    e.preventDefault();
+    const id = document.getElementById('eventId').value;
+    const name = document.getElementById('eventName').value.trim();
+    const type = document.getElementById('eventType').value;
+    const eventDate = document.getElementById('eventDate').value;
+    const eventTime = document.getElementById('eventTime').value;
+    const venue = document.getElementById('eventVenue').value.trim();
+    const province = document.getElementById('eventProvinceForm').value;
+    const fee = document.getElementById('eventFee').value.trim();
+    const dressCode = document.getElementById('eventDressCode').value.trim();
+    const description = document.getElementById('eventDescription').value.trim();
+
+    if (!name || !type || !eventDate || !eventTime || !venue || !province || !description) { showToast('Please fill in all required fields.', 'error'); return; }
+
+    const events = Storage.getEvents();
+    if (id) {
+        const idx = events.findIndex(ev => ev.id === id);
+        if (idx !== -1) {
+            events[idx].name = name;
+            events[idx].type = type;
+            events[idx].eventDate = eventDate;
+            events[idx].eventTime = eventTime;
+            events[idx].venue = venue;
+            events[idx].province = province;
+            events[idx].fee = fee;
+            events[idx].dressCode = dressCode;
+            events[idx].description = description;
+            events[idx].tags = [...eventTags];
+            events[idx].updatedAt = new Date().toISOString();
+        }
+        showToast('Event updated!', 'success');
+    } else {
+        events.push({
+            id: generateId(),
+            name, type, eventDate, eventTime, venue, province, fee, dressCode, description,
+            tags: [...eventTags],
+            providerId: currentProvider?.id || 'unknown',
+            createdAt: new Date().toISOString()
+        });
+        showToast('Event published!', 'success');
+    }
+    Storage.setEvents(events);
+    navigateTo('provider-events');
+}
+
+function editEvent(id) {
+    const events = Storage.getEvents();
+    const ev = events.find(e => e.id === id);
+    if (!ev) return;
+
+    document.getElementById('eventFormTitle').textContent = 'Edit Event';
+    document.getElementById('eventSubmitBtn').textContent = 'Save Changes';
+    document.getElementById('eventId').value = ev.id;
+    document.getElementById('eventName').value = ev.name;
+    document.getElementById('eventType').value = ev.type;
+    document.getElementById('eventDate').value = ev.eventDate || '';
+    document.getElementById('eventTime').value = ev.eventTime || '';
+    document.getElementById('eventVenue').value = ev.venue || '';
+    document.getElementById('eventProvinceForm').value = ev.province || '';
+    document.getElementById('eventFee').value = ev.fee || '';
+    document.getElementById('eventDressCode').value = ev.dressCode || '';
+    document.getElementById('eventDescription').value = ev.description || '';
+    eventTags = [...(ev.tags || [])];
+    renderEventTags();
+    navigateTo('provider-event-create');
+}
+
+function deleteEvent(id) {
+    deleteTarget = { type: 'event', id };
+    const modal = document.getElementById('deleteModal');
+    const text = document.getElementById('deleteModalText');
+    text.textContent = 'Are you sure you want to delete this event? This action cannot be undone.';
     modal.classList.add('active');
 }
