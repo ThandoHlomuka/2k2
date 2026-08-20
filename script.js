@@ -4067,17 +4067,145 @@ function deleteEvent(id) {
 // FORUM SYSTEM
 // ==========================================
 const FORUM_CATEGORIES = {
-    'general': { label: 'General Discussion', icon: 'fa-comments', color: '#3b82f6' },
-    'events': { label: 'Events', icon: 'fa-calendar-days', color: '#8b5cf6' },
-    'tips': { label: 'Tips & Tricks', icon: 'fa-lightbulb', color: '#10b981' },
-    'providers': { label: 'Providers Showcase', icon: 'fa-user-tie', color: '#ec4899' },
-    'safety': { label: 'Safety', icon: 'fa-shield-halved', color: '#ef4444' },
-    'newcomers': { label: 'New Members', icon: 'fa-hand-wave', color: '#f59e0b' },
-    'offtopic': { label: 'Off-Topic', icon: 'fa-ellipsis', color: '#64748b' }
+    'hookups': { label: 'Hookups', icon: 'fa-fire', color: '#ef4444', section: 'public' },
+    'fetishes': { label: 'Fetishes', icon: 'fa-mask', color: '#8b5cf6', section: 'public' },
+    'swingers': { label: 'Swingers', icon: 'fa-people-arrows', color: '#ec4899', section: 'public' },
+    'clubs': { label: 'Clubs', icon: 'fa-champagne-glasses', color: '#f59e0b', section: 'public' },
+    'bdsm': { label: 'BDSM', icon: 'fa-link', color: '#6366f1', section: 'public' },
+    'group-action': { label: 'Group Action', icon: 'fa-users', color: '#10b981', section: 'public' },
+    'general': { label: 'General Discussion', icon: 'fa-comments', color: '#3b82f6', section: 'public' },
+    'events': { label: 'Events', icon: 'fa-calendar-days', color: '#0ea5e9', section: 'public' },
+    'tips': { label: 'Tips & Tricks', icon: 'fa-lightbulb', color: '#10b981', section: 'public' },
+    'newcomers': { label: 'New Members', icon: 'fa-hand-wave', color: '#f59e0b', section: 'public' },
+    'offtopic': { label: 'Off-Topic', icon: 'fa-ellipsis', color: '#64748b', section: 'public' },
+    'premium-exclusive': { label: 'Exclusive Content', icon: 'fa-gem', color: '#d946ef', section: 'premium' },
+    'premium-events': { label: 'Premium Events', icon: 'fa-star', color: '#f59e0b', section: 'premium' },
+    'premium-providers': { label: 'VIP Providers', icon: 'fa-crown', color: '#d97706', section: 'premium' },
+    'premium-safety': { label: 'Safety & Verified', icon: 'fa-shield-halved', color: '#10b981', section: 'premium' },
+    'premium-lounge': { label: 'VIP Lounge', icon: 'fa-martini-glass-citrus', color: '#6366f1', section: 'premium' },
+    'premium-marketplace': { label: 'Premium Marketplace', icon: 'fa-store', color: '#ec4899', section: 'premium' }
 };
 
+const FORUM_EMOJIS = [
+    '😀','😂','😍','🥰','😘','😎','🤩','🥳','😏','😴',
+    '🤔','😱','🤗','😇','🙃','🙄','😬','🤯','🤭','🤫',
+    '👍','👎','👏','🙌','🤝','💪','🫶','❤️','🔥','💯',
+    '🎉','🎊','⭐','✨','💎','👑','🏆','🥂','🍾','💫',
+    '😍','🥰','😘','💋','👄','👅','🍑','🍆','🥵','🥶',
+    '😈','👿','💀','👻','🎃','🖤','💜','💙','💚','💛',
+    '🌹','🌺','🌸','💐','🎵','🎶','🎬','📸','📱','💬'
+];
+
+const FORUM_PUBLIC_CATS = ['hookups','fetishes','swingers','clubs','bdsm','group-action','general','events','tips','newcomers','offtopic'];
+const FORUM_PREMIUM_CATS = ['premium-exclusive','premium-events','premium-providers','premium-safety','premium-lounge','premium-marketplace'];
+
 let currentForumFilter = 'all';
+let currentForumSection = 'public';
 let currentForumViewId = null;
+let currentEmojiTarget = null;
+
+function switchForumSection(section) {
+    currentForumSection = section;
+    currentForumFilter = 'all';
+    document.querySelectorAll('.forum-main-tab').forEach(t => t.classList.remove('active'));
+    if (event && event.target) event.target.closest('.forum-main-tab')?.classList.add('active');
+    updateForumSubTabs();
+    renderForumThreads();
+}
+
+function updateForumSubTabs() {
+    const tabs = document.getElementById('forumSubTabs');
+    if (!tabs) return;
+    const cats = currentForumSection === 'premium' ? FORUM_PREMIUM_CATS : FORUM_PUBLIC_CATS;
+    tabs.innerHTML = `<button class="filter-tab active" onclick="filterForum('all')"><i class="fas fa-globe"></i> All</button>` +
+        cats.map(key => {
+            const cat = FORUM_CATEGORIES[key];
+            return `<button class="filter-tab" onclick="filterForum('${key}')"><i class="fas ${cat.icon}"></i> ${cat.label}</button>`;
+        }).join('');
+}
+
+function updateForumCategoryOptions() {
+    const section = document.getElementById('forumThreadSectionSelect')?.value || '';
+    const catSelect = document.getElementById('forumThreadCategory');
+    const sectionInput = document.getElementById('forumThreadSection');
+    if (!catSelect) return;
+    if (sectionInput) sectionInput.value = section;
+    const cats = section === 'premium' ? FORUM_PREMIUM_CATS : FORUM_PUBLIC_CATS;
+    catSelect.innerHTML = '<option value="">Select category</option>' +
+        cats.map(key => {
+            const cat = FORUM_CATEGORIES[key];
+            return `<option value="${key}">${cat.label}</option>`;
+        }).join('');
+}
+
+function toggleEmojiPicker(targetId) {
+    currentEmojiTarget = targetId;
+    let picker = document.getElementById('forumEmojiPicker');
+    if (picker) {
+        picker.remove();
+        return;
+    }
+    picker = document.createElement('div');
+    picker.id = 'forumEmojiPicker';
+    picker.className = 'forum-emoji-picker';
+    picker.innerHTML = `<div class="emoji-grid">${FORUM_EMOJIS.map(e => `<button type="button" class="emoji-btn" onclick="insertEmoji('${e}')">${e}</button>`).join('')}</div>`;
+    const target = document.getElementById(targetId);
+    if (target) {
+        target.parentElement.style.position = 'relative';
+        target.parentElement.appendChild(picker);
+    }
+}
+
+function insertEmoji(emoji) {
+    const ta = document.getElementById(currentEmojiTarget);
+    if (!ta) return;
+    const start = ta.selectionStart;
+    const end = ta.selectionEnd;
+    ta.value = ta.value.substring(0, start) + emoji + ta.value.substring(end);
+    ta.selectionStart = ta.selectionEnd = start + emoji.length;
+    ta.focus();
+    const picker = document.getElementById('forumEmojiPicker');
+    if (picker) picker.remove();
+}
+
+function insertGistFormat(type, targetId) {
+    const ta = document.getElementById(targetId || 'forumThreadBody');
+    if (!ta) return;
+    const start = ta.selectionStart;
+    const end = ta.selectionEnd;
+    const selected = ta.value.substring(start, end);
+    let before = '', after = '', replacement = '';
+    switch (type) {
+        case 'bold': before = '**'; after = '**'; replacement = selected || 'bold text'; break;
+        case 'italic': before = '*'; after = '*'; replacement = selected || 'italic text'; break;
+        case 'underline': before = '__'; after = '__'; replacement = selected || 'underlined'; break;
+        case 'strikethrough': before = '~~'; after = '~~'; replacement = selected || 'strikethrough'; break;
+        case 'quote': before = '\n> '; after = ''; replacement = selected || 'quoted text'; break;
+        case 'code': before = '`'; after = '`'; replacement = selected || 'code'; break;
+        case 'link': before = '['; after = '](https://)'; replacement = selected || 'link text'; break;
+        case 'list': before = '\n- '; after = ''; replacement = selected || 'list item'; break;
+    }
+    ta.value = ta.value.substring(0, start) + before + replacement + after + ta.value.substring(end);
+    ta.selectionStart = start + before.length;
+    ta.selectionEnd = start + before.length + replacement.length;
+    ta.focus();
+}
+
+function renderGistContent(text) {
+    if (!text) return '';
+    let html = escapeHtml(text);
+    html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+    html = html.replace(/\*(.+?)\*/g, '<em>$1</em>');
+    html = html.replace(/__(.+?)__/g, '<u>$1</u>');
+    html = html.replace(/~~(.+?)~~/g, '<del>$1</del>');
+    html = html.replace(/`(.+?)`/g, '<code class="forum-inline-code">$1</code>');
+    html = html.replace(/^&gt;\s?(.+)$/gm, '<blockquote class="forum-blockquote">$1</blockquote>');
+    html = html.replace(/\[(.+?)\]\((.+?)\)/g, '<a href="$2" target="_blank" rel="noopener" class="forum-link">$1</a>');
+    html = html.replace(/^- (.+)$/gm, '<li>$1</li>');
+    html = html.replace(/(<li>.*<\/li>)/s, '<ul class="forum-list">$1</ul>');
+    html = html.replace(/\n/g, '<br>');
+    return html;
+}
 
 function renderForumThreads() {
     const threads = Storage.getForumThreads();
@@ -4086,7 +4214,11 @@ function renderForumThreads() {
     const search = document.getElementById('forumSearch')?.value?.toLowerCase() || '';
     const sort = document.getElementById('forumSort')?.value || 'newest';
 
-    let filtered = [...threads];
+    let filtered = threads.filter(t => {
+        const cat = FORUM_CATEGORIES[t.category];
+        if (cat && cat.section !== currentForumSection) return false;
+        return true;
+    });
 
     if (currentForumFilter !== 'all') {
         filtered = filtered.filter(t => t.category === currentForumFilter);
@@ -4124,7 +4256,7 @@ function renderForumThreads() {
     if (!container) return;
 
     if (filtered.length === 0) {
-        container.innerHTML = '<div class="forum-empty"><i class="fas fa-comments"></i><h3>No threads found</h3><p>Be the first to start a conversation in the community forum!</p></div>';
+        container.innerHTML = '<div class="forum-empty"><i class="fas fa-comments"></i><h3>No threads found</h3><p>Be the first to start a conversation in this forum!</p></div>';
         return;
     }
 
@@ -4135,6 +4267,8 @@ function renderForumThreads() {
         const isLiked = likes.some(l => l.targetId === thread.id && l.type === 'thread' && l.userId === 'current');
         const tagsHtml = (thread.tags || []).slice(0, 3).map(t => `<span class="forum-tag">${t}</span>`).join('');
         const timeAgo = getTimeAgo(thread.createdAt);
+        const isPremium = cat.section === 'premium';
+        const sectionBadge = isPremium ? '<span class="forum-premium-badge"><i class="fas fa-crown"></i> Premium</span>' : '';
 
         return `
             <div class="forum-thread-card${thread.pinned ? ' pinned' : ''}${thread.locked ? ' locked' : ''}" onclick="viewForumThread('${thread.id}')">
@@ -4148,11 +4282,12 @@ function renderForumThreads() {
                     <div class="forum-thread-content">
                         <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:6px">
                             <span class="forum-thread-category-badge" style="background:${cat.color}18;color:${cat.color}"><i class="fas ${cat.icon}"></i> ${cat.label}</span>
+                            ${sectionBadge}
                             ${thread.pinned ? '<span class="forum-pin-badge"><i class="fas fa-thumbtack"></i> Pinned</span>' : ''}
                             ${thread.locked ? '<span class="forum-lock-badge"><i class="fas fa-lock"></i> Locked</span>' : ''}
                         </div>
                         <h3 class="forum-thread-title">${escapeHtml(thread.title)}</h3>
-                        <p class="forum-thread-excerpt">${escapeHtml(thread.body)}</p>
+                        <p class="forum-thread-excerpt">${escapeHtml(thread.body).substring(0, 180)}${thread.body.length > 180 ? '...' : ''}</p>
                         <div class="forum-thread-meta">
                             <span><i class="fas fa-user"></i> ${escapeHtml(thread.author)}</span>
                             <span><i class="fas fa-clock"></i> ${timeAgo}</span>
@@ -4169,15 +4304,8 @@ function renderForumThreads() {
 
 function filterForum(category) {
     currentForumFilter = category;
-    const tabs = document.querySelectorAll('#page-forum-browse .filter-tab, #page-forum-browse .filter-tab');
-    document.querySelectorAll('.filter-tab').forEach(tab => {
-        if (tab.closest('#page-forum-browse') || tab.closest('.directory-filters')) {
-            tab.classList.remove('active');
-        }
-    });
-    if (event && event.target) {
-        event.target.closest('.filter-tab')?.classList.add('active');
-    }
+    document.querySelectorAll('#forumSubTabs .filter-tab').forEach(tab => tab.classList.remove('active'));
+    if (event && event.target) event.target.closest('.filter-tab')?.classList.add('active');
     renderForumThreads();
 }
 
@@ -4198,6 +4326,8 @@ function viewForumThread(id) {
     const threadReplies = replies.filter(r => r.threadId === id);
     const tagsHtml = (thread.tags || []).map(t => `<span class="forum-tag">${t}</span>`).join('');
     const createdStr = new Date(thread.createdAt).toLocaleDateString('en-ZA', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+    const isPremium = cat.section === 'premium';
+    const sectionBadge = isPremium ? '<span class="forum-premium-badge" style="margin-left:8px"><i class="fas fa-crown"></i> Premium</span>' : '';
 
     const titleEl = document.getElementById('forumViewTitle');
     if (titleEl) titleEl.textContent = thread.title;
@@ -4207,6 +4337,7 @@ function viewForumThread(id) {
         fullEl.innerHTML = `
             <div class="forum-thread-full-header">
                 <span class="forum-thread-full-category" style="background:${cat.color}18;color:${cat.color}"><i class="fas ${cat.icon}"></i> ${cat.label}</span>
+                ${sectionBadge}
                 ${thread.pinned ? '<span class="forum-pin-badge" style="margin-left:8px"><i class="fas fa-thumbtack"></i> Pinned</span>' : ''}
                 ${thread.locked ? '<span class="forum-lock-badge" style="margin-left:8px"><i class="fas fa-lock"></i> Locked</span>' : ''}
                 <h1 class="forum-thread-full-title">${escapeHtml(thread.title)}</h1>
@@ -4217,7 +4348,7 @@ function viewForumThread(id) {
                 </div>
             </div>
             <div class="forum-thread-full-body">
-                <p>${escapeHtml(thread.body)}</p>
+                <div class="forum-gist-content">${renderGistContent(thread.body)}</div>
             </div>
             ${tagsHtml ? `<div class="forum-thread-full-tags">${tagsHtml}</div>` : ''}
             <div class="forum-thread-full-actions">
@@ -4253,7 +4384,7 @@ function viewForumThread(id) {
                                 <span class="forum-reply-author">${escapeHtml(reply.author)}</span>
                                 <span class="forum-reply-time">${replyTime}</span>
                             </div>
-                            <p class="forum-reply-body">${escapeHtml(reply.body)}</p>
+                            <div class="forum-reply-body">${renderGistContent(reply.body)}</div>
                             <div class="forum-reply-actions">
                                 <button class="forum-reply-action-btn${isReplyLiked ? ' liked' : ''}" onclick="toggleForumLike('${reply.id}', 'reply', this); viewForumThread('${id}')">
                                     <i class="fas fa-thumbs-up"></i> ${replyLikes}
@@ -4279,6 +4410,7 @@ function handleForumThreadSubmit(e) {
     e.preventDefault();
     const id = document.getElementById('forumThreadId').value;
     const title = document.getElementById('forumThreadTitle').value.trim();
+    const section = document.getElementById('forumThreadSectionSelect')?.value || document.getElementById('forumThreadSection')?.value || 'public';
     const category = document.getElementById('forumThreadCategory').value;
     const author = document.getElementById('forumThreadAuthor').value.trim();
     const body = document.getElementById('forumThreadBody').value.trim();
@@ -4292,6 +4424,7 @@ function handleForumThreadSubmit(e) {
         const idx = threads.findIndex(t => t.id === id);
         if (idx !== -1) {
             threads[idx].title = title;
+            threads[idx].section = section;
             threads[idx].category = category;
             threads[idx].author = author;
             threads[idx].body = body;
@@ -4301,7 +4434,7 @@ function handleForumThreadSubmit(e) {
         showToast('Thread updated!', 'success');
     } else {
         threads.push({
-            id: generateId(), title, category, author, body, tags,
+            id: generateId(), title, section, category, author, body, tags,
             views: 0, pinned: false, locked: false,
             createdAt: new Date().toISOString()
         });
@@ -4389,6 +4522,7 @@ function renderUserForumThreads() {
         const threadLikes = likes.filter(l => l.targetId === thread.id && l.type === 'thread').length;
         const threadReplies = replies.filter(r => r.threadId === thread.id).length;
         const timeAgo = getTimeAgo(thread.createdAt);
+        const isPremium = cat.section === 'premium';
 
         return `
             <div class="forum-thread-card${thread.pinned ? ' pinned' : ''}${thread.locked ? ' locked' : ''}" onclick="viewForumThread('${thread.id}')">
@@ -4400,11 +4534,12 @@ function renderUserForumThreads() {
                     <div class="forum-thread-content">
                         <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:6px">
                             <span class="forum-thread-category-badge" style="background:${cat.color}18;color:${cat.color}"><i class="fas ${cat.icon}"></i> ${cat.label}</span>
+                            ${isPremium ? '<span class="forum-premium-badge"><i class="fas fa-crown"></i> Premium</span>' : ''}
                             ${thread.pinned ? '<span class="forum-pin-badge"><i class="fas fa-thumbtack"></i> Pinned</span>' : ''}
                             ${thread.locked ? '<span class="forum-lock-badge"><i class="fas fa-lock"></i> Locked</span>' : ''}
                         </div>
                         <h3 class="forum-thread-title">${escapeHtml(thread.title)}</h3>
-                        <p class="forum-thread-excerpt">${escapeHtml(thread.body)}</p>
+                        <p class="forum-thread-excerpt">${escapeHtml(thread.body).substring(0, 180)}${thread.body.length > 180 ? '...' : ''}</p>
                         <div class="forum-thread-meta">
                             <span><i class="fas fa-clock"></i> ${timeAgo}</span>
                             <span><i class="fas fa-comment"></i> ${threadReplies} replies</span>
@@ -4422,7 +4557,8 @@ function resetForumForm() {
     document.getElementById('forumThreadSubmitBtn').textContent = 'Post Thread';
     document.getElementById('forumThreadId').value = '';
     document.getElementById('forumThreadTitle').value = '';
-    document.getElementById('forumThreadCategory').value = '';
+    document.getElementById('forumThreadSectionSelect').value = '';
+    document.getElementById('forumThreadCategory').innerHTML = '<option value="">Select category</option>';
     document.getElementById('forumThreadAuthor').value = '';
     document.getElementById('forumThreadBody').value = '';
     document.getElementById('forumThreadTags').value = '';

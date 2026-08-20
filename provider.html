@@ -2002,14 +2002,27 @@
                     </button>
                 </div>
 
+                <div class="forum-main-tabs">
+                    <button class="forum-main-tab active" onclick="switchForumSection('public')">
+                        <i class="fas fa-globe"></i> Public Forum
+                    </button>
+                    <button class="forum-main-tab premium-tab" onclick="switchForumSection('premium')">
+                        <i class="fas fa-crown"></i> Premium Forum
+                    </button>
+                </div>
+
                 <div class="directory-filters">
-                    <div class="filter-tabs">
+                    <div class="filter-tabs" id="forumSubTabs">
                         <button class="filter-tab active" onclick="filterForum('all')"><i class="fas fa-globe"></i> All</button>
+                        <button class="filter-tab" onclick="filterForum('hookups')"><i class="fas fa-fire"></i> Hookups</button>
+                        <button class="filter-tab" onclick="filterForum('fetishes')"><i class="fas fa-mask"></i> Fetishes</button>
+                        <button class="filter-tab" onclick="filterForum('swingers')"><i class="fas fa-people-arrows"></i> Swingers</button>
+                        <button class="filter-tab" onclick="filterForum('clubs')"><i class="fas fa-champagne-glasses"></i> Clubs</button>
+                        <button class="filter-tab" onclick="filterForum('bdsm')"><i class="fas fa-link"></i> BDSM</button>
+                        <button class="filter-tab" onclick="filterForum('group-action')"><i class="fas fa-users"></i> Group Action</button>
                         <button class="filter-tab" onclick="filterForum('general')"><i class="fas fa-comments"></i> General</button>
                         <button class="filter-tab" onclick="filterForum('events')"><i class="fas fa-calendar-days"></i> Events</button>
-                        <button class="filter-tab" onclick="filterForum('tips')"><i class="fas fa-lightbulb"></i> Tips & Tricks</button>
-                        <button class="filter-tab" onclick="filterForum('providers')"><i class="fas fa-user-tie"></i> Providers</button>
-                        <button class="filter-tab" onclick="filterForum('safety')"><i class="fas fa-shield-halved"></i> Safety</button>
+                        <button class="filter-tab" onclick="filterForum('tips')"><i class="fas fa-lightbulb"></i> Tips</button>
                         <button class="filter-tab" onclick="filterForum('newcomers')"><i class="fas fa-hand-wave"></i> New Members</button>
                         <button class="filter-tab" onclick="filterForum('offtopic')"><i class="fas fa-ellipsis"></i> Off-Topic</button>
                     </div>
@@ -2044,6 +2057,7 @@
 
                 <form id="forumThreadForm" onsubmit="handleForumThreadSubmit(event)">
                     <input type="hidden" id="forumThreadId" value="">
+                    <input type="hidden" id="forumThreadSection" value="public">
 
                     <div class="profile-card">
                         <h2><i class="fas fa-pen-to-square"></i> Thread Details</h2>
@@ -2053,16 +2067,17 @@
                                 <input type="text" id="forumThreadTitle" placeholder="Give your thread a descriptive title" required>
                             </div>
                             <div class="form-group">
+                                <label>Forum Section *</label>
+                                <select id="forumThreadSectionSelect" required onchange="updateForumCategoryOptions()">
+                                    <option value="">Select section</option>
+                                    <option value="public">Public Forum</option>
+                                    <option value="premium">Premium Forum</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
                                 <label>Category *</label>
                                 <select id="forumThreadCategory" required>
                                     <option value="">Select category</option>
-                                    <option value="general">General Discussion</option>
-                                    <option value="events">Events</option>
-                                    <option value="tips">Tips & Tricks</option>
-                                    <option value="providers">Providers Showcase</option>
-                                    <option value="safety">Safety</option>
-                                    <option value="newcomers">New Members</option>
-                                    <option value="offtopic">Off-Topic</option>
                                 </select>
                             </div>
                             <div class="form-group">
@@ -2072,7 +2087,21 @@
                         </div>
                         <div class="form-group" style="margin-top:16px">
                             <label>Body *</label>
-                            <textarea id="forumThreadBody" placeholder="Write your thread content..." rows="10" required></textarea>
+                            <div class="forum-gist-toolbar">
+                                <button type="button" class="gist-btn" onclick="insertGistFormat('bold')" title="Bold"><i class="fas fa-bold"></i></button>
+                                <button type="button" class="gist-btn" onclick="insertGistFormat('italic')" title="Italic"><i class="fas fa-italic"></i></button>
+                                <button type="button" class="gist-btn" onclick="insertGistFormat('underline')" title="Underline"><i class="fas fa-underline"></i></button>
+                                <button type="button" class="gist-btn" onclick="insertGistFormat('strikethrough')" title="Strikethrough"><i class="fas fa-strikethrough"></i></button>
+                                <span class="gist-divider"></span>
+                                <button type="button" class="gist-btn" onclick="insertGistFormat('quote')" title="Quote"><i class="fas fa-quote-left"></i></button>
+                                <button type="button" class="gist-btn" onclick="insertGistFormat('code')" title="Code"><i class="fas fa-code"></i></button>
+                                <button type="button" class="gist-btn" onclick="insertGistFormat('link')" title="Link"><i class="fas fa-link"></i></button>
+                                <button type="button" class="gist-btn" onclick="insertGistFormat('list')" title="List"><i class="fas fa-list-ul"></i></button>
+                                <span class="gist-divider"></span>
+                                <button type="button" class="gist-btn emoji-toggle-btn" onclick="toggleEmojiPicker('forumThreadBody')" title="Emoji"><i class="fas fa-face-smile"></i></button>
+                            </div>
+                            <textarea id="forumThreadBody" placeholder="Write your thread content... Use **bold**, *italic*, > quote, `code`" rows="10" required></textarea>
+                            <div class="forum-gist-hint">Tip: Use **bold**, *italic*, `code`, > quote, [text](url) for formatting</div>
                         </div>
                         <div class="form-group" style="margin-top:12px">
                             <label>Tags (comma-separated)</label>
@@ -2114,7 +2143,19 @@
                             </div>
                         </div>
                         <div class="form-group">
-                            <textarea id="forumReplyBody" placeholder="Write your reply..." rows="4" required style="width:100%;padding:10px 14px;border:1px solid var(--border, #e2e8f0);border-radius:10px;font-family:inherit;font-size:0.9rem;resize:none;outline:none;background:var(--card-bg, white);color:var(--text-primary, #1e293b)"></textarea>
+                            <div class="forum-gist-toolbar">
+                                <button type="button" class="gist-btn" onclick="insertGistFormat('bold', 'forumReplyBody')" title="Bold"><i class="fas fa-bold"></i></button>
+                                <button type="button" class="gist-btn" onclick="insertGistFormat('italic', 'forumReplyBody')" title="Italic"><i class="fas fa-italic"></i></button>
+                                <button type="button" class="gist-btn" onclick="insertGistFormat('underline', 'forumReplyBody')" title="Underline"><i class="fas fa-underline"></i></button>
+                                <button type="button" class="gist-btn" onclick="insertGistFormat('strikethrough', 'forumReplyBody')" title="Strikethrough"><i class="fas fa-strikethrough"></i></button>
+                                <span class="gist-divider"></span>
+                                <button type="button" class="gist-btn" onclick="insertGistFormat('quote', 'forumReplyBody')" title="Quote"><i class="fas fa-quote-left"></i></button>
+                                <button type="button" class="gist-btn" onclick="insertGistFormat('code', 'forumReplyBody')" title="Code"><i class="fas fa-code"></i></button>
+                                <button type="button" class="gist-btn" onclick="insertGistFormat('link', 'forumReplyBody')" title="Link"><i class="fas fa-link"></i></button>
+                                <span class="gist-divider"></span>
+                                <button type="button" class="gist-btn emoji-toggle-btn" onclick="toggleEmojiPicker('forumReplyBody')" title="Emoji"><i class="fas fa-face-smile"></i></button>
+                            </div>
+                            <textarea id="forumReplyBody" placeholder="Write your reply... Use **bold**, *italic*, > quote, `code`" rows="4" required style="width:100%;padding:10px 14px;border:1px solid var(--border, #e2e8f0);border-radius:10px;font-family:inherit;font-size:0.9rem;resize:none;outline:none;background:var(--card-bg, white);color:var(--text-primary, #1e293b)"></textarea>
                         </div>
                         <button class="btn btn-primary btn-sm" onclick="submitForumReply()" style="margin-top:8px"><i class="fas fa-paper-plane"></i> Post Reply</button>
                     </div>
@@ -2143,6 +2184,6 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
-    <script src="script.js?v=3"></script>
+    <script src="script.js?v=4"></script>
 </body>
 </html>

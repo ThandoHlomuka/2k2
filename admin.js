@@ -1026,13 +1026,23 @@ function renderAdminForum() {
     }
 
     const FORUM_CATS = {
+        'hookups': { label: 'Hookups', color: '#ef4444' },
+        'fetishes': { label: 'Fetishes', color: '#8b5cf6' },
+        'swingers': { label: 'Swingers', color: '#ec4899' },
+        'clubs': { label: 'Clubs', color: '#f59e0b' },
+        'bdsm': { label: 'BDSM', color: '#6366f1' },
+        'group-action': { label: 'Group Action', color: '#10b981' },
         'general': { label: 'General', color: '#3b82f6' },
-        'events': { label: 'Events', color: '#8b5cf6' },
+        'events': { label: 'Events', color: '#0ea5e9' },
         'tips': { label: 'Tips', color: '#10b981' },
-        'providers': { label: 'Providers', color: '#ec4899' },
-        'safety': { label: 'Safety', color: '#ef4444' },
         'newcomers': { label: 'New Members', color: '#f59e0b' },
-        'offtopic': { label: 'Off-Topic', color: '#64748b' }
+        'offtopic': { label: 'Off-Topic', color: '#64748b' },
+        'premium-exclusive': { label: 'Premium Exclusive', color: '#d946ef' },
+        'premium-events': { label: 'Premium Events', color: '#f59e0b' },
+        'premium-providers': { label: 'VIP Providers', color: '#d97706' },
+        'premium-safety': { label: 'Safety Verified', color: '#10b981' },
+        'premium-lounge': { label: 'VIP Lounge', color: '#6366f1' },
+        'premium-marketplace': { label: 'Premium Market', color: '#ec4899' }
     };
 
     tbody.innerHTML = filtered.map(thread => {
