@@ -94,6 +94,20 @@
                 <span>My Threads</span>
             </a>
             <div class="nav-divider"></div>
+            <span class="nav-section-title">Jobs & Gigs</span>
+            <a href="#" class="nav-item" data-page="gigs-browse">
+                <i class="fas fa-briefcase"></i>
+                <span>Browse Gigs</span>
+            </a>
+            <a href="#" class="nav-item" data-page="provider-gigs">
+                <i class="fas fa-clipboard-list"></i>
+                <span>My Gigs</span>
+            </a>
+            <a href="#" class="nav-item" data-page="provider-gig-create">
+                <i class="fas fa-plus-circle"></i>
+                <span>Post a Gig</span>
+            </a>
+            <div class="nav-divider"></div>
             <span class="nav-section-title">Personal Ads</span>
             <a href="#" class="nav-item" data-page="provider-ads">
                 <i class="fas fa-bullhorn"></i>
@@ -257,6 +271,12 @@
                             <div class="form-group full-width">
                                 <label>Address *</label>
                                 <input type="text" id="providerFormAddress" placeholder="Full business address" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Province / City</label>
+                                <select id="providerFormLocation">
+                                    <option value="">Select location</option>
+                                </select>
                             </div>
                         </div>
                     </div>
@@ -824,6 +844,12 @@
                                     <option value="podcast">Podcast</option>
                                     <option value="story">Story</option>
                                     <option value="book">Book</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Location</label>
+                                <select id="contentLocation">
+                                    <option value="">Select location</option>
                                 </select>
                             </div>
                             <div class="form-group full-width">
@@ -2003,6 +2029,144 @@
             </div>
         </div>
 
+        <!-- Jobs/Gigs Browse -->
+        <div class="page" id="page-gigs-browse">
+            <div class="container">
+                <div class="dashboard-header">
+                    <div>
+                        <h1>Jobs & Gigs</h1>
+                        <p>Find opportunities or post your services</p>
+                    </div>
+                    <button class="btn btn-primary" onclick="navigateTo('provider-gig-create')">
+                        <i class="fas fa-plus"></i> Post a Gig
+                    </button>
+                </div>
+                <div class="directory-filters">
+                    <div class="filter-bar">
+                        <input type="text" id="gigSearch" placeholder="Search gigs..." oninput="renderGigsBrowse()">
+                        <select id="gigTypeFilter" onchange="renderGigsBrowse()">
+                            <option value="all">All Types</option>
+                        </select>
+                        <select id="gigLocationFilter" onchange="renderGigsBrowse()">
+                            <option value="">All Locations</option>
+                        </select>
+                        <select id="gigSort" onchange="renderGigsBrowse()">
+                            <option value="newest">Newest</option>
+                            <option value="oldest">Oldest</option>
+                            <option value="rate-high">Rate: High to Low</option>
+                            <option value="rate-low">Rate: Low to High</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="directory-stats"><span id="gigCount">0</span> gigs found</div>
+                <div class="forum-threads-list" id="gigsList"></div>
+            </div>
+        </div>
+
+        <!-- Gig Detail View -->
+        <div class="page" id="page-gig-view">
+            <div class="container">
+                <div class="form-header">
+                    <button class="btn-back" onclick="navigateTo('gigs-browse')">
+                        <i class="fas fa-arrow-left"></i> Back to Gigs
+                    </button>
+                    <h1 id="gigViewTitle">Gig Details</h1>
+                </div>
+                <div id="gigViewContent"></div>
+            </div>
+        </div>
+
+        <!-- Gig Create/Edit (Provider) -->
+        <div class="page" id="page-provider-gig-create">
+            <div class="container">
+                <div class="form-header">
+                    <button class="btn-back" onclick="navigateTo('gigs-browse')">
+                        <i class="fas fa-arrow-left"></i> Back
+                    </button>
+                    <h1 id="gigFormTitle">Post a Gig</h1>
+                </div>
+                <form id="gigForm" onsubmit="handleGigSubmit(event)">
+                    <input type="hidden" id="gigId" value="">
+                    <div class="profile-card">
+                        <h2><i class="fas fa-briefcase"></i> Gig Details</h2>
+                        <div class="form-grid">
+                            <div class="form-group full-width">
+                                <label>Title *</label>
+                                <input type="text" id="gigTitle" placeholder="e.g. Professional photographer available in Joburg" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Gig Type *</label>
+                                <select id="gigType" required>
+                                    <option value="">Select type</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Location</label>
+                                <select id="gigLocation">
+                                    <option value="">Select location</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Rate (ZAR)</label>
+                                <input type="number" id="gigRate" placeholder="e.g. 500" min="0">
+                            </div>
+                            <div class="form-group">
+                                <label>Rate Type</label>
+                                <select id="gigRateType">
+                                    <option value="hr">Per Hour</option>
+                                    <option value="day">Per Day</option>
+                                    <option value="event">Per Event</option>
+                                    <option value="session">Per Session</option>
+                                    <option value="fixed">Fixed Price</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Contact</label>
+                                <input type="text" id="gigContact" placeholder="Phone or handle">
+                            </div>
+                            <div class="form-group">
+                                <label>Your Name *</label>
+                                <input type="text" id="gigAuthor" placeholder="Display name" required>
+                            </div>
+                            <div class="form-group full-width">
+                                <label style="display:flex;align-items:center;gap:8px">
+                                    <input type="checkbox" id="gigUrgent"> Mark as Urgent
+                                </label>
+                            </div>
+                        </div>
+                        <div class="form-group" style="margin-top:16px">
+                            <label>Description *</label>
+                            <textarea id="gigDescription" rows="5" placeholder="Describe the gig, requirements, availability..." required></textarea>
+                        </div>
+                        <div class="form-group" style="margin-top:16px">
+                            <label>Tags (comma separated)</label>
+                            <input type="text" id="gigTags" placeholder="e.g. freelance, weekend, downtown">
+                        </div>
+                    </div>
+                    <div style="display:flex;gap:12px;margin-top:20px">
+                        <button type="submit" class="btn btn-primary" style="flex:1"><i class="fas fa-check"></i> Post Gig</button>
+                        <button type="button" class="btn btn-secondary" onclick="navigateTo('gigs-browse')">Cancel</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- My Gigs (Provider) -->
+        <div class="page" id="page-provider-gigs">
+            <div class="container">
+                <div class="dashboard-header">
+                    <div>
+                        <h1>My Gigs</h1>
+                        <p>Manage your posted gigs</p>
+                    </div>
+                    <button class="btn btn-primary" onclick="navigateTo('provider-gig-create')">
+                        <i class="fas fa-plus"></i> Post Gig
+                    </button>
+                </div>
+                <div class="forum-threads-list" id="userGigsList"></div>
+            </div>
+        </div>
+
         <!-- Forum Browse -->
         <div class="page" id="page-forum-browse">
             <div class="container">
@@ -2383,6 +2547,6 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
-    <script src="script.js?v=5"></script>
+    <script src="script.js?v=6"></script>
 </body>
 </html>

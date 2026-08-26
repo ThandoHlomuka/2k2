@@ -6,8 +6,88 @@
     <title>2k2 - General User</title>
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700;900&family=Inter:wght@300;400;500;600;700&family=Dancing+Script:wght@700&display=swap" rel="stylesheet">
 </head>
 <body>
+    <!-- Onboarding Overlay (first visit) -->
+    <div class="onboarding-overlay" id="onboardingOverlay">
+        <div class="onboarding-slides">
+            <!-- Slide 1: Welcome -->
+            <div class="onb-slide active" data-slide="0">
+                <div class="onb-bg" style="background-image:url('https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=1200&q=80')"></div>
+                <div class="onb-overlay"></div>
+                <div class="onb-content">
+                    <div class="onb-crown">👑</div>
+                    <h1 class="onb-title">Welcome to <span class="onb-highlight">2k2</span></h1>
+                    <p class="onb-subtitle">South Africa's #1 Adult Portal</p>
+                    <p class="onb-desc">Discover, connect, and explore like never before.</p>
+                    <div class="onb-icons">
+                        <div class="onb-icon-item"><div class="onb-icon-circle" style="color:#ec4899"><i class="fas fa-heart"></i></div><span>Connect</span></div>
+                        <div class="onb-icon-item"><div class="onb-icon-circle" style="color:#8b5cf6"><i class="fas fa-mask"></i></div><span>Explore</span></div>
+                        <div class="onb-icon-item"><div class="onb-icon-circle" style="color:#d4a853"><i class="fas fa-gem"></i></div><span>Indulge</span></div>
+                        <div class="onb-icon-item"><div class="onb-icon-circle" style="color:#10b981"><i class="fas fa-shield-halved"></i></div><span>Safe</span></div>
+                    </div>
+                </div>
+            </div>
+            <!-- Slide 2: Discover -->
+            <div class="onb-slide" data-slide="1">
+                <div class="onb-bg" style="background-image:url('https://images.unsplash.com/photo-1517841905240-472988babdf9?w=1200&q=80')"></div>
+                <div class="onb-overlay"></div>
+                <div class="onb-content">
+                    <h1 class="onb-title" style="font-size:2.6rem">Discover <span class="onb-highlight">People</span></h1>
+                    <p class="onb-subtitle">Find exactly what you're looking for</p>
+                    <div class="onb-features">
+                        <div class="onb-feature"><i class="fas fa-users" style="color:#ec4899"></i><div><h4>Profiles</h4><p>Browse verified providers across all 9 provinces</p></div></div>
+                        <div class="onb-feature"><i class="fas fa-map-marker-alt" style="color:#f59e0b"></i><div><h4>Venues & Events</h4><p>Fetish clubs, lodges, and exclusive events</p></div></div>
+                        <div class="onb-feature"><i class="fas fa-video" style="color:#8b5cf6"></i><div><h4>Premium Content</h4><p>Videos, images, ASMR, podcasts, and stories</p></div></div>
+                        <div class="onb-feature"><i class="fas fa-briefcase" style="color:#10b981"></i><div><h4>Jobs & Gigs</h4><p>Find work or hire talent for events and services</p></div></div>
+                    </div>
+                </div>
+            </div>
+            <!-- Slide 3: Connect -->
+            <div class="onb-slide" data-slide="2">
+                <div class="onb-bg" style="background-image:url('https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=1200&q=80')"></div>
+                <div class="onb-overlay"></div>
+                <div class="onb-content">
+                    <h1 class="onb-title" style="font-size:2.6rem">Connect <span class="onb-highlight">& Engage</span></h1>
+                    <p class="onb-subtitle">Book, tip, and interact seamlessly</p>
+                    <div class="onb-features">
+                        <div class="onb-feature"><i class="fas fa-calendar-check" style="color:#10b981"></i><div><h4>Book Services</h4><p>Secure bookings with wallet and confirmations</p></div></div>
+                        <div class="onb-feature"><i class="fas fa-fire" style="color:#ef4444"></i><div><h4>Tip & Support</h4><p>Show appreciation with instant tips</p></div></div>
+                        <div class="onb-feature"><i class="fas fa-comments" style="color:#6366f1"></i><div><h4>Community Forum</h4><p>Public & Premium forums with rich text</p></div></div>
+                        <div class="onb-feature"><i class="fas fa-wallet" style="color:#d4a853"></i><div><h4>Digital Wallet</h4><p>Top up, withdraw, track everything</p></div></div>
+                    </div>
+                </div>
+            </div>
+            <!-- Slide 4: Get Started -->
+            <div class="onb-slide" data-slide="3">
+                <div class="onb-bg" style="background-image:url('https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=1200&q=80')"></div>
+                <div class="onb-overlay"></div>
+                <div class="onb-content">
+                    <div class="onb-crown" style="font-size:3rem">🔥</div>
+                    <h1 class="onb-title" style="font-size:3rem">Ready to <span class="onb-highlight">Begin?</span></h1>
+                    <p class="onb-subtitle">Your journey starts now</p>
+                    <p class="onb-desc">Create your profile, explore the community, and experience South Africa's most exclusive adult platform.</p>
+                    <button class="onb-enter-btn" onclick="completeOnboarding()"><i class="fas fa-rocket"></i> Enter 2k2</button>
+                    <p class="onb-footer-text"><i class="fas fa-lock"></i> 18+ Only | Private & Secure</p>
+                </div>
+            </div>
+        </div>
+        <!-- Nav -->
+        <div class="onb-nav">
+            <div class="onb-dots" id="onbDots">
+                <button class="onb-dot active" onclick="goOnbSlide(0)"></button>
+                <button class="onb-dot" onclick="goOnbSlide(1)"></button>
+                <button class="onb-dot" onclick="goOnbSlide(2)"></button>
+                <button class="onb-dot" onclick="goOnbSlide(3)"></button>
+            </div>
+            <div class="onb-nav-btns">
+                <button class="onb-skip" onclick="completeOnboarding()">Skip</button>
+                <button class="onb-next-btn" id="onbNextBtn" onclick="nextOnbSlide()">Next <i class="fas fa-arrow-right"></i></button>
+            </div>
+        </div>
+    </div>
+
     <div class="sidebar" id="sidebar">
         <div class="sidebar-header">
             <h2 class="logo">2k2</h2>
@@ -66,6 +146,20 @@
                 <span>My Threads</span>
             </a>
             <div class="nav-divider"></div>
+            <span class="nav-section-title">Jobs & Gigs</span>
+            <a href="#" class="nav-item" data-page="gigs-browse">
+                <i class="fas fa-briefcase"></i>
+                <span>Browse Gigs</span>
+            </a>
+            <a href="#" class="nav-item" data-page="gigs-create">
+                <i class="fas fa-plus-circle"></i>
+                <span>Post a Gig</span>
+            </a>
+            <a href="#" class="nav-item" data-page="user-gigs">
+                <i class="fas fa-clipboard-list"></i>
+                <span>My Gigs</span>
+            </a>
+            <div class="nav-divider"></div>
             <span class="nav-section-title">Personal Ads</span>
             <a href="#" class="nav-item" data-page="ads-browse">
                 <i class="fas fa-bullhorn"></i>
@@ -106,11 +200,6 @@
             <a href="admin.html" class="nav-item">
                 <i class="fas fa-user-shield"></i>
                 <span>Admin Portal</span>
-            </a>
-            <div class="nav-divider"></div>
-            <a href="#" class="nav-item" data-page="settings">
-                <i class="fas fa-cog"></i>
-                <span>Settings</span>
             </a>
         </nav>
 
@@ -211,7 +300,9 @@
                             </div>
                             <div class="form-group">
                                 <label>Location</label>
-                                <input type="text" id="userFormLocation" placeholder="Enter your location">
+                                <select id="userFormLocation">
+                                    <option value="">Select location</option>
+                                </select>
                             </div>
                             <div class="form-group">
                                 <label>Date of Birth</label>
@@ -867,6 +958,9 @@
                     </div>
                     <div class="filter-bar">
                         <input type="text" id="contentSearch" placeholder="Search content..." oninput="searchContentDirectory()">
+                        <select id="contentLocationFilter" onchange="searchContentDirectory()">
+                            <option value="">All Locations</option>
+                        </select>
                         <select id="contentSort" onchange="searchContentDirectory()">
                             <option value="newest">Newest</option>
                             <option value="oldest">Oldest</option>
@@ -956,16 +1050,95 @@
                     <div class="filter-bar">
                         <input type="text" id="eventSearch" placeholder="Search events..." oninput="searchEventsDirectory()">
                         <select id="eventProvince" onchange="searchEventsDirectory()">
-                            <option value="">All Provinces</option>
-                            <option value="Eastern Cape">Eastern Cape</option>
-                            <option value="Free State">Free State</option>
-                            <option value="Gauteng">Gauteng</option>
-                            <option value="KwaZulu-Natal">KwaZulu-Natal</option>
-                            <option value="Limpopo">Limpopo</option>
-                            <option value="Mpumalanga">Mpumalanga</option>
-                            <option value="North West">North West</option>
-                            <option value="Northern Cape">Northern Cape</option>
-                            <option value="Western Cape">Western Cape</option>
+                            <option value="">All Locations</option>
+                            <optgroup label="Gauteng">
+                                <option value="Johannesburg">Johannesburg</option>
+                                <option value="Pretoria">Pretoria</option>
+                                <option value="Sandton">Sandton</option>
+                                <option value="Randburg">Randburg</option>
+                                <option value="Roodepoort">Roodepoort</option>
+                                <option value="Soweto">Soweto</option>
+                                <option value="Midrand">Midrand</option>
+                                <option value="Centurion">Centurion</option>
+                                <option value="Benoni">Benoni</option>
+                                <option value="Boksburg">Boksburg</option>
+                                <option value="Brakpan">Brakpan</option>
+                                <option value="Germiston">Germiston</option>
+                                <option value="Kempton Park">Kempton Park</option>
+                                <option value="Alberton">Alberton</option>
+                                <option value="Vanderbijlpark">Vanderbijlpark</option>
+                                <option value="Vereeniging">Vereeniging</option>
+                                <option value="Krugersdorp">Krugersdorp</option>
+                                <option value="Springs">Springs</option>
+                            </optgroup>
+                            <optgroup label="Western Cape">
+                                <option value="Cape Town">Cape Town</option>
+                                <option value="Stellenbosch">Stellenbosch</option>
+                                <option value="Paarl">Paarl</option>
+                                <option value="George">George</option>
+                                <option value="Worcester">Worcester</option>
+                                <option value="Hermanus">Hermanus</option>
+                                <option value="Somerset West">Somerset West</option>
+                                <option value="Strand">Strand</option>
+                                <option value="Camps Bay">Camps Bay</option>
+                                <option value="Claremont">Claremont</option>
+                                <option value="Bellville">Bellville</option>
+                                <option value="Mossel Bay">Mossel Bay</option>
+                                <option value="Oudtshoorn">Oudtshoorn</option>
+                                <option value="Saldanha Bay">Saldanha Bay</option>
+                            </optgroup>
+                            <optgroup label="KwaZulu-Natal">
+                                <option value="Durban">Durban</option>
+                                <option value="Pietermaritzburg">Pietermaritzburg</option>
+                                <option value="Umhlanga">Umhlanga</option>
+                                <option value="Richards Bay">Richards Bay</option>
+                                <option value="Newcastle">Newcastle</option>
+                                <option value="Port Shepstone">Port Shepstone</option>
+                                <option value="Ladysmith">Ladysmith</option>
+                                <option value="Pinetown">Pinetown</option>
+                                <option value="Ballito">Ballito</option>
+                                <option value="Margate">Margate</option>
+                            </optgroup>
+                            <optgroup label="Eastern Cape">
+                                <option value="Port Elizabeth">Port Elizabeth (Gqeberha)</option>
+                                <option value="East London">East London</option>
+                                <option value="Grahamstown">Grahamstown (Makhanda)</option>
+                                <option value="Mthatha">Mthatha</option>
+                                <option value="Queenstown">Queenstown (Komani)</option>
+                                <option value="Jeffreys Bay">Jeffreys Bay</option>
+                            </optgroup>
+                            <optgroup label="Free State">
+                                <option value="Bloemfontein">Bloemfontein</option>
+                                <option value="Welkom">Welkom</option>
+                                <option value="Bethlehem">Bethlehem</option>
+                                <option value="Harrismith">Harrismith</option>
+                            </optgroup>
+                            <optgroup label="Mpumalanga">
+                                <option value="Nelspruit">Nelspruit (Mbombela)</option>
+                                <option value="Witbank">Witbank (Emalahleni)</option>
+                                <option value="Middelburg">Middelburg</option>
+                                <option value="Secunda">Secunda</option>
+                                <option value="Hazyview">Hazyview</option>
+                            </optgroup>
+                            <optgroup label="Limpopo">
+                                <option value="Polokwane">Polokwane</option>
+                                <option value="Thohoyandou">Thohoyandou</option>
+                                <option value="Tzaneen">Tzaneen</option>
+                                <option value="Mokopane">Mokopane</option>
+                            </optgroup>
+                            <optgroup label="North West">
+                                <option value="Rustenburg">Rustenburg</option>
+                                <option value="Mahikeng">Mahikeng</option>
+                                <option value="Potchefstroom">Potchefstroom</option>
+                                <option value="Klerksdorp">Klerksdorp</option>
+                                <option value="Brits">Brits</option>
+                            </optgroup>
+                            <optgroup label="Northern Cape">
+                                <option value="Kimberley">Kimberley</option>
+                                <option value="Upington">Upington</option>
+                                <option value="Springbok">Springbok</option>
+                                <option value="De Aar">De Aar</option>
+                            </optgroup>
                         </select>
                         <select id="eventSort" onchange="searchEventsDirectory()">
                             <option value="newest">Newest</option>
@@ -1921,6 +2094,144 @@
             </div>
         </div>
 
+        <!-- Jobs/Gigs Browse -->
+        <div class="page" id="page-gigs-browse">
+            <div class="container">
+                <div class="dashboard-header">
+                    <div>
+                        <h1>Jobs & Gigs</h1>
+                        <p>Find opportunities or post your services</p>
+                    </div>
+                    <button class="btn btn-primary" onclick="navigateTo('gigs-create')">
+                        <i class="fas fa-plus"></i> Post a Gig
+                    </button>
+                </div>
+                <div class="directory-filters">
+                    <div class="filter-bar">
+                        <input type="text" id="gigSearch" placeholder="Search gigs..." oninput="renderGigsBrowse()">
+                        <select id="gigTypeFilter" onchange="renderGigsBrowse()">
+                            <option value="all">All Types</option>
+                        </select>
+                        <select id="gigLocationFilter" onchange="renderGigsBrowse()">
+                            <option value="">All Locations</option>
+                        </select>
+                        <select id="gigSort" onchange="renderGigsBrowse()">
+                            <option value="newest">Newest</option>
+                            <option value="oldest">Oldest</option>
+                            <option value="rate-high">Rate: High to Low</option>
+                            <option value="rate-low">Rate: Low to High</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="directory-stats"><span id="gigCount">0</span> gigs found</div>
+                <div class="forum-threads-list" id="gigsList"></div>
+            </div>
+        </div>
+
+        <!-- Gig Detail View -->
+        <div class="page" id="page-gig-view">
+            <div class="container">
+                <div class="form-header">
+                    <button class="btn-back" onclick="navigateTo('gigs-browse')">
+                        <i class="fas fa-arrow-left"></i> Back to Gigs
+                    </button>
+                    <h1 id="gigViewTitle">Gig Details</h1>
+                </div>
+                <div id="gigViewContent"></div>
+            </div>
+        </div>
+
+        <!-- Gig Create/Edit -->
+        <div class="page" id="page-gigs-create">
+            <div class="container">
+                <div class="form-header">
+                    <button class="btn-back" onclick="navigateTo('gigs-browse')">
+                        <i class="fas fa-arrow-left"></i> Back
+                    </button>
+                    <h1 id="gigFormTitle">Post a Gig</h1>
+                </div>
+                <form id="gigForm" onsubmit="handleGigSubmit(event)">
+                    <input type="hidden" id="gigId" value="">
+                    <div class="profile-card">
+                        <h2><i class="fas fa-briefcase"></i> Gig Details</h2>
+                        <div class="form-grid">
+                            <div class="form-group full-width">
+                                <label>Title *</label>
+                                <input type="text" id="gigTitle" placeholder="e.g. Professional photographer available in Joburg" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Gig Type *</label>
+                                <select id="gigType" required>
+                                    <option value="">Select type</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Location</label>
+                                <select id="gigLocation">
+                                    <option value="">Select location</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Rate (ZAR)</label>
+                                <input type="number" id="gigRate" placeholder="e.g. 500" min="0">
+                            </div>
+                            <div class="form-group">
+                                <label>Rate Type</label>
+                                <select id="gigRateType">
+                                    <option value="hr">Per Hour</option>
+                                    <option value="day">Per Day</option>
+                                    <option value="event">Per Event</option>
+                                    <option value="session">Per Session</option>
+                                    <option value="fixed">Fixed Price</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Contact</label>
+                                <input type="text" id="gigContact" placeholder="Phone or handle">
+                            </div>
+                            <div class="form-group">
+                                <label>Your Name *</label>
+                                <input type="text" id="gigAuthor" placeholder="Display name" required>
+                            </div>
+                            <div class="form-group full-width">
+                                <label style="display:flex;align-items:center;gap:8px">
+                                    <input type="checkbox" id="gigUrgent"> Mark as Urgent
+                                </label>
+                            </div>
+                        </div>
+                        <div class="form-group" style="margin-top:16px">
+                            <label>Description *</label>
+                            <textarea id="gigDescription" rows="5" placeholder="Describe the gig, requirements, availability..." required></textarea>
+                        </div>
+                        <div class="form-group" style="margin-top:16px">
+                            <label>Tags (comma separated)</label>
+                            <input type="text" id="gigTags" placeholder="e.g. freelance, weekend, downtown">
+                        </div>
+                    </div>
+                    <div style="display:flex;gap:12px;margin-top:20px">
+                        <button type="submit" class="btn btn-primary" style="flex:1"><i class="fas fa-check"></i> Post Gig</button>
+                        <button type="button" class="btn btn-secondary" onclick="navigateTo('gigs-browse')">Cancel</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- My Gigs -->
+        <div class="page" id="page-user-gigs">
+            <div class="container">
+                <div class="dashboard-header">
+                    <div>
+                        <h1>My Gigs</h1>
+                        <p>Manage your posted gigs</p>
+                    </div>
+                    <button class="btn btn-primary" onclick="navigateTo('gigs-create')">
+                        <i class="fas fa-plus"></i> Post Gig
+                    </button>
+                </div>
+                <div class="forum-threads-list" id="userGigsList"></div>
+            </div>
+        </div>
+
         <!-- Forum Browse -->
         <div class="page" id="page-forum-browse">
             <div class="container">
@@ -2301,6 +2612,34 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
-    <script src="script.js?v=5"></script>
+    <script src="script.js?v=6"></script>
+    <script>
+        let onbSlide = 0;
+        const onbTotal = 4;
+
+        function goOnbSlide(idx) {
+            if (idx === onbSlide || idx < 0 || idx >= onbTotal) return;
+            const slides = document.querySelectorAll('.onb-slide');
+            const dots = document.querySelectorAll('.onb-dot');
+            slides[onbSlide].classList.remove('active');
+            dots[onbSlide].classList.remove('active');
+            onbSlide = idx;
+            slides[onbSlide].classList.add('active');
+            dots[onbSlide].classList.add('active');
+            document.getElementById('onbNextBtn').style.display = onbSlide === onbTotal - 1 ? 'none' : 'flex';
+        }
+
+        function nextOnbSlide() {
+            if (onbSlide < onbTotal - 1) goOnbSlide(onbSlide + 1);
+        }
+
+        document.addEventListener('keydown', function(e) {
+            const overlay = document.getElementById('onboardingOverlay');
+            if (!overlay || !overlay.classList.contains('active')) return;
+            if (e.key === 'ArrowRight' || e.key === ' ') { e.preventDefault(); nextOnbSlide(); }
+            else if (e.key === 'ArrowLeft') { e.preventDefault(); if (onbSlide > 0) goOnbSlide(onbSlide - 1); }
+            else if (e.key === 'Escape') completeOnboarding();
+        });
+    </script>
 </body>
 </html>

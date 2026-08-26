@@ -47,7 +47,9 @@ const Storage = {
     setForumReplies: (data) => localStorage.setItem('k2_forum_replies', JSON.stringify(data)),
     getForumLikes: () => JSON.parse(localStorage.getItem('k2_forum_likes') || '[]'),
     setForumLikes: (data) => localStorage.setItem('k2_forum_likes', JSON.stringify(data)),
-    clearAll: () => { ['k2_users','k2_providers','k2_listings','k2_venues','k2_ads','k2_services','k2_bookings','k2_tips','k2_service_types','k2_wallets','k2_transactions','k2_topup_requests','k2_withdrawal_requests','k2_content','k2_events','k2_content_comments','k2_content_reactions','k2_reviews','k2_forum_threads','k2_forum_replies','k2_forum_likes'].forEach(k => localStorage.removeItem(k)); }
+    getGigs: () => JSON.parse(localStorage.getItem('k2_gigs') || '[]'),
+    setGigs: (data) => localStorage.setItem('k2_gigs', JSON.stringify(data)),
+    clearAll: () => { ['k2_users','k2_providers','k2_listings','k2_venues','k2_ads','k2_services','k2_bookings','k2_tips','k2_service_types','k2_wallets','k2_transactions','k2_topup_requests','k2_withdrawal_requests','k2_content','k2_events','k2_content_comments','k2_content_reactions','k2_reviews','k2_forum_threads','k2_forum_replies','k2_forum_likes','k2_gigs'].forEach(k => localStorage.removeItem(k)); }
 };
 
 const SA_PROVINCES = {
@@ -109,6 +111,20 @@ const AD_CATEGORIES = {
     'friends-with-benefits': { label: 'Friends with Benefits', icon: 'fa-handshake', color: '#0ea5e9' },
     'casual-hookups': { label: 'Casual Hookups', icon: 'fa-fire', color: '#ef4444' },
     'general': { label: 'General', icon: 'fa-tag', color: '#64748b' }
+};
+
+const GIG_TYPES = {
+    'photography': { label: 'Photography', icon: 'fa-camera', color: '#ec4899' },
+    'modeling': { label: 'Modeling', icon: 'fa-person', color: '#8b5cf6' },
+    'dancing': { label: 'Dancing / Entertainment', icon: 'fa-music', color: '#f59e0b' },
+    'catering': { label: 'Catering / Chef', icon: 'fa-utensils', color: '#10b981' },
+    'massage': { label: 'Massage / Wellness', icon: 'fa-spa', color: '#0ea5e9' },
+    'stripping': { label: 'Striptease / Performance', icon: 'fa-star', color: '#d946ef' },
+    'companionship': { label: 'Companionship', icon: 'fa-heart', color: '#ef4444' },
+    'event-staff': { label: 'Event Staffing', icon: 'fa-people-group', color: '#6366f1' },
+    'content-creation': { label: 'Content Creation', icon: 'fa-video', color: '#a855f7' },
+    'domming': { label: 'Dom / Sub Services', icon: 'fa-link', color: '#64748b' },
+    'other': { label: 'Other', icon: 'fa-ellipsis', color: '#64748b' }
 };
 
 const SERVICE_TYPES = {}; // Replaced by dynamic custom service types
@@ -334,8 +350,8 @@ function navigateTo(page) {
 
     if (page === 'user-dashboard') renderUserProfiles();
     if (page === 'provider-dashboard') renderProviderProfiles();
-    if (page === 'user-create') resetUserForm();
-    if (page === 'provider-create') resetProviderForm();
+    if (page === 'user-create') { populateLocationDropdowns(); resetUserForm(); }
+    if (page === 'provider-create') { populateLocationDropdowns(); resetProviderForm(); }
     if (page === 'directory') renderDirectory();
     if (page === 'provider-directory') renderListings();
     if (page === 'provider-listing-create') resetListingForm();
@@ -355,14 +371,44 @@ function navigateTo(page) {
     if (page === 'provider-tips') renderProviderTips();
     if (page === 'user-wallet') renderUserWallet();
     if (page === 'provider-wallet') renderProviderWallet();
-    if (page === 'content-directory') renderContentDirectory();
+    if (page === 'content-directory') { populateLocationDropdowns(); renderContentDirectory(); }
     if (page === 'provider-content') renderProviderContent();
-    if (page === 'provider-content-create') resetContentForm();
+    if (page === 'provider-content-create') { populateLocationDropdowns(); resetContentForm(); }
     if (page === 'events-directory') renderEventsDirectory();
     if (page === 'provider-events') renderProviderEvents();
     if (page === 'provider-event-create') resetEventForm();
     if (page === 'user-settings') loadUserSettings();
     if (page === 'provider-settings') loadProviderSettings();
+    if (page === 'gigs-browse') { populateGigDropdowns(); renderGigsBrowse(); }
+    if (page === 'gigs-create') { populateGigDropdowns(); resetGigForm(); }
+    if (page === 'user-gigs') renderUserGigs();
+    if (page === 'provider-gigs') renderProviderGigs();
+    if (page === 'provider-gig-create') { populateGigDropdowns(); resetProviderGigForm(); }
+}
+
+function populateGigDropdowns() {
+    document.querySelectorAll('#gigType').forEach(sel => {
+        if (sel.options.length > 1) return;
+        Object.entries(GIG_TYPES).forEach(([key, val]) => {
+            const opt = document.createElement('option');
+            opt.value = key; opt.textContent = val.label;
+            sel.appendChild(opt);
+        });
+    });
+    document.querySelectorAll('#gigLocation, #gigLocationFilter').forEach(sel => {
+        if (sel.options.length > 1) return;
+        const opts = generateSAProvinceOptions();
+        sel.insertAdjacentHTML('beforeend', opts.replace('<option value="">All Provinces</option>', '<option value="">All Locations</option>'));
+    });
+}
+
+function populateLocationDropdowns() {
+    document.querySelectorAll('#userFormLocation, #providerFormLocation, #contentLocation, #contentLocationFilter').forEach(sel => {
+        if (sel.options.length > 1) return;
+        const opts = generateSAProvinceOptions();
+        const placeholder = sel.id.includes('Filter') ? '<option value="">All Locations</option>' : '<option value="">Select location</option>';
+        sel.insertAdjacentHTML('beforeend', opts.replace(/<option value="">.*?<\/option>/, placeholder));
+    });
 }
 
 // ==========================================
@@ -753,6 +799,7 @@ function handleProviderSubmit(e) {
         estYear: document.getElementById('providerEstYear').value,
         website: document.getElementById('providerFormWebsite').value,
         address: document.getElementById('providerFormAddress').value,
+        location: document.getElementById('providerFormLocation')?.value || '',
         description: document.getElementById('providerFormDescription').value,
         tagline: document.getElementById('providerFormTagline').value,
         services,
@@ -885,6 +932,7 @@ function populateProviderForm(p) {
     document.getElementById('providerEstYear').value = p.estYear || '';
     document.getElementById('providerFormWebsite').value = p.website || '';
     document.getElementById('providerFormAddress').value = p.address || '';
+    if (document.getElementById('providerFormLocation')) document.getElementById('providerFormLocation').value = p.location || '';
     document.getElementById('providerFormDescription').value = p.description || '';
     document.getElementById('providerFormTagline').value = p.tagline || '';
     document.getElementById('providerFormTitle').textContent = 'Edit Service Provider Profile';
@@ -3076,6 +3124,9 @@ function renderContentDirectory() {
     const search = document.getElementById('contentSearch')?.value?.toLowerCase() || '';
     if (search) filtered = filtered.filter(c => c.title.toLowerCase().includes(search) || c.description.toLowerCase().includes(search) || (c.tags || []).some(t => t.toLowerCase().includes(search)));
 
+    const locationFilter = document.getElementById('contentLocationFilter')?.value || '';
+    if (locationFilter) filtered = filtered.filter(c => c.location === locationFilter);
+
     const sort = document.getElementById('contentSort')?.value || 'newest';
     if (sort === 'newest') filtered.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
     else if (sort === 'oldest') filtered.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
@@ -3561,6 +3612,7 @@ function handleContentSubmit(e) {
     const id = document.getElementById('contentId').value;
     const title = document.getElementById('contentTitle').value.trim();
     const type = document.getElementById('contentType').value;
+    const location = document.getElementById('contentLocation')?.value || '';
     const description = document.getElementById('contentDescription').value.trim();
     const fileData = document.getElementById('contentFileData').value;
     const fileType = document.getElementById('contentFileType').value;
@@ -3573,6 +3625,7 @@ function handleContentSubmit(e) {
         if (idx !== -1) {
             content[idx].title = title;
             content[idx].type = type;
+            content[idx].location = location;
             content[idx].description = description;
             if (fileData) { content[idx].fileData = fileData; content[idx].fileType = fileType; }
             content[idx].tags = [...contentTags];
@@ -3582,7 +3635,7 @@ function handleContentSubmit(e) {
     } else {
         content.push({
             id: generateId(),
-            title, type, description,
+            title, type, location, description,
             fileData: fileData || '',
             fileType: fileType || '',
             tags: [...contentTags],
@@ -3605,6 +3658,7 @@ function editContent(id) {
     document.getElementById('contentId').value = item.id;
     document.getElementById('contentTitle').value = item.title;
     document.getElementById('contentType').value = item.type;
+    document.getElementById('contentLocation').value = item.location || '';
     document.getElementById('contentDescription').value = item.description || '';
     contentTags = [...(item.tags || [])];
 
@@ -3870,7 +3924,7 @@ function renderEventsDirectory() {
     if (search) filtered = filtered.filter(e => e.name.toLowerCase().includes(search) || e.description.toLowerCase().includes(search) || e.venue?.toLowerCase().includes(search) || (e.tags || []).some(t => t.toLowerCase().includes(search)));
 
     const province = document.getElementById('eventProvince')?.value || '';
-    if (province) filtered = filtered.filter(e => e.province === province);
+    if (province) filtered = filtered.filter(e => e.province === province || e.location === province);
 
     const sort = document.getElementById('eventSort')?.value || 'newest';
     if (sort === 'newest') filtered.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
@@ -4620,6 +4674,252 @@ function resetForumForm() {
     document.getElementById('forumThreadTags').value = '';
 }
 
+// ==========================================
+// JOBS / GIGS SYSTEM
+// ==========================================
+let currentGigViewId = null;
+
+function renderGigsBrowse() {
+    const gigs = Storage.getGigs();
+    const search = document.getElementById('gigSearch')?.value?.toLowerCase() || '';
+    const typeFilter = document.getElementById('gigTypeFilter')?.value || 'all';
+    const locationFilter = document.getElementById('gigLocationFilter')?.value || '';
+    const sort = document.getElementById('gigSort')?.value || 'newest';
+
+    let filtered = gigs.filter(g => g.status !== 'deleted');
+
+    if (typeFilter !== 'all') filtered = filtered.filter(g => g.gigType === typeFilter);
+    if (locationFilter) filtered = filtered.filter(g => g.location === locationFilter);
+    if (search) {
+        filtered = filtered.filter(g =>
+            g.title.toLowerCase().includes(search) ||
+            g.description.toLowerCase().includes(search) ||
+            (g.tags || []).some(t => t.toLowerCase().includes(search)) ||
+            g.author.toLowerCase().includes(search)
+        );
+    }
+
+    filtered.sort((a, b) => {
+        if (a.featured && !b.featured) return -1;
+        if (!a.featured && b.featured) return 1;
+        switch (sort) {
+            case 'oldest': return new Date(a.createdAt) - new Date(b.createdAt);
+            case 'rate-high': return (b.rate || 0) - (a.rate || 0);
+            case 'rate-low': return (a.rate || 0) - (b.rate || 0);
+            default: return new Date(b.createdAt) - new Date(a.createdAt);
+        }
+    });
+
+    const countEl = document.getElementById('gigCount');
+    if (countEl) countEl.textContent = filtered.length;
+
+    const container = document.getElementById('gigsList');
+    if (!container) return;
+
+    if (filtered.length === 0) {
+        container.innerHTML = '<div class="forum-empty"><i class="fas fa-briefcase"></i><h3>No gigs found</h3><p>Be the first to post a gig!</p></div>';
+        return;
+    }
+
+    container.innerHTML = filtered.map(gig => {
+        const type = GIG_TYPES[gig.gigType] || { label: gig.gigType, icon: 'fa-briefcase', color: '#64748b' };
+        const timeAgo = getTimeAgo(gig.createdAt);
+        const rateStr = gig.rate ? `R${gig.rate}/${gig.rateType || 'hr'}` : 'Negotiable';
+        return `
+        <div class="forum-thread-card${gig.featured ? ' pinned' : ''}" onclick="viewGig('${gig.id}')" style="cursor:pointer">
+            <div class="forum-thread-card-inner">
+                <div class="forum-thread-content" style="width:100%">
+                    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:6px">
+                        <span class="forum-thread-category-badge" style="background:${type.color}18;color:${type.color}"><i class="fas ${type.icon}"></i> ${type.label}</span>
+                        ${gig.featured ? '<span class="forum-pin-badge"><i class="fas fa-star"></i> Featured</span>' : ''}
+                        ${gig.urgent ? '<span class="forum-lock-badge" style="background:#ef444418;color:#ef4444"><i class="fas fa-bolt"></i> Urgent</span>' : ''}
+                    </div>
+                    <h3 class="forum-thread-title">${escapeHtml(gig.title)}</h3>
+                    <p class="forum-thread-excerpt">${escapeHtml(gig.description).substring(0, 150)}${gig.description.length > 150 ? '...' : ''}</p>
+                    <div class="forum-thread-meta">
+                        <span><i class="fas fa-user"></i> ${escapeHtml(gig.author)}</span>
+                        <span><i class="fas fa-map-marker-alt"></i> ${escapeHtml(gig.location || 'Remote')}</span>
+                        <span><i class="fas fa-tag"></i> ${rateStr}</span>
+                        <span><i class="fas fa-clock"></i> ${timeAgo}</span>
+                    </div>
+                </div>
+            </div>
+        </div>`;
+    }).join('');
+}
+
+function viewGig(id) {
+    const gigs = Storage.getGigs();
+    const gig = gigs.find(g => g.id === id);
+    if (!gig) return;
+    currentGigViewId = id;
+
+    const type = GIG_TYPES[gig.gigType] || { label: gig.gigType, icon: 'fa-briefcase', color: '#64748b' };
+    const createdStr = new Date(gig.createdAt).toLocaleDateString('en-ZA', { day: 'numeric', month: 'long', year: 'numeric' });
+    const rateStr = gig.rate ? `R${gig.rate}/${gig.rateType || 'hr'}` : 'Negotiable';
+    const tagsHtml = (gig.tags || []).map(t => `<span class="forum-tag">${t}</span>`).join('');
+
+    const titleEl = document.getElementById('gigViewTitle');
+    if (titleEl) titleEl.textContent = gig.title;
+
+    const contentEl = document.getElementById('gigViewContent');
+    if (contentEl) {
+        contentEl.innerHTML = `
+        <div class="profile-card">
+            <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:12px">
+                <span class="forum-thread-category-badge" style="background:${type.color}18;color:${type.color}"><i class="fas ${type.icon}"></i> ${type.label}</span>
+                ${gig.featured ? '<span class="forum-pin-badge"><i class="fas fa-star"></i> Featured</span>' : ''}
+                ${gig.urgent ? '<span class="forum-lock-badge" style="background:#ef444418;color:#ef4444"><i class="fas fa-bolt"></i> Urgent</span>' : ''}
+            </div>
+            <h1 style="font-size:1.5rem;margin-bottom:8px">${escapeHtml(gig.title)}</h1>
+            <div class="forum-thread-full-meta" style="margin-bottom:16px">
+                <span><i class="fas fa-user"></i> ${escapeHtml(gig.author)}</span>
+                <span><i class="fas fa-map-marker-alt"></i> ${escapeHtml(gig.location || 'Remote')}</span>
+                <span><i class="fas fa-tag"></i> ${rateStr}</span>
+                <span><i class="fas fa-clock"></i> ${createdStr}</span>
+            </div>
+            ${gig.contact ? `<p style="margin-bottom:12px"><i class="fas fa-phone" style="color:var(--primary);margin-right:6px"></i> ${escapeHtml(gig.contact)}</p>` : ''}
+        </div>
+        <div class="profile-card">
+            <h2><i class="fas fa-file-alt"></i> Description</h2>
+            <p class="view-bio" style="white-space:pre-wrap;line-height:1.7">${escapeHtml(gig.description)}</p>
+        </div>
+        ${tagsHtml ? `<div class="profile-card"><h2><i class="fas fa-tag"></i> Tags</h2><div class="tags-container">${tagsHtml}</div></div>` : ''}
+        <div style="display:flex;gap:12px;margin-top:16px">
+            <button class="btn btn-primary" onclick="navigateTo('gigs-browse')" style="flex:1"><i class="fas fa-arrow-left"></i> Back to Gigs</button>
+            ${gig.authorId === 'current' ? `<button class="btn btn-danger" onclick="deleteGig('${gig.id}')"><i class="fas fa-trash"></i> Delete</button>` : ''}
+        </div>`;
+    }
+}
+
+function handleGigSubmit(e) {
+    e.preventDefault();
+    const id = document.getElementById('gigId')?.value || '';
+    const title = document.getElementById('gigTitle').value.trim();
+    const gigType = document.getElementById('gigType').value;
+    const location = document.getElementById('gigLocation')?.value || '';
+    const rate = document.getElementById('gigRate')?.value || '';
+    const rateType = document.getElementById('gigRateType')?.value || 'hr';
+    const contact = document.getElementById('gigContact')?.value || '';
+    const author = document.getElementById('gigAuthor').value.trim();
+    const description = document.getElementById('gigDescription').value.trim();
+    const tagsStr = document.getElementById('gigTags')?.value?.trim() || '';
+    const tags = tagsStr ? tagsStr.split(',').map(t => t.trim()).filter(Boolean) : [];
+    const urgent = document.getElementById('gigUrgent')?.checked || false;
+
+    if (!title || !gigType || !author || !description) { showToast('Please fill in all required fields.', 'error'); return; }
+
+    const gigs = Storage.getGigs();
+    if (id) {
+        const idx = gigs.findIndex(g => g.id === id);
+        if (idx !== -1) {
+            gigs[idx].title = title;
+            gigs[idx].gigType = gigType;
+            gigs[idx].location = location;
+            gigs[idx].rate = rate ? parseFloat(rate) : null;
+            gigs[idx].rateType = rateType;
+            gigs[idx].contact = contact;
+            gigs[idx].author = author;
+            gigs[idx].description = description;
+            gigs[idx].tags = tags;
+            gigs[idx].urgent = urgent;
+            gigs[idx].updatedAt = new Date().toISOString();
+        }
+        showToast('Gig updated!', 'success');
+    } else {
+        gigs.push({
+            id: generateId(), title, gigType, location, rate: rate ? parseFloat(rate) : null, rateType,
+            contact, author, authorId: 'current', description, tags, urgent,
+            featured: false, status: 'active',
+            createdAt: new Date().toISOString()
+        });
+        showToast('Gig posted!', 'success');
+    }
+    Storage.setGigs(gigs);
+    navigateTo('gigs-browse');
+}
+
+function resetGigForm() {
+    document.getElementById('gigId').value = '';
+    document.getElementById('gigTitle').value = '';
+    document.getElementById('gigType').value = '';
+    document.getElementById('gigRate').value = '';
+    document.getElementById('gigContact').value = '';
+    document.getElementById('gigAuthor').value = '';
+    document.getElementById('gigDescription').value = '';
+    document.getElementById('gigTags').value = '';
+    document.getElementById('gigLocation').value = '';
+    const urgentEl = document.getElementById('gigUrgent');
+    if (urgentEl) urgentEl.checked = false;
+    document.getElementById('gigFormTitle').textContent = 'Post a Gig';
+}
+
+function renderUserGigs() {
+    const gigs = Storage.getGigs().filter(g => g.authorId === 'current');
+    const container = document.getElementById('userGigsList');
+    if (!container) return;
+    if (gigs.length === 0) {
+        container.innerHTML = '<div class="forum-empty"><i class="fas fa-briefcase"></i><h3>No gigs posted</h3><p>Post your first gig to get started!</p></div>';
+        return;
+    }
+    container.innerHTML = gigs.map(gig => {
+        const type = GIG_TYPES[gig.gigType] || { label: gig.gigType, icon: 'fa-briefcase', color: '#64748b' };
+        return `
+        <div class="forum-thread-card" onclick="viewGig('${gig.id}')" style="cursor:pointer">
+            <div class="forum-thread-card-inner">
+                <div class="forum-thread-content" style="width:100%">
+                    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:6px">
+                        <span class="forum-thread-category-badge" style="background:${type.color}18;color:${type.color}"><i class="fas ${type.icon}"></i> ${type.label}</span>
+                        <span class="status-badge status-${gig.status}">${gig.status}</span>
+                    </div>
+                    <h3 class="forum-thread-title">${escapeHtml(gig.title)}</h3>
+                    <div class="forum-thread-meta">
+                        <span><i class="fas fa-clock"></i> ${getTimeAgo(gig.createdAt)}</span>
+                        <span><i class="fas fa-tag"></i> ${gig.rate ? 'R' + gig.rate + '/' + (gig.rateType || 'hr') : 'Negotiable'}</span>
+                    </div>
+                    <div style="margin-top:8px;display:flex;gap:6px">
+                        <button class="btn btn-secondary btn-sm" onclick="event.stopPropagation();editGig('${gig.id}')"><i class="fas fa-edit"></i> Edit</button>
+                        <button class="btn btn-danger btn-sm" onclick="event.stopPropagation();deleteGig('${gig.id}')"><i class="fas fa-trash"></i> Delete</button>
+                    </div>
+                </div>
+            </div>
+        </div>`;
+    }).join('');
+}
+
+function renderProviderGigs() { renderUserGigs(); }
+
+function editGig(id) {
+    const gig = Storage.getGigs().find(g => g.id === id);
+    if (!gig) return;
+    document.getElementById('gigId').value = gig.id;
+    document.getElementById('gigTitle').value = gig.title;
+    document.getElementById('gigType').value = gig.gigType;
+    document.getElementById('gigRate').value = gig.rate || '';
+    document.getElementById('gigContact').value = gig.contact || '';
+    document.getElementById('gigAuthor').value = gig.author;
+    document.getElementById('gigDescription').value = gig.description;
+    document.getElementById('gigTags').value = (gig.tags || []).join(', ');
+    document.getElementById('gigLocation').value = gig.location || '';
+    const urgentEl = document.getElementById('gigUrgent');
+    if (urgentEl) urgentEl.checked = gig.urgent || false;
+    document.getElementById('gigFormTitle').textContent = 'Edit Gig';
+    navigateTo('gigs-create');
+}
+
+function deleteGig(id) {
+    const gigs = Storage.getGigs();
+    const gig = gigs.find(g => g.id === id);
+    if (!gig) return;
+    if (!confirm(`Delete gig "${gig.title}"?`)) return;
+    Storage.setGigs(gigs.filter(g => g.id !== id));
+    showToast('Gig deleted', 'success');
+    if (currentGigViewId === id) navigateTo('gigs-browse');
+    else { renderUserGigs(); renderGigsBrowse(); }
+}
+
+function resetProviderGigForm() { resetGigForm(); }
+
 function getTimeAgo(dateStr) {
     const now = new Date();
     const date = new Date(dateStr);
@@ -4634,4 +4934,23 @@ function getTimeAgo(dateStr) {
 function escapeHtml(str) {
     if (!str) return '';
     return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+// ==========================================
+// ONBOARDING - First Visit Check
+// ==========================================
+(function checkOnboarding() {
+    if (!localStorage.getItem('k2_onboarded')) {
+        const overlay = document.getElementById('onboardingOverlay');
+        if (overlay) overlay.classList.add('active');
+    }
+})();
+
+function completeOnboarding() {
+    localStorage.setItem('k2_onboarded', 'true');
+    const overlay = document.getElementById('onboardingOverlay');
+    if (overlay) {
+        overlay.classList.add('exiting');
+        setTimeout(() => overlay.classList.remove('active', 'exiting'), 800);
+    }
 }
