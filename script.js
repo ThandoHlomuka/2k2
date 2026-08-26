@@ -50,6 +50,36 @@ const Storage = {
     clearAll: () => { ['k2_users','k2_providers','k2_listings','k2_venues','k2_ads','k2_services','k2_bookings','k2_tips','k2_service_types','k2_wallets','k2_transactions','k2_topup_requests','k2_withdrawal_requests','k2_content','k2_events','k2_content_comments','k2_content_reactions','k2_reviews','k2_forum_threads','k2_forum_replies','k2_forum_likes'].forEach(k => localStorage.removeItem(k)); }
 };
 
+const SA_PROVINCES = {
+    'gauteng': { label: 'Gauteng', cities: ['Johannesburg','Pretoria','Sandton','Randburg','Roodepoort','Soweto','Midrand','Centurion','Benoni','Boksburg','Brakpan','Germiston','Kempton Park','Alberton','Vanderbijlpark','Vereeniging','Krugersdorp','Springs'] },
+    'western-cape': { label: 'Western Cape', cities: ['Cape Town','Stellenbosch','Paarl','George','Worcester','Hermanus','Somerset West','Strand','Camps Bay','Claremont','Bellville','Mossel Bay','Oudtshoorn','Saldanha Bay'] },
+    'kwazulu-natal': { label: 'KwaZulu-Natal', cities: ['Durban','Pietermaritzburg','Umhlanga','Richards Bay','Newcastle','Port Shepstone','Ladysmith','Pinetown','Ballito','Margate'] },
+    'eastern-cape': { label: 'Eastern Cape', cities: ['Port Elizabeth','East London','Grahamstown','Mthatha','Queenstown','Jeffreys Bay'] },
+    'free-state': { label: 'Free State', cities: ['Bloemfontein','Welkom','Bethlehem','Harrismith'] },
+    'mpumalanga': { label: 'Mpumalanga', cities: ['Nelspruit','Witbank','Middelburg','Secunda','Hazyview'] },
+    'limpopo': { label: 'Limpopo', cities: ['Polokwane','Thohoyandou','Tzaneen','Mokopane'] },
+    'north-west': { label: 'North West', cities: ['Rustenburg','Mahikeng','Potchefstroom','Klerksdorp','Brits'] },
+    'northern-cape': { label: 'Northern Cape', cities: ['Kimberley','Upington','Springbok','De Aar'] }
+};
+
+function generateSAProvinceOptions() {
+    return '<option value="">All Provinces</option>' +
+        Object.entries(SA_PROVINCES).map(([key, prov]) =>
+            `<optgroup label="${prov.label}">` +
+            prov.cities.map(city => `<option value="${city}">${city}</option>`).join('') +
+            '</optgroup>'
+        ).join('');
+}
+
+function generateSAProvinceSelect(selected) {
+    return '<option value="">Select location</option>' +
+        Object.entries(SA_PROVINCES).map(([key, prov]) =>
+            `<optgroup label="${prov.label}">` +
+            prov.cities.map(city => `<option value="${city}"${city === selected ? ' selected' : ''}>${city}</option>`).join('') +
+            '</optgroup>'
+        ).join('');
+}
+
 const DIRECTORY_TYPES = {
     'content-creator': { label: 'Content Creator', icon: 'fa-video', color: '#8b5cf6' },
     'model': { label: 'Model', icon: 'fa-camera-retro', color: '#ec4899' },
@@ -68,9 +98,16 @@ const VENUE_TYPES = {
 };
 
 const AD_CATEGORIES = {
-    'personal': { label: 'Personal', icon: 'fa-heart', color: '#ec4899' },
-    'services-offered': { label: 'Services Offered', icon: 'fa-hand-holding-heart', color: '#8b5cf6' },
-    'services-wanted': { label: 'Services Wanted', icon: 'fa-search', color: '#3b82f6' },
+    'woman-seeking-man': { label: 'Woman Seeking Man', icon: 'fa-venus', color: '#ec4899' },
+    'man-seeking-woman': { label: 'Man Seeking Woman', icon: 'fa-mars', color: '#3b82f6' },
+    'woman-seeking-woman': { label: 'Woman Seeking Woman', icon: 'fa-venus-double', color: '#d946ef' },
+    'man-seeking-man': { label: 'Man Seeking Man', icon: 'fa-mars-double', color: '#6366f1' },
+    'couple-seeking-single': { label: 'Couple Seeking Single', icon: 'fa-user-group', color: '#8b5cf6' },
+    'single-seeking-couple': { label: 'Single Seeking Couple', icon: 'fa-user-group', color: '#a855f7' },
+    'services-offered': { label: 'Services Offered', icon: 'fa-hand-holding-heart', color: '#10b981' },
+    'services-wanted': { label: 'Services Wanted', icon: 'fa-search', color: '#f59e0b' },
+    'friends-with-benefits': { label: 'Friends with Benefits', icon: 'fa-handshake', color: '#0ea5e9' },
+    'casual-hookups': { label: 'Casual Hookups', icon: 'fa-fire', color: '#ef4444' },
     'general': { label: 'General', icon: 'fa-tag', color: '#64748b' }
 };
 
@@ -4103,10 +4140,14 @@ let currentForumFilter = 'all';
 let currentForumSection = 'public';
 let currentForumViewId = null;
 let currentEmojiTarget = null;
+let currentForumProvince = '';
 
 function switchForumSection(section) {
     currentForumSection = section;
     currentForumFilter = 'all';
+    currentForumProvince = '';
+    const provinceSelect = document.getElementById('forumProvinceFilter');
+    if (provinceSelect) provinceSelect.value = '';
     document.querySelectorAll('.forum-main-tab').forEach(t => t.classList.remove('active'));
     if (event && event.target) event.target.closest('.forum-main-tab')?.classList.add('active');
     updateForumSubTabs();
@@ -4224,6 +4265,10 @@ function renderForumThreads() {
         filtered = filtered.filter(t => t.category === currentForumFilter);
     }
 
+    if (currentForumProvince) {
+        filtered = filtered.filter(t => t.province === currentForumProvince);
+    }
+
     if (search) {
         filtered = filtered.filter(t =>
             t.title.toLowerCase().includes(search) ||
@@ -4269,6 +4314,7 @@ function renderForumThreads() {
         const timeAgo = getTimeAgo(thread.createdAt);
         const isPremium = cat.section === 'premium';
         const sectionBadge = isPremium ? '<span class="forum-premium-badge"><i class="fas fa-crown"></i> Premium</span>' : '';
+        const provinceBadge = thread.province ? `<span class="forum-tag"><i class="fas fa-map-marker-alt"></i> ${escapeHtml(thread.province)}</span>` : '';
 
         return `
             <div class="forum-thread-card${thread.pinned ? ' pinned' : ''}${thread.locked ? ' locked' : ''}" onclick="viewForumThread('${thread.id}')">
@@ -4283,6 +4329,7 @@ function renderForumThreads() {
                         <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:6px">
                             <span class="forum-thread-category-badge" style="background:${cat.color}18;color:${cat.color}"><i class="fas ${cat.icon}"></i> ${cat.label}</span>
                             ${sectionBadge}
+                            ${provinceBadge}
                             ${thread.pinned ? '<span class="forum-pin-badge"><i class="fas fa-thumbtack"></i> Pinned</span>' : ''}
                             ${thread.locked ? '<span class="forum-lock-badge"><i class="fas fa-lock"></i> Locked</span>' : ''}
                         </div>
@@ -4311,6 +4358,11 @@ function filterForum(category) {
 
 function searchForum() { renderForumThreads(); }
 
+function filterForumProvince(province) {
+    currentForumProvince = province;
+    renderForumThreads();
+}
+
 function viewForumThread(id) {
     const threads = Storage.getForumThreads();
     const thread = threads.find(t => t.id === id);
@@ -4328,6 +4380,7 @@ function viewForumThread(id) {
     const createdStr = new Date(thread.createdAt).toLocaleDateString('en-ZA', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' });
     const isPremium = cat.section === 'premium';
     const sectionBadge = isPremium ? '<span class="forum-premium-badge" style="margin-left:8px"><i class="fas fa-crown"></i> Premium</span>' : '';
+    const provinceBadge = thread.province ? `<span class="forum-tag" style="margin-left:8px"><i class="fas fa-map-marker-alt"></i> ${escapeHtml(thread.province)}</span>` : '';
 
     const titleEl = document.getElementById('forumViewTitle');
     if (titleEl) titleEl.textContent = thread.title;
@@ -4338,6 +4391,7 @@ function viewForumThread(id) {
             <div class="forum-thread-full-header">
                 <span class="forum-thread-full-category" style="background:${cat.color}18;color:${cat.color}"><i class="fas ${cat.icon}"></i> ${cat.label}</span>
                 ${sectionBadge}
+                ${provinceBadge}
                 ${thread.pinned ? '<span class="forum-pin-badge" style="margin-left:8px"><i class="fas fa-thumbtack"></i> Pinned</span>' : ''}
                 ${thread.locked ? '<span class="forum-lock-badge" style="margin-left:8px"><i class="fas fa-lock"></i> Locked</span>' : ''}
                 <h1 class="forum-thread-full-title">${escapeHtml(thread.title)}</h1>
@@ -4412,6 +4466,7 @@ function handleForumThreadSubmit(e) {
     const title = document.getElementById('forumThreadTitle').value.trim();
     const section = document.getElementById('forumThreadSectionSelect')?.value || document.getElementById('forumThreadSection')?.value || 'public';
     const category = document.getElementById('forumThreadCategory').value;
+    const province = document.getElementById('forumThreadProvince')?.value || '';
     const author = document.getElementById('forumThreadAuthor').value.trim();
     const body = document.getElementById('forumThreadBody').value.trim();
     const tagsStr = document.getElementById('forumThreadTags').value.trim();
@@ -4426,6 +4481,7 @@ function handleForumThreadSubmit(e) {
             threads[idx].title = title;
             threads[idx].section = section;
             threads[idx].category = category;
+            threads[idx].province = province;
             threads[idx].author = author;
             threads[idx].body = body;
             threads[idx].tags = tags;
@@ -4434,7 +4490,7 @@ function handleForumThreadSubmit(e) {
         showToast('Thread updated!', 'success');
     } else {
         threads.push({
-            id: generateId(), title, section, category, author, body, tags,
+            id: generateId(), title, section, category, province, author, body, tags,
             views: 0, pinned: false, locked: false,
             createdAt: new Date().toISOString()
         });

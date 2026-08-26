@@ -1199,9 +1199,16 @@
                 <div class="directory-filters">
                     <div class="filter-tabs">
                         <button class="filter-tab active" onclick="filterAds('all')">All</button>
-                        <button class="filter-tab" onclick="filterAds('personal')"><i class="fas fa-heart"></i> Personal</button>
+                        <button class="filter-tab" onclick="filterAds('woman-seeking-man')"><i class="fas fa-venus"></i> W4M</button>
+                        <button class="filter-tab" onclick="filterAds('man-seeking-woman')"><i class="fas fa-mars"></i> M4W</button>
+                        <button class="filter-tab" onclick="filterAds('woman-seeking-woman')"><i class="fas fa-venus-double"></i> W4W</button>
+                        <button class="filter-tab" onclick="filterAds('man-seeking-man')"><i class="fas fa-mars-double"></i> M4M</button>
+                        <button class="filter-tab" onclick="filterAds('couple-seeking-single')"><i class="fas fa-user-group"></i> C4S</button>
+                        <button class="filter-tab" onclick="filterAds('single-seeking-couple')"><i class="fas fa-user-group"></i> S4C</button>
                         <button class="filter-tab" onclick="filterAds('services-offered')"><i class="fas fa-hand-holding-heart"></i> Services Offered</button>
                         <button class="filter-tab" onclick="filterAds('services-wanted')"><i class="fas fa-search"></i> Services Wanted</button>
+                        <button class="filter-tab" onclick="filterAds('friends-with-benefits')"><i class="fas fa-handshake"></i> FWB</button>
+                        <button class="filter-tab" onclick="filterAds('casual-hookups')"><i class="fas fa-fire"></i> Casual</button>
                         <button class="filter-tab" onclick="filterAds('general')"><i class="fas fa-tag"></i> General</button>
                     </div>
                     <div class="filter-bar">
@@ -1381,9 +1388,16 @@
                                 <label>Category *</label>
                                 <select id="adCategory" required>
                                     <option value="">Select category</option>
-                                    <option value="personal">Personal</option>
+                                    <option value="woman-seeking-man">Woman Seeking Man</option>
+                                    <option value="man-seeking-woman">Man Seeking Woman</option>
+                                    <option value="woman-seeking-woman">Woman Seeking Woman</option>
+                                    <option value="man-seeking-man">Man Seeking Man</option>
+                                    <option value="couple-seeking-single">Couple Seeking Single</option>
+                                    <option value="single-seeking-couple">Single Seeking Couple</option>
                                     <option value="services-offered">Services Offered</option>
                                     <option value="services-wanted">Services Wanted</option>
+                                    <option value="friends-with-benefits">Friends with Benefits</option>
+                                    <option value="casual-hookups">Casual Hookups</option>
                                     <option value="general">General</option>
                                 </select>
                             </div>
@@ -1554,9 +1568,16 @@
                         <div class="filter-group">
                             <select id="userAdsFilter" onchange="filterUserAds()">
                                 <option value="all">All</option>
-                                <option value="personal">Personal</option>
+                                <option value="woman-seeking-man">Woman Seeking Man</option>
+                                <option value="man-seeking-woman">Man Seeking Woman</option>
+                                <option value="woman-seeking-woman">Woman Seeking Woman</option>
+                                <option value="man-seeking-man">Man Seeking Man</option>
+                                <option value="couple-seeking-single">Couple Seeking Single</option>
+                                <option value="single-seeking-couple">Single Seeking Couple</option>
                                 <option value="services-offered">Services Offered</option>
                                 <option value="services-wanted">Services Wanted</option>
+                                <option value="friends-with-benefits">Friends with Benefits</option>
+                                <option value="casual-hookups">Casual Hookups</option>
                                 <option value="general">General</option>
                             </select>
                         </div>
@@ -1939,6 +1960,97 @@
                     </div>
                     <div class="filter-bar">
                         <input type="text" id="forumSearch" placeholder="Search threads..." oninput="searchForum()">
+                        <select id="forumProvinceFilter" onchange="filterForumProvince(this.value)">
+                            <option value="">All Provinces</option>
+                            <optgroup label="Gauteng">
+                                <option value="Johannesburg">Johannesburg</option>
+                                <option value="Pretoria">Pretoria</option>
+                                <option value="Sandton">Sandton</option>
+                                <option value="Randburg">Randburg</option>
+                                <option value="Roodepoort">Roodepoort</option>
+                                <option value="Soweto">Soweto</option>
+                                <option value="Midrand">Midrand</option>
+                                <option value="Centurion">Centurion</option>
+                                <option value="Benoni">Benoni</option>
+                                <option value="Boksburg">Boksburg</option>
+                                <option value="Brakpan">Brakpan</option>
+                                <option value="Germiston">Germiston</option>
+                                <option value="Kempton Park">Kempton Park</option>
+                                <option value="Alberton">Alberton</option>
+                                <option value="Vanderbijlpark">Vanderbijlpark</option>
+                                <option value="Vereeniging">Vereeniging</option>
+                                <option value="Krugersdorp">Krugersdorp</option>
+                                <option value="Springs">Springs</option>
+                            </optgroup>
+                            <optgroup label="Western Cape">
+                                <option value="Cape Town">Cape Town</option>
+                                <option value="Stellenbosch">Stellenbosch</option>
+                                <option value="Paarl">Paarl</option>
+                                <option value="George">George</option>
+                                <option value="Worcester">Worcester</option>
+                                <option value="Hermanus">Hermanus</option>
+                                <option value="Somerset West">Somerset West</option>
+                                <option value="Strand">Strand</option>
+                                <option value="Camps Bay">Camps Bay</option>
+                                <option value="Claremont">Claremont</option>
+                                <option value="Bellville">Bellville</option>
+                                <option value="Mossel Bay">Mossel Bay</option>
+                                <option value="Oudtshoorn">Oudtshoorn</option>
+                                <option value="Saldanha Bay">Saldanha Bay</option>
+                            </optgroup>
+                            <optgroup label="KwaZulu-Natal">
+                                <option value="Durban">Durban</option>
+                                <option value="Pietermaritzburg">Pietermaritzburg</option>
+                                <option value="Umhlanga">Umhlanga</option>
+                                <option value="Richards Bay">Richards Bay</option>
+                                <option value="Newcastle">Newcastle</option>
+                                <option value="Port Shepstone">Port Shepstone</option>
+                                <option value="Ladysmith">Ladysmith</option>
+                                <option value="Pinetown">Pinetown</option>
+                                <option value="Ballito">Ballito</option>
+                                <option value="Margate">Margate</option>
+                            </optgroup>
+                            <optgroup label="Eastern Cape">
+                                <option value="Port Elizabeth">Port Elizabeth (Gqeberha)</option>
+                                <option value="East London">East London</option>
+                                <option value="Grahamstown">Grahamstown (Makhanda)</option>
+                                <option value="Mthatha">Mthatha</option>
+                                <option value="Queenstown">Queenstown (Komani)</option>
+                                <option value="Jeffreys Bay">Jeffreys Bay</option>
+                            </optgroup>
+                            <optgroup label="Free State">
+                                <option value="Bloemfontein">Bloemfontein</option>
+                                <option value="Welkom">Welkom</option>
+                                <option value="Bethlehem">Bethlehem</option>
+                                <option value="Harrismith">Harrismith</option>
+                            </optgroup>
+                            <optgroup label="Mpumalanga">
+                                <option value="Nelspruit">Nelspruit (Mbombela)</option>
+                                <option value="Witbank">Witbank (Emalahleni)</option>
+                                <option value="Middelburg">Middelburg</option>
+                                <option value="Secunda">Secunda</option>
+                                <option value="Hazyview">Hazyview</option>
+                            </optgroup>
+                            <optgroup label="Limpopo">
+                                <option value="Polokwane">Polokwane</option>
+                                <option value="Thohoyandou">Thohoyandou</option>
+                                <option value="Tzaneen">Tzaneen</option>
+                                <option value="Mokopane">Mokopane</option>
+                            </optgroup>
+                            <optgroup label="North West">
+                                <option value="Rustenburg">Rustenburg</option>
+                                <option value="Mahikeng">Mahikeng</option>
+                                <option value="Potchefstroom">Potchefstroom</option>
+                                <option value="Klerksdorp">Klerksdorp</option>
+                                <option value="Brits">Brits</option>
+                            </optgroup>
+                            <optgroup label="Northern Cape">
+                                <option value="Kimberley">Kimberley</option>
+                                <option value="Upington">Upington</option>
+                                <option value="Springbok">Springbok</option>
+                                <option value="De Aar">De Aar</option>
+                            </optgroup>
+                        </select>
                         <select id="forumSort" onchange="searchForum()">
                             <option value="newest">Newest</option>
                             <option value="oldest">Oldest</option>
@@ -1989,6 +2101,100 @@
                                 <label>Category *</label>
                                 <select id="forumThreadCategory" required>
                                     <option value="">Select category</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Location</label>
+                                <select id="forumThreadProvince">
+                                    <option value="">Select location (optional)</option>
+                                    <optgroup label="Gauteng">
+                                        <option value="Johannesburg">Johannesburg</option>
+                                        <option value="Pretoria">Pretoria</option>
+                                        <option value="Sandton">Sandton</option>
+                                        <option value="Randburg">Randburg</option>
+                                        <option value="Roodepoort">Roodepoort</option>
+                                        <option value="Soweto">Soweto</option>
+                                        <option value="Midrand">Midrand</option>
+                                        <option value="Centurion">Centurion</option>
+                                        <option value="Benoni">Benoni</option>
+                                        <option value="Boksburg">Boksburg</option>
+                                        <option value="Brakpan">Brakpan</option>
+                                        <option value="Germiston">Germiston</option>
+                                        <option value="Kempton Park">Kempton Park</option>
+                                        <option value="Alberton">Alberton</option>
+                                        <option value="Vanderbijlpark">Vanderbijlpark</option>
+                                        <option value="Vereeniging">Vereeniging</option>
+                                        <option value="Krugersdorp">Krugersdorp</option>
+                                        <option value="Springs">Springs</option>
+                                    </optgroup>
+                                    <optgroup label="Western Cape">
+                                        <option value="Cape Town">Cape Town</option>
+                                        <option value="Stellenbosch">Stellenbosch</option>
+                                        <option value="Paarl">Paarl</option>
+                                        <option value="George">George</option>
+                                        <option value="Worcester">Worcester</option>
+                                        <option value="Hermanus">Hermanus</option>
+                                        <option value="Somerset West">Somerset West</option>
+                                        <option value="Strand">Strand</option>
+                                        <option value="Camps Bay">Camps Bay</option>
+                                        <option value="Claremont">Claremont</option>
+                                        <option value="Bellville">Bellville</option>
+                                        <option value="Mossel Bay">Mossel Bay</option>
+                                        <option value="Oudtshoorn">Oudtshoorn</option>
+                                        <option value="Saldanha Bay">Saldanha Bay</option>
+                                    </optgroup>
+                                    <optgroup label="KwaZulu-Natal">
+                                        <option value="Durban">Durban</option>
+                                        <option value="Pietermaritzburg">Pietermaritzburg</option>
+                                        <option value="Umhlanga">Umhlanga</option>
+                                        <option value="Richards Bay">Richards Bay</option>
+                                        <option value="Newcastle">Newcastle</option>
+                                        <option value="Port Shepstone">Port Shepstone</option>
+                                        <option value="Ladysmith">Ladysmith</option>
+                                        <option value="Pinetown">Pinetown</option>
+                                        <option value="Ballito">Ballito</option>
+                                        <option value="Margate">Margate</option>
+                                    </optgroup>
+                                    <optgroup label="Eastern Cape">
+                                        <option value="Port Elizabeth">Port Elizabeth (Gqeberha)</option>
+                                        <option value="East London">East London</option>
+                                        <option value="Grahamstown">Grahamstown (Makhanda)</option>
+                                        <option value="Mthatha">Mthatha</option>
+                                        <option value="Queenstown">Queenstown (Komani)</option>
+                                        <option value="Jeffreys Bay">Jeffreys Bay</option>
+                                    </optgroup>
+                                    <optgroup label="Free State">
+                                        <option value="Bloemfontein">Bloemfontein</option>
+                                        <option value="Welkom">Welkom</option>
+                                        <option value="Bethlehem">Bethlehem</option>
+                                        <option value="Harrismith">Harrismith</option>
+                                    </optgroup>
+                                    <optgroup label="Mpumalanga">
+                                        <option value="Nelspruit">Nelspruit (Mbombela)</option>
+                                        <option value="Witbank">Witbank (Emalahleni)</option>
+                                        <option value="Middelburg">Middelburg</option>
+                                        <option value="Secunda">Secunda</option>
+                                        <option value="Hazyview">Hazyview</option>
+                                    </optgroup>
+                                    <optgroup label="Limpopo">
+                                        <option value="Polokwane">Polokwane</option>
+                                        <option value="Thohoyandou">Thohoyandou</option>
+                                        <option value="Tzaneen">Tzaneen</option>
+                                        <option value="Mokopane">Mokopane</option>
+                                    </optgroup>
+                                    <optgroup label="North West">
+                                        <option value="Rustenburg">Rustenburg</option>
+                                        <option value="Mahikeng">Mahikeng</option>
+                                        <option value="Potchefstroom">Potchefstroom</option>
+                                        <option value="Klerksdorp">Klerksdorp</option>
+                                        <option value="Brits">Brits</option>
+                                    </optgroup>
+                                    <optgroup label="Northern Cape">
+                                        <option value="Kimberley">Kimberley</option>
+                                        <option value="Upington">Upington</option>
+                                        <option value="Springbok">Springbok</option>
+                                        <option value="De Aar">De Aar</option>
+                                    </optgroup>
                                 </select>
                             </div>
                             <div class="form-group">
@@ -2095,6 +2301,6 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
-    <script src="script.js?v=4"></script>
+    <script src="script.js?v=5"></script>
 </body>
 </html>
