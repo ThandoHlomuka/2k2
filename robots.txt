@@ -1,0 +1,35 @@
+# 2k2 - South Africa's #1 Adult Portal
+# Robots.txt
+
+User-agent: *
+Allow: /
+Allow: /index.html
+Allow: /provider.html
+Disallow: /admin.html
+Disallow: /.vercel/
+
+# Sitemaps
+Sitemap: https://2k2-nu.vercel.app/sitemap.xml
+
+# Crawl-delay for polite bots
+Crawl-delay: 1
+
+# Google
+User-agent: Googlebot
+Allow: /
+Disallow: /admin.html
+
+# Bing
+User-agent: Bingbot
+Allow: /
+Disallow: /admin.html
+
+# Social media crawlers
+User-agent: Twitterbot
+Allow: /
+
+User-agent: facebookexternalhit
+Allow: /
+
+User-agent: WhatsApp
+Allow: /

@@ -32,6 +32,8 @@ body {
     line-height: 1.6;
     min-height: 100vh;
     overflow-x: hidden;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
 }
 
 a {
@@ -64,6 +66,7 @@ h1, h2, h3, h4 {
     z-index: 1000;
     display: flex;
     flex-direction: column;
+    overflow: hidden;
     transition: transform var(--transition-speed) cubic-bezier(0.4, 0, 0.2, 1),
                 box-shadow var(--transition-speed) ease;
     box-shadow: 4px 0 24px rgba(0, 0, 0, 0.15);
@@ -2940,16 +2943,6 @@ h1, h2, h3, h4 {
     }
 }
 
-    .filter-tabs {
-        gap: 6px;
-    }
-
-    .filter-tab {
-        padding: 8px 12px;
-        font-size: 0.75rem;
-    }
-}
-
 /* Services directory uses same cards as profiles/venues/ads - no extra styles needed */
 
 /* ==========================================
@@ -5703,4 +5696,239 @@ h1, h2, h3, h4 {
     .onb-icons { gap: 16px; }
     .onb-icon-circle { width: 48px; height: 48px; font-size: 1.1rem; }
     .onb-content { padding: 30px 16px; }
+    .onb-pricing-grid { grid-template-columns: 1fr; }
+    .onb-content-wide { max-width: 100%; padding: 20px 12px; }
+    .onb-pricing-card { padding: 16px 14px; }
+    .onb-pricing-features { max-height: none; }
+}
+
+/* ==========================================
+   Onboarding - Section Badge
+   ========================================== */
+.onb-section-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 16px;
+    background: rgba(99,102,241,0.15);
+    border: 1px solid rgba(99,102,241,0.3);
+    border-radius: 20px;
+    color: #818cf8;
+    font-size: 0.72rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    margin-bottom: 16px;
+    font-family: 'Inter', sans-serif;
+}
+
+.onb-section-badge.sp-badge {
+    background: rgba(16,185,129,0.15);
+    border-color: rgba(16,185,129,0.3);
+    color: #34d399;
+}
+
+/* ==========================================
+   Onboarding - Wide Content (Pricing)
+   ========================================== */
+.onb-content-wide {
+    max-width: 820px;
+    padding: 20px 16px;
+    overflow-y: auto;
+    max-height: 85vh;
+}
+
+.onb-content-wide::-webkit-scrollbar {
+    width: 4px;
+}
+
+.onb-content-wide::-webkit-scrollbar-thumb {
+    background: rgba(255,255,255,0.2);
+    border-radius: 4px;
+}
+
+/* ==========================================
+   Onboarding - Pricing Grid
+   ========================================== */
+.onb-pricing-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-top: 20px;
+    text-align: left;
+}
+
+.onb-pricing-card {
+    position: relative;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 16px;
+    padding: 20px 16px;
+    backdrop-filter: blur(10px);
+    transition: all 0.3s ease;
+}
+
+.onb-pricing-card:hover {
+    border-color: rgba(255,255,255,0.2);
+    transform: translateY(-2px);
+}
+
+.onb-pricing-featured {
+    border-color: rgba(212,168,83,0.4);
+    background: rgba(212,168,83,0.06);
+}
+
+.onb-pricing-featured:hover {
+    border-color: rgba(212,168,83,0.6);
+    box-shadow: 0 8px 40px rgba(212,168,83,0.15);
+}
+
+.onb-pricing-badge {
+    position: absolute;
+    top: -10px;
+    right: 16px;
+    padding: 4px 12px;
+    background: linear-gradient(135deg, #d4a853, #b8941f);
+    color: #0a0a0a;
+    border-radius: 8px;
+    font-size: 0.65rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-family: 'Inter', sans-serif;
+}
+
+.onb-pricing-header {
+    text-align: center;
+    margin-bottom: 16px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+
+.onb-pricing-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 10px;
+    font-size: 1.2rem;
+    background: rgba(99,102,241,0.15);
+    color: #818cf8;
+    border: 1px solid rgba(99,102,241,0.3);
+}
+
+.onb-pricing-icon.sp-icon {
+    background: rgba(16,185,129,0.15);
+    color: #34d399;
+    border-color: rgba(16,185,129,0.3);
+}
+
+.onb-pricing-header h3 {
+    font-family: 'Inter', sans-serif;
+    font-size: 1rem;
+    font-weight: 700;
+    color: #f8fafc;
+    margin-bottom: 6px;
+}
+
+.onb-pricing-price {
+    font-family: 'Playfair Display', serif;
+    font-size: 2rem;
+    font-weight: 900;
+    background: linear-gradient(135deg, #e11d48, #d4a853);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.onb-pricing-featured .onb-pricing-price {
+    background: linear-gradient(135deg, #d4a853, #b8941f);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.onb-pricing-price span {
+    font-size: 0.85rem;
+    font-family: 'Inter', sans-serif;
+    font-weight: 400;
+}
+
+.onb-pricing-period {
+    font-size: 0.72rem;
+    color: #64748b;
+    margin-top: 2px;
+}
+
+.onb-pricing-features {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-bottom: 16px;
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+.onb-pricing-features::-webkit-scrollbar {
+    width: 3px;
+}
+
+.onb-pricing-features::-webkit-scrollbar-thumb {
+    background: rgba(255,255,255,0.15);
+    border-radius: 3px;
+}
+
+.onb-pricing-feature {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    font-size: 0.72rem;
+    color: #cbd5e1;
+    line-height: 1.4;
+}
+
+.onb-pricing-feature i {
+    color: #10b981;
+    font-size: 0.6rem;
+    margin-top: 3px;
+    flex-shrink: 0;
+}
+
+.onb-pricing-btn {
+    display: block;
+    width: 100%;
+    padding: 12px 16px;
+    border: none;
+    border-radius: 12px;
+    font-size: 0.85rem;
+    font-weight: 700;
+    cursor: pointer;
+    text-align: center;
+    text-decoration: none;
+    font-family: 'Inter', sans-serif;
+    transition: all 0.3s cubic-bezier(0.16,1,0.3,1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.onb-pricing-btn-user {
+    background: linear-gradient(135deg, #6366f1, #4f46e5);
+    color: white;
+}
+
+.onb-pricing-btn-user:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 30px rgba(99,102,241,0.4);
+}
+
+.onb-pricing-btn-provider {
+    background: linear-gradient(135deg, #d4a853, #b8941f);
+    color: #0a0a0a;
+}
+
+.onb-pricing-btn-provider:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 30px rgba(212,168,83,0.4);
 }
