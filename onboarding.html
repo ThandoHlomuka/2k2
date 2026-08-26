@@ -1,0 +1,786 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Welcome to 2k2</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700;900&family=Inter:wght@300;400;500;600;700&family=Dancing+Script:wght@700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --primary: #e11d48;
+            --primary-glow: #f43f5e;
+            --gold: #d4a853;
+            --gold-light: #f0d48a;
+            --dark: #0a0a0a;
+            --dark-surface: #111111;
+            --text: #f8fafc;
+            --text-muted: #94a3b8;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--dark);
+            color: var(--text);
+            overflow: hidden;
+            height: 100vh;
+            width: 100vw;
+        }
+
+        /* ==========================================
+           LOADING SCREEN
+           ========================================== */
+        .loading-screen {
+            position: fixed;
+            inset: 0;
+            z-index: 9999;
+            background: var(--dark);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            transition: opacity 0.8s ease, visibility 0.8s ease;
+        }
+
+        .loading-screen.hidden {
+            opacity: 0;
+            visibility: hidden;
+        }
+
+        .loading-logo {
+            font-family: 'Playfair Display', serif;
+            font-size: 4rem;
+            font-weight: 900;
+            background: linear-gradient(135deg, var(--primary), var(--gold), var(--primary-glow));
+            background-size: 200% 200%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: shimmerLogo 2s ease-in-out infinite, logoPulse 1.5s ease-in-out;
+            letter-spacing: -2px;
+        }
+
+        .loading-tagline {
+            font-family: 'Dancing Script', cursive;
+            font-size: 1.1rem;
+            color: var(--gold);
+            margin-top: 8px;
+            opacity: 0;
+            animation: fadeSlideUp 0.8s ease 0.5s forwards;
+        }
+
+        .loading-bar-container {
+            width: 200px;
+            height: 3px;
+            background: rgba(255,255,255,0.08);
+            border-radius: 4px;
+            margin-top: 40px;
+            overflow: hidden;
+        }
+
+        .loading-bar {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, var(--primary), var(--gold));
+            border-radius: 4px;
+            transition: width 0.3s ease;
+        }
+
+        .loading-particles {
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            overflow: hidden;
+        }
+
+        .loading-particle {
+            position: absolute;
+            width: 2px;
+            height: 2px;
+            background: var(--gold);
+            border-radius: 50%;
+            animation: particleFloat 3s ease-in-out infinite;
+        }
+
+        @keyframes shimmerLogo {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+
+        @keyframes logoPulse {
+            0% { transform: scale(0.8); opacity: 0; }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        @keyframes fadeSlideUp {
+            0% { opacity: 0; transform: translateY(20px); }
+            100% { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes particleFloat {
+            0%, 100% { transform: translateY(0) scale(1); opacity: 0.3; }
+            50% { transform: translateY(-40px) scale(1.5); opacity: 0.8; }
+        }
+
+        /* ==========================================
+           ONBOARDING SLIDES
+           ========================================== */
+        .onboarding-container {
+            position: fixed;
+            inset: 0;
+            z-index: 100;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.6s ease, visibility 0.6s ease;
+        }
+
+        .onboarding-container.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .slide {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.8s ease, transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+            transform: scale(1.05);
+        }
+
+        .slide.active {
+            opacity: 1;
+            visibility: visible;
+            transform: scale(1);
+        }
+
+        .slide.exit-left {
+            opacity: 0;
+            transform: translateX(-60px) scale(0.95);
+        }
+
+        .slide-bg {
+            position: absolute;
+            inset: 0;
+            background-size: cover;
+            background-position: center top;
+            filter: brightness(0.35) saturate(1.2);
+            transform: scale(1.1);
+            transition: transform 8s ease;
+        }
+
+        .slide.active .slide-bg {
+            transform: scale(1);
+        }
+
+        .slide-overlay {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(
+                180deg,
+                rgba(10, 10, 10, 0.4) 0%,
+                rgba(10, 10, 10, 0.2) 30%,
+                rgba(10, 10, 10, 0.6) 70%,
+                rgba(10, 10, 10, 0.95) 100%
+            );
+        }
+
+        .slide-overlay::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(ellipse at center 30%, transparent 0%, rgba(10,10,10,0.5) 70%);
+        }
+
+        .slide-content {
+            position: relative;
+            z-index: 2;
+            text-align: center;
+            padding: 40px 30px;
+            max-width: 600px;
+            width: 100%;
+        }
+
+        /* Slide 1 — Welcome */
+        .welcome-crown {
+            font-size: 2.5rem;
+            margin-bottom: 12px;
+            animation: crownFloat 3s ease-in-out infinite;
+            filter: drop-shadow(0 0 20px rgba(212, 168, 83, 0.5));
+        }
+
+        @keyframes crownFloat {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            25% { transform: translateY(-6px) rotate(2deg); }
+            75% { transform: translateY(-3px) rotate(-2deg); }
+        }
+
+        .welcome-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 3.5rem;
+            font-weight: 900;
+            line-height: 1.05;
+            margin-bottom: 8px;
+            opacity: 0;
+            animation: slideReveal 1s cubic-bezier(0.16, 1, 0.3, 1) 0.2s forwards;
+        }
+
+        .welcome-title .highlight {
+            background: linear-gradient(135deg, var(--primary), var(--gold));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .welcome-subtitle {
+            font-family: 'Dancing Script', cursive;
+            font-size: 1.4rem;
+            color: var(--gold);
+            margin-bottom: 16px;
+            opacity: 0;
+            animation: slideReveal 1s cubic-bezier(0.16, 1, 0.3, 1) 0.4s forwards;
+        }
+
+        .welcome-desc {
+            font-size: 1rem;
+            color: var(--text-muted);
+            line-height: 1.6;
+            max-width: 440px;
+            margin: 0 auto 32px;
+            opacity: 0;
+            animation: slideReveal 1s cubic-bezier(0.16, 1, 0.3, 1) 0.6s forwards;
+        }
+
+        @keyframes slideReveal {
+            0% { opacity: 0; transform: translateY(30px); }
+            100% { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Slide Icons */
+        .slide-icon-row {
+            display: flex;
+            justify-content: center;
+            gap: 24px;
+            margin-bottom: 28px;
+            opacity: 0;
+            animation: slideReveal 1s cubic-bezier(0.16, 1, 0.3, 1) 0.3s forwards;
+        }
+
+        .slide-icon-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .slide-icon-circle {
+            width: 64px;
+            height: 64px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.4rem;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            backdrop-filter: blur(10px);
+            transition: all 0.4s ease;
+        }
+
+        .slide-icon-circle:hover {
+            transform: translateY(-4px) scale(1.05);
+            border-color: var(--gold);
+            box-shadow: 0 8px 30px rgba(212, 168, 83, 0.2);
+        }
+
+        .slide-icon-label {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* Feature Cards */
+        .feature-cards {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 32px;
+            opacity: 0;
+            animation: slideReveal 1s cubic-bezier(0.16, 1, 0.3, 1) 0.3s forwards;
+        }
+
+        .feature-card {
+            padding: 18px 14px;
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 16px;
+            backdrop-filter: blur(10px);
+            text-align: left;
+            transition: all 0.3s ease;
+        }
+
+        .feature-card:hover {
+            background: rgba(255,255,255,0.08);
+            border-color: rgba(255,255,255,0.15);
+            transform: translateY(-2px);
+        }
+
+        .feature-card i {
+            font-size: 1.2rem;
+            margin-bottom: 8px;
+            display: block;
+        }
+
+        .feature-card h4 {
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .feature-card p {
+            font-size: 0.72rem;
+            color: var(--text-muted);
+            line-height: 1.4;
+        }
+
+        /* ==========================================
+           NAVIGATION
+           ========================================== */
+        .onboarding-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            z-index: 200;
+            padding: 24px 30px 40px;
+            background: linear-gradient(0deg, rgba(10,10,10,0.98) 0%, rgba(10,10,10,0.8) 60%, transparent 100%);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .nav-dots {
+            display: flex;
+            gap: 8px;
+        }
+
+        .nav-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.2);
+            border: none;
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            padding: 0;
+        }
+
+        .nav-dot.active {
+            width: 32px;
+            border-radius: 4px;
+            background: linear-gradient(90deg, var(--primary), var(--gold));
+            box-shadow: 0 0 16px rgba(225, 29, 72, 0.4);
+        }
+
+        .nav-dot:hover:not(.active) {
+            background: rgba(255,255,255,0.4);
+            transform: scale(1.2);
+        }
+
+        .nav-buttons {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .btn-skip {
+            padding: 10px 20px;
+            background: none;
+            border: 1px solid rgba(255,255,255,0.15);
+            color: var(--text-muted);
+            border-radius: 12px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .btn-skip:hover {
+            border-color: rgba(255,255,255,0.3);
+            color: var(--text);
+        }
+
+        .btn-next {
+            padding: 14px 32px;
+            background: linear-gradient(135deg, var(--primary), #be123c);
+            color: white;
+            border: none;
+            border-radius: 14px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            font-family: 'Inter', sans-serif;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-next::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, transparent, rgba(255,255,255,0.15), transparent);
+            transform: translateX(-100%);
+            transition: transform 0.6s ease;
+        }
+
+        .btn-next:hover::before {
+            transform: translateX(100%);
+        }
+
+        .btn-next:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 40px rgba(225, 29, 72, 0.4);
+        }
+
+        .btn-next:active {
+            transform: scale(0.97);
+        }
+
+        .btn-next.gold {
+            background: linear-gradient(135deg, var(--gold), #b8941f);
+            box-shadow: 0 8px 30px rgba(212, 168, 83, 0.3);
+        }
+
+        .btn-next.gold:hover {
+            box-shadow: 0 12px 40px rgba(212, 168, 83, 0.5);
+        }
+
+        .btn-next i {
+            transition: transform 0.3s ease;
+        }
+
+        .btn-next:hover i {
+            transform: translateX(3px);
+        }
+
+        /* ==========================================
+           FLOATING ELEMENTS
+           ========================================== */
+        .floating-glow {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(80px);
+            opacity: 0.15;
+            pointer-events: none;
+            animation: glowPulse 6s ease-in-out infinite;
+        }
+
+        .glow-1 {
+            width: 300px;
+            height: 300px;
+            background: var(--primary);
+            top: 10%;
+            left: -5%;
+            animation-delay: 0s;
+        }
+
+        .glow-2 {
+            width: 250px;
+            height: 250px;
+            background: var(--gold);
+            bottom: 20%;
+            right: -5%;
+            animation-delay: 2s;
+        }
+
+        @keyframes glowPulse {
+            0%, 100% { opacity: 0.1; transform: scale(1); }
+            50% { opacity: 0.2; transform: scale(1.2); }
+        }
+
+        /* ==========================================
+           RESPONSIVE
+           ========================================== */
+        @media (max-width: 768px) {
+            .welcome-title { font-size: 2.4rem; }
+            .welcome-subtitle { font-size: 1.1rem; }
+            .loading-logo { font-size: 3rem; }
+            .slide-content { padding: 30px 20px; }
+            .feature-cards { grid-template-columns: 1fr; }
+            .slide-icon-circle { width: 52px; height: 52px; font-size: 1.1rem; }
+            .btn-next { padding: 12px 24px; font-size: 0.9rem; }
+            .onboarding-nav { padding: 20px 20px 32px; }
+        }
+
+        @media (max-width: 480px) {
+            .welcome-title { font-size: 2rem; }
+            .slide-icon-row { gap: 16px; }
+        }
+    </style>
+</head>
+<body>
+    <!-- Loading Screen -->
+    <div class="loading-screen" id="loadingScreen">
+        <div class="loading-particles" id="loadingParticles"></div>
+        <div class="loading-logo">2k2</div>
+        <div class="loading-tagline">South Africa's #1 Adult Portal</div>
+        <div class="loading-bar-container">
+            <div class="loading-bar" id="loadingBar"></div>
+        </div>
+    </div>
+
+    <!-- Onboarding -->
+    <div class="onboarding-container" id="onboardingContainer">
+        <!-- Floating Glows -->
+        <div class="floating-glow glow-1"></div>
+        <div class="floating-glow glow-2"></div>
+
+        <!-- Slide 1: Welcome -->
+        <div class="slide active" id="slide-0">
+            <div class="slide-bg" style="background-image: url('https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=1200&q=80'); background-position: center 20%;"></div>
+            <div class="slide-overlay"></div>
+            <div class="slide-content">
+                <div class="welcome-crown">👑</div>
+                <h1 class="welcome-title">Welcome to <span class="highlight">2k2</span></h1>
+                <p class="welcome-subtitle">South Africa's #1 Adult Portal</p>
+                <p class="welcome-desc">Discover, connect, and explore like never before. A world of pleasure awaits you.</p>
+                <div class="slide-icon-row">
+                    <div class="slide-icon-item">
+                        <div class="slide-icon-circle" style="color: #ec4899;"><i class="fas fa-heart"></i></div>
+                        <span class="slide-icon-label">Connect</span>
+                    </div>
+                    <div class="slide-icon-item">
+                        <div class="slide-icon-circle" style="color: #8b5cf6;"><i class="fas fa-mask"></i></div>
+                        <span class="slide-icon-label">Explore</span>
+                    </div>
+                    <div class="slide-icon-item">
+                        <div class="slide-icon-circle" style="color: #d4a853;"><i class="fas fa-gem"></i></div>
+                        <span class="slide-icon-label">Indulge</span>
+                    </div>
+                    <div class="slide-icon-item">
+                        <div class="slide-icon-circle" style="color: #10b981;"><i class="fas fa-shield-halved"></i></div>
+                        <span class="slide-icon-label">Safe</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 2: Discover -->
+        <div class="slide" id="slide-1">
+            <div class="slide-bg" style="background-image: url('https://images.unsplash.com/photo-1517841905240-472988babdf9?w=1200&q=80');"></div>
+            <div class="slide-overlay"></div>
+            <div class="slide-content">
+                <h1 class="welcome-title" style="font-size:2.8rem;">Discover <span class="highlight">People</span></h1>
+                <p class="welcome-subtitle">Find exactly what you're looking for</p>
+                <div class="feature-cards">
+                    <div class="feature-card">
+                        <i class="fas fa-users" style="color:#ec4899"></i>
+                        <h4>Profiles Directory</h4>
+                        <p>Browse verified providers, content creators, and companions across all 9 provinces</p>
+                    </div>
+                    <div class="feature-card">
+                        <i class="fas fa-map-marker-alt" style="color:#f59e0b"></i>
+                        <h4>Venues & Events</h4>
+                        <p>Find fetish clubs, lodges, B&Bs, and exclusive events near you</p>
+                    </div>
+                    <div class="feature-card">
+                        <i class="fas fa-video" style="color:#8b5cf6"></i>
+                        <h4>Premium Content</h4>
+                        <p>Exclusive videos, images, ASMR, podcasts, and stories from top creators</p>
+                    </div>
+                    <div class="feature-card">
+                        <i class="fas fa-bullhorn" style="color:#3b82f6"></i>
+                        <h4>Personal Ads</h4>
+                        <p>Post and browse classifieds — W4M, M4W, FWB, casual hookups, and more</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 3: Connect -->
+        <div class="slide" id="slide-2">
+            <div class="slide-bg" style="background-image: url('https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=1200&q=80');"></div>
+            <div class="slide-overlay"></div>
+            <div class="slide-content">
+                <h1 class="welcome-title" style="font-size:2.8rem;">Connect <span class="highlight">& Engage</span></h1>
+                <p class="welcome-subtitle">Book, tip, and interact seamlessly</p>
+                <div class="feature-cards">
+                    <div class="feature-card">
+                        <i class="fas fa-calendar-check" style="color:#10b981"></i>
+                        <h4>Book Services</h4>
+                        <p>Secure bookings with built-in wallet, confirmations, and provider ratings</p>
+                    </div>
+                    <div class="feature-card">
+                        <i class="fas fa-fire" style="color:#ef4444"></i>
+                        <h4>Tip & Support</h4>
+                        <p>Show appreciation with instant tips — R50, R100, R250, R500 or custom</p>
+                    </div>
+                    <div class="feature-card">
+                        <i class="fas fa-comments" style="color:#6366f1"></i>
+                        <h4>Community Forum</h4>
+                        <p>Public & Premium forums with emoji, rich text, and location-based threads</p>
+                    </div>
+                    <div class="feature-card">
+                        <i class="fas fa-wallet" style="color:#d4a853"></i>
+                        <h4>Digital Wallet</h4>
+                        <p>Top up, withdraw, and manage your balance — all transactions tracked securely</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 4: Get Started -->
+        <div class="slide" id="slide-3">
+            <div class="slide-bg" style="background-image: url('https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=1200&q=80'); background-position: center 25%;"></div>
+            <div class="slide-overlay"></div>
+            <div class="slide-content">
+                <div class="welcome-crown" style="font-size:3rem;">🔥</div>
+                <h1 class="welcome-title" style="font-size:3rem;">Ready to <span class="highlight">Begin?</span></h1>
+                <p class="welcome-subtitle">Your journey starts now</p>
+                <p class="welcome-desc">Create your profile, explore the community, and experience South Africa's most exclusive adult platform.</p>
+                <div style="display:flex;gap:16px;justify-content:center;flex-wrap:wrap;opacity:0;animation:slideReveal 1s cubic-bezier(0.16,1,0.3,1) 0.4s forwards;">
+                    <a href="index.html" class="btn-next gold" style="text-decoration:none;font-size:1.05rem;padding:16px 40px;">
+                        <i class="fas fa-rocket"></i> Enter 2k2
+                    </a>
+                </div>
+                <p style="margin-top:20px;font-size:0.75rem;color:var(--text-muted);opacity:0;animation:slideReveal 1s ease 0.6s forwards;">
+                    <i class="fas fa-lock" style="margin-right:4px;"></i> 18+ Only | Private & Secure
+                </p>
+            </div>
+        </div>
+
+        <!-- Navigation -->
+        <div class="onboarding-nav">
+            <div class="nav-dots" id="navDots">
+                <button class="nav-dot active" onclick="goToSlide(0)"></button>
+                <button class="nav-dot" onclick="goToSlide(1)"></button>
+                <button class="nav-dot" onclick="goToSlide(2)"></button>
+                <button class="nav-dot" onclick="goToSlide(3)"></button>
+            </div>
+            <div class="nav-buttons">
+                <button class="btn-skip" id="btnSkip" onclick="skipOnboarding()">Skip</button>
+                <button class="btn-next" id="btnNext" onclick="nextSlide()">
+                    Next <i class="fas fa-arrow-right"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentSlide = 0;
+        const totalSlides = 4;
+
+        // Loading animation
+        (function() {
+            const bar = document.getElementById('loadingBar');
+            const screen = document.getElementById('loadingScreen');
+            const container = document.getElementById('onboardingContainer');
+            const particles = document.getElementById('loadingParticles');
+
+            // Create floating particles
+            for (let i = 0; i < 30; i++) {
+                const p = document.createElement('div');
+                p.className = 'loading-particle';
+                p.style.left = Math.random() * 100 + '%';
+                p.style.top = Math.random() * 100 + '%';
+                p.style.animationDelay = Math.random() * 3 + 's';
+                p.style.animationDuration = (2 + Math.random() * 3) + 's';
+                particles.appendChild(p);
+            }
+
+            // Simulate loading
+            let progress = 0;
+            const interval = setInterval(() => {
+                progress += Math.random() * 15 + 5;
+                if (progress >= 100) {
+                    progress = 100;
+                    bar.style.width = '100%';
+                    clearInterval(interval);
+                    setTimeout(() => {
+                        screen.classList.add('hidden');
+                        container.classList.add('active');
+                    }, 600);
+                } else {
+                    bar.style.width = progress + '%';
+                }
+            }, 200);
+        })();
+
+        function goToSlide(index) {
+            if (index === currentSlide || index < 0 || index >= totalSlides) return;
+
+            const slides = document.querySelectorAll('.slide');
+            const dots = document.querySelectorAll('.nav-dot');
+
+            // Exit current
+            slides[currentSlide].classList.remove('active');
+            slides[currentSlide].classList.add('exit-left');
+            dots[currentSlide].classList.remove('active');
+
+            setTimeout(() => {
+                slides[currentSlide].classList.remove('exit-left');
+            }, 800);
+
+            // Enter new
+            currentSlide = index;
+            slides[currentSlide].classList.add('active');
+            dots[currentSlide].classList.add('active');
+
+            // Update buttons
+            const btnNext = document.getElementById('btnNext');
+            const btnSkip = document.getElementById('btnSkip');
+
+            if (currentSlide === totalSlides - 1) {
+                btnNext.style.display = 'none';
+                btnSkip.style.display = 'none';
+            } else {
+                btnNext.style.display = 'flex';
+                btnSkip.style.display = currentSlide === 0 ? 'none' : 'block';
+            }
+        }
+
+        function nextSlide() {
+            if (currentSlide < totalSlides - 1) {
+                goToSlide(currentSlide + 1);
+            }
+        }
+
+        function skipOnboarding() {
+            window.location.href = 'index.html';
+        }
+
+        // Keyboard navigation
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'ArrowRight' || e.key === ' ') {
+                e.preventDefault();
+                nextSlide();
+            } else if (e.key === 'ArrowLeft') {
+                e.preventDefault();
+                if (currentSlide > 0) goToSlide(currentSlide - 1);
+            } else if (e.key === 'Escape') {
+                skipOnboarding();
+            }
+        });
+
+        // Touch swipe
+        let touchStartX = 0;
+        document.addEventListener('touchstart', e => { touchStartX = e.touches[0].clientX; });
+        document.addEventListener('touchend', e => {
+            const diff = touchStartX - e.changedTouches[0].clientX;
+            if (Math.abs(diff) > 50) {
+                if (diff > 0 && currentSlide < totalSlides - 1) nextSlide();
+                else if (diff < 0 && currentSlide > 0) goToSlide(currentSlide - 1);
+            }
+        });
+    </script>
+</body>
+</html>
