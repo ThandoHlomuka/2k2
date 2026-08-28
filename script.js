@@ -384,8 +384,6 @@ function navigateTo(page) {
     if (page === 'user-settings') loadUserSettings();
     if (page === 'provider-settings') loadProviderSettings();
     if (page === 'gigs-browse') { populateGigDropdowns(); renderGigsBrowse(); }
-    if (page === 'gigs-create') { populateGigDropdowns(); resetGigForm(); }
-    if (page === 'user-gigs') renderUserGigs();
     if (page === 'provider-gigs') renderProviderGigs();
     if (page === 'provider-gig-create') { populateGigDropdowns(); resetProviderGigForm(); }
     if (page === 'inbox') renderInbox();
@@ -4914,6 +4912,7 @@ function renderProviderGigs() { renderUserGigs(); }
 function editGig(id) {
     const gig = Storage.getGigs().find(g => g.id === id);
     if (!gig) return;
+    navigateTo('provider-gig-create');
     document.getElementById('gigId').value = gig.id;
     document.getElementById('gigTitle').value = gig.title;
     document.getElementById('gigType').value = gig.gigType;
@@ -4926,7 +4925,6 @@ function editGig(id) {
     const urgentEl = document.getElementById('gigUrgent');
     if (urgentEl) urgentEl.checked = gig.urgent || false;
     document.getElementById('gigFormTitle').textContent = 'Edit Gig';
-    navigateTo('gigs-create');
 }
 
 function deleteGig(id) {

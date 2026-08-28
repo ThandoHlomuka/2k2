@@ -52,7 +52,7 @@
     <!-- Favicon -->
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💎</text></svg>">
 
-    <link rel="stylesheet" href="style.css?v=12">
+    <link rel="stylesheet" href="style.css?v=13">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700;900&family=Inter:wght@300;400;500;600;700&family=Dancing+Script:wght@700&display=swap" rel="stylesheet">
 
@@ -443,6 +443,14 @@
                 <i class="fas fa-calendar-days"></i>
                 <span>Events</span>
             </a>
+            <a href="#" class="nav-item" data-page="ads-browse">
+                <i class="fas fa-bullhorn"></i>
+                <span>Browse Ads</span>
+            </a>
+            <a href="#" class="nav-item" data-page="gigs-browse">
+                <i class="fas fa-briefcase"></i>
+                <span>Browse Gigs</span>
+            </a>
             <div class="nav-divider"></div>
             <span class="nav-section-title">Forum</span>
             <a href="#" class="nav-item" data-page="forum-browse">
@@ -458,25 +466,7 @@
                 <span>My Threads</span>
             </a>
             <div class="nav-divider"></div>
-            <span class="nav-section-title">Jobs & Gigs</span>
-            <a href="#" class="nav-item" data-page="gigs-browse">
-                <i class="fas fa-briefcase"></i>
-                <span>Browse Gigs</span>
-            </a>
-            <a href="#" class="nav-item" data-page="gigs-create">
-                <i class="fas fa-plus-circle"></i>
-                <span>Post a Gig</span>
-            </a>
-            <a href="#" class="nav-item" data-page="user-gigs">
-                <i class="fas fa-clipboard-list"></i>
-                <span>My Gigs</span>
-            </a>
-            <div class="nav-divider"></div>
             <span class="nav-section-title">Personal Ads</span>
-            <a href="#" class="nav-item" data-page="ads-browse">
-                <i class="fas fa-bullhorn"></i>
-                <span>Browse Ads</span>
-            </a>
             <a href="#" class="nav-item" data-page="ads-create">
                 <i class="fas fa-pen-to-square"></i>
                 <span>Post an Ad</span>
@@ -2427,11 +2417,11 @@
             <div class="container">
                 <div class="dashboard-header">
                     <div>
-                        <h1>Jobs & Gigs</h1>
-                        <p>Find opportunities or post your services</p>
+                        <h1>Browse Gigs</h1>
+                        <p>Find opportunities or hire a service provider</p>
                     </div>
-                    <button class="btn btn-primary" onclick="navigateTo('gigs-create')">
-                        <i class="fas fa-plus"></i> Post a Gig
+                    <button class="btn btn-secondary" onclick="window.location.href='provider.html'">
+                        <i class="fas fa-briefcase"></i> Providers: Post a Gig
                     </button>
                 </div>
                 <div class="directory-filters">
@@ -2466,97 +2456,6 @@
                     <h1 id="gigViewTitle">Gig Details</h1>
                 </div>
                 <div id="gigViewContent"></div>
-            </div>
-        </div>
-
-        <!-- Gig Create/Edit -->
-        <div class="page" id="page-gigs-create">
-            <div class="container">
-                <div class="form-header">
-                    <button class="btn-back" onclick="navigateTo('gigs-browse')">
-                        <i class="fas fa-arrow-left"></i> Back
-                    </button>
-                    <h1 id="gigFormTitle">Post a Gig</h1>
-                </div>
-                <form id="gigForm" onsubmit="handleGigSubmit(event)">
-                    <input type="hidden" id="gigId" value="">
-                    <div class="profile-card">
-                        <h2><i class="fas fa-briefcase"></i> Gig Details</h2>
-                        <div class="form-grid">
-                            <div class="form-group full-width">
-                                <label>Title *</label>
-                                <input type="text" id="gigTitle" placeholder="e.g. Professional photographer available in Joburg" required>
-                            </div>
-                            <div class="form-group">
-                                <label>Gig Type *</label>
-                                <select id="gigType" required>
-                                    <option value="">Select type</option>
-                                </select>
-                            </div>
-                            <div class="form-group">
-                                <label>Location</label>
-                                <select id="gigLocation">
-                                    <option value="">Select location</option>
-                                </select>
-                            </div>
-                            <div class="form-group">
-                                <label>Rate (ZAR)</label>
-                                <input type="number" id="gigRate" placeholder="e.g. 500" min="0">
-                            </div>
-                            <div class="form-group">
-                                <label>Rate Type</label>
-                                <select id="gigRateType">
-                                    <option value="hr">Per Hour</option>
-                                    <option value="day">Per Day</option>
-                                    <option value="event">Per Event</option>
-                                    <option value="session">Per Session</option>
-                                    <option value="fixed">Fixed Price</option>
-                                </select>
-                            </div>
-                            <div class="form-group">
-                                <label>Contact</label>
-                                <input type="text" id="gigContact" placeholder="Phone or handle">
-                            </div>
-                            <div class="form-group">
-                                <label>Your Name *</label>
-                                <input type="text" id="gigAuthor" placeholder="Display name" required>
-                            </div>
-                            <div class="form-group full-width">
-                                <label style="display:flex;align-items:center;gap:8px">
-                                    <input type="checkbox" id="gigUrgent"> Mark as Urgent
-                                </label>
-                            </div>
-                        </div>
-                        <div class="form-group" style="margin-top:16px">
-                            <label>Description *</label>
-                            <textarea id="gigDescription" rows="5" placeholder="Describe the gig, requirements, availability..." required></textarea>
-                        </div>
-                        <div class="form-group" style="margin-top:16px">
-                            <label>Tags (comma separated)</label>
-                            <input type="text" id="gigTags" placeholder="e.g. freelance, weekend, downtown">
-                        </div>
-                    </div>
-                    <div style="display:flex;gap:12px;margin-top:20px">
-                        <button type="submit" class="btn btn-primary" style="flex:1"><i class="fas fa-check"></i> Post Gig</button>
-                        <button type="button" class="btn btn-secondary" onclick="navigateTo('gigs-browse')">Cancel</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-
-        <!-- My Gigs -->
-        <div class="page" id="page-user-gigs">
-            <div class="container">
-                <div class="dashboard-header">
-                    <div>
-                        <h1>My Gigs</h1>
-                        <p>Manage your posted gigs</p>
-                    </div>
-                    <button class="btn btn-primary" onclick="navigateTo('gigs-create')">
-                        <i class="fas fa-plus"></i> Post Gig
-                    </button>
-                </div>
-                <div class="forum-threads-list" id="userGigsList"></div>
             </div>
         </div>
 
@@ -3065,7 +2964,7 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
-    <script src="script.js?v=12"></script>
+    <script src="script.js?v=13"></script>
     <script>
         let onbSlide = 0;
         const slides = document.querySelectorAll('.onb-slide');
