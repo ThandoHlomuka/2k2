@@ -38,6 +38,8 @@ function navigateTo(page) {
     if (page === 'admin-reviews') renderAdminReviews();
     if (page === 'admin-wallets') renderAdminWallets();
     if (page === 'admin-forum') renderAdminForum();
+    if (page === 'admin-messages') renderAdminMessages();
+    if (page === 'admin-message-logs') renderAdminMessageLogs();
     if (page === 'admin-logs') renderAdminLogs();
 
     const sidebar = document.getElementById('sidebar');
@@ -111,6 +113,16 @@ function confirmDelete() {
         Storage.setForumReplies(Storage.getForumReplies().filter(r => r.id !== id));
         showToast('Reply deleted.');
         renderAdminForum();
+    } else if (type === 'conversation') {
+        Storage.setConversations(Storage.getConversations().filter(c => c.id !== id));
+        Storage.setMessages(Storage.getMessages().filter(m => m.conversationId !== id));
+        showToast('Conversation deleted.');
+        renderAdminMessages();
+    } else if (type === 'message') {
+        Storage.setMessages(Storage.getMessages().filter(m => m.id !== id));
+        showToast('Message deleted.');
+        renderAdminMessageLogs();
+        renderAdminMessages();
     }
     closeDeleteModal();
 }
@@ -210,7 +222,8 @@ function renderAdminDashboard() {
         ...venues.map(v => ({ type: 'venue', name: v.name, date: v.createdAt, color: '#3b82f6' })),
         ...ads.map(a => ({ type: 'ad', name: a.title, date: a.createdAt, color: '#f59e0b' })),
         ...services.map(s => ({ type: 'service', name: s.name, date: s.createdAt, color: '#10b981' })),
-        ...bookings.map(b => ({ type: 'booking', name: `${b.clientName} → ${b.serviceType}`, date: b.createdAt, color: '#06b6d4' }))
+        ...bookings.map(b => ({ type: 'booking', name: `${b.clientName} → ${b.serviceType}`, date: b.createdAt, color: '#06b6d4' })),
+        ...Storage.getMessages().map(m => ({ type: 'message', name: `${m.senderName}: ${m.body}`, date: m.createdAt, color: '#ef4444' }))
     ].sort((a, b) => new Date(b.date) - new Date(a.date)).slice(0, 10);
 
     document.getElementById('adminActivityFeed').innerHTML = allItems.length === 0
@@ -1110,4 +1123,199 @@ function adminDeleteForumThread(id) {
     const text = document.getElementById('deleteModalText');
     text.textContent = 'Delete this thread and all its replies? This cannot be undone.';
     modal.classList.add('active');
+}
+
+// ==========================================
+// MESSAGE ADMIN
+// ==========================================
+let currentAdminMsgFilter = 'all';
+
+function filterAdminMessages(filter) {
+    currentAdminMsgFilter = filter;
+    document.querySelectorAll('#page-admin-messages .filter-tab').forEach(t => t.classList.remove('active'));
+    if (event && event.target) event.target.closest('.filter-tab')?.classList.add('active');
+    renderAdminMessages();
+}
+
+function renderAdminMessages() {
+    const convs = Storage.getConversations();
+    const messages = Storage.getMessages();
+    const search = document.getElementById('adminMessagesSearch')?.value?.toLowerCase() || '';
+
+    document.getElementById('adminMsgConvCount').textContent = convs.length;
+    document.getElementById('adminMsgCount').textContent = messages.length;
+    document.getElementById('adminMsgUnreadCount').textContent = messages.filter(m => m.senderId !== 'me' && !m.read).length;
+    document.getElementById('adminMsgArchivedCount').textContent = convs.filter(c => c.status === 'archived').length;
+
+    let filtered = [...convs];
+    if (currentAdminMsgFilter === 'unread') {
+        filtered = filtered.filter(c => messages.some(m => m.conversationId === c.id && m.senderId !== 'me' && !m.read));
+    } else if (currentAdminMsgFilter === 'archived') {
+        filtered = filtered.filter(c => c.status === 'archived');
+    }
+
+    if (search) {
+        filtered = filtered.filter(c =>
+            c.subject.toLowerCase().includes(search) ||
+            c.participantName.toLowerCase().includes(search) ||
+            c.lastMessage.toLowerCase().includes(search)
+        );
+    }
+
+    filtered.sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt));
+
+    const tbody = document.getElementById('adminMessagesTableBody');
+    if (!tbody) return;
+
+    if (filtered.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="8" class="empty-cell">No conversations found</td></tr>';
+        return;
+    }
+
+    tbody.innerHTML = filtered.map(c => {
+        const convMsgs = messages.filter(m => m.conversationId === c.id);
+        const unread = convMsgs.filter(m => m.senderId !== 'me' && !m.read).length;
+        return `
+            <tr>
+                <td class="truncate" style="max-width:220px"><strong>${escapeHtml(c.subject)}</strong></td>
+                <td>${escapeHtml(c.participantName)} ${c.participantRole === 'provider' ? '<span style="color:#10b981;font-size:0.75rem">(provider)</span>' : ''}</td>
+                <td>${convMsgs.length}</td>
+                <td>${unread ? `<span style="color:#ef4444;font-weight:700">${unread}</span>` : '-'}</td>
+                <td>${c.status === 'archived' ? '<span style="color:#94a3b8">Archived</span>' : '<span style="color:#10b981">Active</span>'}</td>
+                <td class="truncate" style="max-width:200px">${escapeHtml(c.lastMessage)}</td>
+                <td>${fmtDate(c.updatedAt)}</td>
+                <td>
+                    <div class="admin-actions">
+                        <button class="btn btn-secondary btn-xs" onclick="adminViewConversation('${c.id}')" title="View"><i class="fas fa-eye"></i></button>
+                        <button class="btn btn-secondary btn-xs" onclick="adminToggleArchive('${c.id}')" title="${c.status === 'archived' ? 'Unarchive' : 'Archive'}">
+                            <i class="fas ${c.status === 'archived' ? 'fa-box-open' : 'fa-box-archive'}"></i>
+                        </button>
+                        <button class="btn btn-danger btn-xs" onclick="adminDeleteConversation('${c.id}')" title="Delete"><i class="fas fa-trash"></i></button>
+                    </div>
+                </td>
+            </tr>
+        `;
+    }).join('');
+}
+
+function adminViewConversation(id) {
+    const conv = Storage.getConversations().find(c => c.id === id);
+    if (!conv) return;
+    const msgs = Storage.getMessages().filter(m => m.conversationId === id).sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+
+    const threadHtml = msgs.length === 0
+        ? '<p style="color:#94a3b8">No messages</p>'
+        : msgs.map(m => `
+            <div style="padding:10px 0;border-bottom:1px solid #f1f5f9">
+                <div style="display:flex;justify-content:space-between;margin-bottom:4px">
+                    <strong>${escapeHtml(m.senderName)}</strong>
+                    <span style="color:#94a3b8;font-size:0.75rem">${fmtDate(m.createdAt)}</span>
+                </div>
+                <div style="font-size:0.9rem;color:#334155;white-space:pre-wrap">${escapeHtml(m.body)}</div>
+            </div>
+        `).join('');
+
+    showAdminView(`
+        <h2><i class="fas fa-envelope-open-text"></i> ${escapeHtml(conv.subject)}</h2>
+        <p style="color:#64748b;margin-top:4px">With: <strong>${escapeHtml(conv.participantName)}</strong> (${conv.participantRole}) &middot; Created ${fmtDate(conv.createdAt)}</p>
+        <div style="max-height:280px;overflow-y:auto;margin-top:16px;background:#f8fafc;border-radius:10px;padding:12px 16px">${threadHtml}</div>
+        <div style="margin-top:16px">
+            <label style="display:block;font-weight:600;color:#475569;font-size:0.85rem;margin-bottom:6px">Reply as Admin:</label>
+            <textarea id="adminMsgReplyBody" rows="3" style="width:100%;padding:10px 12px;border:1px solid #e2e8f0;border-radius:8px;font-family:inherit;font-size:0.88rem;resize:none"></textarea>
+            <button class="btn btn-primary btn-xs" onclick="adminReplyConversation('${conv.id}')" style="margin-top:8px"><i class="fas fa-paper-plane"></i> Send Reply</button>
+        </div>
+    `);
+}
+
+function adminReplyConversation(id) {
+    const body = document.getElementById('adminMsgReplyBody')?.value.trim();
+    if (!body) { showToast('Please enter a reply.', 'error'); return; }
+
+    const convs = Storage.getConversations();
+    const conv = convs.find(c => c.id === id);
+    if (!conv) return;
+
+    const messages = Storage.getMessages();
+    messages.push({
+        id: generateId(),
+        conversationId: id,
+        senderId: 'admin',
+        senderName: '2k2 Admin',
+        body,
+        read: true,
+        createdAt: new Date().toISOString()
+    });
+    Storage.setMessages(messages);
+
+    conv.lastMessage = body;
+    conv.updatedAt = new Date().toISOString();
+    Storage.setConversations(convs);
+
+    showToast('Admin reply sent.');
+    renderAdminMessages();
+    closeAdminView();
+}
+
+function adminToggleArchive(id) {
+    const convs = Storage.getConversations();
+    const conv = convs.find(c => c.id === id);
+    if (!conv) return;
+    conv.status = conv.status === 'archived' ? 'active' : 'archived';
+    conv.updatedAt = new Date().toISOString();
+    Storage.setConversations(convs);
+    showToast(conv.status === 'archived' ? 'Conversation archived.' : 'Conversation restored.');
+    renderAdminMessages();
+}
+
+function adminDeleteConversation(id) {
+    const conv = Storage.getConversations().find(c => c.id === id);
+    promptAdminDelete('conversation', id, conv ? conv.subject : 'Conversation');
+}
+
+function adminMessageLogsSearch() { renderAdminMessageLogs(); }
+
+function renderAdminMessageLogs() {
+    let messages = [...Storage.getMessages()];
+    const search = document.getElementById('adminLogsSearch')?.value?.toLowerCase() || '';
+
+    if (search) {
+        messages = messages.filter(m =>
+            m.senderName.toLowerCase().includes(search) ||
+            (m.body || '').toLowerCase().includes(search)
+        );
+    }
+
+    messages.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+    const tbody = document.getElementById('adminMessageLogsBody');
+    if (!tbody) return;
+
+    if (messages.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" class="empty-cell">No messages found</td></tr>';
+        return;
+    }
+
+    const convs = Storage.getConversations();
+    tbody.innerHTML = messages.map(m => {
+        const conv = convs.find(c => c.id === m.conversationId);
+        const contact = conv ? conv.participantName : '-';
+        return `
+            <tr>
+                <td>${fmtDate(m.createdAt)}</td>
+                <td>${escapeHtml(m.senderName)} ${m.senderId === 'admin' ? '<span style="color:#ef4444;font-size:0.75rem">(admin)</span>' : ''}</td>
+                <td>${escapeHtml(contact)}</td>
+                <td class="truncate" style="max-width:300px">${escapeHtml(m.body)}</td>
+                <td>
+                    <div class="admin-actions">
+                        ${conv ? `<button class="btn btn-secondary btn-xs" onclick="adminViewConversation('${conv.id}')" title="View"><i class="fas fa-eye"></i></button>` : ''}
+                        <button class="btn btn-danger btn-xs" onclick="adminDeleteMessage('${m.id}')" title="Delete"><i class="fas fa-trash"></i></button>
+                    </div>
+                </td>
+            </tr>
+        `;
+    }).join('');
+}
+
+function adminDeleteMessage(id) {
+    promptAdminDelete('message', id, 'message');
 }

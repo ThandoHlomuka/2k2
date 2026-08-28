@@ -12,7 +12,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🛡️</text></svg>">
-    <link rel="stylesheet" href="style.css?v=10">
+    <link rel="stylesheet" href="style.css?v=11">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <style>
         .admin-badge { background: linear-gradient(135deg, #ef4444, #dc2626); color: white; padding: 3px 10px; border-radius: 6px; font-size: 0.65rem; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; margin-left: 8px; }
@@ -98,6 +98,14 @@
             <a href="#" class="nav-item" data-page="admin-forum">
                 <i class="fas fa-comments"></i>
                 <span>Forum</span>
+            </a>
+            <a href="#" class="nav-item" data-page="admin-messages">
+                <i class="fas fa-envelope-open-text"></i>
+                <span>Messages</span>
+            </a>
+            <a href="#" class="nav-item" data-page="admin-message-logs">
+                <i class="fas fa-list-ul"></i>
+                <span>Message Logs</span>
             </a>
             <a href="#" class="nav-item" data-page="admin-wallets">
                 <i class="fas fa-wallet"></i>
@@ -207,6 +215,7 @@
                     <a class="admin-quick-btn" onclick="navigateTo('admin-listings')"><i class="fas fa-address-book"></i><span>Manage Listings</span></a>
                     <a class="admin-quick-btn" onclick="navigateTo('admin-venues')"><i class="fas fa-store"></i><span>Manage Venues</span></a>
                     <a class="admin-quick-btn" onclick="navigateTo('admin-ads')"><i class="fas fa-bullhorn"></i><span>Manage Ads</span></a>
+                    <a class="admin-quick-btn" onclick="navigateTo('admin-messages')"><i class="fas fa-envelope-open-text"></i><span>Messages</span></a>
                     <a class="admin-quick-btn" onclick="navigateTo('admin-logs')"><i class="fas fa-file-alt"></i><span>View Logs</span></a>
                 </div>
 
@@ -650,6 +659,111 @@
             <div class="admin-view-content" id="adminViewContent"></div>
         </div>
 
+        <!-- Message Management -->
+        <div class="page" id="page-admin-messages">
+            <div class="container">
+                <div class="dashboard-header">
+                    <div>
+                        <h1><i class="fas fa-envelope-open-text"></i> Message Management</h1>
+                        <p>Monitor all conversations and messages between members</p>
+                    </div>
+                </div>
+
+                <div class="stats-row" id="adminMsgStats" style="margin-bottom:16px">
+                    <div class="stat-card">
+                        <div class="stat-icon user-bg"><i class="fas fa-comments"></i></div>
+                        <div class="stat-info">
+                            <span class="stat-number" id="adminMsgConvCount">0</span>
+                            <span class="stat-label">Conversations</span>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon green-bg"><i class="fas fa-message"></i></div>
+                        <div class="stat-info">
+                            <span class="stat-number" id="adminMsgCount">0</span>
+                            <span class="stat-label">Messages</span>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background:#fef3c7;color:#f59e0b"><i class="fas fa-envelope"></i></div>
+                        <div class="stat-info">
+                            <span class="stat-number" id="adminMsgUnreadCount">0</span>
+                            <span class="stat-label">Unread</span>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background:#fef2f2;color:#ef4444"><i class="fas fa-box-archive"></i></div>
+                        <div class="stat-info">
+                            <span class="stat-number" id="adminMsgArchivedCount">0</span>
+                            <span class="stat-label">Archived</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="directory-filters">
+                    <div class="filter-tabs">
+                        <button class="filter-tab active" onclick="filterAdminMessages('all')"><i class="fas fa-globe"></i> All</button>
+                        <button class="filter-tab" onclick="filterAdminMessages('unread')"><i class="fas fa-envelope"></i> Unread</button>
+                        <button class="filter-tab" onclick="filterAdminMessages('archived')"><i class="fas fa-box-archive"></i> Archived</button>
+                    </div>
+                    <div class="filter-bar">
+                        <input type="text" id="adminMessagesSearch" placeholder="Search conversations... (contact, subject)" oninput="renderAdminMessages()">
+                    </div>
+                </div>
+
+                <div class="admin-table-wrap">
+                    <table class="admin-table" id="adminMessagesTable">
+                        <thead>
+                            <tr>
+                                <th>Subject</th>
+                                <th>Contact</th>
+                                <th>Messages</th>
+                                <th>Unread</th>
+                                <th>Status</th>
+                                <th>Last Message</th>
+                                <th>Last Activity</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="adminMessagesTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Message Logs -->
+        <div class="page" id="page-admin-message-logs">
+            <div class="container">
+                <div class="dashboard-header">
+                    <div>
+                        <h1><i class="fas fa-list-ul"></i> Message Logs</h1>
+                        <p>Full audit trail of every message sent on the platform</p>
+                    </div>
+                </div>
+
+                <div class="directory-filters">
+                    <div class="filter-bar">
+                        <input type="text" id="adminLogsSearch" placeholder="Search messages... (sender, content)" oninput="renderAdminMessageLogs()">
+                    </div>
+                </div>
+
+                <div class="admin-table-wrap">
+                    <table class="admin-table" id="adminMessageLogsTable">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Sender</th>
+                                <th>Contact</th>
+                                <th>Message</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="adminMessageLogsBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
         <!-- Delete Modal -->
         <div class="modal-overlay" id="deleteModal">
             <div class="modal">
@@ -666,7 +780,7 @@
         <div class="toast-container" id="toastContainer"></div>
     </div>
 
-    <script src="script.js?v=10"></script>
+    <script src="script.js?v=11"></script>
     <script src="admin.js"></script>
 </body>
 </html>

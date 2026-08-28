@@ -52,7 +52,7 @@
     <!-- Favicon -->
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💎</text></svg>">
 
-    <link rel="stylesheet" href="style.css?v=10">
+    <link rel="stylesheet" href="style.css?v=11">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700;900&family=Inter:wght@300;400;500;600;700&family=Dancing+Script:wght@700&display=swap" rel="stylesheet">
 
@@ -486,6 +486,16 @@
                 <span>My Ads</span>
             </a>
             <div class="nav-divider"></div>
+            <span class="nav-section-title">Messages</span>
+            <a href="#" class="nav-item" data-page="inbox">
+                <i class="fas fa-inbox"></i>
+                <span>Inbox</span>
+            </a>
+            <a href="#" class="nav-item" data-page="message-compose">
+                <i class="fas fa-paper-plane"></i>
+                <span>New Message</span>
+            </a>
+            <div class="nav-divider"></div>
             <span class="nav-section-title">Bookings</span>
             <a href="#" class="nav-item" data-page="user-bookings">
                 <i class="fas fa-calendar-check"></i>
@@ -693,6 +703,7 @@
                     <h1>View Profile</h1>
                     <div class="header-actions">
                         <button class="btn btn-secondary" onclick="editUserProfile()"><i class="fas fa-edit"></i> Edit</button>
+                        <button class="btn btn-primary" onclick="openComposeTo(currentViewUserId, document.getElementById('userViewName').textContent, 'user')"><i class="fas fa-paper-plane"></i> Message</button>
                         <button class="btn btn-danger" onclick="deleteUserProfile()"><i class="fas fa-trash"></i> Delete</button>
                     </div>
                 </div>
@@ -959,6 +970,7 @@
                         </div>
                         <div class="view-actions-row">
                             <button class="btn btn-primary" id="dirBookBtn" onclick="openBookingModal(currentViewListingId, 'listing')"><i class="fas fa-calendar-plus"></i> Book Provider</button>
+                            <button class="btn btn-primary provider-btn" onclick="openComposeTo(currentViewListingId, document.getElementById('dirViewName').textContent, 'listing')"><i class="fas fa-paper-plane"></i> Message</button>
                             <button class="btn btn-secondary" id="dirTipBtn" onclick="openTipModal(currentViewListingId, 'listing', document.getElementById('dirViewName').textContent)"><i class="fas fa-hand-holding-heart"></i> Tip Jar</button>
                         </div>
                     </div>
@@ -2920,11 +2932,96 @@
             </div>
         </div>
 
+        <!-- Messaging: Inbox -->
+        <div class="page" id="page-inbox">
+            <div class="container">
+                <div class="dashboard-header">
+                    <div>
+                        <h1>Inbox</h1>
+                        <p>Conversations between you and other members</p>
+                    </div>
+                    <button class="btn btn-primary" onclick="navigateTo('message-compose')">
+                        <i class="fas fa-pen"></i> New Message
+                    </button>
+                </div>
+                <div class="directory-filters">
+                    <div class="filter-tabs">
+                        <button class="filter-tab active" onclick="filterInbox('all')"><i class="fas fa-globe"></i> All</button>
+                        <button class="filter-tab" onclick="filterInbox('unread')"><i class="fas fa-envelope"></i> Unread</button>
+                        <button class="filter-tab" onclick="filterInbox('archived')"><i class="fas fa-box-archive"></i> Archived</button>
+                    </div>
+                    <div class="filter-bar">
+                        <input type="text" id="inboxSearch" placeholder="Search conversations..." oninput="renderInbox()">
+                    </div>
+                </div>
+                <div class="directory-stats"><span id="inboxCount">0</span> conversations</div>
+                <div class="inbox-list" id="inboxList"></div>
+            </div>
+        </div>
+
+        <!-- Messaging: Conversation View -->
+        <div class="page" id="page-message-view">
+            <div class="container">
+                <div class="form-header">
+                    <button class="btn-back" onclick="navigateTo('inbox')">
+                        <i class="fas fa-arrow-left"></i> Back to Inbox
+                    </button>
+                    <h1 id="messageViewTitle">Conversation</h1>
+                </div>
+                <div id="messageThreadContent"></div>
+            </div>
+        </div>
+
+        <!-- Messaging: Compose -->
+        <div class="page" id="page-message-compose">
+            <div class="container">
+                <div class="form-header">
+                    <button class="btn-back" onclick="navigateTo('inbox')">
+                        <i class="fas fa-arrow-left"></i> Back to Inbox
+                    </button>
+                    <h1>New Message</h1>
+                </div>
+                <form id="messageForm" onsubmit="handleMessageSubmit(event)">
+                    <div class="profile-card">
+                        <h2><i class="fas fa-envelope"></i> Compose Message</h2>
+                        <div class="form-grid">
+                            <div class="form-group full-width">
+                                <label>Recipient *</label>
+                                <select id="msgRecipient" required onchange="renderMessageCompose()">
+                                    <option value="">Select recipient</option>
+                                </select>
+                            </div>
+                            <div class="form-group full-width" id="msgRecipientCustomWrap" style="display:none">
+                                <label>Custom Contact Name *</label>
+                                <input type="text" id="msgRecipientCustom" placeholder="Enter contact name">
+                            </div>
+                            <div class="form-group">
+                                <label>Your Name *</label>
+                                <input type="text" id="msgSenderName" placeholder="Display name" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Subject *</label>
+                                <input type="text" id="msgSubject" placeholder="e.g. Hi, I saw your profile" required>
+                            </div>
+                            <div class="form-group full-width">
+                                <label>Message *</label>
+                                <textarea id="msgBody" rows="5" placeholder="Write your message..." required></textarea>
+                            </div>
+                        </div>
+                    </div>
+                    <div style="display:flex;gap:12px;margin-top:20px">
+                        <button type="submit" class="btn btn-primary" style="flex:1"><i class="fas fa-paper-plane"></i> Send Message</button>
+                        <button type="button" class="btn btn-secondary" onclick="navigateTo('inbox')">Cancel</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
         <div class="toast-container" id="toastContainer"></div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
-    <script src="script.js?v=10"></script>
+    <script src="script.js?v=11"></script>
     <script>
         let onbSlide = 0;
         const slides = document.querySelectorAll('.onb-slide');

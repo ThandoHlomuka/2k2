@@ -49,7 +49,11 @@ const Storage = {
     setForumLikes: (data) => localStorage.setItem('k2_forum_likes', JSON.stringify(data)),
     getGigs: () => JSON.parse(localStorage.getItem('k2_gigs') || '[]'),
     setGigs: (data) => localStorage.setItem('k2_gigs', JSON.stringify(data)),
-    clearAll: () => { ['k2_users','k2_providers','k2_listings','k2_venues','k2_ads','k2_services','k2_bookings','k2_tips','k2_service_types','k2_wallets','k2_transactions','k2_topup_requests','k2_withdrawal_requests','k2_content','k2_events','k2_content_comments','k2_content_reactions','k2_reviews','k2_forum_threads','k2_forum_replies','k2_forum_likes','k2_gigs'].forEach(k => localStorage.removeItem(k)); }
+    getConversations: () => JSON.parse(localStorage.getItem('k2_conversations') || '[]'),
+    setConversations: (data) => localStorage.setItem('k2_conversations', JSON.stringify(data)),
+    getMessages: () => JSON.parse(localStorage.getItem('k2_messages') || '[]'),
+    setMessages: (data) => localStorage.setItem('k2_messages', JSON.stringify(data)),
+    clearAll: () => { ['k2_users','k2_providers','k2_listings','k2_venues','k2_ads','k2_services','k2_bookings','k2_tips','k2_service_types','k2_wallets','k2_transactions','k2_topup_requests','k2_withdrawal_requests','k2_content','k2_events','k2_content_comments','k2_content_reactions','k2_reviews','k2_forum_threads','k2_forum_replies','k2_forum_likes','k2_gigs','k2_conversations','k2_messages'].forEach(k => localStorage.removeItem(k)); }
 };
 
 const SA_PROVINCES = {
@@ -384,6 +388,9 @@ function navigateTo(page) {
     if (page === 'user-gigs') renderUserGigs();
     if (page === 'provider-gigs') renderProviderGigs();
     if (page === 'provider-gig-create') { populateGigDropdowns(); resetProviderGigForm(); }
+    if (page === 'inbox') renderInbox();
+    if (page === 'message-view') renderMessageThread();
+    if (page === 'message-compose') renderMessageCompose();
 }
 
 function populateGigDropdowns() {
@@ -4792,7 +4799,8 @@ function viewGig(id) {
         </div>
         ${tagsHtml ? `<div class="profile-card"><h2><i class="fas fa-tag"></i> Tags</h2><div class="tags-container">${tagsHtml}</div></div>` : ''}
         <div style="display:flex;gap:12px;margin-top:16px">
-            <button class="btn btn-primary" onclick="navigateTo('gigs-browse')" style="flex:1"><i class="fas fa-arrow-left"></i> Back to Gigs</button>
+            <button class="btn btn-primary" onclick="openComposeTo('current', '${escapeHtml(gig.author.replace(/'/g, "\\'"))}', 'gig-author')" style="flex:1"><i class="fas fa-paper-plane"></i> Respond</button>
+            <button class="btn btn-secondary" onclick="navigateTo('gigs-browse')" style="flex:1"><i class="fas fa-arrow-left"></i> Back to Gigs</button>
             ${gig.authorId === 'current' ? `<button class="btn btn-danger" onclick="deleteGig('${gig.id}')"><i class="fas fa-trash"></i> Delete</button>` : ''}
         </div>`;
     }
@@ -4940,6 +4948,305 @@ function getTimeAgo(dateStr) {
 function escapeHtml(str) {
     if (!str) return '';
     return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+// ==========================================
+// MESSAGING / INBOX SYSTEM
+// ==========================================
+let currentMessageViewId = null;
+let currentInboxFilter = 'all';
+
+function getMsgIdentity() {
+    const stored = JSON.parse(localStorage.getItem('k2_msg_identity') || 'null');
+    if (stored) return stored;
+    const users = Storage.getUsers();
+    return { name: users[0]?.fullName || '2k2 Member', email: users[0]?.email || '' };
+}
+
+function saveMsgIdentity(name, email) {
+    localStorage.setItem('k2_msg_identity', JSON.stringify({ name, email }));
+}
+
+function getMsgRecipients() {
+    const users = Storage.getUsers().map(u => ({ id: u.id, name: u.fullName || 'User', role: 'user' }));
+    const providers = Storage.getProviders().map(p => ({ id: p.id, name: p.businessName || 'Provider', role: 'provider' }));
+    return [...users, ...providers];
+}
+
+function conversationUnread(conv) {
+    const msgs = Storage.getMessages().filter(m => m.conversationId === conv.id && m.senderId !== 'me' && !m.read);
+    return msgs.length;
+}
+
+function inboxTotalUnread() {
+    return Storage.getConversations().reduce((s, c) => s + (c.status !== 'deleted' ? conversationUnread(c) : 0), 0);
+}
+
+function filterInbox(filter) {
+    currentInboxFilter = filter;
+    document.querySelectorAll('#page-inbox .filter-tab').forEach(t => t.classList.remove('active'));
+    if (event && event.target) event.target.closest('.filter-tab')?.classList.add('active');
+    renderInbox();
+}
+
+function renderInbox() {
+    let convs = Storage.getConversations().filter(c => c.status !== 'deleted');
+    const search = (document.getElementById('inboxSearch')?.value || '').toLowerCase();
+
+    if (currentInboxFilter === 'unread') convs = convs.filter(c => conversationUnread(c) > 0);
+    else if (currentInboxFilter === 'archived') convs = convs.filter(c => c.status === 'archived');
+    else convs = convs.filter(c => c.status !== 'archived');
+
+    if (search) {
+        convs = convs.filter(c =>
+            c.subject.toLowerCase().includes(search) ||
+            c.participantName.toLowerCase().includes(search) ||
+            c.lastMessage.toLowerCase().includes(search)
+        );
+    }
+
+    convs.sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt));
+
+    const container = document.getElementById('inboxList');
+    const countEl = document.getElementById('inboxCount');
+    if (countEl) countEl.textContent = convs.length;
+    if (!container) return;
+
+    if (convs.length === 0) {
+        container.innerHTML = '<div class="forum-empty"><i class="fas fa-envelope-open-text"></i><h3>No messages</h3><p>Your conversations will appear here</p><button class="btn btn-primary btn-sm" onclick="navigateTo(\'message-compose\')" style="margin-top:8px"><i class="fas fa-plus"></i> New Message</button></div>';
+        return;
+    }
+
+    container.innerHTML = convs.map(conv => {
+        const unread = conversationUnread(conv);
+        const initials = conv.participantName.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase();
+        return `
+        <div class="conv-card${unread ? ' unread' : ''}${conv.status === 'archived' ? ' archived' : ''}" onclick="openConversation('${conv.id}')">
+            <div class="conv-avatar">${escapeHtml(initials)}</div>
+            <div class="conv-body">
+                <div class="conv-top">
+                    <span class="conv-name">${escapeHtml(conv.participantName)}</span>
+                    <span class="conv-time">${getTimeAgo(conv.updatedAt)}</span>
+                </div>
+                <div class="conv-subject">${escapeHtml(conv.subject)}</div>
+                <div class="conv-preview">${escapeHtml(conv.lastMessage)}</div>
+            </div>
+            ${unread ? `<span class="conv-unread-badge">${unread}</span>` : ''}
+        </div>`;
+    }).join('');
+}
+
+function openConversation(id) {
+    currentMessageViewId = id;
+    const msgs = Storage.getMessages();
+    msgs.forEach(m => { if (m.conversationId === id && m.senderId !== 'me') m.read = true; });
+    Storage.setMessages(msgs);
+    navigateTo('message-view');
+}
+
+function renderMessageThread() {
+    const conv = Storage.getConversations().find(c => c.id === currentMessageViewId);
+    const container = document.getElementById('messageThreadContent');
+    const titleEl = document.getElementById('messageViewTitle');
+    if (!conv || !container) return;
+
+    if (titleEl) titleEl.textContent = conv.subject;
+    const msgs = Storage.getMessages().filter(m => m.conversationId === currentMessageViewId).sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+
+    const me = getMsgIdentity();
+    container.innerHTML = `
+        <div class="profile-card">
+            <div class="msg-thread-meta">
+                <div class="conv-avatar lg">${escapeHtml(conv.participantName.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase())}</div>
+                <div>
+                    <h3>${escapeHtml(conv.participantName)}</h3>
+                    <p style="color:var(--text-muted, #94a3b8);font-size:0.85rem">${conv.participantRole === 'provider' ? 'Service Provider' : 'Member'}</p>
+                </div>
+                <div style="margin-left:auto;display:flex;gap:8px">
+                    <button class="btn btn-secondary btn-sm" onclick="archiveConversation('${conv.id}')"><i class="fas ${conv.status === 'archived' ? 'fa-box-open' : 'fa-box-archive'}"></i> ${conv.status === 'archived' ? 'Unarchive' : 'Archive'}</button>
+                    <button class="btn btn-danger btn-sm" onclick="deleteConversation('${conv.id}')"><i class="fas fa-trash"></i> Delete</button>
+                </div>
+            </div>
+        </div>
+        <div class="msg-thread">
+            ${msgs.length === 0 ? '<div class="msg-empty"><i class="fas fa-comments"></i><p>No messages in this conversation yet</p></div>' : msgs.map(m => `
+                <div class="msg-bubble ${m.senderId === 'me' ? 'mine' : (m.senderId === 'admin' ? 'admin' : 'theirs')}">
+                    <div class="msg-bubble-head"><span class="msg-sender">${escapeHtml(m.senderName)}</span><span class="msg-time">${new Date(m.createdAt).toLocaleString('en-ZA', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}</span></div>
+                    <div class="msg-body">${escapeHtml(m.body)}</div>
+                </div>
+            `).join('')}
+        </div>
+        <div class="profile-card" style="margin-top:16px">
+            <h2><i class="fas fa-reply"></i> Reply</h2>
+            <div class="form-group" style="margin-top:8px">
+                <textarea id="messageReplyBody" rows="3" placeholder="Type your reply..." style="width:100%;padding:12px 14px;border:1px solid var(--border, #e2e8f0);border-radius:10px;font-family:inherit;font-size:0.9rem;resize:none;outline:none;background:var(--card-bg, white);color:var(--text-primary, #1e293b)"></textarea>
+            </div>
+            <div class="form-grid" style="grid-template-columns:2fr 1fr;gap:10px">
+                <div class="form-group">
+                    <label>Your Name</label>
+                    <input type="text" id="messageReplyName" value="${escapeHtml(me.name)}">
+                </div>
+                <div class="form-group">
+                    <label>&nbsp;</label>
+                    <button class="btn btn-primary" style="width:100%" onclick="sendMessageReply()"><i class="fas fa-paper-plane"></i> Send</button>
+                </div>
+            </div>
+        </div>`;
+
+    const elThread = container.querySelector('.msg-thread');
+    if (elThread) elThread.scrollTop = elThread.scrollHeight;
+}
+
+function sendMessageReply() {
+    const body = document.getElementById('messageReplyBody').value.trim();
+    const name = document.getElementById('messageReplyName').value.trim();
+    if (!body || !name) { showToast('Please enter your name and a reply.', 'error'); return; }
+    if (!currentMessageViewId) { showToast('No conversation selected.', 'error'); return; }
+
+    const convs = Storage.getConversations();
+    const conv = convs.find(c => c.id === currentMessageViewId);
+    if (!conv) { showToast('Conversation not found.', 'error'); return; }
+
+    const messages = Storage.getMessages();
+    messages.push({
+        id: generateId(),
+        conversationId: conv.id,
+        senderId: 'me',
+        senderName: name,
+        body,
+        read: true,
+        createdAt: new Date().toISOString()
+    });
+    Storage.setMessages(messages);
+
+    conv.lastMessage = body;
+    conv.updatedAt = new Date().toISOString();
+    Storage.setConversations(convs);
+
+    saveMsgIdentity(name, getMsgIdentity().email);
+    document.getElementById('messageReplyBody').value = '';
+    renderMessageThread();
+    showToast('Reply sent.');
+}
+
+function archiveConversation(id) {
+    const convs = Storage.getConversations();
+    const conv = convs.find(c => c.id === id);
+    if (!conv) return;
+    conv.status = conv.status === 'archived' ? 'active' : 'archived';
+    conv.updatedAt = new Date().toISOString();
+    Storage.setConversations(convs);
+    showToast(conv.status === 'archived' ? 'Conversation archived.' : 'Conversation restored.');
+    renderMessageThread();
+}
+
+function deleteConversation(id) {
+    if (!confirm('Delete this conversation and all its messages?')) return;
+    const convs = Storage.getConversations();
+    const idx = convs.findIndex(c => c.id === id);
+    if (idx !== -1) convs.splice(idx, 1);
+    Storage.setConversations(convs);
+    Storage.setMessages(Storage.getMessages().filter(m => m.conversationId !== id));
+    showToast('Conversation deleted.');
+    navigateTo('inbox');
+}
+
+function renderMessageCompose() {
+    const recipients = getMsgRecipients();
+    const select = document.getElementById('msgRecipient');
+    if (!select) return;
+    const current = select.value;
+    select.innerHTML = '<option value="">Select recipient</option>' + recipients.map(r =>
+        `<option value="${r.id}" data-role="${r.role}">${escapeHtml(r.name)} (${r.role})</option>`
+    ).join('') + '<option value="custom">Custom contact...</option>';
+    if (current) select.value = current;
+
+    const customWrap = document.getElementById('msgRecipientCustomWrap');
+    if (customWrap) customWrap.style.display = select.value === 'custom' ? 'block' : 'none';
+
+    const me = getMsgIdentity();
+    const nameEl = document.getElementById('msgSenderName');
+    if (nameEl && !nameEl.value) nameEl.value = me.name;
+}
+
+function openComposeTo(participantId, participantName, role) {
+    navigateTo('message-compose');
+    const select = document.getElementById('msgRecipient');
+    const recipients = getMsgRecipients();
+    const match = recipients.find(r => r.id === participantId);
+    if (match) {
+        select.value = match.id;
+        const customWrap = document.getElementById('msgRecipientCustomWrap');
+        if (customWrap) customWrap.style.display = 'none';
+    } else {
+        select.value = 'custom';
+        const customName = document.getElementById('msgRecipientCustom');
+        if (customName) customName.value = participantName;
+        const customWrap = document.getElementById('msgRecipientCustomWrap');
+        if (customWrap) customWrap.style.display = 'block';
+    }
+}
+
+function handleMessageSubmit(e) {
+    e.preventDefault();
+    const recipientSel = document.getElementById('msgRecipient');
+    const recipientId = recipientSel.value;
+    const recipientRole = recipientSel.options[recipientSel.selectedIndex]?.dataset?.role || 'contact';
+    let recipientName = recipientSel.options[recipientSel.selectedIndex]?.text?.replace(/\s*\((user|provider)\)$/, '') || '';
+    if (recipientId === 'custom') {
+        recipientName = document.getElementById('msgRecipientCustom').value.trim();
+        if (!recipientName) { showToast('Please enter the contact name.', 'error'); return; }
+    }
+    if (!recipientId) { showToast('Please select a recipient.', 'error'); return; }
+
+    const subject = document.getElementById('msgSubject').value.trim();
+    const body = document.getElementById('msgBody').value.trim();
+    const senderName = document.getElementById('msgSenderName').value.trim();
+    if (!subject || !body || !senderName) { showToast('Please fill in subject, message and your name.', 'error'); return; }
+    if (recipientId === 'custom') { recipientId = 'contact-' + generateId(); recipientSel.value = recipientId; }
+
+    const convs = Storage.getConversations();
+    const existing = convs.find(c => c.participantId === recipientId && c.status !== 'deleted');
+    let convId;
+    const now = new Date().toISOString();
+
+    if (existing) {
+        convId = existing.id;
+        existing.lastMessage = body;
+        existing.updatedAt = now;
+        existing.subject = subject;
+    } else {
+        convId = generateId();
+        convs.push({
+            id: convId,
+            subject,
+            participantId: recipientId,
+            participantName: recipientName,
+            participantRole: recipientRole,
+            createdAt: now,
+            updatedAt: now,
+            lastMessage: body,
+            status: 'active'
+        });
+    }
+    Storage.setConversations(convs);
+
+    const messages = Storage.getMessages();
+    messages.push({
+        id: generateId(),
+        conversationId: convId,
+        senderId: 'me',
+        senderName,
+        body,
+        read: true,
+        createdAt: now
+    });
+    Storage.setMessages(messages);
+
+    saveMsgIdentity(senderName, getMsgIdentity().email);
+    showToast('Message sent.');
+    currentMessageViewId = convId;
+    navigateTo('message-view');
 }
 
 // ==========================================
