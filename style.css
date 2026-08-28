@@ -66,11 +66,8 @@ h1, h2, h3, h4 {
     z-index: 1000;
     display: flex;
     flex-direction: column;
-    overflow-y: auto;
-    overflow-x: hidden;
+    overflow: visible;
     overscroll-behavior: contain;
-    scrollbar-width: thin;
-    scrollbar-color: rgba(255, 255, 255, 0.25) transparent;
     transition: transform var(--transition-speed) cubic-bezier(0.4, 0, 0.2, 1),
                 box-shadow var(--transition-speed) ease;
     box-shadow: 4px 0 24px rgba(0, 0, 0, 0.15);
@@ -105,10 +102,6 @@ h1, h2, h3, h4 {
     padding: 24px 20px;
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
     flex-shrink: 0;
-    position: sticky;
-    top: 0;
-    z-index: 5;
-    background: linear-gradient(180deg, #1e1b4b 0%, #241a5c 100%);
 }
 
 .logo {
@@ -141,9 +134,12 @@ h1, h2, h3, h4 {
 
 /* Navigation */
 .nav-menu {
-    flex: 0 0 auto;
-    overflow: visible;
-    padding: 16px 12px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.25) transparent;
+    padding: 16px 12px 96px 12px;
 }
 
 .nav-item {
@@ -212,13 +208,12 @@ h1, h2, h3, h4 {
 }
 
 .sidebar-footer {
-    margin-top: auto;
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
     padding: 12px;
     border-top: 1px solid rgba(255, 255, 255, 0.1);
-    flex-shrink: 0;
-    position: sticky;
-    bottom: 0;
-    z-index: 5;
     background: linear-gradient(0deg, #4c1d95 0%, #3b1a80 100%);
 }
 

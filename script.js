@@ -429,34 +429,50 @@ document.addEventListener('DOMContentLoaded', function() {
     closeBtn.addEventListener('click', () => { sidebar.classList.add('hidden'); menuToggle.classList.add('visible'); });
 
     // ==========================================
-    // Sidebar scroll guarantee
-    // Forces the sidebar itself to scroll when a
-    // CSS overflow quirk swallows wheel events.
+    // Sidebar scroll - hard guarantee.
+    // The nav-menu gets an EXACT pixel height
+    // (viewport minus header minus footer) and
+    // becomes the scroll container. A manual
+    // wheel handler scrolls it directly so no
+    // CSS overflow quirk can block scrolling.
     // ==========================================
-    function forceSidebarScroll() {
-        if (!sidebar) return;
-        const menu = sidebar.querySelector('.nav-menu');
-        // Scroll the whole sidebar; the nav-menu flows inside it.
-        // Make the sidebar a guaranteed scrollport with explicit height.
-        sidebar.style.overflow = 'auto';
-        sidebar.style.overflowX = 'hidden';
-        sidebar.style.height = '100vh';
-        sidebar.style.maxHeight = '100vh';
-        if (menu) {
-            menu.style.overflow = 'visible';
-            menu.style.flex = '0 0 auto';
-        }
-    }
     if (sidebar) {
-        forceSidebarScroll();
-        window.addEventListener('resize', forceSidebarScroll);
-        // Fallback: if a child had overflow that trapped wheel events,
-        // remove scroll from any inner container.
-        const anyInnerScroller = sidebar.querySelectorAll('.nav-menu');
-        anyInnerScroller.forEach(el => {
-            el.style.overflowY = 'visible';
-            el.style.webkitOverflowScrolling = 'auto';
-        });
+        const menu = sidebar.querySelector('.nav-menu');
+        const headerEl = sidebar.querySelector('.sidebar-header');
+        const footerEl = sidebar.querySelector('.sidebar-footer');
+
+        function sizeSidebar() {
+            if (!menu) return;
+            var vh = window.innerHeight;
+            var hh = headerEl ? headerEl.offsetHeight : 0;
+            var fh = footerEl ? footerEl.offsetHeight : 0;
+            var avail = vh - hh - fh;
+            if (avail < 120) avail = 120;
+            menu.style.height = avail + 'px';
+            menu.style.maxHeight = avail + 'px';
+            menu.style.overflowY = 'auto';
+            menu.style.overflowX = 'hidden';
+        }
+
+        function manualWheel(e) {
+            if (!menu) return;
+            var canScroll = menu.scrollHeight > menu.clientHeight + 1;
+            if (!canScroll) return;
+            e.preventDefault();
+            var d = (typeof e.deltaY === 'number') ? e.deltaY : 0;
+            menu.scrollTop += d;
+        }
+        function manualTouchMove(e) {
+            if (!menu) return;
+            var canScroll = menu.scrollHeight > menu.clientHeight + 1;
+            if (!canScroll) return;
+            e.preventDefault();
+        }
+
+        sizeSidebar();
+        window.addEventListener('resize', sizeSidebar);
+        sidebar.addEventListener('wheel', manualWheel, { passive: false });
+        sidebar.addEventListener('touchmove', manualTouchMove, { passive: false });
     }
 
     document.querySelectorAll('.nav-item[data-page]').forEach(item => {
