@@ -160,6 +160,19 @@ function truncate(str, len = 30) {
     return str.length > len ? str.substring(0, len) + '...' : str;
 }
 
+function renderMsgBodyText(text) {
+    if (!text) return '';
+    let html = escapeHtml(text);
+    html = html.replace(/\[gif:(.*?)\]/g, (m, url) => `<img class="admin-msg-gif" src="${url}" alt="GIF" loading="lazy" style="max-width:160px;border-radius:8px;display:block;margin:4px 0">`);
+    html = html.replace(/\n/g, '<br>');
+    return html;
+}
+
+function msgPreviewText(text) {
+    if (!text) return '';
+    return text.replace(/\[gif:.*?\]/g, '[GIF]');
+}
+
 function renderTagsHtml(tags) {
     if (!tags || tags.length === 0) return '<span style="color:#94a3b8">-</span>';
     return tags.slice(0, 3).map(t => `<span class="mini-tag">${t}</span>`).join('') + (tags.length > 3 ? `<span class="mini-tag">+${tags.length - 3}</span>` : '');
@@ -1182,7 +1195,7 @@ function renderAdminMessages() {
                 <td>${convMsgs.length}</td>
                 <td>${unread ? `<span style="color:#ef4444;font-weight:700">${unread}</span>` : '-'}</td>
                 <td>${c.status === 'archived' ? '<span style="color:#94a3b8">Archived</span>' : '<span style="color:#10b981">Active</span>'}</td>
-                <td class="truncate" style="max-width:200px">${escapeHtml(c.lastMessage)}</td>
+                <td class="truncate" style="max-width:200px">${escapeHtml(msgPreviewText(c.lastMessage))}</td>
                 <td>${fmtDate(c.updatedAt)}</td>
                 <td>
                     <div class="admin-actions">
@@ -1211,7 +1224,7 @@ function adminViewConversation(id) {
                     <strong>${escapeHtml(m.senderName)}</strong>
                     <span style="color:#94a3b8;font-size:0.75rem">${fmtDate(m.createdAt)}</span>
                 </div>
-                <div style="font-size:0.9rem;color:#334155;white-space:pre-wrap">${escapeHtml(m.body)}</div>
+                <div style="font-size:0.9rem;color:#334155">${renderMsgBodyText(m.body)}</div>
             </div>
         `).join('');
 
@@ -1304,7 +1317,7 @@ function renderAdminMessageLogs() {
                 <td>${fmtDate(m.createdAt)}</td>
                 <td>${escapeHtml(m.senderName)} ${m.senderId === 'admin' ? '<span style="color:#ef4444;font-size:0.75rem">(admin)</span>' : ''}</td>
                 <td>${escapeHtml(contact)}</td>
-                <td class="truncate" style="max-width:300px">${escapeHtml(m.body)}</td>
+                <td class="truncate" style="max-width:300px">${escapeHtml(msgPreviewText(m.body))}</td>
                 <td>
                     <div class="admin-actions">
                         ${conv ? `<button class="btn btn-secondary btn-xs" onclick="adminViewConversation('${conv.id}')" title="View"><i class="fas fa-eye"></i></button>` : ''}

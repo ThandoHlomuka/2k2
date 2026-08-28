@@ -52,7 +52,7 @@
     <!-- Favicon -->
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💎</text></svg>">
 
-    <link rel="stylesheet" href="style.css?v=11">
+    <link rel="stylesheet" href="style.css?v=12">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700;900&family=Inter:wght@300;400;500;600;700&family=Dancing+Script:wght@700&display=swap" rel="stylesheet">
 
@@ -494,6 +494,10 @@
             <a href="#" class="nav-item" data-page="message-compose">
                 <i class="fas fa-paper-plane"></i>
                 <span>New Message</span>
+            </a>
+            <a href="#" class="nav-item" data-page="online-users">
+                <i class="fas fa-user-clock"></i>
+                <span>Online Users</span>
             </a>
             <div class="nav-divider"></div>
             <span class="nav-section-title">Bookings</span>
@@ -3005,7 +3009,11 @@
                             </div>
                             <div class="form-group full-width">
                                 <label>Message *</label>
-                                <textarea id="msgBody" rows="5" placeholder="Write your message..." required></textarea>
+                                <div class="msg-compose-toolbar">
+                                    <button type="button" class="gist-btn" onclick="toggleMsgEmojiPicker('msgBody')" title="Emoji"><i class="fas fa-face-smile"></i></button>
+                                    <button type="button" class="gist-btn" onclick="toggleMsgGifPicker('msgBody')" title="GIF"><i class="fas fa-images"></i></button>
+                                </div>
+                                <textarea id="msgBody" rows="5" placeholder="Write your message... Add emojis and GIFs 🎉" required></textarea>
                             </div>
                         </div>
                     </div>
@@ -3017,11 +3025,47 @@
             </div>
         </div>
 
+        <div class="page" id="page-online-users">
+            <div class="container">
+                <div class="dashboard-header">
+                    <div>
+                        <h1>Online Users</h1>
+                        <p>See who's active on 2k2 right now</p>
+                    </div>
+                    <div class="header-actions">
+                        <button class="btn btn-secondary" onclick="navigateTo('message-compose')"><i class="fas fa-paper-plane"></i> New Message</button>
+                    </div>
+                </div>
+                <div class="directory-filters">
+                    <div class="filter-tabs">
+                        <button class="filter-tab active" onclick="filterOnlineUsers('all')"><i class="fas fa-users"></i> All</button>
+                        <button class="filter-tab" onclick="filterOnlineUsers('online')"><i class="fas fa-circle" style="color:#10b981"></i> Online</button>
+                        <button class="filter-tab" onclick="filterOnlineUsers('offline')"><i class="fas fa-circle" style="color:#94a3b8"></i> Offline</button>
+                    </div>
+                    <div class="filter-bar">
+                        <input type="text" id="onlineSearch" placeholder="Search users..." oninput="renderOnlineUsers()">
+                        <select id="onlineTypeFilter" onchange="renderOnlineUsers()">
+                            <option value="all">All Members</option>
+                            <option value="user">Users</option>
+                            <option value="provider">Providers</option>
+                        </select>
+                        <select id="onlineCityFilter" onchange="renderOnlineUsers()">
+                            <option value="">All Locations</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="directory-stats">
+                    <span><i class="fas fa-users"></i> <strong id="onlineUserCount">0</strong> matching members</span>
+                </div>
+                <div class="online-users-list" id="onlineUsersList"></div>
+            </div>
+        </div>
+
         <div class="toast-container" id="toastContainer"></div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
-    <script src="script.js?v=11"></script>
+    <script src="script.js?v=12"></script>
     <script>
         let onbSlide = 0;
         const slides = document.querySelectorAll('.onb-slide');

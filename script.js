@@ -391,6 +391,7 @@ function navigateTo(page) {
     if (page === 'inbox') renderInbox();
     if (page === 'message-view') renderMessageThread();
     if (page === 'message-compose') renderMessageCompose();
+    if (page === 'online-users') { populateOnlineCityFilters(); renderOnlineUsers(); }
 }
 
 function populateGigDropdowns() {
@@ -416,6 +417,13 @@ function populateLocationDropdowns() {
         const placeholder = sel.id.includes('Filter') ? '<option value="">All Locations</option>' : '<option value="">Select location</option>';
         sel.insertAdjacentHTML('beforeend', opts.replace(/<option value="">.*?<\/option>/, placeholder));
     });
+}
+
+function populateOnlineCityFilters() {
+    const sel = document.getElementById('onlineCityFilter');
+    if (!sel) return;
+    if (sel.options.length > 1) return;
+    sel.innerHTML = '<option value="">All Locations</option>' + generateSAProvinceOptions().replace('<option value="">All Provinces</option>', '');
 }
 
 // ==========================================
@@ -5029,7 +5037,7 @@ function renderInbox() {
                     <span class="conv-time">${getTimeAgo(conv.updatedAt)}</span>
                 </div>
                 <div class="conv-subject">${escapeHtml(conv.subject)}</div>
-                <div class="conv-preview">${escapeHtml(conv.lastMessage)}</div>
+                <div class="conv-preview">${escapeHtml(msgPreviewText(conv.lastMessage))}</div>
             </div>
             ${unread ? `<span class="conv-unread-badge">${unread}</span>` : ''}
         </div>`;
@@ -5072,14 +5080,18 @@ function renderMessageThread() {
             ${msgs.length === 0 ? '<div class="msg-empty"><i class="fas fa-comments"></i><p>No messages in this conversation yet</p></div>' : msgs.map(m => `
                 <div class="msg-bubble ${m.senderId === 'me' ? 'mine' : (m.senderId === 'admin' ? 'admin' : 'theirs')}">
                     <div class="msg-bubble-head"><span class="msg-sender">${escapeHtml(m.senderName)}</span><span class="msg-time">${new Date(m.createdAt).toLocaleString('en-ZA', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}</span></div>
-                    <div class="msg-body">${escapeHtml(m.body)}</div>
+                    <div class="msg-body">${renderMsgBody(m.body)}</div>
                 </div>
             `).join('')}
         </div>
         <div class="profile-card" style="margin-top:16px">
             <h2><i class="fas fa-reply"></i> Reply</h2>
+            <div class="msg-toolbar">
+                <button type="button" class="gist-btn" onclick="toggleMsgEmojiPicker('messageReplyBody')" title="Emoji"><i class="fas fa-face-smile"></i></button>
+                <button type="button" class="gist-btn" onclick="toggleMsgGifPicker('messageReplyBody')" title="GIF"><i class="fas fa-images"></i></button>
+            </div>
             <div class="form-group" style="margin-top:8px">
-                <textarea id="messageReplyBody" rows="3" placeholder="Type your reply..." style="width:100%;padding:12px 14px;border:1px solid var(--border, #e2e8f0);border-radius:10px;font-family:inherit;font-size:0.9rem;resize:none;outline:none;background:var(--card-bg, white);color:var(--text-primary, #1e293b)"></textarea>
+                <textarea id="messageReplyBody" rows="3" placeholder="Type your reply... Add emojis and GIFs 🎉" style="width:100%;padding:12px 14px;border:1px solid var(--border, #e2e8f0);border-radius:10px;font-family:inherit;font-size:0.9rem;resize:none;outline:none;background:var(--card-bg, white);color:var(--text-primary, #1e293b)"></textarea>
             </div>
             <div class="form-grid" style="grid-template-columns:2fr 1fr;gap:10px">
                 <div class="form-group">
@@ -5247,6 +5259,174 @@ function handleMessageSubmit(e) {
     showToast('Message sent.');
     currentMessageViewId = convId;
     navigateTo('message-view');
+}
+
+// ==========================================
+// MESSAGING - EMOJI & GIF SUPPORT
+// ==========================================
+const MSG_GIF_LIBRARY = [
+    { name: 'Celebrate', url: '//media.giphy.com/media/3oriO0OEd9QIDdllqo/giphy.gif' },
+    { name: 'Thumbs Up', url: '//media.giphy.com/media/l0HlNaQ6gWfllcjDO/giphy.gif' },
+    { name: 'Party', url: '//media.giphy.com/media/1BXa2alBjrCXC/giphy.gif' },
+    { name: 'Wink', url: '//media.giphy.com/media/uLqJEJfU0Q4lO/giphy.gif' },
+    { name: 'Clap', url: '//media.giphy.com/media/8Jc4hBOcvXs9XHBLML/giphy.gif' },
+    { name: 'Happy', url: '//media.giphy.com/media/L95W4wv8nnb9K/giphy.gif' },
+    { name: 'Love', url: '//media.giphy.com/media/ddcut2AMLnczi/giphy.gif' },
+    { name: 'Dance', url: '//media.giphy.com/media/KiT9mxPcM8mDm/giphy.gif' },
+    { name: 'Crying Laugh', url: '//media.giphy.com/media/JIX9t2j0ZTN9S/giphy.gif' },
+    { name: 'Excited', url: '//media.giphy.com/media/l3q2WMhNcnFABP8xO/giphy.gif' },
+    { name: 'Cool', url: '//media.giphy.com/media/qWeVxLQqJvT5e/giphy.gif' },
+    { name: 'Wow', url: '//media.giphy.com/media/5GoVLqeAOo6PK/giphy.gif' },
+    { name: 'Eyes', url: '//media.giphy.com/media/l0MYC2uMljszXBKdK/giphy.gif' },
+    { name: 'Strong', url: '//media.giphy.com/media/3o7abLDj0b3rxrZUxW/giphy.gif' },
+    { name: 'Nope', url: '//media.giphy.com/media/icoXPlRUmSdw8/giphy.gif' },
+    { name: 'Jazz Hands', url: '//media.giphy.com/media/l4pTdc5T7zJkPYGiI/giphy.gif' },
+    { name: 'Hug', url: '//media.giphy.com/media/3ohze1bG0rUkOofAG0/giphy.gif' },
+    { name: 'Heart Eyes', url: '//media.giphy.com/media/26BRr0BUGRQhIGgqM/giphy.gif' },
+    { name: 'Relax', url: '//media.giphy.com/media/3o7qDMavvgDstqkt1e/giphy.gif' },
+    { name: 'Thank You', url: '//media.giphy.com/media/l0ExceAJKZSFRJphO/giphy.gif' },
+    { name: 'OMG', url: '//media.giphy.com/media/xT1XGQ2wZ2cT1O9RwM/giphy.gif' },
+    { name: 'Cute', url: '//media.giphy.com/media/8UEZs2oJmbK3y/giphy.gif' },
+    { name: 'Silly', url: '//media.giphy.com/media/13we8yQO8zvhrW/giphy.gif' }
+];
+
+let currentMsgEmojiTarget = null;
+let currentMsgGifTarget = null;
+
+function renderMsgBody(text) {
+    if (!text) return '';
+    let html = escapeHtml(text);
+    html = html.replace(/\[gif:(.*?)\]/g, (m, url) => `<img class="msg-gif" src="${url}" alt="GIF" loading="lazy">`);
+    html = html.replace(/\n/g, '<br>');
+    return html;
+}
+
+function msgPreviewText(text) {
+    if (!text) return '';
+    return text.replace(/\[gif:.*?\]/g, '[GIF]');
+}
+
+function toggleMsgEmojiPicker(targetId) {
+    currentMsgEmojiTarget = targetId;
+    let picker = document.getElementById('msgEmojiPicker');
+    if (picker) { picker.remove(); return; }
+    picker = document.createElement('div');
+    picker.id = 'msgEmojiPicker';
+    picker.className = 'forum-emoji-picker';
+    picker.innerHTML = `<div class="emoji-grid">${FORUM_EMOJIS.map(e => `<button type="button" class="emoji-btn" onclick="insertMsgEmoji('${e}')">${e}</button>`).join('')}</div>`;
+    const target = document.getElementById(targetId);
+    if (target) {
+        target.parentElement.style.position = 'relative';
+        target.parentElement.appendChild(picker);
+    }
+}
+
+function insertMsgEmoji(emoji) {
+    const ta = document.getElementById(currentMsgEmojiTarget);
+    if (!ta) return;
+    const start = ta.selectionStart;
+    const end = ta.selectionEnd;
+    ta.value = ta.value.substring(0, start) + emoji + ta.value.substring(end);
+    ta.selectionStart = ta.selectionEnd = start + emoji.length;
+    ta.focus();
+    const picker = document.getElementById('msgEmojiPicker');
+    if (picker) picker.remove();
+}
+
+function toggleMsgGifPicker(targetId) {
+    currentMsgGifTarget = targetId;
+    let picker = document.getElementById('msgGifPicker');
+    if (picker) { picker.remove(); return; }
+    picker = document.createElement('div');
+    picker.id = 'msgGifPicker';
+    picker.className = 'msg-gif-picker';
+    picker.innerHTML = `<div class="msg-gif-grid">${MSG_GIF_LIBRARY.map(g => `<button type="button" class="msg-gif-item" title="${g.name}" onclick="insertMsgGif('${g.url}')"><img src="https:${g.url}" alt="${g.name}" loading="lazy"></button>`).join('')}</div>`;
+    const target = document.getElementById(targetId);
+    if (target) {
+        target.parentElement.style.position = 'relative';
+        target.parentElement.appendChild(picker);
+    }
+}
+
+function insertMsgGif(url) {
+    const ta = document.getElementById(currentMsgGifTarget);
+    if (!ta) return;
+    const marker = `[gif:${url.replace(/^\/\//, '//')}]`;
+    const end = ta.selectionEnd;
+    ta.value = ta.value.substring(0, end) + (ta.value.length && end && ta.value.charAt(end - 1) !== ' ' ? ' ' : '') + marker + ' ' + ta.value.substring(end);
+    ta.focus();
+    const picker = document.getElementById('msgGifPicker');
+    if (picker) picker.remove();
+}
+
+// ==========================================
+// ONLINE USERS
+// ==========================================
+let currentOnlineFilter = 'all';
+let currentOnlineViewId = null;
+
+function isMemberOnline(id, createdAt) {
+    if (id === 'current') return true;
+    let hash = 0;
+    const str = id || '';
+    for (let i = 0; i < str.length; i++) { hash = ((hash << 5) - hash) + str.charCodeAt(i); hash |= 0; }
+    const hourBlock = Math.floor(Date.now() / 3600000);
+    return (Math.abs(hash) + hourBlock) % 3 !== 0;
+}
+
+function filterOnlineUsers(filter) {
+    currentOnlineFilter = filter;
+    document.querySelectorAll('#page-online-users .filter-tab').forEach(t => t.classList.remove('active'));
+    if (event && event.target) event.target.closest('.filter-tab')?.classList.add('active');
+    renderOnlineUsers();
+}
+
+function renderOnlineUsers() {
+    const users = Storage.getUsers().map(u => ({ id: u.id, name: u.fullName || 'User', role: 'user', location: u.location || '', photo: u.photo || '', bio: u.bio || '' }));
+    const providers = Storage.getProviders().map(p => ({ id: p.id, name: p.businessName || 'Provider', role: 'provider', location: p.location || p.address || '', photo: p.logo || '', bio: p.description || '' }));
+    let members = [...users, ...providers];
+
+    const search = (document.getElementById('onlineSearch')?.value || '').toLowerCase();
+    const typeF = document.getElementById('onlineTypeFilter')?.value || 'all';
+    const cityF = document.getElementById('onlineCityFilter')?.value || '';
+
+    if (currentOnlineFilter === 'online') members = members.filter(m => isMemberOnline(m.id));
+    else if (currentOnlineFilter === 'offline') members = members.filter(m => !isMemberOnline(m.id));
+    if (typeF !== 'all') members = members.filter(m => m.role === typeF);
+    if (cityF) members = members.filter(m => (m.location || '').toLowerCase().includes(cityF.toLowerCase()));
+    if (search) members = members.filter(m => m.name.toLowerCase().includes(search) || (m.location || '').toLowerCase().includes(search));
+
+    members.sort((a, b) => (isMemberOnline(b.id) - isMemberOnline(a.id)) || a.name.localeCompare(b.name));
+
+    const container = document.getElementById('onlineUsersList');
+    const countEl = document.getElementById('onlineUserCount');
+    if (countEl) countEl.textContent = members.length;
+    if (!container) return;
+
+    if (members.length === 0) {
+        container.innerHTML = '<div class="forum-empty"><i class="fas fa-user-slash"></i><h3>No users found</h3><p>Try adjusting your filters</p></div>';
+        return;
+    }
+
+    container.innerHTML = members.map(m => {
+        const online = isMemberOnline(m.id);
+        const initials = m.name.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase();
+        return `
+        <div class="online-user-card">
+            <div class="online-user-avatar-wrap">
+                ${m.photo ? `<img src="${m.photo}" alt="" class="online-user-avatar">` : `<div class="online-user-avatar initials">${escapeHtml(initials)}</div>`}
+                <span class="online-dot ${online ? 'on' : 'off'}" title="${online ? 'Online' : 'Offline'}"></span>
+            </div>
+            <div class="online-user-info">
+                <div class="online-user-name">${escapeHtml(m.name)} <span class="mini-tag" style="${m.role === 'provider' ? 'background:rgba(16,185,129,.15);color:#10b981' : 'background:rgba(102,126,234,.15);color:#667eea'}">${m.role === 'provider' ? 'Provider' : 'User'}</span></div>
+                <div class="online-user-loc"><i class="fas fa-map-marker-alt"></i> ${escapeHtml(m.location || 'Location not set')}</div>
+                <div class="online-user-bio">${escapeHtml((m.bio || '').substring(0, 90))}</div>
+            </div>
+            <div class="online-user-actions">
+                <button class="btn btn-primary btn-sm" onclick="openComposeTo('${m.id}', '${m.name.replace(/'/g, "\\'")}', '${m.role}')"><i class="fas fa-paper-plane"></i> Message</button>
+            </div>
+        </div>`;
+    }).join('');
 }
 
 // ==========================================
