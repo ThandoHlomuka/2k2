@@ -428,53 +428,6 @@ document.addEventListener('DOMContentLoaded', function() {
     menuToggle.addEventListener('click', () => { sidebar.classList.remove('hidden'); menuToggle.classList.remove('visible'); });
     closeBtn.addEventListener('click', () => { sidebar.classList.add('hidden'); menuToggle.classList.add('visible'); });
 
-    // ==========================================
-    // Sidebar scroll - hard guarantee.
-    // The nav-menu gets an EXACT pixel height
-    // (viewport minus header minus footer) and
-    // becomes the scroll container. A manual
-    // wheel handler scrolls it directly so no
-    // CSS overflow quirk can block scrolling.
-    // ==========================================
-    if (sidebar) {
-        const menu = sidebar.querySelector('.nav-menu');
-        const headerEl = sidebar.querySelector('.sidebar-header');
-        const footerEl = sidebar.querySelector('.sidebar-footer');
-
-        function sizeSidebar() {
-            if (!menu) return;
-            var vh = window.innerHeight;
-            var hh = headerEl ? headerEl.offsetHeight : 0;
-            var fh = footerEl ? footerEl.offsetHeight : 0;
-            var avail = vh - hh - fh;
-            if (avail < 120) avail = 120;
-            menu.style.height = avail + 'px';
-            menu.style.maxHeight = avail + 'px';
-            menu.style.overflowY = 'auto';
-            menu.style.overflowX = 'hidden';
-        }
-
-        function manualWheel(e) {
-            if (!menu) return;
-            var canScroll = menu.scrollHeight > menu.clientHeight + 1;
-            if (!canScroll) return;
-            e.preventDefault();
-            var d = (typeof e.deltaY === 'number') ? e.deltaY : 0;
-            menu.scrollTop += d;
-        }
-        function manualTouchMove(e) {
-            if (!menu) return;
-            var canScroll = menu.scrollHeight > menu.clientHeight + 1;
-            if (!canScroll) return;
-            e.preventDefault();
-        }
-
-        sizeSidebar();
-        window.addEventListener('resize', sizeSidebar);
-        sidebar.addEventListener('wheel', manualWheel, { passive: false });
-        sidebar.addEventListener('touchmove', manualTouchMove, { passive: false });
-    }
-
     document.querySelectorAll('.nav-item[data-page]').forEach(item => {
         item.addEventListener('click', function(e) {
             e.preventDefault();
