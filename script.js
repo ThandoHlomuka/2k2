@@ -419,8 +419,45 @@ document.addEventListener('DOMContentLoaded', function() {
     const menuToggle = document.getElementById('menuToggle');
     const closeBtn = document.getElementById('closeBtn');
 
+    // Start the sidebar hidden on mobile so it slides in via the toggle.
+    if (sidebar && window.innerWidth <= 768) {
+        sidebar.classList.add('hidden');
+        if (menuToggle) menuToggle.classList.add('visible');
+    }
+
     menuToggle.addEventListener('click', () => { sidebar.classList.remove('hidden'); menuToggle.classList.remove('visible'); });
     closeBtn.addEventListener('click', () => { sidebar.classList.add('hidden'); menuToggle.classList.add('visible'); });
+
+    // ==========================================
+    // Sidebar scroll guarantee
+    // Forces the sidebar itself to scroll when a
+    // CSS overflow quirk swallows wheel events.
+    // ==========================================
+    function forceSidebarScroll() {
+        if (!sidebar) return;
+        const menu = sidebar.querySelector('.nav-menu');
+        // Scroll the whole sidebar; the nav-menu flows inside it.
+        // Make the sidebar a guaranteed scrollport with explicit height.
+        sidebar.style.overflow = 'auto';
+        sidebar.style.overflowX = 'hidden';
+        sidebar.style.height = '100vh';
+        sidebar.style.maxHeight = '100vh';
+        if (menu) {
+            menu.style.overflow = 'visible';
+            menu.style.flex = '0 0 auto';
+        }
+    }
+    if (sidebar) {
+        forceSidebarScroll();
+        window.addEventListener('resize', forceSidebarScroll);
+        // Fallback: if a child had overflow that trapped wheel events,
+        // remove scroll from any inner container.
+        const anyInnerScroller = sidebar.querySelectorAll('.nav-menu');
+        anyInnerScroller.forEach(el => {
+            el.style.overflowY = 'visible';
+            el.style.webkitOverflowScrolling = 'auto';
+        });
+    }
 
     document.querySelectorAll('.nav-item[data-page]').forEach(item => {
         item.addEventListener('click', function(e) {
