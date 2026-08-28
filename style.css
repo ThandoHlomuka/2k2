@@ -100,6 +100,7 @@ h1, h2, h3, h4 {
     justify-content: space-between;
     padding: 24px 20px;
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    flex-shrink: 0;
 }
 
 .logo {
@@ -133,7 +134,9 @@ h1, h2, h3, h4 {
 /* Navigation */
 .nav-menu {
     flex: 1;
+    min-height: 0;
     overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
     padding: 16px 12px;
 }
 
@@ -205,6 +208,7 @@ h1, h2, h3, h4 {
 .sidebar-footer {
     padding: 12px;
     border-top: 1px solid rgba(255, 255, 255, 0.1);
+    flex-shrink: 0;
 }
 
 .sidebar-footer .nav-item {
