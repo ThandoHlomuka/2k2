@@ -52,7 +52,7 @@
     <!-- Favicon -->
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💎</text></svg>">
 
-    <link rel="stylesheet" href="style.css?v=14">
+    <link rel="stylesheet" href="style.css?v=15">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700;900&family=Inter:wght@300;400;500;600;700&family=Dancing+Script:wght@700&display=swap" rel="stylesheet">
 
@@ -450,6 +450,24 @@
             <a href="#" class="nav-item" data-page="gigs-browse">
                 <i class="fas fa-briefcase"></i>
                 <span>Browse Gigs</span>
+            </a>
+            <div class="nav-divider"></div>
+            <span class="nav-section-title">Games</span>
+            <a href="#" class="nav-item" data-page="experiences-browse">
+                <i class="fas fa-gamepad"></i>
+                <span>Browse Experiences</span>
+            </a>
+            <a href="#" class="nav-item" data-page="experiences-my">
+                <i class="fas fa-trophy"></i>
+                <span>My Games</span>
+            </a>
+            <a href="#" class="nav-item" data-page="fantasy-requests">
+                <i class="fas fa-scroll"></i>
+                <span>Fantasy Requests</span>
+            </a>
+            <a href="#" class="nav-item" data-page="fantasy-request-create">
+                <i class="fas fa-pen-to-square"></i>
+                <span>Post Fantasy Request</span>
             </a>
             <div class="nav-divider"></div>
             <span class="nav-section-title">Forum</span>
@@ -3018,11 +3036,143 @@
             </div>
         </div>
 
+        <div class="page" id="page-experiences-browse">
+            <div class="container">
+                <div class="dashboard-header">
+                    <div>
+                        <h1>Game Experiences</h1>
+                        <p>Join paid game experiences hosted by providers</p>
+                    </div>
+                    <button class="btn btn-wallet" onclick="navigateTo('user-wallet')"><i class="fas fa-wallet"></i> <span id="expWalletBalance">R0</span></button>
+                </div>
+                <div class="directory-filters">
+                    <div class="filter-tabs" id="experienceFilterTabs">
+                        <button class="filter-tab active" onclick="filterExperiences('all')"><i class="fas fa-gamepad"></i> All</button>
+                        <button class="filter-tab" onclick="filterExperiences('multiplayer')"><i class="fas fa-users"></i> Multiplayer</button>
+                        <button class="filter-tab" onclick="filterExperiences('arcade')"><i class="fas fa-gamepad"></i> Arcade</button>
+                        <button class="filter-tab" onclick="filterExperiences('board-game')"><i class="fas fa-chess-board"></i> Board</button>
+                        <button class="filter-tab" onclick="filterExperiences('card-game')"><i class="fas fa-suitcase"></i> Card</button>
+                        <button class="filter-tab" onclick="filterExperiences('betting')"><i class="fas fa-dice"></i> Betting</button>
+                        <button class="filter-tab" onclick="filterExperiences('trivia')"><i class="fas fa-lightbulb"></i> Trivia</button>
+                        <button class="filter-tab" onclick="filterExperiences('sports')"><i class="fas fa-futbol"></i> Sports</button>
+                        <button class="filter-tab" onclick="filterExperiences('tournament')"><i class="fas fa-trophy"></i> Tournaments</button>
+                    </div>
+                    <div class="filter-bar">
+                        <input type="text" id="experienceSearch" placeholder="Search experiences..." oninput="searchExperiences()">
+                    </div>
+                </div>
+                <div class="directory-stats"><span><i class="fas fa-gamepad"></i> <strong id="experienceCount">0</strong> experiences</span></div>
+                <div class="forum-threads-list" id="experiencesList" style="margin-top:16px"></div>
+            </div>
+        </div>
+
+        <div class="page" id="page-experiences-view">
+            <div class="container">
+                <div class="form-header">
+                    <button class="btn-back" onclick="navigateTo('experiences-browse')"><i class="fas fa-arrow-left"></i> Back to Experiences</button>
+                    <h1>Experience Details</h1>
+                </div>
+                <div id="experienceViewContent"></div>
+            </div>
+        </div>
+
+        <div class="page" id="page-experiences-my">
+            <div class="container">
+                <div class="dashboard-header">
+                    <div>
+                        <h1>My Games</h1>
+                        <p>Your joined experiences and fantasy requests</p>
+                    </div>
+                </div>
+                <div id="myGamesList"></div>
+            </div>
+        </div>
+
+        <div class="page" id="page-fantasy-requests">
+            <div class="container">
+                <div class="dashboard-header">
+                    <div>
+                        <h1>Fantasy Requests</h1>
+                        <p>Post your dream game scenario and let providers bid on it</p>
+                    </div>
+                    <button class="btn btn-primary" onclick="navigateTo('fantasy-request-create')"><i class="fas fa-plus"></i> Post a Request</button>
+                </div>
+                <div class="directory-filters">
+                    <div class="filter-tabs" id="fantasyFilterTabs">
+                        <button class="filter-tab active" onclick="filterFantasyRequests('all')"><i class="fas fa-scroll"></i> All</button>
+                        <button class="filter-tab" onclick="filterFantasyRequests('sports')"><i class="fas fa-futbol"></i> Sports</button>
+                        <button class="filter-tab" onclick="filterFantasyRequests('gaming')"><i class="fas fa-gamepad"></i> Gaming</button>
+                        <button class="filter-tab" onclick="filterFantasyRequests('roleplay')"><i class="fas fa-masks-theater"></i> Roleplay</button>
+                        <button class="filter-tab" onclick="filterFantasyRequests('battle')"><i class="fas fa-crosshairs"></i> Battle</button>
+                        <button class="filter-tab" onclick="filterFantasyRequests('card')"><i class="fas fa-chess-board"></i> Card</button>
+                        <button class="filter-tab" onclick="filterFantasyRequests('virtual')"><i class="fas fa-vr-cardboard"></i> Virtual</button>
+                    </div>
+                    <div class="filter-bar">
+                        <input type="text" id="fantasySearch" placeholder="Search fantasy requests..." oninput="searchFantasyRequests()">
+                    </div>
+                </div>
+                <div class="directory-stats"><span><i class="fas fa-scroll"></i> <strong id="fantasyCount">0</strong> requests</span></div>
+                <div id="fantasyRequestsList" style="margin-top:16px"></div>
+            </div>
+        </div>
+
+        <div class="page" id="page-fantasy-view">
+            <div class="container">
+                <div class="form-header">
+                    <button class="btn-back" onclick="navigateTo('fantasy-requests')"><i class="fas fa-arrow-left"></i> Back</button>
+                    <h1>Fantasy Request</h1>
+                </div>
+                <div id="fantasyViewContent"></div>
+            </div>
+        </div>
+
+        <div class="page" id="page-fantasy-request-create">
+            <div class="container">
+                <div class="dashboard-header">
+                    <div>
+                        <h1>Post a Fantasy Request</h1>
+                        <p>Describe the game experience you want. Providers will respond with offers</p>
+                    </div>
+                </div>
+                <div class="profile-card" style="max-width:800px;margin:0 auto">
+                    <form id="fantasyForm" onsubmit="handleFantasySubmit(event)">
+                        <input type="hidden" id="fantasyRequestId">
+                        <div class="form-group">
+                            <label>Request Title</label>
+                            <input type="text" id="fantasyTitle" placeholder="e.g. MMA fighting simulation, Las Vegas casino night..." required>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Category</label>
+                                <select id="fantasyCategory"></select>
+                            </div>
+                            <div class="form-group">
+                                <label>Budget (R)</label>
+                                <input type="number" id="fantasyPrice" placeholder="How much are you willing to pay?" min="0" step="0.01" required>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Location</label>
+                            <select id="fantasyLocation"></select>
+                        </div>
+                        <div class="form-group">
+                            <label>Describe your fantasy</label>
+                            <textarea id="fantasyDescription" rows="5" placeholder="Describe exactly what you're looking for: rules, players, atmosphere, time frame..." required></textarea>
+                        </div>
+                        <div class="form-group" style="text-align:right">
+                            <button type="submit" class="btn btn-primary"><i class="fas fa-paper-plane"></i> Submit for Approval</button>
+                        </div>
+                        <p style="font-size:0.8rem;color:var(--text-muted)"><i class="fas fa-shield-halved"></i> Fantasy requests require admin approval before they go live for providers.</p>
+                    </form>
+                </div>
+            </div>
+        </div>
+
         <div class="toast-container" id="toastContainer"></div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
-    <script src="script.js?v=14"></script>
+    <script src="script.js?v=15"></script>
     <script>
         let onbSlide = 0;
         const slides = document.querySelectorAll('.onb-slide');

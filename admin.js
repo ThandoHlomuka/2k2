@@ -42,6 +42,8 @@ function navigateTo(page) {
     if (page === 'admin-message-logs') renderAdminMessageLogs();
     if (page === 'admin-saved-items') renderAdminSavedItems();
     if (page === 'admin-downloads') renderAdminDownloads();
+    if (page === 'admin-experiences') renderAdminExperiences();
+    if (page === 'admin-fantasy') renderAdminFantasy();
     if (page === 'admin-logs') renderAdminLogs();
 
     const sidebar = document.getElementById('sidebar');
@@ -133,6 +135,14 @@ function confirmDelete() {
         Storage.setDownloads(Storage.getDownloads().filter(d => d.id !== id));
         showToast('Download record deleted.');
         renderAdminDownloads();
+    } else if (type === 'experience') {
+        Storage.setExperiences(Storage.getExperiences().filter(x => x.id !== id));
+        showToast('Experience deleted.');
+        renderAdminExperiences();
+    } else if (type === 'fantasy-request') {
+        Storage.setFantasyRequests(Storage.getFantasyRequests().filter(r => r.id !== id));
+        showToast('Fantasy request deleted.');
+        renderAdminFantasy();
     }
     closeDeleteModal();
 }
@@ -228,7 +238,9 @@ function renderAdminDashboard() {
         { label: 'Bookings', value: bookings.length, color: '#06b6d4' },
         { label: 'Reviews', value: reviews.length, color: '#f59e0b' },
         { label: 'Saved', value: Storage.getSavedItems().length, color: '#eab308' },
-        { label: 'Downloads', value: Storage.getDownloads().length, color: '#0284c7' }
+        { label: 'Downloads', value: Storage.getDownloads().length, color: '#0284c7' },
+        { label: 'Experiences', value: Storage.getExperiences().length, color: '#7c3aed' },
+        { label: 'Fantasy', value: Storage.getFantasyRequests().length, color: '#db2777' }
     ];
     const maxVal = Math.max(...chartData.map(d => d.value), 1);
 
@@ -1411,4 +1423,159 @@ function adminPreviewDownload(id) {
         body += `<div style="margin:16px 0"><img src="${d.fileData}" alt="${escapeHtml(d.title)}" style="max-width:100%;max-height:240px;border-radius:12px;object-fit:contain"></div>`;
     }
     showAdminView(body);
+}
+
+function renderAdminExperiences() {
+    let experiences = [...Storage.getExperiences()].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    const search = document.getElementById('adminExperiencesSearch')?.value?.toLowerCase() || '';
+    if (search) {
+        experiences = experiences.filter(x =>
+            (x.title || '').toLowerCase().includes(search) ||
+            (x.type || '').toLowerCase().includes(search) ||
+            (x.location || '').toLowerCase().includes(search)
+        );
+    }
+
+    const purchases = Storage.getExperiencePurchases();
+    const tbody = document.getElementById('adminExperiencesBody');
+    if (!tbody) return;
+
+    if (experiences.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7" class="empty-cell">No experiences found</td></tr>';
+        return;
+    }
+
+    tbody.innerHTML = experiences.map(x => {
+        const type = EXPERIENCE_TYPES[x.type] || { label: x.type || '-', icon: 'fa-gamepad', color: '#64748b' };
+        const sales = purchases.filter(p => p.experienceId === x.id);
+        const sold = sales.length;
+        const revenue = sales.reduce((s, p) => s + p.amount, 0);
+        return `
+            <tr>
+                <td><i class="fas ${type.icon}" style="color:${type.color};margin-right:8px"></i>${escapeHtml(x.title)}</td>
+                <td>${escapeHtml(type.label)}</td>
+                <td>${escapeHtml(x.author || x.providerId || '-')}</td>
+                <td>R${x.price || 0}</td>
+                <td>${sold} (R${revenue.toFixed(0)})</td>
+                <td>${fmtDate(x.createdAt)}</td>
+                <td>
+                    <div class="admin-actions">
+                        <button class="btn btn-secondary btn-xs" onclick="adminViewExperience('${x.id}')" title="View"><i class="fas fa-eye"></i></button>
+                        <button class="btn btn-danger btn-xs" onclick="promptAdminDelete('experience', '${x.id}', '${escapeHtml(x.title).replace(/'/g, "\\'")}')" title="Delete"><i class="fas fa-trash"></i></button>
+                    </div>
+                </td>
+            </tr>
+        `;
+    }).join('');
+}
+
+function adminViewExperience(id) {
+    const x = Storage.getExperiences().find(item => item.id === id);
+    if (!x) return;
+    const type = EXPERIENCE_TYPES[x.type] || { label: x.type || '-', icon: 'fa-gamepad', color: '#64748b' };
+    const sales = Storage.getExperiencePurchases().filter(p => p.experienceId === id);
+    let body = `<p class="admin-view-row"><span class="label">Title</span><span class="value">${escapeHtml(x.title)}</span></p>`;
+    body += `<p class="admin-view-row"><span class="label">Type</span><span class="value"><i class="fas ${type.icon}" style="color:${type.color}"></i> ${escapeHtml(type.label)}</span></p>`;
+    body += `<p class="admin-view-row"><span class="label">Provider</span><span class="value">${escapeHtml(x.author || x.providerId || '-')}</span></p>`;
+    body += `<p class="admin-view-row"><span class="label">Price</span><span class="value">R${x.price || 0}</span></p>`;
+    body += `<p class="admin-view-row"><span class="label">Location</span><span class="value">${escapeHtml(x.location || '-')}</span></p>`;
+    body += `<p class="admin-view-row"><span class="label">Sold</span><span class="value">${sales.length} (R${sales.reduce((s, p) => s + p.amount, 0).toFixed(0)})</span></p>`;
+    body += `<p class="admin-view-row"><span class="label">Capacity</span><span class="value">${escapeHtml(x.capacity || '-')}</span></p>`;
+    body += `<p class="admin-view-row"><span class="label">Duration</span><span class="value">${escapeHtml(x.duration || '-')}</span></p>`;
+    if (x.coverPhoto) body += `<div style="margin:12px 0"><img src="${x.coverPhoto}" alt="" style="max-width:100%;max-height:200px;border-radius:12px;object-fit:cover"></div>`;
+    body += `<p class="admin-view-row"><span class="label">Description</span></p><p>${escapeHtml(x.description || '-')}</p>`;
+    if (x.rules) body += `<p class="admin-view-row"><span class="label">Rules</span></p><p>${escapeHtml(x.rules)}</p>`;
+    if (x.includes) body += `<p class="admin-view-row"><span class="label">Includes</span></p><p>${escapeHtml(x.includes)}</p>`;
+    showAdminView(body);
+}
+
+function renderAdminFantasy() {
+    let requests = [...Storage.getFantasyRequests()].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    const search = document.getElementById('adminFantasySearch')?.value?.toLowerCase() || '';
+    if (search) {
+        requests = requests.filter(r =>
+            (r.title || '').toLowerCase().includes(search) ||
+            (r.category || '').toLowerCase().includes(search)
+        );
+    }
+
+    const tbody = document.getElementById('adminFantasyBody');
+    if (!tbody) return;
+
+    if (requests.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7" class="empty-cell">No fantasy requests found</td></tr>';
+        return;
+    }
+
+    tbody.innerHTML = requests.map(r => {
+        const cat = FANTASY_CATEGORIES[r.category] || { label: r.category || '-', icon: 'fa-scroll', color: '#64748b' };
+        const status = FANTASY_STATUSES[r.status] || { label: r.status || '-', color: '#64748b', icon: 'fa-circle' };
+        const responseCount = (r.responses || []).length;
+        return `
+            <tr>
+                <td><i class="fas ${cat.icon}" style="color:${cat.color};margin-right:8px"></i>${escapeHtml(r.title)}</td>
+                <td>${escapeHtml(cat.label)}</td>
+                <td>R${r.price || 0}</td>
+                <td>${responseCount}</td>
+                <td><span class="status-badge" style="background:${status.color}20;color:${status.color}"><i class="fas ${status.icon}"></i> ${escapeHtml(status.label)}</span></td>
+                <td>${fmtDate(r.createdAt)}</td>
+                <td>
+                    <div class="admin-actions">
+                        <button class="btn btn-secondary btn-xs" onclick="adminViewFantasy('${r.id}')" title="View"><i class="fas fa-eye"></i></button>
+                        ${r.status === 'pending' ? `
+                            <button class="btn btn-success btn-xs" onclick="adminApproveFantasy('${r.id}')" title="Approve"><i class="fas fa-check"></i></button>
+                            <button class="btn btn-warning btn-xs" onclick="adminRejectFantasy('${r.id}')" title="Reject"><i class="fas fa-ban"></i></button>
+                        ` : ''}
+                        <button class="btn btn-danger btn-xs" onclick="promptAdminDelete('fantasy-request', '${r.id}', '${escapeHtml(r.title).replace(/'/g, "\\'")}')" title="Delete"><i class="fas fa-trash"></i></button>
+                    </div>
+                </td>
+            </tr>
+        `;
+    }).join('');
+}
+
+function adminViewFantasy(id) {
+    const r = Storage.getFantasyRequests().find(item => item.id === id);
+    if (!r) return;
+    const cat = FANTASY_CATEGORIES[r.category] || { label: r.category || '-', icon: 'fa-scroll', color: '#64748b' };
+    const status = FANTASY_STATUSES[r.status] || { label: r.status || '-', color: '#64748b', icon: 'fa-circle' };
+    let body = `<p class="admin-view-row"><span class="label">Title</span><span class="value">${escapeHtml(r.title)}</span></p>`;
+    body += `<p class="admin-view-row"><span class="label">Category</span><span class="value"><i class="fas ${cat.icon}" style="color:${cat.color}"></i> ${escapeHtml(cat.label)}</span></p>`;
+    body += `<p class="admin-view-row"><span class="label">Budget</span><span class="value">R${r.price || 0}</span></p>`;
+    body += `<p class="admin-view-row"><span class="label">Location</span><span class="value">${escapeHtml(r.location || '-')}</span></p>`;
+    body += `<p class="admin-view-row"><span class="label">Status</span><span class="value"><i class="fas ${status.icon}" style="color:${status.color}"></i> ${escapeHtml(status.label)}</span></p>`;
+    body += `<p class="admin-view-row"><span class="label">Description</span></p><p>${escapeHtml(r.description || '-')}</p>`;
+    if (r.responses && r.responses.length > 0) {
+        body += `<p class="admin-view-row"><span class="label">Provider Responses</span></p>`;
+        r.responses.forEach(res => {
+            body += `<div style="border:1px solid #e2e8f0;border-radius:10px;padding:10px 12px;margin:8px 0">
+                <strong><i class="fas fa-briefcase"></i> ${escapeHtml(res.providerName || 'Provider')}</strong> <span style="color:#10b981">R${res.price || 0}</span>
+                <p style="font-size:0.85rem;color:#475569;margin-top:6px">${escapeHtml(res.message || '')}</p>
+                <span style="font-size:0.75rem;color:#94a3b8">${fmtDate(res.createdAt)}</span>
+            </div>`;
+        });
+    }
+    showAdminView(body);
+}
+
+function adminApproveFantasy(id) {
+    const requests = Storage.getFantasyRequests();
+    const idx = requests.findIndex(r => r.id === id);
+    if (idx === -1) return;
+    requests[idx].status = 'approved';
+    requests[idx].approvedAt = new Date().toISOString();
+    Storage.setFantasyRequests(requests);
+    showToast('Fantasy request approved and published.');
+    renderAdminFantasy();
+}
+
+function adminRejectFantasy(id) {
+    const requests = Storage.getFantasyRequests();
+    const idx = requests.findIndex(r => r.id === id);
+    if (idx === -1) return;
+    requests[idx].status = 'rejected';
+    requests[idx].rejectedAt = new Date().toISOString();
+    Storage.setFantasyRequests(requests);
+    showToast('Fantasy request rejected.');
+    renderAdminFantasy();
 }

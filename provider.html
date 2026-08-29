@@ -25,7 +25,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💰</text></svg>">
-    <link rel="stylesheet" href="style.css?v=14">
+    <link rel="stylesheet" href="style.css?v=15">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <script type="application/ld+json">
     {
@@ -182,6 +182,20 @@
             <a href="#" class="nav-item" data-page="provider-tips">
                 <i class="fas fa-hand-holding-heart"></i>
                 <span>Tips Received</span>
+            </a>
+            <div class="nav-divider"></div>
+            <span class="nav-section-title">Games</span>
+            <a href="#" class="nav-item" data-page="provider-experiences">
+                <i class="fas fa-gamepad"></i>
+                <span>My Experiences</span>
+            </a>
+            <a href="#" class="nav-item" data-page="provider-experience-create">
+                <i class="fas fa-plus-circle"></i>
+                <span>Add Experience</span>
+            </a>
+            <a href="#" class="nav-item" data-page="provider-fantasy-requests">
+                <i class="fas fa-scroll"></i>
+                <span>Fantasy Requests</span>
             </a>
             <div class="nav-divider"></div>
             <span class="nav-section-title">Wallet</span>
@@ -2782,10 +2796,134 @@
             </div>
         </div>
 
+        <div class="page" id="page-provider-experiences">
+            <div class="container">
+                <div class="dashboard-header">
+                    <div>
+                        <h1>My Experiences</h1>
+                        <p>Monetize game experiences for members</p>
+                    </div>
+                    <button class="btn btn-primary provider-btn" onclick="navigateTo('provider-experience-create')"><i class="fas fa-plus"></i> Add Experience</button>
+                </div>
+                <div class="directory-filters">
+                    <div class="filter-bar">
+                        <select id="providerExperienceFilter" onchange="filterProviderExperiences()">
+                            <option value="all">All Types</option>
+                            <option value="multiplayer">Multiplayer</option>
+                            <option value="arcade">Arcade</option>
+                            <option value="board-game">Board Games</option>
+                            <option value="card-game">Card Games</option>
+                            <option value="betting">Betting & Wagers</option>
+                            <option value="trivia">Trivia & Quizzes</option>
+                            <option value="sports">Sports & Physical</option>
+                            <option value="virtual">Virtual / VR</option>
+                            <option value="tournament">Tournaments</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="directory-stats"><span><i class="fas fa-gamepad"></i> <strong id="providerExperienceCount">0</strong> experiences</span></div>
+                <div id="providerExperiencesList" style="margin-top:16px"></div>
+            </div>
+        </div>
+
+        <div class="page" id="page-provider-experience-create">
+            <div class="container">
+                <div class="dashboard-header">
+                    <div>
+                        <h1 id="experienceFormTitle">Add Experience</h1>
+                        <p>Set up a game experience and your entry price</p>
+                    </div>
+                </div>
+                <div class="profile-card" style="max-width:800px;margin:0 auto">
+                    <form id="experienceForm" onsubmit="handleExperienceSubmit(event)">
+                        <input type="hidden" id="experienceId">
+                        <div class="form-group">
+                            <label>Experience Title</label>
+                            <input type="text" id="expTitle" placeholder="e.g. Poker Night Tournament, VR Battleroyal..." required>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Game Type</label>
+                                <select id="expType"></select>
+                            </div>
+                            <div class="form-group">
+                                <label>Price (R)</label>
+                                <input type="number" id="expPrice" placeholder="Entry price" min="0" step="0.01" required>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Location</label>
+                            <select id="expLocation"></select>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Duration</label>
+                                <input type="text" id="expDuration" placeholder="e.g. 2 hours">
+                            </div>
+                            <div class="form-group">
+                                <label>Max Players</label>
+                                <input type="text" id="expCapacity" placeholder="e.g. 12">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Cover Photo</label>
+                            <input type="file" id="expCoverInput" accept="image/*" onchange="handleExperienceCover(this.files)">
+                            <img id="expCoverPreview" class="hidden" alt="Preview" style="max-width:100%;max-height:180px;border-radius:12px;margin-top:10px;object-fit:cover">
+                        </div>
+                        <div class="form-group">
+                            <label>Description</label>
+                            <textarea id="expDescription" rows="4" placeholder="Describe the experience, rules, atmosphere..." required></textarea>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>What's Included</label>
+                                <textarea id="expIncludes" rows="3" placeholder="e.g. drinks, chips, dealer, equipment"></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label>Rules</label>
+                                <textarea id="expRules" rows="3" placeholder="House rules players must follow"></textarea>
+                            </div>
+                        </div>
+                        <div class="form-group" style="text-align:right">
+                            <button type="submit" id="experienceSubmitBtn" class="btn btn-primary"><i class="fas fa-paper-plane"></i> Publish Experience</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="page" id="page-provider-fantasy-requests">
+            <div class="container">
+                <div class="dashboard-header">
+                    <div>
+                        <h1>Fantasy Requests</h1>
+                        <p>Members post dream scenarios - respond with your best offer</p>
+                    </div>
+                </div>
+                <div class="directory-filters">
+                    <div class="filter-bar">
+                        <input type="text" id="providerFantasySearch" placeholder="Search fantasy requests..." oninput="searchProviderFantasyRequests()">
+                    </div>
+                </div>
+                <div class="directory-stats"><span><i class="fas fa-scroll"></i> <strong id="providerFantasyCount">0</strong> requests</span></div>
+                <div id="providerFantasyRequestsList" style="margin-top:16px"></div>
+            </div>
+        </div>
+
+        <div class="page" id="page-fantasy-view">
+            <div class="container">
+                <div class="form-header">
+                    <button class="btn-back" onclick="navigateTo('provider-fantasy-requests')"><i class="fas fa-arrow-left"></i> Back</button>
+                    <h1>Fantasy Request</h1>
+                </div>
+                <div id="fantasyViewContent"></div>
+            </div>
+        </div>
+
         <div class="toast-container" id="toastContainer"></div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
-    <script src="script.js?v=14"></script>
+    <script src="script.js?v=15"></script>
 </body>
 </html>

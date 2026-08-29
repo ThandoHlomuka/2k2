@@ -57,7 +57,13 @@ const Storage = {
     setSavedItems: (data) => localStorage.setItem('k2_saved_items', JSON.stringify(data)),
     getDownloads: () => JSON.parse(localStorage.getItem('k2_downloads') || '[]'),
     setDownloads: (data) => localStorage.setItem('k2_downloads', JSON.stringify(data)),
-    clearAll: () => { ['k2_users','k2_providers','k2_listings','k2_venues','k2_ads','k2_services','k2_bookings','k2_tips','k2_service_types','k2_wallets','k2_transactions','k2_topup_requests','k2_withdrawal_requests','k2_content','k2_events','k2_content_comments','k2_content_reactions','k2_reviews','k2_forum_threads','k2_forum_replies','k2_forum_likes','k2_gigs','k2_conversations','k2_messages','k2_saved_items','k2_downloads'].forEach(k => localStorage.removeItem(k)); }
+    getExperiences: () => JSON.parse(localStorage.getItem('k2_experiences') || '[]'),
+    setExperiences: (data) => localStorage.setItem('k2_experiences', JSON.stringify(data)),
+    getExperiencePurchases: () => JSON.parse(localStorage.getItem('k2_experience_purchases') || '[]'),
+    setExperiencePurchases: (data) => localStorage.setItem('k2_experience_purchases', JSON.stringify(data)),
+    getFantasyRequests: () => JSON.parse(localStorage.getItem('k2_fantasy_requests') || '[]'),
+    setFantasyRequests: (data) => localStorage.setItem('k2_fantasy_requests', JSON.stringify(data)),
+    clearAll: () => { ['k2_users','k2_providers','k2_listings','k2_venues','k2_ads','k2_services','k2_bookings','k2_tips','k2_service_types','k2_wallets','k2_transactions','k2_topup_requests','k2_withdrawal_requests','k2_content','k2_events','k2_content_comments','k2_content_reactions','k2_reviews','k2_forum_threads','k2_forum_replies','k2_forum_likes','k2_gigs','k2_conversations','k2_messages','k2_saved_items','k2_downloads','k2_experiences','k2_experience_purchases','k2_fantasy_requests'].forEach(k => localStorage.removeItem(k)); }
 };
 
 const SA_PROVINCES = {
@@ -161,6 +167,39 @@ const EVENT_TYPES = {
     'fun': { label: 'Fun Nights/Days', icon: 'fa-sun', color: '#f59e0b' },
     'cookout': { label: 'Cookout', icon: 'fa-fire-burner', color: '#ef4444' },
     'other': { label: 'Other', icon: 'fa-ellipsis', color: '#64748b' }
+};
+
+const EXPERIENCE_TYPES = {
+    'multiplayer': { label: 'Multiplayer', icon: 'fa-users', color: '#ec4899' },
+    'arcade': { label: 'Arcade', icon: 'fa-gamepad', color: '#8b5cf6' },
+    'board-game': { label: 'Board Games', icon: 'fa-chess-board', color: '#f59e0b' },
+    'card-game': { label: 'Card Games', icon: 'fa-suitcase', color: '#10b981' },
+    'betting': { label: 'Betting & Wagers', icon: 'fa-dice', color: '#0ea5e9' },
+    'trivia': { label: 'Trivia & Quizzes', icon: 'fa-lightbulb', color: '#ef4444' },
+    'sports': { label: 'Sports & Physical', icon: 'fa-futbol', color: '#3b82f6' },
+    'virtual': { label: 'Virtual / VR', icon: 'fa-vr-cardboard', color: '#a855f7' },
+    'strategy': { label: 'Strategy & Puzzles', icon: 'fa-brain', color: '#06b6d4' },
+    'tournament': { label: 'Tournaments', icon: 'fa-trophy', color: '#f97316' },
+    'fantasy': { label: 'Fantasy Games', icon: 'fa-dragon', color: '#d946ef' },
+    'other': { label: 'Other', icon: 'fa-ellipsis', color: '#64748b' }
+};
+
+const FANTASY_CATEGORIES = {
+    'sports': { label: 'Sports Fantasy', icon: 'fa-futbol', color: '#10b981' },
+    'gaming': { label: 'Gaming Fantasy', icon: 'fa-gamepad', color: '#8b5cf6' },
+    'roleplay': { label: 'Role Playing', icon: 'fa-masks-theater', color: '#ec4899' },
+    'battle': { label: 'Battle Royale', icon: 'fa-crosshairs', color: '#ef4444' },
+    'card': { label: 'Card & Board', icon: 'fa-chess-board', color: '#f59e0b' },
+    'strategy': { label: 'Strategy', icon: 'fa-brain', color: '#06b6d4' },
+    'virtual': { label: 'Virtual Worlds', icon: 'fa-vr-cardboard', color: '#a855f7' },
+    'social': { label: 'Social Games', icon: 'fa-people-group', color: '#3b82f6' },
+    'other': { label: 'Other', icon: 'fa-ellipsis', color: '#64748b' }
+};
+
+const FANTASY_STATUSES = {
+    'pending': { label: 'Pending Approval', color: '#f59e0b', icon: 'fa-clock' },
+    'approved': { label: 'Approved', color: '#10b981', icon: 'fa-check-circle' },
+    'rejected': { label: 'Rejected', color: '#ef4444', icon: 'fa-ban' }
 };
 
 // ==========================================
@@ -396,6 +435,13 @@ function navigateTo(page) {
     if (page === 'online-users') { populateOnlineCityFilters(); renderOnlineUsers(); }
     if (page === 'saved-items') renderSavedItems();
     if (page === 'downloads') renderDownloads();
+    if (page === 'experiences-browse') renderExperiencesBrowse();
+    if (page === 'experiences-my') renderMyGames();
+    if (page === 'fantasy-requests') { populateFantasyDropdowns(); renderFantasyRequests(); }
+    if (page === 'fantasy-request-create') { populateFantasyDropdowns(); resetFantasyForm(); }
+    if (page === 'provider-experiences') renderProviderExperiences();
+    if (page === 'provider-experience-create') { populateExperienceDropdowns(); resetProviderExperienceForm(); }
+    if (page === 'provider-fantasy-requests') { populateFantasyDropdowns(); renderProviderFantasyRequests(); }
     if (['directory','venue-directory','services-directory','content-directory','events-directory','ads-browse','gigs-browse','forum-browse'].includes(page)) renderSaveButtons();
 }
 
@@ -5703,6 +5749,693 @@ function deleteDownload(id) {
     showToast('Download removed.');
     renderDownloads();
 }
+
+// ==========================================
+// GAMES - EXPERIENCES SYSTEM
+// ==========================================
+let currentExperienceFilter = 'all';
+let currentExperienceViewId = null;
+let currentExperienceSearch = '';
+let currentProviderExperienceFilter = 'all';
+let currentProviderExperienceViewId = null;
+
+let currentFantasyFilter = 'all';
+let currentFantasyViewId = null;
+let currentProviderFantasyViewId = null;
+let currentProviderId = null;
+
+function populateExperienceDropdowns() {
+    document.querySelectorAll('#expType').forEach(sel => {
+        if (sel.options.length > 1) return;
+        Object.entries(EXPERIENCE_TYPES).forEach(([key, val]) => {
+            const opt = document.createElement('option');
+            opt.value = key; opt.textContent = val.label;
+            sel.appendChild(opt);
+        });
+    });
+    document.querySelectorAll('#expLocation').forEach(sel => {
+        if (sel.options.length > 1) return;
+        sel.insertAdjacentHTML('beforeend', generateSAProvinceOptions().replace('<option value="">All Provinces</option>', '<option value="">Select location</option>'));
+    });
+}
+
+function resetProviderExperienceForm() {
+    const form = document.getElementById('experienceForm');
+    if (!form) return;
+    form.reset();
+    document.getElementById('experienceId').value = '';
+    document.getElementById('experienceFormTitle').textContent = 'Add Experience';
+    document.getElementById('experienceSubmitBtn').textContent = 'Publish Experience';
+    document.getElementById('expCoverPreview')?.classList.add('hidden');
+    document.getElementById('expCoverPreview')?.removeAttribute('src');
+}
+
+function handleExperienceCover(files) {
+    const file = files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith('image/')) return;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        const img = document.getElementById('expCoverPreview');
+        if (img) { img.src = e.target.result; img.classList.remove('hidden'); }
+    };
+    reader.readAsDataURL(file);
+}
+
+function getCurrentProviderIdentity() {
+    const bizNameInput = document.getElementById('providerBusinessName');
+    const name = bizNameInput ? bizNameInput.value.trim() || 'My Business' : 'My Business';
+    let id = 'current';
+    const p = Storage.getProviders().find(x => (x.businessName || '').toLowerCase() === name.toLowerCase());
+    if (p) id = p.id;
+    return { id, name };
+}
+
+function handleExperienceSubmit(e) {
+    e.preventDefault();
+    const id = document.getElementById('experienceId')?.value || '';
+    const title = document.getElementById('expTitle').value.trim();
+    const type = document.getElementById('expType').value;
+    const location = document.getElementById('expLocation').value;
+    const price = parseFloat(document.getElementById('expPrice').value) || 0;
+    const description = document.getElementById('expDescription').value.trim();
+    const rules = document.getElementById('expRules').value.trim();
+    const includes = document.getElementById('expIncludes').value.trim();
+    const capacity = document.getElementById('expCapacity').value.trim();
+    const duration = document.getElementById('expDuration').value.trim();
+    const coverPhoto = document.getElementById('expCoverPreview')?.src || '';
+
+    if (!title || !type) { showToast('Please fill in the title and game type.', 'error'); return; }
+
+    const experiences = Storage.getExperiences();
+    const { id: providerId, name: author } = getCurrentProviderIdentity();
+
+    if (id) {
+        const idx = experiences.findIndex(x => x.id === id);
+        if (idx !== -1) {
+            experiences[idx] = { ...experiences[idx], title, type, location, price, description, rules, includes, capacity, duration, coverPhoto, updatedAt: new Date().toISOString() };
+        }
+        showToast('Experience updated!', 'success');
+    } else {
+        experiences.push({
+            id: generateId(), title, type, location, price, description, rules, includes, capacity,
+            duration, coverPhoto, author, providerId, authorId: 'current', status: 'active', tags: [],
+            createdAt: new Date().toISOString(), updatedAt: new Date().toISOString()
+        });
+        showToast('Experience published!', 'success');
+    }
+    Storage.setExperiences(experiences);
+    navigateTo('provider-experiences');
+}
+
+function editProviderExperience(id) {
+    const e = Storage.getExperiences().find(x => x.id === id);
+    if (!e) return;
+    navigateTo('provider-experience-create');
+    setTimeout(() => {
+        document.getElementById('experienceId').value = e.id;
+        document.getElementById('experienceFormTitle').textContent = 'Edit Experience';
+        document.getElementById('experienceSubmitBtn').textContent = 'Save Changes';
+        document.getElementById('expTitle').value = e.title || '';
+        document.getElementById('expType').value = e.type || '';
+        document.getElementById('expLocation').value = e.location || '';
+        document.getElementById('expPrice').value = e.price ?? '';
+        document.getElementById('expDescription').value = e.description || '';
+        document.getElementById('expRules').value = e.rules || '';
+        document.getElementById('expIncludes').value = e.includes || '';
+        document.getElementById('expCapacity').value = e.capacity || '';
+        document.getElementById('expDuration').value = e.duration || '';
+        if (e.coverPhoto) {
+            const img = document.getElementById('expCoverPreview');
+            if (img) { img.src = e.coverPhoto; img.classList.remove('hidden'); }
+        }
+        const typeSel = document.getElementById('expType');
+        if (typeSel && typeSel.options.length <= 1) {
+            Object.entries(EXPERIENCE_TYPES).forEach(([key, val]) => {
+                const opt = document.createElement('option');
+                opt.value = key; opt.textContent = val.label;
+                typeSel.appendChild(opt);
+            });
+            typeSel.value = e.type || '';
+        }
+        const locSel = document.getElementById('expLocation');
+        if (locSel && locSel.options.length <= 1) {
+            locSel.insertAdjacentHTML('beforeend', generateSAProvinceOptions().replace('<option value="">All Provinces</option>', '<option value="">Select location</option>'));
+            locSel.value = e.location || '';
+        }
+    }, 0);
+}
+
+function deleteProviderExperience(id) {
+    if (!confirm('Delete this experience?')) return;
+    Storage.setExperiences(Storage.getExperiences().filter(x => x.id !== id));
+    showToast('Experience deleted.');
+    renderProviderExperiences();
+}
+
+function findCurrentProviderId() {
+    const name = document.getElementById('providerBusinessName')?.textContent || '';
+    const p = Storage.getProviders().find(x => (x.businessName || '').toLowerCase() === name.toLowerCase() || x.id === name);
+    return p ? p.id : 'current';
+}
+
+function getExperienceProvider(providerId) {
+    const p = Storage.getProviders().find(x => x.id === providerId);
+    return p ? p.businessName : 'Provider';
+}
+
+function renderProviderExperiences() {
+    const experiences = Storage.getExperiences().filter(x => x.authorId === 'current');
+    let filtered = [...experiences];
+    const typeFilter = document.getElementById('providerExperienceFilter')?.value || 'all';
+    if (typeFilter !== 'all') filtered = filtered.filter(x => x.type === typeFilter);
+
+    const purchases = Storage.getExperiencePurchases();
+    const container = document.getElementById('providerExperiencesList');
+    const countEl = document.getElementById('providerExperienceCount');
+    if (countEl) countEl.textContent = filtered.length;
+    if (!container) return;
+
+    if (filtered.length === 0) {
+        container.innerHTML = '<div class="empty-state"><i class="fas fa-gamepad"></i><h3>No experiences yet</h3><p>Add your first game experience to start earning</p><button class="btn btn-primary provider-btn" onclick="navigateTo(\'provider-experience-create\')">Add Experience</button></div>';
+        return;
+    }
+
+    container.innerHTML = filtered.map(x => {
+        const type = EXPERIENCE_TYPES[x.type] || { label: x.type, icon: 'fa-gamepad', color: '#64748b' };
+        const sold = purchases.filter(p => p.experienceId === x.id).length;
+        const revenue = purchases.filter(p => p.experienceId === x.id).reduce((s, p) => s + p.amount, 0);
+        return `
+        <div class="profile-list-card" style="animation-delay:${0}s">
+            <div class="list-card-avatar" style="background:${type.color}20; color:${type.color}">
+                ${x.coverPhoto ? `<img src="${x.coverPhoto}" alt="">` : `<i class="fas ${type.icon || 'fa-gamepad'}"></i>`}
+            </div>
+            <div class="list-card-info">
+                <h3>${escapeHtml(x.title)}</h3>
+                <p>${type.label || x.type} &middot; ${escapeHtml(x.location || 'Anywhere')} &middot; R${x.price || 0}</p>
+                <div class="list-card-tags">
+                    <span class="mini-tag" style="background:#10b98118;color:#10b981"><i class="fas fa-shopping-cart"></i> ${sold} sold</span>
+                    <span class="mini-tag" style="background:#8b5cf618;color:#8b5cf6"><i class="fas fa-coins"></i> R${revenue.toFixed(0)} earned</span>
+                </div>
+            </div>
+            <div class="list-card-actions">
+                <span class="status-badge status-active">${x.status}</span>
+                <button class="btn-icon" onclick="event.stopPropagation(); editProviderExperience('${x.id}')"><i class="fas fa-edit"></i></button>
+                <button class="btn-icon danger-icon" onclick="event.stopPropagation(); deleteProviderExperience('${x.id}')"><i class="fas fa-trash"></i></button>
+            </div>
+        </div>`;
+    }).join('');
+}
+
+function filterProviderExperiences() {
+    renderProviderExperiences();
+}
+
+function renderExperiencesBrowse() {
+    const experiences = Storage.getExperiences().filter(x => x.status === 'active');
+    const walletBalanceEl = document.getElementById('expWalletBalance');
+    if (walletBalanceEl) walletBalanceEl.textContent = 'R' + getWalletBalance('user', 'general');
+    let filtered = [...experiences];
+
+    if (currentExperienceFilter !== 'all') filtered = filtered.filter(x => x.type === currentExperienceFilter);
+    const searchVal = (document.getElementById('experienceSearch')?.value || '').toLowerCase();
+    if (searchVal) {
+        filtered = filtered.filter(x => x.title.toLowerCase().includes(searchVal) || (EXPERIENCE_TYPES[x.type]?.label || '').toLowerCase().includes(searchVal) || (x.location || '').toLowerCase().includes(searchVal));
+    }
+
+    filtered.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+    const container = document.getElementById('experiencesList');
+    const countEl = document.getElementById('experienceCount');
+    if (countEl) countEl.textContent = filtered.length;
+    if (!container) return;
+
+    if (filtered.length === 0) {
+        container.innerHTML = '<div class="empty-state"><i class="fas fa-gamepad"></i><h3>No experiences found</h3><p>Check back soon for new game experiences</p></div>';
+        return;
+    }
+
+    container.innerHTML = filtered.map(x => {
+        const type = EXPERIENCE_TYPES[x.type] || { label: x.type, icon: 'fa-gamepad', color: '#64748b' };
+        const purchases = Storage.getExperiencePurchases();
+        const soldCount = purchases.filter(p => p.experienceId === x.id).length;
+        return `
+        <div class="forum-thread-card" style="cursor:pointer" onclick="viewExperience('${x.id}')">
+            <div class="forum-thread-card-inner">
+                <div class="forum-thread-content" style="width:100%">
+                    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:6px">
+                        <span class="forum-thread-category-badge" style="background:${type.color}18;color:${type.color}"><i class="fas ${type.icon || 'fa-gamepad'}"></i> ${type.label || x.type}</span>
+                        <span class="forum-pin-badge" style="background:#10b98118;color:#10b981"><i class="fas fa-users"></i> ${soldCount} joined</span>
+                    </div>
+                    <h3 class="forum-thread-title">${escapeHtml(x.title)}</h3>
+                    <p class="forum-thread-excerpt">${escapeHtml((x.description || '').substring(0, 120))}${(x.description || '').length > 120 ? '...' : ''}</p>
+                    <div class="forum-thread-meta">
+                        <span><i class="fas fa-tag"></i> R${x.price || 0}</span>
+                        ${x.location ? `<span><i class="fas fa-map-marker-alt"></i> ${escapeHtml(x.location)}</span>` : ''}
+                        ${x.duration ? `<span><i class="fas fa-clock"></i> ${escapeHtml(x.duration)}</span>` : ''}
+                    </div>
+                </div>
+                <button class="btn btn-primary btn-sm" style="align-self:center" onclick="event.stopPropagation(); viewExperience('${x.id}')"><i class="fas fa-arrow-right"></i> Join</button>
+            </div>
+        </div>`;
+    }).join('');
+}
+
+function filterExperiences(type) {
+    currentExperienceFilter = type;
+    document.querySelectorAll('#page-experiences-browse .filter-tab').forEach(t => t.classList.remove('active'));
+    if (event && event.target) event.target.closest('.filter-tab')?.classList.add('active');
+    renderExperiencesBrowse();
+}
+
+function searchExperiences() { renderExperiencesBrowse(); }
+
+function viewExperience(id) {
+    const item = Storage.getExperiences().find(x => x.id === id);
+    if (!item) return;
+    currentExperienceViewId = id;
+    const type = EXPERIENCE_TYPES[item.type] || { label: item.type, icon: 'fa-gamepad', color: '#64748b' };
+    const provider = getExperienceProvider(item.providerId);
+    const alreadyBought = Storage.getExperiencePurchases().some(p => p.experienceId === id);
+
+    const container = document.getElementById('experienceViewContent');
+    if (!container) return;
+    container.innerHTML = `
+        <div class="profile-card">
+            ${item.coverPhoto ? `<img src="${item.coverPhoto}" alt="" style="width:100%;max-height:240px;object-fit:cover;border-radius:12px;margin-bottom:16px">` : ''}
+            <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:12px">
+                <span class="badge" style="background:${type.color}20;color:${type.color}"><i class="fas ${type.icon}"></i> ${type.label}</span>
+                <span class="badge" style="background:#10b98120;color:#10b981"><i class="fas fa-user"></i> ${escapeHtml(provider)}</span>
+            </div>
+            <h1 style="font-size:1.5rem;margin-bottom:8px">${escapeHtml(item.title)}</h1>
+            <div class="forum-thread-full-meta" style="margin-bottom:16px">
+                <span><i class="fas fa-map-marker-alt"></i> ${escapeHtml(item.location || 'Anywhere')}</span>
+                <span><i class="fas fa-tag"></i> R${item.price || 0}</span>
+                ${item.duration ? `<span><i class="fas fa-clock"></i> ${escapeHtml(item.duration)}</span>` : ''}
+                ${item.capacity ? `<span><i class="fas fa-users"></i> ${escapeHtml(item.capacity)}</span>` : ''}
+            </div>
+        </div>
+        ${item.description ? `<div class="profile-card"><h2><i class="fas fa-file-alt"></i> About this experience</h2><p class="view-bio" style="white-space:pre-wrap;line-height:1.7">${escapeHtml(item.description)}</p></div>` : ''}
+        ${item.includes ? `<div class="profile-card"><h2><i class="fas fa-gift"></i> What's included</h2><p class="view-bio" style="white-space:pre-wrap;line-height:1.7">${escapeHtml(item.includes)}</p></div>` : ''}
+        ${item.rules ? `<div class="profile-card"><h2><i class="fas fa-scroll"></i> Rules</h2><p class="view-bio" style="white-space:pre-wrap;line-height:1.7">${escapeHtml(item.rules)}</p></div>` : ''}
+        <div style="display:flex;gap:12px;margin-top:16px">
+            <button class="btn btn-primary" style="flex:2" onclick="${alreadyBought ? `openExperienceAccess('${item.id}')` : `purchaseExperience('${item.id}')`}"><i class="fas ${alreadyBought ? 'fa-unlock' : 'fa-cart-shopping'}"></i> ${alreadyBought ? 'Open Experience' : 'Join Now - R' + (item.price || 0)}</button>
+            <button class="btn btn-secondary" style="flex:1" onclick="navigateTo('experiences-browse')"><i class="fas fa-arrow-left"></i> Back</button>
+        </div>
+        ${alreadyBought ? `<p style="margin-top:10px;font-size:0.8rem;color:#10b981"><i class="fas fa-check-circle"></i> You've already joined this experience. You now have lifetime access.</p>` : ''}
+    `;
+    navigateTo('experiences-view');
+}
+
+function openExperienceAccess(id) {
+    navigateTo('experiences-my');
+}
+
+function purchaseExperience(id) {
+    const item = Storage.getExperiences().find(x => x.id === id);
+    if (!item) return;
+    if (Storage.getExperiencePurchases().some(p => p.experienceId === id)) {
+        showToast('You already own this experience.');
+        return;
+    }
+    const price = item.price || 0;
+    if (price <= 0) {
+        Storage.setExperiencePurchases([...Storage.getExperiencePurchases(), {
+            id: generateId(), experienceId: id, buyerId: 'current', amount: 0, title: item.title, providerId: item.providerId,
+            status: 'active', createdAt: new Date().toISOString()
+        }]);
+        showToast('Free experience joined!');
+        viewExperience(id);
+        return;
+    }
+    const balance = getWalletBalance('user', 'general');
+    if (balance < price) {
+        showToast('Insufficient wallet balance. Please top up your wallet first.', 'error');
+        navigateTo('user-wallet');
+        return;
+    }
+    adjustWallet('user', 'general', -price, 'experience-purchase', `Joined experience: ${item.title}`, { experienceId: id });
+    adjustWallet('provider', item.providerId, price, 'experience-sale', `Experience sold: ${item.title}`, { experienceId: id });
+    Storage.setExperiencePurchases([...Storage.getExperiencePurchases(), {
+        id: generateId(), experienceId: id, buyerId: 'current', amount: price, title: item.title, providerId: item.providerId,
+        status: 'active', createdAt: new Date().toISOString()
+    }]);
+    showToast('Experience joined! Payment complete.');
+    viewExperience(id);
+}
+
+function renderMyGames() {
+    const purchases = Storage.getExperiencePurchases().filter(p => p.buyerId === 'current');
+    const myRequests = Storage.getFantasyRequests().filter(r => r.authorId === 'current');
+
+    const container = document.getElementById('myGamesList');
+    if (!container) return;
+
+    let html = '';
+    if (purchases.length > 0) {
+        html += `<h3 style="margin:0 0 12px;color:var(--text-primary)"><i class="fas fa-gamepad"></i> My Experiences</h3>`;
+        html += purchases.map(p => {
+            const exp = Storage.getExperiences().find(x => x.id === p.experienceId);
+            const type = EXPERIENCE_TYPES[exp?.type] || { label: 'Experience', icon: 'fa-gamepad', color: '#64748b' };
+            return `
+            <div class="forum-thread-card" style="cursor:pointer" onclick="viewExperience('${p.experienceId}')">
+                <div class="forum-thread-card-inner">
+                    <div class="forum-thread-content" style="width:100%">
+                        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:6px">
+                            <span class="forum-thread-category-badge" style="background:${type.color}18;color:${type.color}"><i class="fas ${type.icon}"></i> ${type.label}</span>
+                            <span class="forum-pin-badge" style="background:#10b98120;color:#10b981"><i class="fas fa-check-circle"></i> Joined</span>
+                        </div>
+                        <h3 class="forum-thread-title">${escapeHtml(p.title || 'Experience')}</h3>
+                        <div class="forum-thread-meta">
+                            <span><i class="fas fa-tag"></i> R${p.amount || 0}</span>
+                            <span><i class="fas fa-clock"></i> ${getTimeAgo(p.createdAt)}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>`;
+        }).join('');
+        html += `<div style="height:24px"></div>`;
+    } else {
+        html += `<div class="forum-empty"><i class="fas fa-gamepad"></i><h3>No experiences yet</h3><p>Browse game experiences and join one to start playing</p><button class="btn btn-primary provider-btn" onclick="navigateTo('experiences-browse')">Browse Experiences</button></div>`;
+    }
+
+    if (myRequests.length > 0) {
+        html += `<h3 style="margin:0 0 12px;color:var(--text-primary)"><i class="fas fa-scroll"></i> My Fantasy Requests</h3>`;
+        html += myRequests.map(r => {
+            const cat = FANTASY_CATEGORIES[r.category] || { label: r.category, icon: 'fa-scroll', color: '#64748b' };
+            const status = FANTASY_STATUSES[r.status] || { label: r.status, color: '#64748b', icon: 'fa-circle' };
+            const responseCount = (r.responses || []).length;
+            return `
+            <div class="forum-thread-card" style="cursor:pointer" onclick="viewFantasyRequest('${r.id}')">
+                <div class="forum-thread-card-inner">
+                    <div class="forum-thread-content" style="width:100%">
+                        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:6px">
+                            <span class="forum-thread-category-badge" style="background:${cat.color}18;color:${cat.color}"><i class="fas ${cat.icon}"></i> ${cat.label}</span>
+                            <span class="status-badge" style="background:${status.color}20;color:${status.color}"><i class="fas ${status.icon}"></i> ${status.label}</span>
+                        </div>
+                        <h3 class="forum-thread-title">${escapeHtml(r.title)}</h3>
+                        <div class="forum-thread-meta">
+                            <span><i class="fas fa-tag"></i> R${r.price || 0} budget</span>
+                            <span><i class="fas fa-comments"></i> ${responseCount} provider ${responseCount === 1 ? 'response' : 'responses'}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>`;
+        }).join('');
+    } else {
+        html += `<div class="forum-empty"><i class="fas fa-scroll"></i><h3>No fantasy requests yet</h3><p>Post a fantasy request and let providers respond with offers</p><button class="btn btn-primary provider-btn" onclick="navigateTo('fantasy-request-create')">Post a Request</button></div>`;
+    }
+
+    container.innerHTML = html;
+}
+
+// ==========================================
+// GAMES - FANTASY REQUESTS SYSTEM
+// ==========================================
+function populateFantasyDropdowns() {
+    document.querySelectorAll('#fantasyCategory, #fantasyCategoryFilter').forEach(sel => {
+        if (sel.options.length > 1) return;
+        const placeholder = sel.id.includes('Filter') ? '<option value="all">All Categories</option>' : '<option value="">Select category</option>';
+        let opts = placeholder;
+        Object.entries(FANTASY_CATEGORIES).forEach(([key, val]) => {
+            opts += `<option value="${key}">${val.label}</option>`;
+        });
+        sel.innerHTML = opts;
+    });
+    document.querySelectorAll('#fantasyLocation').forEach(sel => {
+        if (sel.options.length > 1) return;
+        sel.insertAdjacentHTML('beforeend', generateSAProvinceOptions().replace('<option value="">All Provinces</option>', '<option value="">Select location</option>'));
+    });
+}
+
+function resetFantasyForm() {
+    const form = document.getElementById('fantasyForm');
+    if (!form) return;
+    form.reset();
+    document.getElementById('fantasyRequestId').value = '';
+}
+
+function handleFantasySubmit(e) {
+    e.preventDefault();
+    const id = document.getElementById('fantasyRequestId')?.value || '';
+    const title = document.getElementById('fantasyTitle').value.trim();
+    const category = document.getElementById('fantasyCategory').value;
+    const price = parseFloat(document.getElementById('fantasyPrice').value) || 0;
+    const location = document.getElementById('fantasyLocation').value;
+    const description = document.getElementById('fantasyDescription').value.trim();
+
+    if (!title || !category) { showToast('Please fill in the title and category.', 'error'); return; }
+
+    const requests = Storage.getFantasyRequests();
+    if (id) {
+        const idx = requests.findIndex(x => x.id === id);
+        if (idx !== -1) {
+            requests[idx] = { ...requests[idx], title, category, price, location, description, status: 'pending', updatedAt: new Date().toISOString() };
+        }
+        showToast('Request updated! Resubmitted for admin approval.', 'success');
+    } else {
+        requests.push({
+            id: generateId(), title, category, price, location, description, authorId: 'current',
+            author: 'Me', status: 'pending', responses: [], createdAt: new Date().toISOString()
+        });
+        showToast('Request submitted! Pending admin approval.', 'success');
+    }
+    Storage.setFantasyRequests(requests);
+    navigateTo('fantasy-requests');
+}
+
+function renderFantasyRequests() {
+    const requests = Storage.getFantasyRequests().filter(r => r.status === 'approved' || r.authorId === 'current');
+    let filtered = [...requests];
+
+    if (currentFantasyFilter !== 'all') filtered = filtered.filter(r => r.category === currentFantasyFilter);
+    const searchVal = (document.getElementById('fantasySearch')?.value || '').toLowerCase();
+    if (searchVal) filtered = filtered.filter(r => r.title.toLowerCase().includes(searchVal) || (r.description || '').toLowerCase().includes(searchVal));
+
+    filtered.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+    const container = document.getElementById('fantasyRequestsList');
+    const countEl = document.getElementById('fantasyCount');
+    if (countEl) countEl.textContent = filtered.length;
+    if (!container) return;
+
+    if (filtered.length === 0) {
+        container.innerHTML = '<div class="empty-state"><i class="fas fa-scroll"></i><h3>No fantasy requests yet</h3><p>Be the first to post a fantasy request</p><button class="btn btn-primary provider-btn" onclick="navigateTo(\'fantasy-request-create\')">Post a Request</button></div>';
+        return;
+    }
+
+    container.innerHTML = filtered.map(r => {
+        const cat = FANTASY_CATEGORIES[r.category] || { label: r.category, icon: 'fa-scroll', color: '#64748b' };
+        const status = FANTASY_STATUSES[r.status] || { label: r.status, color: '#64748b', icon: 'fa-circle' };
+        const responseCount = (r.responses || []).length;
+        const isMine = r.authorId === 'current';
+        return `
+        <div class="forum-thread-card" style="cursor:pointer" onclick="viewFantasyRequest('${r.id}')">
+            <div class="forum-thread-card-inner">
+                <div class="forum-thread-content" style="width:100%">
+                    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:6px">
+                        <span class="forum-thread-category-badge" style="background:${cat.color}18;color:${cat.color}"><i class="fas ${cat.icon}"></i> ${cat.label}</span>
+                        ${isMine ? `<span class="status-badge" style="background:${status.color}20;color:${status.color}"><i class="fas ${status.icon}"></i> ${status.label}</span>` : '<span class="status-badge" style="background:#10b98120;color:#10b981"><i class="fas fa-check-circle"></i> Approved</span>'}
+                    </div>
+                    <h3 class="forum-thread-title">${escapeHtml(r.title)}</h3>
+                    <p class="forum-thread-excerpt">${escapeHtml((r.description || '').substring(0, 120))}${(r.description || '').length > 120 ? '...' : ''}</p>
+                    <div class="forum-thread-meta">
+                        <span><i class="fas fa-tag"></i> R${r.price || 0} budget</span>
+                        ${r.location ? `<span><i class="fas fa-map-marker-alt"></i> ${escapeHtml(r.location)}</span>` : ''}
+                        <span><i class="fas fa-comments"></i> ${responseCount} responses</span>
+                        <span><i class="fas fa-clock"></i> ${getTimeAgo(r.createdAt)}</span>
+                    </div>
+                </div>
+            </div>
+        </div>`;
+    }).join('');
+}
+
+function filterFantasyRequests(category) {
+    currentFantasyFilter = category;
+    document.querySelectorAll('#page-fantasy-requests .filter-tab').forEach(t => t.classList.remove('active'));
+    if (event && event.target) event.target.closest('.filter-tab')?.classList.add('active');
+    renderFantasyRequests();
+}
+
+function searchFantasyRequests() { renderFantasyRequests(); }
+
+function viewFantasyRequest(id) {
+    const r = Storage.getFantasyRequests().find(x => x.id === id);
+    if (!r) return;
+    currentFantasyViewId = id;
+    currentProviderFantasyViewId = id;
+    const cat = FANTASY_CATEGORIES[r.category] || { label: r.category, icon: 'fa-scroll', color: '#64748b' };
+    const status = FANTASY_STATUSES[r.status] || { label: r.status, color: '#64748b', icon: 'fa-circle' };
+    const canRespond = r.status === 'approved' && currentProviderFantasyViewId === id && document.getElementById('page-provider-fantasy-requests');
+
+    const container = document.getElementById('fantasyViewContent');
+    if (!container) return;
+
+    const responsesHtml = (r.responses || []).map(res => `
+        <div class="fantasy-response-card">
+            <div class="fantasy-response-avatar"><i class="fas fa-briefcase"></i></div>
+            <div class="fantasy-response-body">
+                <div class="fantasy-response-name">${escapeHtml(res.providerName || 'Provider')} <span class="mini-tag" style="background:#0ea5e918;color:#0ea5e9"><i class="fas fa-tag"></i> R${res.price || 0}</span></div>
+                <p>${escapeHtml(res.message || '')}</p>
+                <div class="fantasy-response-time">${getTimeAgo(res.createdAt)}</div>
+            </div>
+            ${r.authorId === 'current' ? `<button class="btn btn-secondary btn-sm" onclick="openResponseCompose('${res.providerId}', '${escapeHtml((res.providerName || 'Provider').replace(/'/g, "\\'"))}')" style="flex-shrink:0"><i class="fas fa-paper-plane"></i> Reply</button>` : ''}
+        </div>
+    `).join('') || '<p class="empty-text">No responses yet. Providers will respond with their best offer.</p>';
+
+    const formHtml = document.getElementById('page-provider-fantasy-requests')
+        ? `
+        <div class="profile-card">
+            <h2><i class="fas fa-reply"></i> Respond as Provider</h2>
+            <form onsubmit="submitFantasyResponse(event)">
+                <input type="hidden" id="fantasyResponseId" value="${r.id}">
+                <input type="hidden" id="fantasyResponseProviderId" value="${getCurrentProviderIdentity().id}">
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+                    <input type="text" id="fantasyResponseProvider" placeholder="Provider business name" value="${escapeHtml(getCurrentProviderIdentity().name)}" required>
+                    <input type="number" id="fantasyResponsePrice" placeholder="Your offer (R)" min="0" step="0.01" required>
+                </div>
+                <textarea id="fantasyResponseMessage" placeholder="Describe your offer..." rows="3" style="margin-top:12px" required></textarea>
+                <div style="text-align:right;margin-top:12px"><button class="btn btn-primary" type="submit"><i class="fas fa-paper-plane"></i> Submit Offer</button></div>
+            </form>
+        </div>`
+        : '';
+
+    container.innerHTML = `
+        <div class="profile-card">
+            <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:12px">
+                <span class="badge" style="background:${cat.color}20;color:${cat.color}"><i class="fas ${cat.icon}"></i> ${cat.label}</span>
+                <span class="status-badge" style="background:${status.color}20;color:${status.color}"><i class="fas ${status.icon}"></i> ${status.label}</span>
+            </div>
+            <h1 style="font-size:1.5rem;margin-bottom:8px">${escapeHtml(r.title)}</h1>
+            <div class="forum-thread-full-meta" style="margin-bottom:16px">
+                <span><i class="fas fa-tag"></i> R${r.price || 0} budget</span>
+                ${r.location ? `<span><i class="fas fa-map-marker-alt"></i> ${escapeHtml(r.location)}</span>` : ''}
+                <span><i class="fas fa-user"></i> General Member</span>
+                <span><i class="fas fa-clock"></i> ${getTimeAgo(r.createdAt)}</span>
+            </div>
+            <p class="view-bio" style="white-space:pre-wrap;line-height:1.7">${escapeHtml(r.description || '')}</p>
+            ${r.authorId === 'current' && r.status !== 'approved' ? `
+                <div style="display:flex;gap:8px;margin-top:16px">
+                    <button class="btn btn-secondary btn-sm" onclick="editFantasyRequest('${r.id}')"><i class="fas fa-edit"></i> Edit & Resubmit</button>
+                    <button class="btn btn-danger btn-sm" onclick="deleteFantasyRequest('${r.id}')"><i class="fas fa-trash"></i> Delete</button>
+                </div>` : ''}
+        </div>
+        <div class="profile-card">
+            <h2><i class="fas fa-comments"></i> Provider Offers (${(r.responses || []).length})</h2>
+            ${responsesHtml}
+        </div>
+        ${formHtml}
+        <div style="display:flex;gap:12px;margin-top:16px">
+            <button class="btn btn-secondary" onclick="navigateTo('${document.getElementById('page-provider-fantasy-requests') ? 'provider-fantasy-requests' : 'fantasy-requests'}')"><i class="fas fa-arrow-left"></i> Back</button>
+        </div>
+    `;
+    navigateTo('fantasy-view');
+}
+
+function editFantasyRequest(id) {
+    const r = Storage.getFantasyRequests().find(x => x.id === id);
+    if (!r) return;
+    navigateTo('fantasy-request-create');
+    setTimeout(() => {
+        document.getElementById('fantasyRequestId').value = r.id;
+        document.getElementById('fantasyTitle').value = r.title || '';
+        document.getElementById('fantasyCategory').value = r.category || '';
+        document.getElementById('fantasyPrice').value = r.price ?? '';
+        document.getElementById('fantasyLocation').value = r.location || '';
+        document.getElementById('fantasyDescription').value = r.description || '';
+        const catSel = document.getElementById('fantasyCategory');
+        if (catSel && catSel.options.length <= 1) {
+            let opts = '<option value="">Select category</option>';
+            Object.entries(FANTASY_CATEGORIES).forEach(([key, val]) => { opts += `<option value="${key}">${val.label}</option>`; });
+            catSel.innerHTML = opts;
+            catSel.value = r.category || '';
+        }
+        const locSel = document.getElementById('fantasyLocation');
+        if (locSel && locSel.options.length <= 1) {
+            locSel.insertAdjacentHTML('beforeend', generateSAProvinceOptions().replace('<option value="">All Provinces</option>', '<option value="">Select location</option>'));
+            locSel.value = r.location || '';
+        }
+    }, 0);
+}
+
+function deleteFantasyRequest(id, confirmText) {
+    if (!confirm(confirmText || 'Delete this fantasy request?')) return;
+    Storage.setFantasyRequests(Storage.getFantasyRequests().filter(x => x.id !== id));
+    showToast('Fantasy request deleted.');
+    if (document.getElementById('page-fantasy-requests')) renderFantasyRequests();
+    if (document.getElementById('page-provider-fantasy-requests')) renderProviderFantasyRequests();
+}
+
+function openResponseCompose(providerId, providerName) {
+    openComposeTo(providerId, providerName, 'provider');
+}
+
+function submitFantasyResponse(e) {
+    e.preventDefault();
+    const id = document.getElementById('fantasyResponseId').value;
+    const provider = document.getElementById('fantasyResponseProvider').value.trim();
+    const providerId = document.getElementById('fantasyResponseProviderId')?.value || 'current';
+    const price = parseFloat(document.getElementById('fantasyResponsePrice').value) || 0;
+    const message = document.getElementById('fantasyResponseMessage').value.trim();
+    if (!provider || !message) { showToast('Please fill in your offer.', 'error'); return; }
+
+    const requests = Storage.getFantasyRequests();
+    const idx = requests.findIndex(x => x.id === id);
+    if (idx === -1) return;
+    if (!requests[idx].responses) requests[idx].responses = [];
+    requests[idx].responses.push({
+        id: generateId(), providerId, providerName: provider,
+        price, message, createdAt: new Date().toISOString()
+    });
+    Storage.setFantasyRequests(requests);
+    showToast('Offer submitted!');
+    viewFantasyRequest(id);
+}
+
+function renderProviderFantasyRequests() {
+    const requests = Storage.getFantasyRequests().filter(r => r.status === 'approved' || r.authorId === 'current');
+    let filtered = [...requests];
+    const searchVal = (document.getElementById('providerFantasySearch')?.value || '').toLowerCase();
+    if (searchVal) filtered = filtered.filter(r => r.title.toLowerCase().includes(searchVal));
+
+    filtered.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+    const container = document.getElementById('providerFantasyRequestsList');
+    const countEl = document.getElementById('providerFantasyCount');
+    if (countEl) countEl.textContent = filtered.length;
+    if (!container) return;
+
+    if (filtered.length === 0) {
+        container.innerHTML = '<div class="empty-state"><i class="fas fa-scroll"></i><h3>No fantasy requests yet</h3><p>Approved fantasy requests from members will appear here</p></div>';
+        return;
+    }
+
+    container.innerHTML = filtered.map(r => {
+        const cat = FANTASY_CATEGORIES[r.category] || { label: r.category, icon: 'fa-scroll', color: '#64748b' };
+        const responseCount = (r.responses || []).length;
+        const me = getCurrentProviderIdentity();
+        const alreadyResponded = (r.responses || []).some(res => res.providerId === me.id);
+        return `
+        <div class="profile-list-card" style="cursor:pointer" onclick="viewFantasyRequest('${r.id}')">
+            <div class="list-card-avatar" style="background:${cat.color}20; color:${cat.color}"><i class="fas ${cat.icon}"></i></div>
+            <div class="list-card-info">
+                <h3>${escapeHtml(r.title)}</h3>
+                <p>${cat.label} &middot; R${r.price || 0} budget ${r.location ? '&middot; ' + escapeHtml(r.location) : ''}</p>
+                <div class="list-card-tags">
+                    <span class="mini-tag" style="background:#10b98118;color:#10b981"><i class="fas fa-check-circle"></i> Approved</span>
+                    <span class="mini-tag" style="background:#3b82f618;color:#3b82f6"><i class="fas fa-comments"></i> ${responseCount} responses</span>
+                </div>
+            </div>
+            <div class="list-card-actions">
+                <button class="btn btn-primary btn-sm" onclick="event.stopPropagation(); viewFantasyRequest('${r.id}')"><i class="fas ${alreadyResponded ? 'fa-check' : 'fa-paper-plane'}"></i> ${alreadyResponded ? 'View My Offer' : 'Respond'}</button>
+                <button class="btn-icon" onclick="event.stopPropagation(); viewFantasyRequest('${r.id}')"><i class="fas fa-eye"></i></button>
+            </div>
+        </div>`;
+    }).join('');
+}
+
+function searchProviderFantasyRequests() { renderProviderFantasyRequests(); }
 
 // ==========================================
 // ONBOARDING - First Visit Check

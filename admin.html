@@ -12,7 +12,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🛡️</text></svg>">
-    <link rel="stylesheet" href="style.css?v=14">
+    <link rel="stylesheet" href="style.css?v=15">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <style>
         .admin-badge { background: linear-gradient(135deg, #ef4444, #dc2626); color: white; padding: 3px 10px; border-radius: 6px; font-size: 0.65rem; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; margin-left: 8px; }
@@ -118,6 +118,14 @@
             <a href="#" class="nav-item" data-page="admin-wallets">
                 <i class="fas fa-wallet"></i>
                 <span>Wallets</span>
+            </a>
+            <a href="#" class="nav-item" data-page="admin-experiences">
+                <i class="fas fa-gamepad"></i>
+                <span>Experiences</span>
+            </a>
+            <a href="#" class="nav-item" data-page="admin-fantasy">
+                <i class="fas fa-scroll"></i>
+                <span>Fantasy Requests</span>
             </a>
             <div class="nav-divider"></div>
             <span class="nav-section-title">System</span>
@@ -837,6 +845,76 @@
             </div>
         </div>
 
+        <!-- Experiences Management -->
+        <div class="page" id="page-admin-experiences">
+            <div class="container">
+                <div class="dashboard-header">
+                    <div>
+                        <h1><i class="fas fa-gamepad"></i> Experiences Management</h1>
+                        <p>View, moderate and delete all game experiences</p>
+                    </div>
+                </div>
+
+                <div class="directory-filters">
+                    <div class="filter-bar">
+                        <input type="text" id="adminExperiencesSearch" placeholder="Search experiences..." oninput="renderAdminExperiences()">
+                    </div>
+                </div>
+
+                <div class="admin-table-wrap" style="margin-top:16px">
+                    <table class="admin-table" id="adminExperiencesTable">
+                        <thead>
+                            <tr>
+                                <th>Title</th>
+                                <th>Type</th>
+                                <th>Provider</th>
+                                <th>Price</th>
+                                <th>Sales</th>
+                                <th>Created</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="adminExperiencesBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Fantasy Requests Management -->
+        <div class="page" id="page-admin-fantasy">
+            <div class="container">
+                <div class="dashboard-header">
+                    <div>
+                        <h1><i class="fas fa-scroll"></i> Fantasy Requests Management</h1>
+                        <p>Approve, reject and moderate fantasy requests before they go live</p>
+                    </div>
+                </div>
+
+                <div class="directory-filters">
+                    <div class="filter-bar">
+                        <input type="text" id="adminFantasySearch" placeholder="Search fantasy requests..." oninput="renderAdminFantasy()">
+                    </div>
+                </div>
+
+                <div class="admin-table-wrap" style="margin-top:16px">
+                    <table class="admin-table" id="adminFantasyTable">
+                        <thead>
+                            <tr>
+                                <th>Title</th>
+                                <th>Category</th>
+                                <th>Budget</th>
+                                <th>Responses</th>
+                                <th>Status</th>
+                                <th>Created</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="adminFantasyBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
         <!-- Delete Modal -->
         <div class="modal-overlay" id="deleteModal">
             <div class="modal">
@@ -853,7 +931,7 @@
         <div class="toast-container" id="toastContainer"></div>
     </div>
 
-    <script src="script.js?v=14"></script>
+    <script src="script.js?v=15"></script>
     <script src="admin.js"></script>
 </body>
 </html>
