@@ -147,6 +147,14 @@ function confirmDelete() {
         Storage.setDownloads(Storage.getDownloads().filter(d => d.id !== id));
         showToast('Download record deleted.');
         renderAdminDownloads();
+    } else if (type === 'content') {
+        Storage.setContent(Storage.getContent().filter(c => c.id !== id));
+        showToast('Content deleted.');
+        renderAdminContent();
+    } else if (type === 'event') {
+        Storage.setEvents(Storage.getEvents().filter(e => e.id !== id));
+        showToast('Event deleted.');
+        renderAdminEvents();
     } else if (type === 'experience') {
         Storage.setExperiences(Storage.getExperiences().filter(x => x.id !== id));
         showToast('Experience deleted.');
@@ -312,11 +320,24 @@ function renderAdminUsers() {
             <td>
                 <div class="admin-actions">
                     <button class="btn btn-secondary btn-xs" onclick="adminViewUser('${u.id}')"><i class="fas fa-eye"></i></button>
-                    <button class="btn btn-secondary btn-xs" onclick="adminDeleteUser('${u.id}','${(u.name||'').replace(/'/g,"\\'")}')"><i class="fas fa-trash" style="color:#ef4444"></i></button>
+                    <button class="btn btn-secondary btn-xs" onclick="adminToggleUserStatus('${u.id}')" title="${u.status === 'suspended' ? 'Reinstate' : 'Suspend'}">
+                        <i class="fas fa-${u.status === 'suspended' ? 'check-circle' : 'ban'}" style="color:${u.status === 'suspended' ? '#10b981' : '#f59e0b'}"></i>
+                    </button>
+                    <button class="btn btn-danger btn-xs" onclick="adminDeleteUser('${u.id}','${(u.name||'').replace(/'/g,"\\'")}')"><i class="fas fa-trash" style="color:#ef4444"></i></button>
                 </div>
             </td>
         </tr>
     `).join('');
+}
+
+function adminToggleUserStatus(id) {
+    const users = Storage.getUsers();
+    const u = users.find(x => x.id === id);
+    if (!u) return;
+    u.status = u.status === 'suspended' ? 'active' : 'suspended';
+    Storage.setUsers(users);
+    showToast(u.status === 'suspended' ? 'User suspended.' : 'User reinstated.');
+    renderAdminUsers();
 }
 
 function adminViewUser(id) {
@@ -360,11 +381,24 @@ function renderAdminProviders() {
             <td>
                 <div class="admin-actions">
                     <button class="btn btn-secondary btn-xs" onclick="adminViewProvider('${p.id}')"><i class="fas fa-eye"></i></button>
-                    <button class="btn btn-secondary btn-xs" onclick="adminDeleteProvider('${p.id}','${(p.name||'').replace(/'/g,"\\'")}')"><i class="fas fa-trash" style="color:#ef4444"></i></button>
+                    <button class="btn btn-secondary btn-xs" onclick="adminToggleProviderStatus('${p.id}')" title="${p.status === 'suspended' ? 'Reinstate' : 'Suspend'}">
+                        <i class="fas fa-${p.status === 'suspended' ? 'check-circle' : 'ban'}" style="color:${p.status === 'suspended' ? '#10b981' : '#f59e0b'}"></i>
+                    </button>
+                    <button class="btn btn-danger btn-xs" onclick="adminDeleteProvider('${p.id}','${(p.name||'').replace(/'/g,"\\'")}')"><i class="fas fa-trash" style="color:#ef4444"></i></button>
                 </div>
             </td>
         </tr>
     `).join('');
+}
+
+function adminToggleProviderStatus(id) {
+    const providers = Storage.getProviders();
+    const p = providers.find(x => x.id === id);
+    if (!p) return;
+    p.status = p.status === 'suspended' ? 'active' : 'suspended';
+    Storage.setProviders(providers);
+    showToast(p.status === 'suspended' ? 'Provider suspended.' : 'Provider reinstated.');
+    renderAdminProviders();
 }
 
 function adminViewProvider(id) {
@@ -411,11 +445,24 @@ function renderAdminListings() {
             <td>
                 <div class="admin-actions">
                     <button class="btn btn-secondary btn-xs" onclick="adminViewListing('${l.id}')"><i class="fas fa-eye"></i></button>
-                    <button class="btn btn-secondary btn-xs" onclick="adminDeleteListing('${l.id}','${(l.name||'').replace(/'/g,"\\'")}')"><i class="fas fa-trash" style="color:#ef4444"></i></button>
+                    <button class="btn btn-secondary btn-xs" onclick="adminToggleListingStatus('${l.id}')" title="${l.status === 'suspended' ? 'Reinstate' : 'Suspend'}">
+                        <i class="fas fa-${l.status === 'suspended' ? 'check-circle' : 'ban'}" style="color:${l.status === 'suspended' ? '#10b981' : '#f59e0b'}"></i>
+                    </button>
+                    <button class="btn btn-danger btn-xs" onclick="adminDeleteListing('${l.id}','${(l.name||'').replace(/'/g,"\\'")}')"><i class="fas fa-trash" style="color:#ef4444"></i></button>
                 </div>
             </td>
         </tr>`;
     }).join('');
+}
+
+function adminToggleListingStatus(id) {
+    const listings = Storage.getListings();
+    const l = listings.find(x => x.id === id);
+    if (!l) return;
+    l.status = l.status === 'suspended' ? 'active' : 'suspended';
+    Storage.setListings(listings);
+    showToast(l.status === 'suspended' ? 'Listing suspended.' : 'Listing reinstated.');
+    renderAdminListings();
 }
 
 function adminViewListing(id) {
@@ -467,11 +514,24 @@ function renderAdminVenues() {
             <td>
                 <div class="admin-actions">
                     <button class="btn btn-secondary btn-xs" onclick="adminViewVenue('${v.id}')"><i class="fas fa-eye"></i></button>
-                    <button class="btn btn-secondary btn-xs" onclick="adminDeleteVenue('${v.id}','${(v.name||'').replace(/'/g,"\\'")}')"><i class="fas fa-trash" style="color:#ef4444"></i></button>
+                    <button class="btn btn-secondary btn-xs" onclick="adminToggleVenueStatus('${v.id}')" title="${v.status === 'suspended' ? 'Reinstate' : 'Suspend'}">
+                        <i class="fas fa-${v.status === 'suspended' ? 'check-circle' : 'ban'}" style="color:${v.status === 'suspended' ? '#10b981' : '#f59e0b'}"></i>
+                    </button>
+                    <button class="btn btn-danger btn-xs" onclick="adminDeleteVenue('${v.id}','${(v.name||'').replace(/'/g,"\\'")}')"><i class="fas fa-trash" style="color:#ef4444"></i></button>
                 </div>
             </td>
         </tr>`;
     }).join('');
+}
+
+function adminToggleVenueStatus(id) {
+    const venues = Storage.getVenues();
+    const v = venues.find(x => x.id === id);
+    if (!v) return;
+    v.status = v.status === 'suspended' ? 'active' : 'suspended';
+    Storage.setVenues(venues);
+    showToast(v.status === 'suspended' ? 'Venue suspended.' : 'Venue reinstated.');
+    renderAdminVenues();
 }
 
 function adminViewVenue(id) {
@@ -524,11 +584,24 @@ function renderAdminAds() {
             <td>
                 <div class="admin-actions">
                     <button class="btn btn-secondary btn-xs" onclick="adminViewAd('${a.id}')"><i class="fas fa-eye"></i></button>
-                    <button class="btn btn-secondary btn-xs" onclick="adminDeleteAd('${a.id}','${(a.title||'').replace(/'/g,"\\'")}')"><i class="fas fa-trash" style="color:#ef4444"></i></button>
+                    <button class="btn btn-secondary btn-xs" onclick="adminToggleAdStatus('${a.id}')" title="${a.status === 'suspended' ? 'Reinstate' : 'Suspend'}">
+                        <i class="fas fa-${a.status === 'suspended' ? 'check-circle' : 'ban'}" style="color:${a.status === 'suspended' ? '#10b981' : '#f59e0b'}"></i>
+                    </button>
+                    <button class="btn btn-danger btn-xs" onclick="adminDeleteAd('${a.id}','${(a.title||'').replace(/'/g,"\\'")}')"><i class="fas fa-trash" style="color:#ef4444"></i></button>
                 </div>
             </td>
         </tr>`;
     }).join('');
+}
+
+function adminToggleAdStatus(id) {
+    const ads = Storage.getAds();
+    const a = ads.find(x => x.id === id);
+    if (!a) return;
+    a.status = a.status === 'suspended' ? 'active' : 'suspended';
+    Storage.setAds(ads);
+    showToast(a.status === 'suspended' ? 'Ad suspended.' : 'Ad reinstated.');
+    renderAdminAds();
 }
 
 function adminViewAd(id) {
@@ -633,17 +706,106 @@ function renderAdminContent() {
             <td><span class="badge" style="background:${type.color}22;color:${type.color};border:1px solid ${type.color}44"><i class="fas ${type.icon}"></i> ${type.label}</span></td>
             <td>${author ? author.name : 'Unknown'}</td>
             <td>${fmtDate(c.createdAt)}</td>
-            <td><button class="btn btn-danger btn-xs" onclick="adminDeleteContent('${c.id}')"><i class="fas fa-trash"></i></button></td>
+            <td>
+                <div class="admin-actions">
+                    <button class="btn btn-secondary btn-xs" onclick="adminViewContent('${c.id}')"><i class="fas fa-eye"></i></button>
+                    <button class="btn btn-secondary btn-xs" onclick="adminEditContent('${c.id}')"><i class="fas fa-pen"></i></button>
+                    <button class="btn btn-secondary btn-xs" onclick="adminToggleContentStatus('${c.id}')" title="${c.status === 'suspended' ? 'Reinstate' : 'Suspend'}">
+                        <i class="fas fa-${c.status === 'suspended' ? 'check-circle' : 'ban'}" style="color:${c.status === 'suspended' ? '#10b981' : '#f59e0b'}"></i>
+                    </button>
+                    <button class="btn btn-danger btn-xs" onclick="adminDeleteContent('${c.id}','${(c.title||'').replace(/'/g,"\\'")}')"><i class="fas fa-trash"></i></button>
+                </div>
+            </td>
         </tr>`;
     }).join('');
 }
 
-function adminDeleteContent(id) {
-    if (!confirm('Delete this content item?')) return;
-    const content = Storage.getContent().filter(c => c.id !== id);
+function adminViewContent(id) {
+    const c = Storage.getContent().find(x => x.id === id);
+    if (!c) return;
+    const type = CONTENT_TYPES[c.type] || { label: c.type, icon: 'fa-file', color: '#64748b' };
+    const providers = [...Storage.getListings(), ...Storage.getServices()];
+    const author = providers.find(p => p.id === c.providerId);
+    let mediaHtml = '';
+    if (c.type === 'audio' || c.type === 'podcast') {
+        mediaHtml = c.fileUrl ? `<div style="margin:14px 0"><audio controls style="width:100%" src="${escapeHtml(c.fileUrl)}"></audio></div>` : '';
+    } else if (c.img || (c.gallery && c.gallery.length)) {
+        mediaHtml = `<div style="margin:14px 0;display:grid;gap:8px">${((c.type === 'book') ? [] : (c.gallery && c.gallery.length ? c.gallery : c.img ? [c.img] : [])).slice(0, 6).map(u => `<img src="${escapeHtml(u)}" style="max-width:100%;max-height:200px;border-radius:10px;object-fit:cover" onerror="this.style.display='none'">`).join('')}</div>`;
+    }
+    showAdminView(`
+        <h2><i class="fas ${type.icon}" style="color:${type.color};margin-right:8px"></i> Content Details</h2>
+        ${mediaHtml}
+        <div style="padding:14px;background:#f8fafc;border-radius:10px;margin:10px 0;font-size:0.9rem;line-height:1.6">${renderAdminRichText(c.description || c.title)}</div>
+        <div style="margin-top:16px">
+            <div class="admin-view-row"><span class="label">Title</span><span class="value">${escapeHtml(c.title || '-')}</span></div>
+            <div class="admin-view-row"><span class="label">Type</span><span class="value">${type.label}</span></div>
+            <div class="admin-view-row"><span class="label">Creator</span><span class="value">${author ? escapeHtml(author.name) : 'Unknown'}</span></div>
+            <div class="admin-view-row"><span class="label">Status</span><span class="value">${c.status || 'active'}</span></div>
+            <div class="admin-view-row"><span class="label">Price</span><span class="value">${c.price ? 'R' + c.price : 'Free'}</span></div>
+            <div class="admin-view-row"><span class="label">Downloads</span><span class="value">${(c.downloads || 0)}</span></div>
+            <div class="admin-view-row"><span class="label">Created</span><span class="value">${fmtDate(c.createdAt)}</span></div>
+        </div>
+        <div style="display:flex;gap:8px;margin-top:16px">
+            <button class="btn btn-primary btn-sm" onclick="adminEditContent('${c.id}')"><i class="fas fa-pen"></i> Edit</button>
+            <button class="btn btn-secondary btn-sm" onclick="adminToggleContentStatus('${c.id}')"><i class="fas fa-${c.status === 'suspended' ? 'check-circle' : 'ban'}"></i> ${c.status === 'suspended' ? 'Reinstate' : 'Suspend'}</button>
+        </div>
+    `);
+}
+
+function adminEditContent(id) {
+    const c = Storage.getContent().find(x => x.id === id);
+    if (!c) return;
+    const typeOptions = Object.keys(CONTENT_TYPES).map(key =>
+        `<option value="${key}" ${key === c.type ? 'selected' : ''}>${CONTENT_TYPES[key].label}</option>`
+    ).join('');
+    showAdminView(`
+        <h2><i class="fas fa-pen" style="color:var(--primary, #667eea);margin-right:8px"></i> Edit Content</h2>
+        <label class="admin-form-label">Title</label>
+        <input class="admin-form-input" id="adminEditContentTitle" value="${escapeHtml(c.title || '')}" />
+        <label class="admin-form-label" style="margin-top:12px">Type</label>
+        <select class="admin-form-input" id="adminEditContentType">${typeOptions}</select>
+        <label class="admin-form-label" style="margin-top:12px">Description</label>
+        <textarea class="admin-form-input" id="adminEditContentDesc" style="min-height:120px">${escapeHtml(c.description || '')}</textarea>
+        <label class="admin-form-label" style="margin-top:12px">Price (R, blank = free)</label>
+        <input class="admin-form-input" id="adminEditContentPrice" value="${c.price || ''}" type="number" min="0" step="0.01" />
+        <div style="display:flex;gap:8px;margin-top:18px">
+            <button class="btn btn-primary btn-sm" onclick="adminSaveContentEdit('${c.id}')"><i class="fas fa-save"></i> Save Changes</button>
+            <button class="btn btn-secondary btn-sm" onclick="adminViewContent('${c.id}')"><i class="fas fa-arrow-left"></i> Cancel</button>
+        </div>
+    `);
+}
+
+function adminSaveContentEdit(id) {
+    const content = Storage.getContent();
+    const c = content.find(x => x.id === id);
+    if (!c) return;
+    const title = document.getElementById('adminEditContentTitle').value.trim();
+    const type = document.getElementById('adminEditContentType').value;
+    const description = document.getElementById('adminEditContentDesc').value.trim();
+    const price = document.getElementById('adminEditContentPrice').value;
+    if (!title) { showToast('Title is required.', 'error'); return; }
+    c.title = title;
+    c.type = type;
+    c.description = description;
+    c.price = price !== '' && !isNaN(parseFloat(price)) ? parseFloat(price) : null;
+    c.editedByAdmin = true;
     Storage.setContent(content);
-    showToast('Content deleted.', 'info');
+    showToast('Content updated.');
+    adminViewContent(id);
+}
+
+function adminToggleContentStatus(id) {
+    const content = Storage.getContent();
+    const c = content.find(x => x.id === id);
+    if (!c) return;
+    c.status = c.status === 'suspended' ? 'active' : 'suspended';
+    Storage.setContent(content);
+    showToast(c.status === 'suspended' ? 'Content suspended.' : 'Content reinstated.');
     renderAdminContent();
+}
+
+function adminDeleteContent(id, title) {
+    promptAdminDelete('content', id, title || 'content item');
 }
 
 // ==========================================
@@ -675,17 +837,104 @@ function renderAdminEvents() {
             <td>${eventDate}</td>
             <td>${ev.venue || '-'}</td>
             <td>${host ? host.name : 'Unknown'}</td>
-            <td><button class="btn btn-danger btn-xs" onclick="adminDeleteEvent('${ev.id}')"><i class="fas fa-trash"></i></button></td>
+            <td>
+                <div class="admin-actions">
+                    <button class="btn btn-secondary btn-xs" onclick="adminViewEvent('${ev.id}')"><i class="fas fa-eye"></i></button>
+                    <button class="btn btn-secondary btn-xs" onclick="adminEditEvent('${ev.id}')"><i class="fas fa-pen"></i></button>
+                    <button class="btn btn-secondary btn-xs" onclick="adminToggleEventStatus('${ev.id}')" title="${ev.status === 'suspended' ? 'Reinstate' : 'Cancel/Remove'}">
+                        <i class="fas fa-${ev.status === 'suspended' ? 'check-circle' : 'calendar-xmark'}" style="color:${ev.status === 'suspended' ? '#10b981' : '#f59e0b'}"></i>
+                    </button>
+                    <button class="btn btn-danger btn-xs" onclick="adminDeleteEvent('${ev.id}','${(ev.name||'').replace(/'/g,"\\'")}')"><i class="fas fa-trash"></i></button>
+                </div>
+            </td>
         </tr>`;
     }).join('');
 }
 
-function adminDeleteEvent(id) {
-    if (!confirm('Delete this event?')) return;
-    const events = Storage.getEvents().filter(e => e.id !== id);
+function adminViewEvent(id) {
+    const ev = Storage.getEvents().find(x => x.id === id);
+    if (!ev) return;
+    const type = EVENT_TYPES[ev.type] || { label: ev.type, icon: 'fa-calendar', color: '#64748b' };
+    const providers = [...Storage.getListings(), ...Storage.getServices()];
+    const host = providers.find(p => p.id === ev.providerId);
+    showAdminView(`
+        <h2><i class="fas ${type.icon}" style="color:${type.color};margin-right:8px"></i> Event Details</h2>
+        <div style="margin-top:12px">
+            <div class="admin-view-row"><span class="label">Name</span><span class="value">${escapeHtml(ev.name || '-')}</span></div>
+            <div class="admin-view-row"><span class="label">Type</span><span class="value">${type.label}</span></div>
+            <div class="admin-view-row"><span class="label">Date</span><span class="value">${ev.eventDate ? new Date(ev.eventDate).toLocaleString('en-ZA', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '-'}</span></div>
+            <div class="admin-view-row"><span class="label">Venue</span><span class="value">${escapeHtml(ev.venue || '-')}</span></div>
+            <div class="admin-view-row"><span class="label">Entry</span><span class="value">${ev.entryFee ? 'R' + ev.entryFee : 'Free'}</span></div>
+            <div class="admin-view-row"><span class="label">Host</span><span class="value">${host ? escapeHtml(host.name) : 'Unknown'}</span></div>
+            <div class="admin-view-row"><span class="label">Status</span><span class="value">${ev.status || 'active'}</span></div>
+            <div class="admin-view-row"><span class="label">Created</span><span class="value">${fmtDate(ev.createdAt)}</span></div>
+        </div>
+        <div style="padding:14px;background:#f8fafc;border-radius:10px;margin-top:12px;font-size:0.9rem;line-height:1.6">${renderAdminRichText(ev.description || 'No description')}</div>
+        <div style="display:flex;gap:8px;margin-top:16px">
+            <button class="btn btn-primary btn-sm" onclick="adminEditEvent('${ev.id}')"><i class="fas fa-pen"></i> Edit</button>
+            <button class="btn btn-secondary btn-sm" onclick="adminToggleEventStatus('${ev.id}')"><i class="fas fa-${ev.status === 'suspended' ? 'check-circle' : 'ban'}"></i> ${ev.status === 'suspended' ? 'Reinstate' : 'Cancel Event'}</button>
+        </div>
+    `);
+}
+
+function adminEditEvent(id) {
+    const ev = Storage.getEvents().find(x => x.id === id);
+    if (!ev) return;
+    const typeOptions = Object.keys(EVENT_TYPES).map(key =>
+        `<option value="${key}" ${key === ev.type ? 'selected' : ''}>${EVENT_TYPES[key].label}</option>`
+    ).join('');
+    showAdminView(`
+        <h2><i class="fas fa-pen" style="color:var(--primary, #667eea);margin-right:8px"></i> Edit Event</h2>
+        <label class="admin-form-label">Name</label>
+        <input class="admin-form-input" id="adminEditEventName" value="${escapeHtml(ev.name || '')}" />
+        <label class="admin-form-label" style="margin-top:12px">Type</label>
+        <select class="admin-form-input" id="adminEditEventType">${typeOptions}</select>
+        <label class="admin-form-label" style="margin-top:12px">Event Date</label>
+        <input class="admin-form-input" id="adminEditEventDate" type="datetime-local" value="${ev.eventDate ? ev.eventDate.substring(0, 16) : ''}" />
+        <label class="admin-form-label" style="margin-top:12px">Venue / Location</label>
+        <input class="admin-form-input" id="adminEditEventVenue" value="${escapeHtml(ev.venue || '')}" />
+        <label class="admin-form-label" style="margin-top:12px">Entry Fee (R, blank = free)</label>
+        <input class="admin-form-input" id="adminEditEventFee" value="${ev.entryFee || ''}" type="number" min="0" step="0.01" />
+        <label class="admin-form-label" style="margin-top:12px">Description</label>
+        <textarea class="admin-form-input" id="adminEditEventDesc" style="min-height:90px">${escapeHtml(ev.description || '')}</textarea>
+        <div style="display:flex;gap:8px;margin-top:18px">
+            <button class="btn btn-primary btn-sm" onclick="adminSaveEventEdit('${ev.id}')"><i class="fas fa-save"></i> Save Changes</button>
+            <button class="btn btn-secondary btn-sm" onclick="adminViewEvent('${ev.id}')"><i class="fas fa-arrow-left"></i> Cancel</button>
+        </div>
+    `);
+}
+
+function adminSaveEventEdit(id) {
+    const events = Storage.getEvents();
+    const ev = events.find(x => x.id === id);
+    if (!ev) return;
+    const name = document.getElementById('adminEditEventName').value.trim();
+    if (!name) { showToast('Event name is required.', 'error'); return; }
+    ev.name = name;
+    ev.type = document.getElementById('adminEditEventType').value;
+    ev.eventDate = document.getElementById('adminEditEventDate').value || ev.eventDate;
+    ev.venue = document.getElementById('adminEditEventVenue').value.trim();
+    const fee = document.getElementById('adminEditEventFee').value;
+    ev.entryFee = fee !== '' && !isNaN(parseFloat(fee)) ? parseFloat(fee) : null;
+    ev.description = document.getElementById('adminEditEventDesc').value.trim();
+    ev.editedByAdmin = true;
     Storage.setEvents(events);
-    showToast('Event deleted.', 'info');
+    showToast('Event updated.');
+    adminViewEvent(id);
+}
+
+function adminToggleEventStatus(id) {
+    const events = Storage.getEvents();
+    const ev = events.find(x => x.id === id);
+    if (!ev) return;
+    ev.status = ev.status === 'suspended' ? 'active' : 'suspended';
+    Storage.setEvents(events);
+    showToast(ev.status === 'suspended' ? 'Event removed from public view.' : 'Event reinstated.');
     renderAdminEvents();
+}
+
+function adminDeleteEvent(id, name) {
+    promptAdminDelete('event', id, name || 'event');
 }
 
 // ==========================================
@@ -878,6 +1127,8 @@ function renderAdminWallets() {
                         <td>
                             <div class="admin-actions">
                                 <button class="btn btn-secondary btn-xs" onclick="adminViewWalletTxns('${w.ownerType}','${w.ownerId}')"><i class="fas fa-history"></i></button>
+                                <button class="btn btn-secondary btn-xs" onclick="adminWalletDelta('${w.ownerType}','${w.ownerId}',1)" title="Credit"><i class="fas fa-plus" style="color:#10b981"></i></button>
+                                <button class="btn btn-secondary btn-xs" onclick="adminWalletDelta('${w.ownerType}','${w.ownerId}',-1)" title="Deduct"><i class="fas fa-minus" style="color:#ef4444"></i></button>
                                 <button class="btn btn-secondary btn-xs" onclick="adminEditWalletBalance('${w.ownerType}','${w.ownerId}',${w.balance})"><i class="fas fa-edit"></i></button>
                             </div>
                         </td>
@@ -894,8 +1145,8 @@ function renderAdminWallets() {
             tTbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:#94a3b8;padding:40px">No transactions yet</td></tr>';
         } else {
             tTbody.innerHTML = txns.slice(0, 50).map(t => {
-                const typeColors = { 'top-up': '#10b981', 'tip-sent': '#f59e0b', 'tip-received': '#10b981', 'booking-fee': '#ef4444', 'booking-confirmed': '#3b82f6', 'withdrawal': '#8b5cf6', 'admin-adjust': '#64748b', 'refund': '#06b6d4' };
-                const typeLabels = { 'top-up': 'Top Up', 'tip-sent': 'Tip Sent', 'tip-received': 'Tip Received', 'booking-fee': 'Booking Fee', 'booking-confirmed': 'Booking Confirmed', 'withdrawal': 'Withdrawal', 'admin-adjust': 'Admin Adjust', 'refund': 'Refund' };
+                const typeColors = { 'top-up': '#10b981', 'tip-sent': '#f59e0b', 'tip-received': '#10b981', 'booking-fee': '#ef4444', 'booking-confirmed': '#3b82f6', 'withdrawal': '#8b5cf6', 'admin-adjust': '#64748b', 'refund': '#06b6d4', 'credit': '#10b981', 'deduct': '#ef4444', 'experience-sale': '#7c3aed', 'experience-purchase': '#db2777' };
+                const typeLabels = { 'top-up': 'Top Up', 'tip-sent': 'Tip Sent', 'tip-received': 'Tip Received', 'booking-fee': 'Booking Fee', 'booking-confirmed': 'Booking Confirmed', 'withdrawal': 'Withdrawal', 'admin-adjust': 'Admin Adjust', 'refund': 'Refund', 'credit': 'Credit', 'deduct': 'Deduct', 'experience-sale': 'Experience Sale', 'experience-purchase': 'Experience Purchase' };
                 const color = typeColors[t.type] || '#64748b';
                 const label = typeLabels[t.type] || t.type;
                 return `
@@ -946,6 +1197,24 @@ function adminEditWalletBalance(ownerType, ownerId, currentBalance) {
         showToast('Balance updated.');
         renderAdminWallets();
     }
+}
+
+function adminWalletDelta(ownerType, ownerId, direction) {
+    const wallet = getOrCreateWallet(ownerType, ownerId);
+    const action = direction > 0 ? 'CREDIT' : 'DEDUCT';
+    const amt = prompt(`${action} R amount for ${ownerType}:${ownerId}\nCurrent: R${wallet.balance.toFixed(2)}`, '100');
+    if (amt === null) return;
+    const amount = parseFloat(amt);
+    if (isNaN(amount) || amount <= 0) { showToast('Please enter a valid amount.', 'error'); return; }
+    const delta = direction > 0 ? amount : -amount;
+    const reason = prompt(`${action} reason (optional):`, action === 'CREDIT' ? 'Admin credit' : 'Admin deduction');
+    if (reason === null) return;
+    if (delta < 0 && wallet.balance + delta < 0) {
+        if (!confirm(`Deducting R${amount.toFixed(2)} would take this wallet negative (balance R${wallet.balance.toFixed(2)}). Continue?`)) return;
+    }
+    adjustWallet(ownerType, ownerId, delta, direction > 0 ? 'credit' : 'deduct', (reason || '').trim() ? reason : (action === 'CREDIT' ? 'Admin credit' : 'Admin deduction'));
+    showToast(`R${amount.toFixed(2)} ${action.toLowerCase()}ed.`);
+    renderAdminWallets();
 }
 
 function adminAdjustBalanceAction() {
