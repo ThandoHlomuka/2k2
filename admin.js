@@ -72,6 +72,7 @@ function showToast(msg, type = 'success') {
 // DELETE MODAL
 // ==========================================
 let adminDeleteTarget = { type: null, id: null };
+let adminDeleteAfterConfirm = null;
 
 function promptAdminDelete(type, id, name) {
     adminDeleteTarget = { type, id };
@@ -82,6 +83,7 @@ function promptAdminDelete(type, id, name) {
 function closeDeleteModal() {
     document.getElementById('deleteModal').classList.remove('active');
     adminDeleteTarget = { type: null, id: null };
+    adminDeleteAfterConfirm = null;
 }
 
 function confirmDelete() {
@@ -112,11 +114,21 @@ function confirmDelete() {
         Storage.setForumThreads(Storage.getForumThreads().filter(t => t.id !== id));
         Storage.setForumReplies(Storage.getForumReplies().filter(r => r.threadId !== id));
         showToast('Thread deleted.');
-        renderAdminForum();
+        if (adminDeleteAfterConfirm) {
+            adminDeleteAfterConfirm();
+            adminDeleteAfterConfirm = null;
+        } else {
+            renderAdminForum();
+        }
     } else if (type === 'forum-reply') {
         Storage.setForumReplies(Storage.getForumReplies().filter(r => r.id !== id));
         showToast('Reply deleted.');
-        renderAdminForum();
+        if (adminDeleteAfterConfirm) {
+            adminDeleteAfterConfirm();
+            adminDeleteAfterConfirm = null;
+        } else {
+            renderAdminForum();
+        }
     } else if (type === 'conversation') {
         Storage.setConversations(Storage.getConversations().filter(c => c.id !== id));
         Storage.setMessages(Storage.getMessages().filter(m => m.conversationId !== id));
@@ -1039,19 +1051,61 @@ let currentAdminForumFilter = 'all';
 
 function filterAdminForum(filter) {
     currentAdminForumFilter = filter;
+    forumGroupFilter = '';
     document.querySelectorAll('#page-admin-forum .filter-tab').forEach(t => t.classList.remove('active'));
     if (event && event.target) event.target.closest('.filter-tab')?.classList.add('active');
     renderAdminForum();
 }
 
+const ADMIN_FORUM_CATS = {
+    'hookups': { label: 'Hookups', color: '#ef4444', icon: 'fa-fire' },
+    'fetishes': { label: 'Fetishes', color: '#8b5cf6', icon: 'fa-mask' },
+    'swingers': { label: 'Swingers', color: '#ec4899', icon: 'fa-people-arrows' },
+    'clubs': { label: 'Clubs', color: '#f59e0b', icon: 'fa-champagne-glasses' },
+    'bdsm': { label: 'BDSM', color: '#6366f1', icon: 'fa-link' },
+    'group-action': { label: 'Group Action', color: '#10b981', icon: 'fa-users' },
+    'general': { label: 'General', color: '#3b82f6', icon: 'fa-comments' },
+    'events': { label: 'Events', color: '#0ea5e9', icon: 'fa-calendar-days' },
+    'tips': { label: 'Tips', color: '#10b981', icon: 'fa-lightbulb' },
+    'newcomers': { label: 'New Members', color: '#f59e0b', icon: 'fa-hand-wave' },
+    'offtopic': { label: 'Off-Topic', color: '#64748b', icon: 'fa-ellipsis' },
+    'premium-exclusive': { label: 'Exclusive Content', color: '#d946ef', icon: 'fa-gem' },
+    'premium-events': { label: 'Premium Events', color: '#f59e0b', icon: 'fa-star' },
+    'premium-providers': { label: 'VIP Providers', color: '#d97706', icon: 'fa-crown' },
+    'premium-safety': { label: 'Safety & Verified', color: '#10b981', icon: 'fa-shield-halved' },
+    'premium-lounge': { label: 'VIP Lounge', color: '#6366f1', icon: 'fa-martini-glass-citrus' },
+    'premium-marketplace': { label: 'Premium Marketplace', color: '#ec4899', icon: 'fa-store' }
+};
+
+function adminSetForumHeader(show) {
+    const thead = document.getElementById('adminForumThead');
+    if (thead) thead.style.display = show ? '' : 'none';
+}
+
 function renderAdminForum() {
+    if (currentAdminForumFilter === 'replies') { renderAdminForumReplies(); return; }
+    if (currentAdminForumFilter === 'groups') { renderAdminForumGroups(); return; }
+
     const threads = Storage.getForumThreads();
     const replies = Storage.getForumReplies();
+
+    const repliesCount = replies.length;
+    const totalLikes = Storage.getForumLikes().length;
+    const threadCount = threads.length;
+    const participants = new Set([...threads.map(t => t.author), ...replies.map(r => r.author)].filter(Boolean)).size;
+    const setNum = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+    setNum('adminForumThreadCount', threadCount);
+    setNum('adminForumReplyCount', repliesCount);
+    setNum('adminForumLikeCount', totalLikes);
+    setNum('adminForumUsersCount', participants);
+
     const search = document.getElementById('adminForumSearch')?.value?.toLowerCase() || '';
 
     let filtered = [...threads];
 
-    if (currentAdminForumFilter === 'pinned') {
+    if (forumGroupFilter) {
+        filtered = filtered.filter(t => t.category === forumGroupFilter);
+    } else if (currentAdminForumFilter === 'pinned') {
         filtered = filtered.filter(t => t.pinned);
     } else if (currentAdminForumFilter === 'locked') {
         filtered = filtered.filter(t => t.locked);
@@ -1061,7 +1115,8 @@ function renderAdminForum() {
         filtered = filtered.filter(t =>
             t.title.toLowerCase().includes(search) ||
             t.author.toLowerCase().includes(search) ||
-            t.body.toLowerCase().includes(search)
+            t.body.toLowerCase().includes(search) ||
+            ((ADMIN_FORUM_CATS[t.category] || {}).label || '').toLowerCase().includes(search)
         );
     }
 
@@ -1070,33 +1125,21 @@ function renderAdminForum() {
     const tbody = document.getElementById('adminForumTableBody');
     if (!tbody) return;
 
+    if (currentAdminForumFilter === 'all') {
+        adminSetForumHeader(false);
+        renderAdminForumActivity();
+        return;
+    }
+
+    adminSetForumHeader(true);
+
     if (filtered.length === 0) {
         tbody.innerHTML = '<tr><td colspan="8" class="empty-cell">No forum threads found</td></tr>';
         return;
     }
 
-    const FORUM_CATS = {
-        'hookups': { label: 'Hookups', color: '#ef4444' },
-        'fetishes': { label: 'Fetishes', color: '#8b5cf6' },
-        'swingers': { label: 'Swingers', color: '#ec4899' },
-        'clubs': { label: 'Clubs', color: '#f59e0b' },
-        'bdsm': { label: 'BDSM', color: '#6366f1' },
-        'group-action': { label: 'Group Action', color: '#10b981' },
-        'general': { label: 'General', color: '#3b82f6' },
-        'events': { label: 'Events', color: '#0ea5e9' },
-        'tips': { label: 'Tips', color: '#10b981' },
-        'newcomers': { label: 'New Members', color: '#f59e0b' },
-        'offtopic': { label: 'Off-Topic', color: '#64748b' },
-        'premium-exclusive': { label: 'Premium Exclusive', color: '#d946ef' },
-        'premium-events': { label: 'Premium Events', color: '#f59e0b' },
-        'premium-providers': { label: 'VIP Providers', color: '#d97706' },
-        'premium-safety': { label: 'Safety Verified', color: '#10b981' },
-        'premium-lounge': { label: 'VIP Lounge', color: '#6366f1' },
-        'premium-marketplace': { label: 'Premium Market', color: '#ec4899' }
-    };
-
     tbody.innerHTML = filtered.map(thread => {
-        const cat = FORUM_CATS[thread.category] || { label: thread.category, color: '#64748b' };
+        const cat = ADMIN_FORUM_CATS[thread.category] || { label: thread.category, color: '#64748b', icon: 'fa-comment' };
         const threadReplies = replies.filter(r => r.threadId === thread.id).length;
         const likes = Storage.getForumLikes();
         const threadLikes = likes.filter(l => l.targetId === thread.id && l.type === 'thread').length;
@@ -1118,6 +1161,9 @@ function renderAdminForum() {
                 <td>${date}</td>
                 <td>
                     <div class="admin-actions">
+                        <button class="btn btn-secondary btn-xs" onclick="adminViewThread('${thread.id}')" title="Moderate">
+                            <i class="fas fa-eye"></i>
+                        </button>
                         <button class="btn btn-secondary btn-xs" onclick="adminTogglePin('${thread.id}')" title="${thread.pinned ? 'Unpin' : 'Pin'}">
                             <i class="fas fa-thumbtack"></i>
                         </button>
@@ -1129,6 +1175,348 @@ function renderAdminForum() {
                         </button>
                     </div>
                 </td>
+            </tr>
+        `;
+    }).join('');
+}
+
+function renderAdminForumReplies() {
+    adminSetForumHeader(false);
+    const replies = Storage.getForumReplies();
+    const threads = Storage.getForumThreads();
+    const search = document.getElementById('adminForumSearch')?.value?.toLowerCase() || '';
+
+    let filtered = [...replies];
+
+    if (search) {
+        filtered = filtered.filter(r =>
+            r.author.toLowerCase().includes(search) ||
+            r.body.toLowerCase().includes(search) ||
+            ((threads.find(t => t.id === r.threadId) || {}).title || '').toLowerCase().includes(search)
+        );
+    }
+
+    filtered.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+    const tbody = document.getElementById('adminForumTableBody');
+    if (!tbody) return;
+
+    if (filtered.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" class="empty-cell">No replies found</td></tr>';
+        return;
+    }
+
+    tbody.innerHTML = filtered.map(reply => {
+        const thread = threads.find(t => t.id === reply.threadId);
+        const cat = ADMIN_FORUM_CATS[thread && thread.category] || { label: thread ? thread.category : 'Unknown', color: '#64748b', icon: 'fa-comment' };
+        const likes = Storage.getForumLikes();
+        const replyLikes = likes.filter(l => l.targetId === reply.id && l.type === 'reply').length;
+        const date = new Date(reply.createdAt).toLocaleDateString('en-ZA', { day: 'numeric', month: 'short', year: 'numeric' });
+
+        return `
+            <tr>
+                <td class="truncate" style="max-width:280px">${renderGistShort(reply.body)}</td>
+                <td>${escapeHtml(reply.author)}</td>
+                <td><a href="#" onclick="event.preventDefault(); adminViewThread('${thread ? thread.id : ''}')">${thread ? '<i class="fas fa-comment"></i> ' + escapeHtml(truncate(thread.title, 40)) : '<span style="color:var(--text-muted, #94a3b8)">Deleted thread</span>'}</a></td>
+                <td>${replyLikes}</td>
+                <td>${date}</td>
+                <td>
+                    <div class="admin-actions">
+                        <button class="btn btn-secondary btn-xs" onclick="adminDeleteForumReply('${reply.id}', '${thread ? thread.id : ''}')" title="Delete reply"><i class="fas fa-trash"></i></button>
+                    </div>
+                </td>
+            </tr>
+        `;
+    }).join('');
+}
+
+function renderAdminForumGroups() {
+    adminSetForumHeader(false);
+    const threads = Storage.getForumThreads();
+    const replies = Storage.getForumReplies();
+    const likes = Storage.getForumLikes();
+
+    const sections = {
+        public: { label: 'Public Groups', desc: 'Open discussion categories', color: '#3b82f6' },
+        premium: { label: 'Premium Groups', desc: 'Exclusive member categories', color: '#d946ef' }
+    };
+
+    const container = document.getElementById('adminForumTableBody');
+    if (!container) return;
+
+    const groupsBySection = Object.keys(ADMIN_FORUM_CATS).reduce((acc, key) => {
+        const isPremium = key.startsWith('premium');
+        const secKey = isPremium ? 'premium' : 'public';
+        if (!acc[secKey]) acc[secKey] = [];
+        acc[secKey].push(key);
+        return acc;
+    }, {});
+
+    let html = '<tr><td colspan="8" style="padding:0">';
+    Object.keys(sections).forEach(secKey => {
+        const sec = sections[secKey];
+        const keys = groupsBySection[secKey] || [];
+        html += `<div style="margin-bottom:24px">
+            <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
+                <span class="stat-icon" style="background:${sec.color}18;color:${sec.color};width:38px;height:38px;font-size:1rem"><i class="fas fa-layer-group"></i></span>
+                <div><div style="font-weight:700;color:var(--text-primary, #1e293b)">${sec.label}</div>
+                <div style="font-size:0.8rem;color:var(--text-muted, #94a3b8)">${sec.desc}</div></div>
+            </div>
+            <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px">`;
+        keys.forEach(key => {
+            const cat = ADMIN_FORUM_CATS[key];
+            const catThreads = threads.filter(t => t.category === key);
+            const catRepliesCount = replies.filter(r => catThreads.some(t => t.id === r.threadId)).length;
+            const catLikes = likes.filter(l => catThreads.some(t => t.id === l.targetId)).length;
+            const last = catThreads.length ? new Date(Math.max(...catThreads.map(t => new Date(t.createdAt)))).toLocaleDateString('en-ZA', { day: 'numeric', month: 'short' }) : 'No activity';
+            html += `
+                <div style="border:1px solid var(--border, #e2e8f0);border-radius:12px;padding:14px;background:var(--card-bg, #fff)">
+                    <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+                        <i class="fas ${cat.icon}" style="color:${cat.color}"></i>
+                        <strong style="font-size:0.9rem">${cat.label}</strong>
+                    </div>
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;font-size:0.8rem;color:var(--text-muted, #94a3b8);margin-bottom:4px">
+                        <div><i class="fas fa-comment" style="margin-right:4px"></i>${catThreads.length} threads</div>
+                        <div><i class="fas fa-reply" style="margin-right:4px"></i>${catRepliesCount} replies</div>
+                        <div><i class="fas fa-heart" style="margin-right:4px"></i>${catLikes} likes</div>
+                        <div><i class="fas fa-clock" style="margin-right:4px"></i>${last}</div>
+                    </div>
+                    <div style="margin-top:10px">
+                        <button class="btn btn-secondary btn-xs" onclick="filterAdminForumThreadsByGroup('${key}')"><i class="fas fa-eye"></i> View threads</button>
+                    </div>
+                </div>`;
+        });
+        html += '</div></div>';
+    });
+    html += '</td></tr>';
+    container.innerHTML = html;
+}
+
+function filterAdminForumThreadsByGroup(category) {
+    currentAdminForumFilter = 'threads';
+    document.querySelectorAll('#page-admin-forum .filter-tab').forEach(t => t.classList.remove('active'));
+    const tab = document.querySelector(`#page-admin-forum .filter-tab[data-group="${category}"]`);
+    if (tab) tab.classList.add('active');
+    else document.querySelector('#page-admin-forum .filter-tab[onclick*="threads"]')?.classList.add('active');
+    const search = document.getElementById('adminForumSearch');
+    if (search) search.value = '';
+    forumGroupFilter = category;
+    renderAdminForum();
+}
+
+let forumGroupFilter = '';
+
+function renderAdminForumThreads() {
+    renderAdminForum();
+}
+
+function adminViewThread(id) {
+    const thread = Storage.getForumThreads().find(t => t.id === id);
+    if (!thread) { showAdminView('<p>Thread not found.</p>'); return; }
+    const replies = Storage.getForumReplies().filter(r => r.threadId === id);
+    const cat = ADMIN_FORUM_CATS[thread.category] || { label: thread.category, color: '#64748b', icon: 'fa-comment' };
+    const likes = Storage.getForumLikes();
+    const threadLikes = likes.filter(l => l.targetId === id && l.type === 'thread').length;
+    const date = new Date(thread.createdAt).toLocaleDateString('en-ZA', { day: 'numeric', month: 'short', year: 'numeric' });
+
+    let statusBadges = '';
+    if (thread.pinned) statusBadges += '<span class="forum-pin-badge" style="margin-right:4px"><i class="fas fa-thumbtack"></i> Pinned</span>';
+    if (thread.locked) statusBadges += '<span class="forum-lock-badge"><i class="fas fa-lock"></i> Locked</span>';
+
+    let repliesHtml = replies.length ? replies.map(r => {
+        const rLikes = likes.filter(l => l.targetId === r.id && l.type === 'reply').length;
+        return `
+            <div style="display:flex;gap:10px;padding:12px 0;border-top:1px solid var(--border, #f1f5f9)">
+                <div class="forum-reply-avatar">${escapeHtml((r.author || '?').charAt(0).toUpperCase())}</div>
+                <div style="flex:1;min-width:0">
+                    <div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap">
+                        <strong style="font-size:0.88rem">${escapeHtml(r.author)}</strong>
+                        <div style="display:flex;gap:8px;align-items:center">
+                            <span style="font-size:0.75rem;color:var(--text-muted, #94a3b8)"><i class="fas fa-heart"></i> ${rLikes}</span>
+                            <button class="btn btn-danger btn-xs" onclick="adminDeleteForumReply('${r.id}', '${id}')"><i class="fas fa-trash"></i></button>
+                        </div>
+                    </div>
+                    <div style="font-size:0.85rem;color:var(--text-secondary, #475569);margin-top:6px;line-height:1.6">${renderAdminRichText(r.body)}</div>
+                </div>
+            </div>`;
+    }).join('') : '<p style="color:var(--text-muted, #94a3b8);font-size:0.85rem;padding:12px 0">No replies yet.</p>';
+
+    showAdminView(`
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap">
+            <span class="stat-icon" style="background:${cat.color}18;color:${cat.color};width:40px;height:40px;font-size:1rem"><i class="fas ${cat.icon}"></i></span>
+            <div>
+                <h2 style="margin:0 0 4px">${escapeHtml(thread.title)}</h2>
+                <div style="font-size:0.8rem;color:var(--text-muted, #94a3b8)">
+                    by <strong>${escapeHtml(thread.author)}</strong> · ${cat.label} · ${date} · <i class="fas fa-heart"></i> ${threadLikes}
+                </div>
+            </div>
+        </div>
+        ${statusBadges}
+        <div style="margin:14px 0;padding:14px;background:#f8fafc;border-radius:10px;font-size:0.9rem;line-height:1.7">${renderAdminRichText(thread.body)}</div>
+        <h3 style="font-size:1rem;margin:0 0 4px"><i class="fas fa-comments"></i> Replies (${replies.length})</h3>
+        ${repliesHtml}
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:16px">
+            <button class="btn btn-secondary btn-sm" onclick="adminEditThread('${thread.id}')"><i class="fas fa-pen"></i> Edit Thread</button>
+            <button class="btn ${thread.pinned ? 'btn-warning' : 'btn-secondary'} btn-sm" onclick="adminTogglePin('${thread.id}')"><i class="fas fa-thumbtack"></i> ${thread.pinned ? 'Unpin' : 'Pin'}</button>
+            <button class="btn ${thread.locked ? 'btn-warning' : 'btn-secondary'} btn-sm" onclick="adminToggleLock('${thread.id}')"><i class="fas fa-lock"></i> ${thread.locked ? 'Unlock' : 'Lock'}</button>
+            <button class="btn btn-danger btn-sm" onclick="adminDeleteForumThread('${thread.id}')"><i class="fas fa-trash"></i> Delete Thread</button>
+        </div>
+    `);
+}
+
+function renderAdminRichText(text) {
+    if (!text) return '';
+    let html = escapeHtml(text);
+    html = html.replace(/\[gif:(.*?)\]/g, (m, url) => `<img src="${url}" alt="GIF" loading="lazy" style="max-width:180px;border-radius:8px;display:block;margin:6px 0">`);
+    html = html.replace(/\n/g, '<br>');
+    return html;
+}
+
+function renderGistShort(text) {
+    if (!text) return '';
+    return truncate(text.replace(/\[gif:.*?\]/g, '[GIF]').replace(/\n/g, ' '), 60);
+}
+
+function adminEditThread(id) {
+    const thread = Storage.getForumThreads().find(t => t.id === id);
+    if (!thread) return;
+    const categoryOptions = Object.keys(ADMIN_FORUM_CATS).map(key =>
+        `<option value="${key}" ${key === thread.category ? 'selected' : ''}>${ADMIN_FORUM_CATS[key].label}</option>`
+    ).join('');
+
+    showAdminView(`
+        <h2 style="margin:0 0 16px"><i class="fas fa-pen"></i> Edit Thread</h2>
+        <label class="admin-form-label">Title</label>
+        <input class="admin-form-input" id="adminEditThreadTitle" value="${escapeHtml(thread.title)}" />
+        <label class="admin-form-label" style="margin-top:12px">Category</label>
+        <select class="admin-form-input" id="adminEditThreadCategory">${categoryOptions}</select>
+        <label class="admin-form-label" style="margin-top:12px">Body</label>
+        <textarea class="admin-form-input" id="adminEditThreadBody" style="min-height:130px">${escapeHtml(thread.body)}</textarea>
+        <div style="display:flex;gap:16px;margin-top:12px">
+            <label style="font-size:0.85rem;display:flex;align-items:center;gap:6px"><input type="checkbox" id="adminEditThreadPinned" ${thread.pinned ? 'checked' : ''}> Pinned</label>
+            <label style="font-size:0.85rem;display:flex;align-items:center;gap:6px"><input type="checkbox" id="adminEditThreadLocked" ${thread.locked ? 'checked' : ''}> Locked</label>
+        </div>
+        <div style="display:flex;gap:8px;margin-top:18px">
+            <button class="btn btn-primary btn-sm" onclick="adminSaveThreadEdit('${thread.id}')"><i class="fas fa-save"></i> Save Changes</button>
+            <button class="btn btn-secondary btn-sm" onclick="adminViewThread('${thread.id}')"><i class="fas fa-arrow-left"></i> Cancel</button>
+        </div>
+    `);
+}
+
+function adminSaveThreadEdit(id) {
+    const threads = Storage.getForumThreads();
+    const thread = threads.find(t => t.id === id);
+    if (!thread) return;
+    const title = document.getElementById('adminEditThreadTitle').value.trim();
+    const category = document.getElementById('adminEditThreadCategory').value;
+    const body = document.getElementById('adminEditThreadBody').value.trim();
+    if (!title || !body) { showToast('Title and body are required.'); return; }
+    thread.title = title;
+    thread.category = category;
+    thread.body = body;
+    thread.pinned = document.getElementById('adminEditThreadPinned').checked;
+    thread.locked = document.getElementById('adminEditThreadLocked').checked;
+    thread.editedByAdmin = true;
+    Storage.setForumThreads(threads);
+    showToast('Thread updated.');
+    adminViewThread(id);
+}
+
+function adminDeleteForumReply(id, threadId) {
+    adminDeleteTarget = { type: 'forum-reply', id };
+    const modal = document.getElementById('deleteModal');
+    const text = document.getElementById('deleteModalText');
+    text.textContent = 'Delete this reply? This cannot be undone.';
+    adminDeleteAfterConfirm = () => {
+        Storage.setForumReplies(Storage.getForumReplies().filter(r => r.id !== id));
+        showToast('Reply deleted.');
+        if (threadId && document.getElementById('adminViewModal').classList.contains('active')) {
+            adminViewThread(threadId);
+        } else {
+            renderAdminForum();
+        }
+    };
+    modal.classList.add('active');
+}
+
+function renderAdminForumActivity() {
+    const threads = Storage.getForumThreads();
+    const replies = Storage.getForumReplies();
+    const likes = Storage.getForumLikes();
+    const search = document.getElementById('adminForumSearch')?.value?.toLowerCase() || '';
+
+    const items = [];
+    threads.forEach(t => {
+        const cat = ADMIN_FORUM_CATS[t.category] || { label: t.category, color: '#64748b', icon: 'fa-comment' };
+        items.push({
+            id: t.id,
+            type: 'thread',
+            title: t.title,
+            author: t.author,
+            category: t.category,
+            catLabel: cat.label,
+            catColor: cat.color,
+            catIcon: cat.icon,
+            likes: likes.filter(l => l.targetId === t.id && l.type === 'thread').length,
+            time: new Date(t.createdAt),
+            body: t.body
+        });
+    });
+    replies.forEach(r => {
+        const t = threads.find(x => x.id === r.threadId);
+        const cat = ADMIN_FORUM_CATS[t && t.category] || { label: t ? t.category : 'Unknown', color: '#64748b', icon: 'fa-comment' };
+        items.push({
+            id: r.id,
+            type: 'reply',
+            title: t ? truncate(t.title, 50) : 'Deleted thread',
+            threadId: r.threadId,
+            author: r.author,
+            category: t ? t.category : '',
+            catLabel: cat.label,
+            catColor: cat.color,
+            catIcon: cat.icon,
+            likes: likes.filter(l => l.targetId === r.id && l.type === 'reply').length,
+            time: new Date(r.createdAt),
+            body: r.body
+        });
+    });
+
+    let filtered = items;
+    if (search) {
+        filtered = items.filter(i =>
+            i.author.toLowerCase().includes(search) ||
+            i.title.toLowerCase().includes(search) ||
+            i.body.toLowerCase().includes(search) ||
+            i.catLabel.toLowerCase().includes(search)
+        );
+    }
+
+    filtered.sort((a, b) => b.time - a.time);
+
+    const tbody = document.getElementById('adminForumTableBody');
+    if (!tbody) return;
+
+    if (filtered.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" class="empty-cell">No forum activity found</td></tr>';
+        return;
+    }
+
+    tbody.innerHTML = filtered.map(item => {
+        const date = item.time.toLocaleDateString('en-ZA', { day: 'numeric', month: 'short', year: 'numeric' }) + ' ' + item.time.toLocaleTimeString('en-ZA', { hour: '2-digit', minute: '2-digit' });
+        const target = item.type === 'thread'
+            ? `onclick="adminViewThread('${item.id}')" style="cursor:pointer"`
+            : (item.threadId ? `onclick="adminViewThread('${item.threadId}')" style="cursor:pointer"` : '');
+        const icon = item.type === 'thread' ? 'fa-comment' : 'fa-reply';
+        return `
+            <tr ${target}>
+                <td style="white-space:nowrap"><span class="stat-icon" style="background:${item.catColor}18;color:${item.catColor};width:32px;height:32px;font-size:0.8rem"><i class="fas ${icon}"></i></span></td>
+                <td>
+                    <strong style="font-size:0.88rem">${escapeHtml(item.title)}</strong>
+                    <div style="font-size:0.75rem;color:var(--text-muted, #94a3b8);margin-top:2px">${renderGistShort(item.body)}</div>
+                </td>
+                <td>${escapeHtml(item.author)}</td>
+                <td><span style="background:${item.catColor}18;color:${item.catColor};padding:3px 8px;border-radius:8px;font-size:0.75rem;font-weight:600">${item.catLabel}</span></td>
+                <td style="white-space:nowrap">${date}</td>
             </tr>
         `;
     }).join('');
@@ -1159,6 +1547,10 @@ function adminDeleteForumThread(id) {
     const modal = document.getElementById('deleteModal');
     const text = document.getElementById('deleteModalText');
     text.textContent = 'Delete this thread and all its replies? This cannot be undone.';
+    adminDeleteAfterConfirm = () => {
+        closeAdminView();
+        renderAdminForum();
+    };
     modal.classList.add('active');
 }
 
