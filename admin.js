@@ -40,6 +40,8 @@ function navigateTo(page) {
     if (page === 'admin-forum') renderAdminForum();
     if (page === 'admin-messages') renderAdminMessages();
     if (page === 'admin-message-logs') renderAdminMessageLogs();
+    if (page === 'admin-saved-items') renderAdminSavedItems();
+    if (page === 'admin-downloads') renderAdminDownloads();
     if (page === 'admin-logs') renderAdminLogs();
 
     const sidebar = document.getElementById('sidebar');
@@ -123,6 +125,14 @@ function confirmDelete() {
         showToast('Message deleted.');
         renderAdminMessageLogs();
         renderAdminMessages();
+    } else if (type === 'saved-item') {
+        Storage.setSavedItems(Storage.getSavedItems().filter(s => s.id !== id));
+        showToast('Saved item removed.');
+        renderAdminSavedItems();
+    } else if (type === 'download') {
+        Storage.setDownloads(Storage.getDownloads().filter(d => d.id !== id));
+        showToast('Download record deleted.');
+        renderAdminDownloads();
     }
     closeDeleteModal();
 }
@@ -216,7 +226,9 @@ function renderAdminDashboard() {
         { label: 'Content', value: content.length, color: '#ef4444' },
         { label: 'Events', value: events.length, color: '#f97316' },
         { label: 'Bookings', value: bookings.length, color: '#06b6d4' },
-        { label: 'Reviews', value: reviews.length, color: '#f59e0b' }
+        { label: 'Reviews', value: reviews.length, color: '#f59e0b' },
+        { label: 'Saved', value: Storage.getSavedItems().length, color: '#eab308' },
+        { label: 'Downloads', value: Storage.getDownloads().length, color: '#0284c7' }
     ];
     const maxVal = Math.max(...chartData.map(d => d.value), 1);
 
@@ -1331,4 +1343,72 @@ function renderAdminMessageLogs() {
 
 function adminDeleteMessage(id) {
     promptAdminDelete('message', id, 'message');
+}
+
+function renderAdminSavedItems() {
+    let items = [...Storage.getSavedItems()].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    const search = document.getElementById('adminSavedSearch')?.value?.toLowerCase() || '';
+    if (search) items = items.filter(s => (s.title || '').toLowerCase().includes(search) || (s.sub || '').toLowerCase().includes(search));
+
+    const tbody = document.getElementById('adminSavedItemsBody');
+    if (!tbody) return;
+
+    if (items.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" class="empty-cell">No saved items found</td></tr>';
+        return;
+    }
+
+    tbody.innerHTML = items.map(s => `
+        <tr>
+            <td><i class="fas ${s.icon || 'fa-star'}" style="color:${s.color || '#64748b'};margin-right:8px"></i>${escapeHtml(s.title)}</td>
+            <td>${escapeHtml((s.kind || 'item').replace('-', ' '))}</td>
+            <td class="truncate" style="max-width:200px">${escapeHtml(s.sub || '-')}</td>
+            <td>${fmtDate(s.createdAt)}</td>
+            <td>
+                <div class="admin-actions">
+                    <button class="btn btn-danger btn-xs" onclick="promptAdminDelete('saved-item', '${s.id}', '${escapeHtml(s.title).replace(/'/g, "\\'")}')" title="Remove"><i class="fas fa-trash"></i></button>
+                </div>
+            </td>
+        </tr>
+    `).join('');
+}
+
+function renderAdminDownloads() {
+    let items = [...Storage.getDownloads()].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    const search = document.getElementById('adminDownloadsSearch')?.value?.toLowerCase() || '';
+    if (search) items = items.filter(d => (d.title || '').toLowerCase().includes(search) || (d.sub || '').toLowerCase().includes(search));
+
+    const tbody = document.getElementById('adminDownloadsBody');
+    if (!tbody) return;
+
+    if (items.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="4" class="empty-cell">No downloads found</td></tr>';
+        return;
+    }
+
+    tbody.innerHTML = items.map(d => `
+        <tr>
+            <td><i class="fas fa-file" style="color:#0ea5e9;margin-right:8px"></i>${escapeHtml(d.title)}</td>
+            <td>${escapeHtml((d.kind || 'file').replace('-', ' '))}</td>
+            <td>${fmtDate(d.createdAt)}</td>
+            <td>
+                <div class="admin-actions">
+                    <button class="btn btn-secondary btn-xs" onclick="adminPreviewDownload('${d.id}')" title="Preview"><i class="fas fa-eye"></i></button>
+                    <button class="btn btn-danger btn-xs" onclick="promptAdminDelete('download', '${d.id}', '${escapeHtml(d.title).replace(/'/g, "\\'")}')" title="Delete"><i class="fas fa-trash"></i></button>
+                </div>
+            </td>
+        </tr>
+    `).join('');
+}
+
+function adminPreviewDownload(id) {
+    const d = Storage.getDownloads().find(x => x.id === id);
+    if (!d) return;
+    const fileType = (d.fileType || '').toLowerCase();
+    let body = `<p class="admin-view-row"><span class="label">Title</span><span class="value">${escapeHtml(d.title)}</span></p>`;
+    body += `<p class="admin-view-row"><span class="label">Type</span><span class="value">${escapeHtml(d.kind)}</span></p>`;
+    if (fileType.startsWith('image/') || fileType.startsWith('video/') || fileType.startsWith('audio/')) {
+        body += `<div style="margin:16px 0"><img src="${d.fileData}" alt="${escapeHtml(d.title)}" style="max-width:100%;max-height:240px;border-radius:12px;object-fit:contain"></div>`;
+    }
+    showAdminView(body);
 }

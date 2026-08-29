@@ -12,7 +12,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🛡️</text></svg>">
-    <link rel="stylesheet" href="style.css?v=13">
+    <link rel="stylesheet" href="style.css?v=14">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <style>
         .admin-badge { background: linear-gradient(135deg, #ef4444, #dc2626); color: white; padding: 3px 10px; border-radius: 6px; font-size: 0.65rem; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; margin-left: 8px; }
@@ -102,6 +102,14 @@
             <a href="#" class="nav-item" data-page="admin-messages">
                 <i class="fas fa-envelope-open-text"></i>
                 <span>Messages</span>
+            </a>
+            <a href="#" class="nav-item" data-page="admin-saved-items">
+                <i class="fas fa-bookmark"></i>
+                <span>Saved Items</span>
+            </a>
+            <a href="#" class="nav-item" data-page="admin-downloads">
+                <i class="fas fa-download"></i>
+                <span>Downloads</span>
             </a>
             <a href="#" class="nav-item" data-page="admin-message-logs">
                 <i class="fas fa-list-ul"></i>
@@ -764,6 +772,71 @@
             </div>
         </div>
 
+        <!-- Saved Items Management -->
+        <div class="page" id="page-admin-saved-items">
+            <div class="container">
+                <div class="dashboard-header">
+                    <div>
+                        <h1><i class="fas fa-bookmark"></i> Saved Items Management</h1>
+                        <p>View and manage all items saved by platform members</p>
+                    </div>
+                </div>
+
+                <div class="directory-filters">
+                    <div class="filter-bar">
+                        <input type="text" id="adminSavedSearch" placeholder="Search saved items..." oninput="renderAdminSavedItems()">
+                    </div>
+                </div>
+
+                <div class="admin-table-wrap" style="margin-top:16px">
+                    <table class="admin-table" id="adminSavedItemsTable">
+                        <thead>
+                            <tr>
+                                <th>Title</th>
+                                <th>Type</th>
+                                <th>Category / Sub</th>
+                                <th>Saved</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="adminSavedItemsBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Downloads Management -->
+        <div class="page" id="page-admin-downloads">
+            <div class="container">
+                <div class="dashboard-header">
+                    <div>
+                        <h1><i class="fas fa-download"></i> Downloads Management</h1>
+                        <p>View and manage all content downloads across the platform</p>
+                    </div>
+                </div>
+
+                <div class="directory-filters">
+                    <div class="filter-bar">
+                        <input type="text" id="adminDownloadsSearch" placeholder="Search downloads..." oninput="renderAdminDownloads()">
+                    </div>
+                </div>
+
+                <div class="admin-table-wrap" style="margin-top:16px">
+                    <table class="admin-table" id="adminDownloadsTable">
+                        <thead>
+                            <tr>
+                                <th>Title</th>
+                                <th>Type</th>
+                                <th>Downloaded</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="adminDownloadsBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
         <!-- Delete Modal -->
         <div class="modal-overlay" id="deleteModal">
             <div class="modal">
@@ -780,7 +853,7 @@
         <div class="toast-container" id="toastContainer"></div>
     </div>
 
-    <script src="script.js?v=13"></script>
+    <script src="script.js?v=14"></script>
     <script src="admin.js"></script>
 </body>
 </html>

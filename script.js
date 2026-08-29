@@ -53,7 +53,11 @@ const Storage = {
     setConversations: (data) => localStorage.setItem('k2_conversations', JSON.stringify(data)),
     getMessages: () => JSON.parse(localStorage.getItem('k2_messages') || '[]'),
     setMessages: (data) => localStorage.setItem('k2_messages', JSON.stringify(data)),
-    clearAll: () => { ['k2_users','k2_providers','k2_listings','k2_venues','k2_ads','k2_services','k2_bookings','k2_tips','k2_service_types','k2_wallets','k2_transactions','k2_topup_requests','k2_withdrawal_requests','k2_content','k2_events','k2_content_comments','k2_content_reactions','k2_reviews','k2_forum_threads','k2_forum_replies','k2_forum_likes','k2_gigs','k2_conversations','k2_messages'].forEach(k => localStorage.removeItem(k)); }
+    getSavedItems: () => JSON.parse(localStorage.getItem('k2_saved_items') || '[]'),
+    setSavedItems: (data) => localStorage.setItem('k2_saved_items', JSON.stringify(data)),
+    getDownloads: () => JSON.parse(localStorage.getItem('k2_downloads') || '[]'),
+    setDownloads: (data) => localStorage.setItem('k2_downloads', JSON.stringify(data)),
+    clearAll: () => { ['k2_users','k2_providers','k2_listings','k2_venues','k2_ads','k2_services','k2_bookings','k2_tips','k2_service_types','k2_wallets','k2_transactions','k2_topup_requests','k2_withdrawal_requests','k2_content','k2_events','k2_content_comments','k2_content_reactions','k2_reviews','k2_forum_threads','k2_forum_replies','k2_forum_likes','k2_gigs','k2_conversations','k2_messages','k2_saved_items','k2_downloads'].forEach(k => localStorage.removeItem(k)); }
 };
 
 const SA_PROVINCES = {
@@ -390,6 +394,9 @@ function navigateTo(page) {
     if (page === 'message-view') renderMessageThread();
     if (page === 'message-compose') renderMessageCompose();
     if (page === 'online-users') { populateOnlineCityFilters(); renderOnlineUsers(); }
+    if (page === 'saved-items') renderSavedItems();
+    if (page === 'downloads') renderDownloads();
+    if (['directory','venue-directory','services-directory','content-directory','events-directory','ads-browse','gigs-browse','forum-browse'].includes(page)) renderSaveButtons();
 }
 
 function populateGigDropdowns() {
@@ -1076,6 +1083,7 @@ function renderDirectory() {
         const type = DIRECTORY_TYPES[l.category] || {};
         return `
         <div class="directory-card" style="animation-delay:${i * 0.05}s" onclick="viewDirectoryListing('${l.id}')">
+            <button class="save-item-btn ${isItemSaved('profile', l.id) ? 'saved' : ''}" data-kind="profile" data-id="${l.id}" onclick="event.stopPropagation(); toggleSaveItem('profile','${l.id}')"><i class="fas ${isItemSaved('profile', l.id) ? 'fa-bookmark' : 'fa-bookmark-o'}"></i></button>
             <div class="directory-card-photo">
                 ${l.photo ? `<img src="${l.photo}" alt="">` : `<div class="directory-card-icon" style="background:${type.color}"><i class="fas ${type.icon || 'fa-user'}"></i></div>`}
             </div>
@@ -1486,6 +1494,7 @@ function renderVenueDirectory() {
         const type = VENUE_TYPES[v.category] || {};
         return `
         <div class="directory-card" style="animation-delay:${i * 0.05}s" onclick="viewVenueDirectory('${v.id}')">
+            <button class="save-item-btn ${isItemSaved('venue', v.id) ? 'saved' : ''}" data-kind="venue" data-id="${v.id}" onclick="event.stopPropagation(); toggleSaveItem('venue','${v.id}')"><i class="fas ${isItemSaved('venue', v.id) ? 'fa-bookmark' : 'fa-bookmark-o'}"></i></button>
             <div class="directory-card-photo">
                 ${v.photo ? `<img src="${v.photo}" alt="">` : `<div class="directory-card-icon" style="background:${type.color}"><i class="fas ${type.icon || 'fa-store'}"></i></div>`}
             </div>
@@ -1827,6 +1836,7 @@ function renderAdsBrowse() {
         const hasPhotos = a.gallery && a.gallery.length > 0;
         return `
         <div class="ad-card" style="animation-delay:${i * 0.05}s" onclick="viewAd('${a.id}')">
+            <button class="save-item-btn ${isItemSaved('ad', a.id) ? 'saved' : ''}" data-kind="ad" data-id="${a.id}" onclick="event.stopPropagation(); toggleSaveItem('ad','${a.id}')"><i class="fas ${isItemSaved('ad', a.id) ? 'fa-bookmark' : 'fa-bookmark-o'}"></i></button>
             <div class="ad-card-header">
                 <span class="ad-card-category" style="background:${cat.color}20; color:${cat.color}"><i class="fas ${cat.icon || 'fa-tag'}"></i> ${cat.label || a.category}</span>
                 <span class="ad-card-date">${formatDate(a.createdAt)}</span>
@@ -2295,6 +2305,7 @@ function renderServicesDirectory() {
         const cat = getServiceTypeBySlug(s.category);
         return `
             <div class="directory-card profile-card-hover" onclick="viewServiceDirectory('${s.id}')">
+                <button class="save-item-btn ${isItemSaved('service', s.id) ? 'saved' : ''}" data-kind="service" data-id="${s.id}" onclick="event.stopPropagation(); toggleSaveItem('service','${s.id}')"><i class="fas ${isItemSaved('service', s.id) ? 'fa-bookmark' : 'fa-bookmark-o'}"></i></button>
                 <div class="dir-avatar">
                     ${s.coverPhoto
                         ? `<img src="${s.coverPhoto}" alt="${s.name}">`
@@ -3176,6 +3187,7 @@ function renderContentDirectory() {
         const hasMedia = c.fileData && c.fileData.length > 100;
         return `
             <div class="content-card profile-card" onclick="viewContent('${c.id}')">
+                <button class="save-item-btn ${isItemSaved('content', c.id) ? 'saved' : ''}" data-kind="content" data-id="${c.id}" onclick="event.stopPropagation(); toggleSaveItem('content','${c.id}')"><i class="fas ${isItemSaved('content', c.id) ? 'fa-bookmark' : 'fa-bookmark-o'}"></i></button>
                 ${hasMedia ? `<div class="content-card-thumb"><div class="content-thumb-icon" style="background:${type.color}22;color:${type.color}"><i class="fas ${type.icon}"></i></div></div>` : `<div class="content-card-icon" style="background:${type.color}22;color:${type.color}"><i class="fas ${type.icon}"></i></div>`}
                 <h3 class="content-card-title">${c.title}</h3>
                 <p class="content-card-desc">${(c.description || '').substring(0, 80)}${(c.description || '').length > 80 ? '...' : ''}</p>
@@ -3252,6 +3264,23 @@ function viewContent(id) {
     initStarRating('contentStarRating');
 
     navigateTo('content-view');
+}
+
+function downloadContentView() {
+    const item = Storage.getContent().find(c => c.id === currentContentViewId);
+    if (!item) { showToast('Content not found.', 'error'); return; }
+    if (!item.fileData || item.fileData.length <= 100) {
+        showToast('This content has no downloadable file.', 'error');
+        return;
+    }
+    logDownload({
+        kind: 'content',
+        itemId: item.id,
+        title: item.title,
+        sub: (CONTENT_TYPES[item.type] || { label: item.type }).label,
+        fileData: item.fileData,
+        fileType: item.fileType
+    });
 }
 
 // ==========================================
@@ -3973,6 +4002,7 @@ function renderEventsDirectory() {
         const eventDate = ev.eventDate ? new Date(ev.eventDate).toLocaleDateString('en-ZA', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' }) : '';
         return `
             <div class="content-card profile-card event-grid-card" onclick="viewEvent('${ev.id}')">
+                <button class="save-item-btn ${isItemSaved('event', ev.id) ? 'saved' : ''}" data-kind="event" data-id="${ev.id}" onclick="event.stopPropagation(); toggleSaveItem('event','${ev.id}')"><i class="fas ${isItemSaved('event', ev.id) ? 'fa-bookmark' : 'fa-bookmark-o'}"></i></button>
                 <div class="content-card-thumb event-card-thumb" style="background:linear-gradient(135deg, ${type.color}22, ${type.color}08)">
                     <div class="content-thumb-icon" style="background:${type.color}22;color:${type.color}"><i class="fas ${type.icon}"></i></div>
                     ${ev.eventDate ? `<div class="event-card-date-badge"><span class="event-date-day">${new Date(ev.eventDate).getDate()}</span><span class="event-date-month">${new Date(ev.eventDate).toLocaleDateString('en-ZA', { month: 'short' })}</span></div>` : ''}
@@ -4390,7 +4420,8 @@ function renderForumThreads() {
         const provinceBadge = thread.province ? `<span class="forum-tag"><i class="fas fa-map-marker-alt"></i> ${escapeHtml(thread.province)}</span>` : '';
 
         return `
-            <div class="forum-thread-card${thread.pinned ? ' pinned' : ''}${thread.locked ? ' locked' : ''}" onclick="viewForumThread('${thread.id}')">
+            <div class="forum-thread-card${thread.pinned ? ' pinned' : ''}${thread.locked ? ' locked' : ''}" onclick="viewForumThread('${thread.id}')" style="position:relative">
+                <button class="save-item-btn ${isItemSaved('forum-thread', thread.id) ? 'saved' : ''}" data-kind="forum-thread" data-id="${thread.id}" onclick="event.stopPropagation(); toggleSaveItem('forum-thread','${thread.id}')"><i class="fas ${isItemSaved('forum-thread', thread.id) ? 'fa-bookmark' : 'fa-bookmark-o'}"></i></button>
                 <div class="forum-thread-card-inner">
                     <div class="forum-thread-votes" onclick="event.stopPropagation()">
                         <button class="forum-vote-btn${isLiked ? ' liked' : ''}" onclick="toggleForumLike('${thread.id}', 'thread', this)" title="Like">
@@ -4745,7 +4776,8 @@ function renderGigsBrowse() {
         const timeAgo = getTimeAgo(gig.createdAt);
         const rateStr = gig.rate ? `R${gig.rate}/${gig.rateType || 'hr'}` : 'Negotiable';
         return `
-        <div class="forum-thread-card${gig.featured ? ' pinned' : ''}" onclick="viewGig('${gig.id}')" style="cursor:pointer">
+        <div class="forum-thread-card${gig.featured ? ' pinned' : ''}" onclick="viewGig('${gig.id}')" style="cursor:pointer;position:relative">
+            <button class="save-item-btn ${isItemSaved('gig', gig.id) ? 'saved' : ''}" data-kind="gig" data-id="${gig.id}" onclick="event.stopPropagation(); toggleSaveItem('gig','${gig.id}')"><i class="fas ${isItemSaved('gig', gig.id) ? 'fa-bookmark' : 'fa-bookmark-o'}"></i></button>
             <div class="forum-thread-card-inner">
                 <div class="forum-thread-content" style="width:100%">
                     <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:6px">
@@ -5425,6 +5457,251 @@ function renderOnlineUsers() {
             </div>
         </div>`;
     }).join('');
+}
+
+// ==========================================
+// SAVED ITEMS & DOWNLOADS
+// ==========================================
+let currentSavedFilter = 'all';
+
+function getSaveableMeta(kind, id) {
+    switch (kind) {
+        case 'profile': {
+            const u = Storage.getUsers().find(x => x.id === id);
+            if (u) return { title: u.fullName, sub: u.role || 'Member', icon: 'fa-user', color: '#667eea' };
+            const l = [...Storage.getListings(), ...Storage.getServices()].find(x => x.id === id);
+            return { title: l ? l.name : 'Profile', sub: l ? (l.typeLabel || l.type || '') : '', icon: 'fa-user', color: '#667eea' };
+        }
+        case 'venue': {
+            const v = Storage.getVenues().find(x => x.id === id);
+            const type = VENUE_TYPES[(v && v.venueType) || 'other'] || { label: 'Venue', icon: 'fa-store' };
+            return { title: v ? v.name : 'Venue', sub: type.label, icon: type.icon || 'fa-store', color: '#10b981' };
+        }
+        case 'service': {
+            const s = Storage.getServices().find(x => x.id === id);
+            return { title: s ? s.name : 'Service', sub: s ? s.duration || '' : '', icon: 'fa-concierge-bell', color: '#3b82f6' };
+        }
+        case 'content': {
+            const c = Storage.getContent().find(x => x.id === id);
+            const type = CONTENT_TYPES[(c && c.type) || ''] || { label: 'Content', icon: 'fa-photo-film' };
+            return { title: c ? c.title : 'Content', sub: type.label, icon: type.icon || 'fa-photo-film', color: '#8b5cf6' };
+        }
+        case 'event': {
+            const e = Storage.getEvents().find(x => x.id === id);
+            return { title: e ? e.title : 'Event', sub: e ? (e.location || '') : '', icon: 'fa-calendar-days', color: '#f59e0b' };
+        }
+        case 'ad': {
+            const a = Storage.getAds().find(x => x.id === id);
+            const cat = AD_CATEGORIES[(a && a.category) || 'general'] || { label: 'Ad', icon: 'fa-bullhorn' };
+            return { title: a ? a.title : 'Ad', sub: cat.label, icon: cat.icon || 'fa-bullhorn', color: '#ec4899' };
+        }
+        case 'gig': {
+            const g = Storage.getGigs().find(x => x.id === id);
+            const type = GIG_TYPES[(g && g.gigType) || 'other'] || { label: 'Gig', icon: 'fa-briefcase' };
+            return { title: g ? g.title : 'Gig', sub: type.label, icon: type.icon || 'fa-briefcase', color: '#0ea5e9' };
+        }
+        case 'forum-thread': {
+            const t = Storage.getForumThreads().find(x => x.id === id);
+            const cat = FORUM_CATEGORIES[(t && t.category) || 'general'] || { label: 'Thread', icon: 'fa-comments' };
+            return { title: t ? t.title : 'Thread', sub: cat.label, icon: cat.icon || 'fa-comments', color: '#6366f1' };
+        }
+        default:
+            return { title: 'Item', sub: '', icon: 'fa-star', color: '#64748b' };
+    }
+}
+
+function openSaveTarget(kind, id) {
+    switch (kind) {
+        case 'profile': return () => viewDirectoryListing(id);
+        case 'venue': return () => viewVenueDirectory(id);
+        case 'service': return () => viewServiceDirectory(id);
+        case 'content': return () => viewContent(id);
+        case 'event': return () => viewEvent(id);
+        case 'ad': return () => viewAd(id);
+        case 'gig': return () => { viewGig(id); navigateTo('gig-view'); };
+        case 'forum-thread': return () => viewForumThread(id);
+    }
+}
+
+function isItemSaved(kind, id) {
+    return Storage.getSavedItems().some(s => s.kind === kind && s.itemId === id);
+}
+
+function toggleSaveItem(kind, id) {
+    const saved = Storage.getSavedItems();
+    if (isItemSaved(kind, id)) {
+        Storage.setSavedItems(saved.filter(s => !(s.kind === kind && s.itemId === id)));
+        showToast('Removed from saved items.');
+    } else {
+        const meta = getSaveableMeta(kind, id);
+        saved.push({ id: generateId(), kind, itemId: id, title: meta.title, sub: meta.sub, icon: meta.icon, color: meta.color, createdAt: new Date().toISOString() });
+        Storage.setSavedItems(saved);
+        showToast('Saved item added.');
+    }
+    if (currentSavedFilter === 'all' || currentSavedFilter === kind) {
+        const list = document.getElementById('savedItemsList');
+        if (list && list.parentElement.parentElement.classList.contains('active')) renderSavedItems();
+    }
+    renderSaveButtons();
+}
+
+function renderSaveButtons() {
+    document.querySelectorAll('.save-item-btn[data-kind]').forEach(btn => {
+        const kind = btn.dataset.kind;
+        const id = btn.dataset.id;
+        const saved = isItemSaved(kind, id);
+        btn.innerHTML = saved ? '<i class="fas fa-bookmark"></i>' : '<i class="fas fa-bookmark-o"></i>';
+        btn.classList.toggle('saved', saved);
+        btn.title = saved ? 'Remove from saved' : 'Save item';
+    });
+}
+
+function filterSavedItems(filter) {
+    currentSavedFilter = filter;
+    document.querySelectorAll('#page-saved-items .filter-tab').forEach(t => t.classList.remove('active'));
+    if (event && event.target) event.target.closest('.filter-tab')?.classList.add('active');
+    renderSavedItems();
+}
+
+function renderSavedItems() {
+    let items = [...Storage.getSavedItems()].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    if (currentSavedFilter !== 'all') items = items.filter(s => s.kind === currentSavedFilter);
+
+    const search = (document.getElementById('savedSearch')?.value || '').toLowerCase();
+    if (search) items = items.filter(s => (s.title || '').toLowerCase().includes(search) || (s.sub || '').toLowerCase().includes(search));
+
+    const container = document.getElementById('savedItemsList');
+    const countEl = document.getElementById('savedCount');
+    if (countEl) countEl.textContent = items.length;
+    if (!container) return;
+
+    if (items.length === 0) {
+        container.innerHTML = '<div class="forum-empty"><i class="fas fa-bookmark-o"></i><h3>No saved items</h3><p>Tap the bookmark icon on profiles, venues, services, content & more to save them here</p></div>';
+        return;
+    }
+
+    container.innerHTML = items.map(s => `
+        <div class="online-user-card">
+            <div class="online-user-avatar-wrap">
+                <div class="online-user-avatar initials" style="background:${s.color}"><i class="fas ${s.icon}"></i></div>
+            </div>
+            <div class="online-user-info">
+                <div class="online-user-name">${escapeHtml(s.title)} <span class="mini-tag" style="background:${s.color}18;color:${s.color}">${s.kind.replace('-', ' ')}</span></div>
+                <div class="online-user-loc">${escapeHtml(s.sub || '')}</div>
+            </div>
+            <div class="online-user-actions">
+                <button class="btn btn-secondary btn-sm" onclick="openSavedItem('${s.kind}','${s.itemId}')"><i class="fas fa-eye"></i> View</button>
+                <button class="btn btn-danger btn-sm" onclick="removeSavedItem('${s.id}')"><i class="fas fa-trash"></i></button>
+            </div>
+        </div>
+    `).join('');
+}
+
+function openSavedItem(kind, id) {
+    const pageMap = {
+        'profile': 'directory-view',
+        'venue': 'venue-directory-view',
+        'service': 'services-directory',
+        'content': 'content-view',
+        'event': 'event-view',
+        'ad': 'ad-view',
+        'gig': 'gig-view',
+        'forum-thread': 'forum-view'
+    };
+    const targetPage = pageMap[kind];
+    if (targetPage && !document.getElementById('page-' + targetPage)) {
+        showToast('Open this item from the General User portal.', 'error');
+        return;
+    }
+    const fn = openSaveTarget(kind, id);
+    if (fn) fn();
+}
+
+function removeSavedItem(id) {
+    Storage.setSavedItems(Storage.getSavedItems().filter(s => s.id !== id));
+    showToast('Removed from saved items.');
+    renderSavedItems();
+}
+
+function logDownload({ kind, itemId, title, sub, fileData, fileType }) {
+    const dl = Storage.getDownloads();
+    if (!dl.some(d => d.kind === kind && d.itemId === itemId)) {
+        const meta = getSaveableMeta(kind, itemId);
+        dl.push({
+            id: generateId(),
+            kind,
+            itemId,
+            title: title || meta.title,
+            sub: sub || meta.sub,
+            fileData,
+            fileType: fileType || 'application/octet-stream',
+            createdAt: new Date().toISOString()
+        });
+        Storage.setDownloads(dl);
+    }
+    const a = document.createElement('a');
+    a.href = fileData;
+    a.download = (title || meta.title || 'download') + '.' + (fileType || 'file').split('/').pop();
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    showToast('Download started.');
+}
+
+function filterDownloads(filter) {
+    document.querySelectorAll('#page-downloads .filter-tab').forEach(t => t.classList.remove('active'));
+    if (event && event.target) event.target.closest('.filter-tab')?.classList.add('active');
+    renderDownloads();
+}
+
+function renderDownloads() {
+    let items = [...Storage.getDownloads()].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    const search = (document.getElementById('downloadsSearch')?.value || '').toLowerCase();
+    if (search) items = items.filter(d => (d.title || '').toLowerCase().includes(search));
+
+    const container = document.getElementById('downloadsList');
+    const countEl = document.getElementById('downloadsCount');
+    if (countEl) countEl.textContent = items.length;
+    if (!container) return;
+
+    if (items.length === 0) {
+        container.innerHTML = '<div class="forum-empty"><i class="fas fa-download"></i><h3>No downloads yet</h3><p>Files you download from content creators will appear here</p></div>';
+        return;
+    }
+
+    container.innerHTML = items.map(d => `
+        <div class="online-user-card">
+            <div class="online-user-avatar-wrap">
+                <div class="online-user-avatar initials" style="background:${d.color || '#0ea5e9'}"><i class="fas fa-file"></i></div>
+            </div>
+            <div class="online-user-info">
+                <div class="online-user-name">${escapeHtml(d.title)} <span class="mini-tag" style="background:#0ea5e918;color:#0ea5e9">${escapeHtml(d.kind || 'file')}</span></div>
+                <div class="online-user-loc">${escapeHtml(d.sub || '')} &middot; ${getTimeAgo(d.createdAt)}</div>
+            </div>
+            <div class="online-user-actions">
+                <button class="btn btn-primary btn-sm" onclick="reDownload('${d.id}')"><i class="fas fa-download"></i> Download</button>
+                <button class="btn btn-danger btn-sm" onclick="deleteDownload('${d.id}')"><i class="fas fa-trash"></i></button>
+            </div>
+        </div>
+    `).join('');
+}
+
+function reDownload(id) {
+    const d = Storage.getDownloads().find(x => x.id === id);
+    if (!d) return;
+    const a = document.createElement('a');
+    a.href = d.fileData;
+    a.download = d.title + '.' + (d.fileType || 'file').split('/').pop();
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    showToast('Download started.');
+}
+
+function deleteDownload(id) {
+    Storage.setDownloads(Storage.getDownloads().filter(d => d.id !== id));
+    showToast('Download removed.');
+    renderDownloads();
 }
 
 // ==========================================

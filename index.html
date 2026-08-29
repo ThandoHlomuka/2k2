@@ -52,7 +52,7 @@
     <!-- Favicon -->
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💎</text></svg>">
 
-    <link rel="stylesheet" href="style.css?v=13">
+    <link rel="stylesheet" href="style.css?v=14">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700;900&family=Inter:wght@300;400;500;600;700&family=Dancing+Script:wght@700&display=swap" rel="stylesheet">
 
@@ -500,6 +500,16 @@
             <a href="#" class="nav-item" data-page="user-wallet">
                 <i class="fas fa-wallet"></i>
                 <span>My Wallet</span>
+            </a>
+            <div class="nav-divider"></div>
+            <span class="nav-section-title">My Library</span>
+            <a href="#" class="nav-item" data-page="saved-items">
+                <i class="fas fa-bookmark"></i>
+                <span>Saved Items</span>
+            </a>
+            <a href="#" class="nav-item" data-page="downloads">
+                <i class="fas fa-download"></i>
+                <span>Downloads</span>
             </a>
             <div class="nav-divider"></div>
             <span class="nav-section-title">Account</span>
@@ -1312,6 +1322,7 @@
                         <div class="content-detail-body" id="contentDetailViewBody"></div>
                         <div class="content-detail-tags" id="contentDetailViewTags"></div>
                         <div class="content-engagement-bar">
+                            <button class="content-share-btn" onclick="downloadContentView()"><i class="fas fa-download"></i> Download</button>
                             <button class="content-share-btn" onclick="shareContent()"><i class="fas fa-share-nodes"></i> Share</button>
                         </div>
                         <div class="content-comments-section" id="contentCommentsSection">
@@ -2960,11 +2971,58 @@
             </div>
         </div>
 
+        <div class="page" id="page-saved-items">
+            <div class="container">
+                <div class="dashboard-header">
+                    <div>
+                        <h1>Saved Items</h1>
+                        <p>Everything you've bookmarked across 2k2</p>
+                    </div>
+                </div>
+                <div class="directory-filters">
+                    <div class="filter-tabs">
+                        <button class="filter-tab active" onclick="filterSavedItems('all')"><i class="fas fa-star"></i> All</button>
+                        <button class="filter-tab" onclick="filterSavedItems('profile')"><i class="fas fa-user"></i> Profiles</button>
+                        <button class="filter-tab" onclick="filterSavedItems('venue')"><i class="fas fa-store"></i> Venues</button>
+                        <button class="filter-tab" onclick="filterSavedItems('service')"><i class="fas fa-concierge-bell"></i> Services</button>
+                        <button class="filter-tab" onclick="filterSavedItems('content')"><i class="fas fa-photo-film"></i> Content</button>
+                        <button class="filter-tab" onclick="filterSavedItems('event')"><i class="fas fa-calendar-days"></i> Events</button>
+                        <button class="filter-tab" onclick="filterSavedItems('ad')"><i class="fas fa-bullhorn"></i> Ads</button>
+                        <button class="filter-tab" onclick="filterSavedItems('gig')"><i class="fas fa-briefcase"></i> Gigs</button>
+                        <button class="filter-tab" onclick="filterSavedItems('forum-thread')"><i class="fas fa-comments"></i> Threads</button>
+                    </div>
+                    <div class="filter-bar">
+                        <input type="text" id="savedSearch" placeholder="Search saved items..." oninput="renderSavedItems()">
+                    </div>
+                </div>
+                <div class="directory-stats"><span><i class="fas fa-bookmark"></i> <strong id="savedCount">0</strong> saved items</span></div>
+                <div class="online-users-list" id="savedItemsList" style="margin-top:16px"></div>
+            </div>
+        </div>
+
+        <div class="page" id="page-downloads">
+            <div class="container">
+                <div class="dashboard-header">
+                    <div>
+                        <h1>Downloads</h1>
+                        <p>Files and media you've downloaded</p>
+                    </div>
+                </div>
+                <div class="directory-filters">
+                    <div class="filter-bar">
+                        <input type="text" id="downloadsSearch" placeholder="Search downloads..." oninput="renderDownloads()">
+                    </div>
+                </div>
+                <div class="directory-stats"><span><i class="fas fa-download"></i> <strong id="downloadsCount">0</strong> downloads</span></div>
+                <div class="online-users-list" id="downloadsList" style="margin-top:16px"></div>
+            </div>
+        </div>
+
         <div class="toast-container" id="toastContainer"></div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
-    <script src="script.js?v=13"></script>
+    <script src="script.js?v=14"></script>
     <script>
         let onbSlide = 0;
         const slides = document.querySelectorAll('.onb-slide');
