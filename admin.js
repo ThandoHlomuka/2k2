@@ -214,7 +214,7 @@ function msgPreviewText(text) {
 }
 
 function renderTagsHtml(tags) {
-    if (!tags || tags.length === 0) return '<span style="color:#94a3b8">-</span>';
+    if (!tags || tags.length === 0) return '<span style="color:#a99c7e">-</span>';
     return tags.slice(0, 3).map(t => `<span class="mini-tag">${t}</span>`).join('') + (tags.length > 3 ? `<span class="mini-tag">+${tags.length - 3}</span>` : '');
 }
 
@@ -284,7 +284,7 @@ function renderAdminDashboard() {
     ].sort((a, b) => new Date(b.date) - new Date(a.date)).slice(0, 10);
 
     document.getElementById('adminActivityFeed').innerHTML = allItems.length === 0
-        ? '<p style="color:#94a3b8;font-size:0.88rem;padding:12px 0">No activity yet</p>'
+        ? '<p style="color:#a99c7e;font-size:0.88rem;padding:12px 0">No activity yet</p>'
         : allItems.map(item => `
             <div class="admin-activity-item">
                 <div class="admin-activity-dot" style="background:${item.color}"></div>
@@ -305,7 +305,7 @@ function renderAdminUsers() {
     if (!tbody) return;
 
     if (users.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:#94a3b8;padding:40px">No users registered yet</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:#a99c7e;padding:40px">No users registered yet</td></tr>';
         return;
     }
 
@@ -344,7 +344,7 @@ function adminViewUser(id) {
     const u = Storage.getUsers().find(x => x.id === id);
     if (!u) return;
     showAdminView(`
-        <h2><i class="fas fa-user" style="color:#667eea;margin-right:8px"></i> User Details</h2>
+        <h2><i class="fas fa-user" style="color:#c9a227;margin-right:8px"></i> User Details</h2>
         <div class="admin-view-row"><span class="label">Name</span><span class="value">${u.name || '-'}</span></div>
         <div class="admin-view-row"><span class="label">Email</span><span class="value">${u.email || '-'}</span></div>
         <div class="admin-view-row"><span class="label">Phone</span><span class="value">${u.phone || '-'}</span></div>
@@ -366,7 +366,7 @@ function renderAdminProviders() {
     if (!tbody) return;
 
     if (providers.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:#94a3b8;padding:40px">No providers registered yet</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:#a99c7e;padding:40px">No providers registered yet</td></tr>';
         return;
     }
 
@@ -427,7 +427,7 @@ function renderAdminListings() {
     if (!tbody) return;
 
     if (listings.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:#94a3b8;padding:40px">No listings yet</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:#a99c7e;padding:40px">No listings yet</td></tr>';
         return;
     }
 
@@ -438,7 +438,7 @@ function renderAdminListings() {
         return `
         <tr>
             <td><strong>${truncate(l.name, 20)}</strong></td>
-            <td><span class="directory-type-badge" style="background:${t.color||'#64748b'}20;color:${t.color||'#64748b'};padding:4px 10px;border-radius:12px;font-size:0.75rem;font-weight:600">${t.label || l.category}</span></td>
+            <td><span class="directory-type-badge" style="background:${t.color||'#8a7b55'}20;color:${t.color||'#8a7b55'};padding:4px 10px;border-radius:12px;font-size:0.75rem;font-weight:600">${t.label || l.category}</span></td>
             <td>${l.location || '-'}</td>
             <td><span class="status-badge status-${l.status}">${l.status}</span></td>
             <td>${fmtDate(l.createdAt)}</td>
@@ -495,7 +495,7 @@ function renderAdminVenues() {
     if (!tbody) return;
 
     if (venues.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:#94a3b8;padding:40px">No venues yet</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:#a99c7e;padding:40px">No venues yet</td></tr>';
         return;
     }
 
@@ -506,7 +506,7 @@ function renderAdminVenues() {
         return `
         <tr>
             <td><strong>${truncate(v.name, 20)}</strong></td>
-            <td><span class="directory-type-badge" style="background:${t.color||'#64748b'}20;color:${t.color||'#64748b'};padding:4px 10px;border-radius:12px;font-size:0.75rem;font-weight:600">${t.label || v.category}</span></td>
+            <td><span class="directory-type-badge" style="background:${t.color||'#8a7b55'}20;color:${t.color||'#8a7b55'};padding:4px 10px;border-radius:12px;font-size:0.75rem;font-weight:600">${t.label || v.category}</span></td>
             <td>${v.location || '-'}</td>
             <td>${v.capacity || '-'}</td>
             <td><span class="status-badge status-${v.status}">${v.status}</span></td>
@@ -565,7 +565,7 @@ function renderAdminAds() {
     if (!tbody) return;
 
     if (ads.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:#94a3b8;padding:40px">No ads yet</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:#a99c7e;padding:40px">No ads yet</td></tr>';
         return;
     }
 
@@ -576,7 +576,7 @@ function renderAdminAds() {
         return `
         <tr>
             <td><strong>${truncate(a.title, 20)}</strong></td>
-            <td><span class="directory-type-badge" style="background:${c.color||'#64748b'}20;color:${c.color||'#64748b'};padding:4px 10px;border-radius:12px;font-size:0.75rem;font-weight:600">${c.label || a.category}</span></td>
+            <td><span class="directory-type-badge" style="background:${c.color||'#8a7b55'}20;color:${c.color||'#8a7b55'};padding:4px 10px;border-radius:12px;font-size:0.75rem;font-weight:600">${c.label || a.category}</span></td>
             <td>${a.contactName || '-'}</td>
             <td>${a.location || '-'}</td>
             <td><span class="status-badge status-${a.status}">${a.status}</span></td>
@@ -669,7 +669,7 @@ function renderAdminLogs() {
             const raw = localStorage.getItem(key) || '[]';
             const bytes = new Blob([raw]).size;
             const kb = (bytes / 1024).toFixed(1);
-            html += `<div style="padding:12px;background:#f8fafc;border-radius:10px"><div style="font-weight:700;color:#1e293b;font-size:0.85rem">${key.replace('k2_', '').toUpperCase()}</div><div style="color:#64748b;font-size:0.82rem;margin-top:4px">${kb} KB</div></div>`;
+            html += `<div style="padding:12px;background:#fdf9ef;border-radius:10px"><div style="font-weight:700;color:#211a0d;font-size:0.85rem">${key.replace('k2_', '').toUpperCase()}</div><div style="color:#8a7b55;font-size:0.82rem;margin-top:4px">${kb} KB</div></div>`;
         });
         html += '</div>';
         info.innerHTML = html;
@@ -699,7 +699,7 @@ function renderAdminContent() {
 
     const providers = [...Storage.getListings(), ...Storage.getServices()];
     tbody.innerHTML = filtered.map(c => {
-        const type = CONTENT_TYPES[c.type] || { label: c.type, icon: 'fa-file', color: '#64748b' };
+        const type = CONTENT_TYPES[c.type] || { label: c.type, icon: 'fa-file', color: '#8a7b55' };
         const author = providers.find(p => p.id === c.providerId);
         return `<tr>
             <td><strong>${c.title}</strong></td>
@@ -723,7 +723,7 @@ function renderAdminContent() {
 function adminViewContent(id) {
     const c = Storage.getContent().find(x => x.id === id);
     if (!c) return;
-    const type = CONTENT_TYPES[c.type] || { label: c.type, icon: 'fa-file', color: '#64748b' };
+    const type = CONTENT_TYPES[c.type] || { label: c.type, icon: 'fa-file', color: '#8a7b55' };
     const providers = [...Storage.getListings(), ...Storage.getServices()];
     const author = providers.find(p => p.id === c.providerId);
     let mediaHtml = '';
@@ -735,7 +735,7 @@ function adminViewContent(id) {
     showAdminView(`
         <h2><i class="fas ${type.icon}" style="color:${type.color};margin-right:8px"></i> Content Details</h2>
         ${mediaHtml}
-        <div style="padding:14px;background:#f8fafc;border-radius:10px;margin:10px 0;font-size:0.9rem;line-height:1.6">${renderAdminRichText(c.description || c.title)}</div>
+        <div style="padding:14px;background:#fdf9ef;border-radius:10px;margin:10px 0;font-size:0.9rem;line-height:1.6">${renderAdminRichText(c.description || c.title)}</div>
         <div style="margin-top:16px">
             <div class="admin-view-row"><span class="label">Title</span><span class="value">${escapeHtml(c.title || '-')}</span></div>
             <div class="admin-view-row"><span class="label">Type</span><span class="value">${type.label}</span></div>
@@ -759,7 +759,7 @@ function adminEditContent(id) {
         `<option value="${key}" ${key === c.type ? 'selected' : ''}>${CONTENT_TYPES[key].label}</option>`
     ).join('');
     showAdminView(`
-        <h2><i class="fas fa-pen" style="color:var(--primary, #667eea);margin-right:8px"></i> Edit Content</h2>
+        <h2><i class="fas fa-pen" style="color:var(--primary, #c9a227);margin-right:8px"></i> Edit Content</h2>
         <label class="admin-form-label">Title</label>
         <input class="admin-form-input" id="adminEditContentTitle" value="${escapeHtml(c.title || '')}" />
         <label class="admin-form-label" style="margin-top:12px">Type</label>
@@ -828,7 +828,7 @@ function renderAdminEvents() {
 
     const providers = [...Storage.getListings(), ...Storage.getServices()];
     tbody.innerHTML = filtered.map(ev => {
-        const type = EVENT_TYPES[ev.type] || { label: ev.type, icon: 'fa-calendar', color: '#64748b' };
+        const type = EVENT_TYPES[ev.type] || { label: ev.type, icon: 'fa-calendar', color: '#8a7b55' };
         const host = providers.find(p => p.id === ev.providerId);
         const eventDate = ev.eventDate ? new Date(ev.eventDate).toLocaleDateString('en-ZA', { day: 'numeric', month: 'short', year: 'numeric' }) : '-';
         return `<tr>
@@ -854,7 +854,7 @@ function renderAdminEvents() {
 function adminViewEvent(id) {
     const ev = Storage.getEvents().find(x => x.id === id);
     if (!ev) return;
-    const type = EVENT_TYPES[ev.type] || { label: ev.type, icon: 'fa-calendar', color: '#64748b' };
+    const type = EVENT_TYPES[ev.type] || { label: ev.type, icon: 'fa-calendar', color: '#8a7b55' };
     const providers = [...Storage.getListings(), ...Storage.getServices()];
     const host = providers.find(p => p.id === ev.providerId);
     showAdminView(`
@@ -869,7 +869,7 @@ function adminViewEvent(id) {
             <div class="admin-view-row"><span class="label">Status</span><span class="value">${ev.status || 'active'}</span></div>
             <div class="admin-view-row"><span class="label">Created</span><span class="value">${fmtDate(ev.createdAt)}</span></div>
         </div>
-        <div style="padding:14px;background:#f8fafc;border-radius:10px;margin-top:12px;font-size:0.9rem;line-height:1.6">${renderAdminRichText(ev.description || 'No description')}</div>
+        <div style="padding:14px;background:#fdf9ef;border-radius:10px;margin-top:12px;font-size:0.9rem;line-height:1.6">${renderAdminRichText(ev.description || 'No description')}</div>
         <div style="display:flex;gap:8px;margin-top:16px">
             <button class="btn btn-primary btn-sm" onclick="adminEditEvent('${ev.id}')"><i class="fas fa-pen"></i> Edit</button>
             <button class="btn btn-secondary btn-sm" onclick="adminToggleEventStatus('${ev.id}')"><i class="fas fa-${ev.status === 'suspended' ? 'check-circle' : 'ban'}"></i> ${ev.status === 'suspended' ? 'Reinstate' : 'Cancel Event'}</button>
@@ -884,7 +884,7 @@ function adminEditEvent(id) {
         `<option value="${key}" ${key === ev.type ? 'selected' : ''}>${EVENT_TYPES[key].label}</option>`
     ).join('');
     showAdminView(`
-        <h2><i class="fas fa-pen" style="color:var(--primary, #667eea);margin-right:8px"></i> Edit Event</h2>
+        <h2><i class="fas fa-pen" style="color:var(--primary, #c9a227);margin-right:8px"></i> Edit Event</h2>
         <label class="admin-form-label">Name</label>
         <input class="admin-form-input" id="adminEditEventName" value="${escapeHtml(ev.name || '')}" />
         <label class="admin-form-label" style="margin-top:12px">Type</label>
@@ -1070,7 +1070,7 @@ function renderAdminWallets() {
     const reqContainer = document.getElementById('adminPendingRequestsList');
     if (reqContainer) {
         if (pendingReqs.length === 0) {
-            reqContainer.innerHTML = '<p style="color:#94a3b8;font-size:0.88rem;padding:12px 0">No pending requests</p>';
+            reqContainer.innerHTML = '<p style="color:#a99c7e;font-size:0.88rem;padding:12px 0">No pending requests</p>';
         } else {
             reqContainer.innerHTML = pendingReqs.map(r => {
                 const isTopUp = topUpReqs.includes(r);
@@ -1090,9 +1090,9 @@ function renderAdminWallets() {
                             <span class="badge" style="background:${typeColor}22;color:${typeColor};border:1px solid ${typeColor}44"><i class="fas ${typeIcon}"></i> ${typeLabel}</span>
                             <div>
                                 <strong>R${r.amount.toFixed(2)}</strong>
-                                <span style="color:#94a3b8;font-size:0.82rem;margin-left:8px">${ownerLabel}</span>
+                                <span style="color:#a99c7e;font-size:0.82rem;margin-left:8px">${ownerLabel}</span>
                             </div>
-                            <span style="color:#94a3b8;font-size:0.8rem">${fmtDate(r.createdAt)}</span>
+                            <span style="color:#a99c7e;font-size:0.8rem">${fmtDate(r.createdAt)}</span>
                         </div>
                         <div class="admin-actions">
                             <button class="btn btn-primary btn-xs" style="background:#10b981;border:none" onclick="adminApproveRequest('${isTopUp ? 'topup' : 'withdrawal'}','${r.id}')"><i class="fas fa-check"></i> Approve</button>
@@ -1108,7 +1108,7 @@ function renderAdminWallets() {
     const wTbody = document.querySelector('#adminWalletsTable tbody');
     if (wTbody) {
         if (wallets.length === 0) {
-            wTbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:#94a3b8;padding:40px">No wallets yet</td></tr>';
+            wTbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:#a99c7e;padding:40px">No wallets yet</td></tr>';
         } else {
             wTbody.innerHTML = wallets.map(w => {
                 let ownerName = w.ownerId;
@@ -1120,7 +1120,7 @@ function renderAdminWallets() {
                 }
                 return `
                     <tr>
-                        <td><strong>${truncate(ownerName, 25)}</strong><br><span style="font-size:0.75rem;color:#94a3b8">${w.ownerId}</span></td>
+                        <td><strong>${truncate(ownerName, 25)}</strong><br><span style="font-size:0.75rem;color:#a99c7e">${w.ownerId}</span></td>
                         <td><span class="badge" style="background:${w.ownerType === 'user' ? '#667eea22; color:#667eea' : '#8b5cf622; color:#8b5cf6'}">${w.ownerType}</span></td>
                         <td><strong>R${w.balance.toFixed(2)}</strong></td>
                         <td>${fmtDate(w.updatedAt)}</td>
@@ -1142,17 +1142,17 @@ function renderAdminWallets() {
     const tTbody = document.querySelector('#adminTransactionsTable tbody');
     if (tTbody) {
         if (txns.length === 0) {
-            tTbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:#94a3b8;padding:40px">No transactions yet</td></tr>';
+            tTbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:#a99c7e;padding:40px">No transactions yet</td></tr>';
         } else {
             tTbody.innerHTML = txns.slice(0, 50).map(t => {
-                const typeColors = { 'top-up': '#10b981', 'tip-sent': '#f59e0b', 'tip-received': '#10b981', 'booking-fee': '#ef4444', 'booking-confirmed': '#3b82f6', 'withdrawal': '#8b5cf6', 'admin-adjust': '#64748b', 'refund': '#06b6d4', 'credit': '#10b981', 'deduct': '#ef4444', 'experience-sale': '#7c3aed', 'experience-purchase': '#db2777' };
+                const typeColors = { 'top-up': '#10b981', 'tip-sent': '#f59e0b', 'tip-received': '#10b981', 'booking-fee': '#ef4444', 'booking-confirmed': '#3b82f6', 'withdrawal': '#8b5cf6', 'admin-adjust': '#8a7b55', 'refund': '#06b6d4', 'credit': '#10b981', 'deduct': '#ef4444', 'experience-sale': '#7c3aed', 'experience-purchase': '#db2777' };
                 const typeLabels = { 'top-up': 'Top Up', 'tip-sent': 'Tip Sent', 'tip-received': 'Tip Received', 'booking-fee': 'Booking Fee', 'booking-confirmed': 'Booking Confirmed', 'withdrawal': 'Withdrawal', 'admin-adjust': 'Admin Adjust', 'refund': 'Refund', 'credit': 'Credit', 'deduct': 'Deduct', 'experience-sale': 'Experience Sale', 'experience-purchase': 'Experience Purchase' };
-                const color = typeColors[t.type] || '#64748b';
+                const color = typeColors[t.type] || '#8a7b55';
                 const label = typeLabels[t.type] || t.type;
                 return `
                     <tr>
                         <td>${fmtDate(t.createdAt)}</td>
-                        <td><span style="font-size:0.8rem;color:#94a3b8">${t.ownerType}: ${truncate(t.ownerId, 15)}</span></td>
+                        <td><span style="font-size:0.8rem;color:#a99c7e">${t.ownerType}: ${truncate(t.ownerId, 15)}</span></td>
                         <td><span class="badge" style="background:${color}22; color:${color}; border:1px solid ${color}44">${label}</span></td>
                         <td style="color:${t.amount >= 0 ? '#10b981' : '#ef4444'}; font-weight:700">${t.amount >= 0 ? '+' : ''}R${Math.abs(t.amount).toFixed(2)}</td>
                         <td>R${t.newBalance.toFixed(2)}</td>
@@ -1172,16 +1172,16 @@ function renderAdminWallets() {
 function adminViewWalletTxns(ownerType, ownerId) {
     const txns = getWalletTransactions(ownerType, ownerId);
     const wallet = getOrCreateWallet(ownerType, ownerId);
-    let html = `<h2><i class="fas fa-history" style="color:#667eea;margin-right:8px"></i> Transactions</h2>`;
+    let html = `<h2><i class="fas fa-history" style="color:#c9a227;margin-right:8px"></i> Transactions</h2>`;
     html += `<div class="admin-view-row"><span class="label">Owner</span><span class="value">${ownerType}: ${ownerId}</span></div>`;
     html += `<div class="admin-view-row"><span class="label">Balance</span><span class="value">R${wallet.balance.toFixed(2)}</span></div>`;
     if (txns.length === 0) {
-        html += '<p style="color:#94a3b8;margin-top:16px">No transactions</p>';
+        html += '<p style="color:#a99c7e;margin-top:16px">No transactions</p>';
     } else {
         html += '<div style="margin-top:16px;max-height:400px;overflow-y:auto">';
         txns.forEach(t => {
-            html += `<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid #f1f5f9">
-                <div><div style="font-weight:600;font-size:0.88rem">${t.description || t.type}</div><div style="font-size:0.75rem;color:#94a3b8">${fmtDate(t.createdAt)}</div></div>
+            html += `<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid #f3eddd">
+                <div><div style="font-weight:600;font-size:0.88rem">${t.description || t.type}</div><div style="font-size:0.75rem;color:#a99c7e">${fmtDate(t.createdAt)}</div></div>
                 <div style="font-weight:700;color:${t.amount >= 0 ? '#10b981' : '#ef4444'}">${t.amount >= 0 ? '+' : ''}R${Math.abs(t.amount).toFixed(2)}</div>
             </div>`;
         });
@@ -1337,7 +1337,7 @@ const ADMIN_FORUM_CATS = {
     'events': { label: 'Events', color: '#0ea5e9', icon: 'fa-calendar-days' },
     'tips': { label: 'Tips', color: '#10b981', icon: 'fa-lightbulb' },
     'newcomers': { label: 'New Members', color: '#f59e0b', icon: 'fa-hand-wave' },
-    'offtopic': { label: 'Off-Topic', color: '#64748b', icon: 'fa-ellipsis' },
+    'offtopic': { label: 'Off-Topic', color: '#8a7b55', icon: 'fa-ellipsis' },
     'premium-exclusive': { label: 'Exclusive Content', color: '#d946ef', icon: 'fa-gem' },
     'premium-events': { label: 'Premium Events', color: '#f59e0b', icon: 'fa-star' },
     'premium-providers': { label: 'VIP Providers', color: '#d97706', icon: 'fa-crown' },
@@ -1408,7 +1408,7 @@ function renderAdminForum() {
     }
 
     tbody.innerHTML = filtered.map(thread => {
-        const cat = ADMIN_FORUM_CATS[thread.category] || { label: thread.category, color: '#64748b', icon: 'fa-comment' };
+        const cat = ADMIN_FORUM_CATS[thread.category] || { label: thread.category, color: '#8a7b55', icon: 'fa-comment' };
         const threadReplies = replies.filter(r => r.threadId === thread.id).length;
         const likes = Storage.getForumLikes();
         const threadLikes = likes.filter(l => l.targetId === thread.id && l.type === 'thread').length;
@@ -1417,7 +1417,7 @@ function renderAdminForum() {
         let statusBadges = '';
         if (thread.pinned) statusBadges += '<span class="forum-pin-badge" style="margin-right:4px"><i class="fas fa-thumbtack"></i> Pinned</span>';
         if (thread.locked) statusBadges += '<span class="forum-lock-badge"><i class="fas fa-lock"></i> Locked</span>';
-        if (!thread.pinned && !thread.locked) statusBadges = '<span style="color:var(--text-muted, #94a3b8);font-size:0.8rem">Active</span>';
+        if (!thread.pinned && !thread.locked) statusBadges = '<span style="color:var(--text-muted, #a99c7e);font-size:0.8rem">Active</span>';
 
         return `
             <tr>
@@ -1477,7 +1477,7 @@ function renderAdminForumReplies() {
 
     tbody.innerHTML = filtered.map(reply => {
         const thread = threads.find(t => t.id === reply.threadId);
-        const cat = ADMIN_FORUM_CATS[thread && thread.category] || { label: thread ? thread.category : 'Unknown', color: '#64748b', icon: 'fa-comment' };
+        const cat = ADMIN_FORUM_CATS[thread && thread.category] || { label: thread ? thread.category : 'Unknown', color: '#8a7b55', icon: 'fa-comment' };
         const likes = Storage.getForumLikes();
         const replyLikes = likes.filter(l => l.targetId === reply.id && l.type === 'reply').length;
         const date = new Date(reply.createdAt).toLocaleDateString('en-ZA', { day: 'numeric', month: 'short', year: 'numeric' });
@@ -1486,7 +1486,7 @@ function renderAdminForumReplies() {
             <tr>
                 <td class="truncate" style="max-width:280px">${renderGistShort(reply.body)}</td>
                 <td>${escapeHtml(reply.author)}</td>
-                <td><a href="#" onclick="event.preventDefault(); adminViewThread('${thread ? thread.id : ''}')">${thread ? '<i class="fas fa-comment"></i> ' + escapeHtml(truncate(thread.title, 40)) : '<span style="color:var(--text-muted, #94a3b8)">Deleted thread</span>'}</a></td>
+                <td><a href="#" onclick="event.preventDefault(); adminViewThread('${thread ? thread.id : ''}')">${thread ? '<i class="fas fa-comment"></i> ' + escapeHtml(truncate(thread.title, 40)) : '<span style="color:var(--text-muted, #a99c7e)">Deleted thread</span>'}</a></td>
                 <td>${replyLikes}</td>
                 <td>${date}</td>
                 <td>
@@ -1528,8 +1528,8 @@ function renderAdminForumGroups() {
         html += `<div style="margin-bottom:24px">
             <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
                 <span class="stat-icon" style="background:${sec.color}18;color:${sec.color};width:38px;height:38px;font-size:1rem"><i class="fas fa-layer-group"></i></span>
-                <div><div style="font-weight:700;color:var(--text-primary, #1e293b)">${sec.label}</div>
-                <div style="font-size:0.8rem;color:var(--text-muted, #94a3b8)">${sec.desc}</div></div>
+                <div><div style="font-weight:700;color:var(--text-primary, #211a0d)">${sec.label}</div>
+                <div style="font-size:0.8rem;color:var(--text-muted, #a99c7e)">${sec.desc}</div></div>
             </div>
             <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px">`;
         keys.forEach(key => {
@@ -1539,12 +1539,12 @@ function renderAdminForumGroups() {
             const catLikes = likes.filter(l => catThreads.some(t => t.id === l.targetId)).length;
             const last = catThreads.length ? new Date(Math.max(...catThreads.map(t => new Date(t.createdAt)))).toLocaleDateString('en-ZA', { day: 'numeric', month: 'short' }) : 'No activity';
             html += `
-                <div style="border:1px solid var(--border, #e2e8f0);border-radius:12px;padding:14px;background:var(--card-bg, #fff)">
+                <div style="border:1px solid var(--border, #e6dec8);border-radius:12px;padding:14px;background:var(--card-bg, #fff)">
                     <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
                         <i class="fas ${cat.icon}" style="color:${cat.color}"></i>
                         <strong style="font-size:0.9rem">${cat.label}</strong>
                     </div>
-                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;font-size:0.8rem;color:var(--text-muted, #94a3b8);margin-bottom:4px">
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;font-size:0.8rem;color:var(--text-muted, #a99c7e);margin-bottom:4px">
                         <div><i class="fas fa-comment" style="margin-right:4px"></i>${catThreads.length} threads</div>
                         <div><i class="fas fa-reply" style="margin-right:4px"></i>${catRepliesCount} replies</div>
                         <div><i class="fas fa-heart" style="margin-right:4px"></i>${catLikes} likes</div>
@@ -1583,7 +1583,7 @@ function adminViewThread(id) {
     const thread = Storage.getForumThreads().find(t => t.id === id);
     if (!thread) { showAdminView('<p>Thread not found.</p>'); return; }
     const replies = Storage.getForumReplies().filter(r => r.threadId === id);
-    const cat = ADMIN_FORUM_CATS[thread.category] || { label: thread.category, color: '#64748b', icon: 'fa-comment' };
+    const cat = ADMIN_FORUM_CATS[thread.category] || { label: thread.category, color: '#8a7b55', icon: 'fa-comment' };
     const likes = Storage.getForumLikes();
     const threadLikes = likes.filter(l => l.targetId === id && l.type === 'thread').length;
     const date = new Date(thread.createdAt).toLocaleDateString('en-ZA', { day: 'numeric', month: 'short', year: 'numeric' });
@@ -1595,33 +1595,33 @@ function adminViewThread(id) {
     let repliesHtml = replies.length ? replies.map(r => {
         const rLikes = likes.filter(l => l.targetId === r.id && l.type === 'reply').length;
         return `
-            <div style="display:flex;gap:10px;padding:12px 0;border-top:1px solid var(--border, #f1f5f9)">
+            <div style="display:flex;gap:10px;padding:12px 0;border-top:1px solid var(--border, #f3eddd)">
                 <div class="forum-reply-avatar">${escapeHtml((r.author || '?').charAt(0).toUpperCase())}</div>
                 <div style="flex:1;min-width:0">
                     <div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap">
                         <strong style="font-size:0.88rem">${escapeHtml(r.author)}</strong>
                         <div style="display:flex;gap:8px;align-items:center">
-                            <span style="font-size:0.75rem;color:var(--text-muted, #94a3b8)"><i class="fas fa-heart"></i> ${rLikes}</span>
+                            <span style="font-size:0.75rem;color:var(--text-muted, #a99c7e)"><i class="fas fa-heart"></i> ${rLikes}</span>
                             <button class="btn btn-danger btn-xs" onclick="adminDeleteForumReply('${r.id}', '${id}')"><i class="fas fa-trash"></i></button>
                         </div>
                     </div>
-                    <div style="font-size:0.85rem;color:var(--text-secondary, #475569);margin-top:6px;line-height:1.6">${renderAdminRichText(r.body)}</div>
+                    <div style="font-size:0.85rem;color:var(--text-secondary, #54492f);margin-top:6px;line-height:1.6">${renderAdminRichText(r.body)}</div>
                 </div>
             </div>`;
-    }).join('') : '<p style="color:var(--text-muted, #94a3b8);font-size:0.85rem;padding:12px 0">No replies yet.</p>';
+    }).join('') : '<p style="color:var(--text-muted, #a99c7e);font-size:0.85rem;padding:12px 0">No replies yet.</p>';
 
     showAdminView(`
         <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap">
             <span class="stat-icon" style="background:${cat.color}18;color:${cat.color};width:40px;height:40px;font-size:1rem"><i class="fas ${cat.icon}"></i></span>
             <div>
                 <h2 style="margin:0 0 4px">${escapeHtml(thread.title)}</h2>
-                <div style="font-size:0.8rem;color:var(--text-muted, #94a3b8)">
+                <div style="font-size:0.8rem;color:var(--text-muted, #a99c7e)">
                     by <strong>${escapeHtml(thread.author)}</strong> · ${cat.label} · ${date} · <i class="fas fa-heart"></i> ${threadLikes}
                 </div>
             </div>
         </div>
         ${statusBadges}
-        <div style="margin:14px 0;padding:14px;background:#f8fafc;border-radius:10px;font-size:0.9rem;line-height:1.7">${renderAdminRichText(thread.body)}</div>
+        <div style="margin:14px 0;padding:14px;background:#fdf9ef;border-radius:10px;font-size:0.9rem;line-height:1.7">${renderAdminRichText(thread.body)}</div>
         <h3 style="font-size:1rem;margin:0 0 4px"><i class="fas fa-comments"></i> Replies (${replies.length})</h3>
         ${repliesHtml}
         <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:16px">
@@ -1716,7 +1716,7 @@ function renderAdminForumActivity() {
 
     const items = [];
     threads.forEach(t => {
-        const cat = ADMIN_FORUM_CATS[t.category] || { label: t.category, color: '#64748b', icon: 'fa-comment' };
+        const cat = ADMIN_FORUM_CATS[t.category] || { label: t.category, color: '#8a7b55', icon: 'fa-comment' };
         items.push({
             id: t.id,
             type: 'thread',
@@ -1733,7 +1733,7 @@ function renderAdminForumActivity() {
     });
     replies.forEach(r => {
         const t = threads.find(x => x.id === r.threadId);
-        const cat = ADMIN_FORUM_CATS[t && t.category] || { label: t ? t.category : 'Unknown', color: '#64748b', icon: 'fa-comment' };
+        const cat = ADMIN_FORUM_CATS[t && t.category] || { label: t ? t.category : 'Unknown', color: '#8a7b55', icon: 'fa-comment' };
         items.push({
             id: r.id,
             type: 'reply',
@@ -1781,7 +1781,7 @@ function renderAdminForumActivity() {
                 <td style="white-space:nowrap"><span class="stat-icon" style="background:${item.catColor}18;color:${item.catColor};width:32px;height:32px;font-size:0.8rem"><i class="fas ${icon}"></i></span></td>
                 <td>
                     <strong style="font-size:0.88rem">${escapeHtml(item.title)}</strong>
-                    <div style="font-size:0.75rem;color:var(--text-muted, #94a3b8);margin-top:2px">${renderGistShort(item.body)}</div>
+                    <div style="font-size:0.75rem;color:var(--text-muted, #a99c7e);margin-top:2px">${renderGistShort(item.body)}</div>
                 </td>
                 <td>${escapeHtml(item.author)}</td>
                 <td><span style="background:${item.catColor}18;color:${item.catColor};padding:3px 8px;border-radius:8px;font-size:0.75rem;font-weight:600">${item.catLabel}</span></td>
@@ -1879,7 +1879,7 @@ function renderAdminMessages() {
                 <td>${escapeHtml(c.participantName)} ${c.participantRole === 'provider' ? '<span style="color:#10b981;font-size:0.75rem">(provider)</span>' : ''}</td>
                 <td>${convMsgs.length}</td>
                 <td>${unread ? `<span style="color:#ef4444;font-weight:700">${unread}</span>` : '-'}</td>
-                <td>${c.status === 'archived' ? '<span style="color:#94a3b8">Archived</span>' : '<span style="color:#10b981">Active</span>'}</td>
+                <td>${c.status === 'archived' ? '<span style="color:#a99c7e">Archived</span>' : '<span style="color:#10b981">Active</span>'}</td>
                 <td class="truncate" style="max-width:200px">${escapeHtml(msgPreviewText(c.lastMessage))}</td>
                 <td>${fmtDate(c.updatedAt)}</td>
                 <td>
@@ -1902,24 +1902,24 @@ function adminViewConversation(id) {
     const msgs = Storage.getMessages().filter(m => m.conversationId === id).sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
 
     const threadHtml = msgs.length === 0
-        ? '<p style="color:#94a3b8">No messages</p>'
+        ? '<p style="color:#a99c7e">No messages</p>'
         : msgs.map(m => `
-            <div style="padding:10px 0;border-bottom:1px solid #f1f5f9">
+            <div style="padding:10px 0;border-bottom:1px solid #f3eddd">
                 <div style="display:flex;justify-content:space-between;margin-bottom:4px">
                     <strong>${escapeHtml(m.senderName)}</strong>
-                    <span style="color:#94a3b8;font-size:0.75rem">${fmtDate(m.createdAt)}</span>
+                    <span style="color:#a99c7e;font-size:0.75rem">${fmtDate(m.createdAt)}</span>
                 </div>
-                <div style="font-size:0.9rem;color:#334155">${renderMsgBodyText(m.body)}</div>
+                <div style="font-size:0.9rem;color:#3a3121">${renderMsgBodyText(m.body)}</div>
             </div>
         `).join('');
 
     showAdminView(`
         <h2><i class="fas fa-envelope-open-text"></i> ${escapeHtml(conv.subject)}</h2>
-        <p style="color:#64748b;margin-top:4px">With: <strong>${escapeHtml(conv.participantName)}</strong> (${conv.participantRole}) &middot; Created ${fmtDate(conv.createdAt)}</p>
-        <div style="max-height:280px;overflow-y:auto;margin-top:16px;background:#f8fafc;border-radius:10px;padding:12px 16px">${threadHtml}</div>
+        <p style="color:#8a7b55;margin-top:4px">With: <strong>${escapeHtml(conv.participantName)}</strong> (${conv.participantRole}) &middot; Created ${fmtDate(conv.createdAt)}</p>
+        <div style="max-height:280px;overflow-y:auto;margin-top:16px;background:#fdf9ef;border-radius:10px;padding:12px 16px">${threadHtml}</div>
         <div style="margin-top:16px">
-            <label style="display:block;font-weight:600;color:#475569;font-size:0.85rem;margin-bottom:6px">Reply as Admin:</label>
-            <textarea id="adminMsgReplyBody" rows="3" style="width:100%;padding:10px 12px;border:1px solid #e2e8f0;border-radius:8px;font-family:inherit;font-size:0.88rem;resize:none"></textarea>
+            <label style="display:block;font-weight:600;color:#54492f;font-size:0.85rem;margin-bottom:6px">Reply as Admin:</label>
+            <textarea id="adminMsgReplyBody" rows="3" style="width:100%;padding:10px 12px;border:1px solid #e6dec8;border-radius:8px;font-family:inherit;font-size:0.88rem;resize:none"></textarea>
             <button class="btn btn-primary btn-xs" onclick="adminReplyConversation('${conv.id}')" style="margin-top:8px"><i class="fas fa-paper-plane"></i> Send Reply</button>
         </div>
     `);
@@ -2033,7 +2033,7 @@ function renderAdminSavedItems() {
 
     tbody.innerHTML = items.map(s => `
         <tr>
-            <td><i class="fas ${s.icon || 'fa-star'}" style="color:${s.color || '#64748b'};margin-right:8px"></i>${escapeHtml(s.title)}</td>
+            <td><i class="fas ${s.icon || 'fa-star'}" style="color:${s.color || '#8a7b55'};margin-right:8px"></i>${escapeHtml(s.title)}</td>
             <td>${escapeHtml((s.kind || 'item').replace('-', ' '))}</td>
             <td class="truncate" style="max-width:200px">${escapeHtml(s.sub || '-')}</td>
             <td>${fmtDate(s.createdAt)}</td>
@@ -2107,7 +2107,7 @@ function renderAdminExperiences() {
     }
 
     tbody.innerHTML = experiences.map(x => {
-        const type = EXPERIENCE_TYPES[x.type] || { label: x.type || '-', icon: 'fa-gamepad', color: '#64748b' };
+        const type = EXPERIENCE_TYPES[x.type] || { label: x.type || '-', icon: 'fa-gamepad', color: '#8a7b55' };
         const sales = purchases.filter(p => p.experienceId === x.id);
         const sold = sales.length;
         const revenue = sales.reduce((s, p) => s + p.amount, 0);
@@ -2133,7 +2133,7 @@ function renderAdminExperiences() {
 function adminViewExperience(id) {
     const x = Storage.getExperiences().find(item => item.id === id);
     if (!x) return;
-    const type = EXPERIENCE_TYPES[x.type] || { label: x.type || '-', icon: 'fa-gamepad', color: '#64748b' };
+    const type = EXPERIENCE_TYPES[x.type] || { label: x.type || '-', icon: 'fa-gamepad', color: '#8a7b55' };
     const sales = Storage.getExperiencePurchases().filter(p => p.experienceId === id);
     let body = `<p class="admin-view-row"><span class="label">Title</span><span class="value">${escapeHtml(x.title)}</span></p>`;
     body += `<p class="admin-view-row"><span class="label">Type</span><span class="value"><i class="fas ${type.icon}" style="color:${type.color}"></i> ${escapeHtml(type.label)}</span></p>`;
@@ -2169,8 +2169,8 @@ function renderAdminFantasy() {
     }
 
     tbody.innerHTML = requests.map(r => {
-        const cat = FANTASY_CATEGORIES[r.category] || { label: r.category || '-', icon: 'fa-scroll', color: '#64748b' };
-        const status = FANTASY_STATUSES[r.status] || { label: r.status || '-', color: '#64748b', icon: 'fa-circle' };
+        const cat = FANTASY_CATEGORIES[r.category] || { label: r.category || '-', icon: 'fa-scroll', color: '#8a7b55' };
+        const status = FANTASY_STATUSES[r.status] || { label: r.status || '-', color: '#8a7b55', icon: 'fa-circle' };
         const responseCount = (r.responses || []).length;
         return `
             <tr>
@@ -2198,8 +2198,8 @@ function renderAdminFantasy() {
 function adminViewFantasy(id) {
     const r = Storage.getFantasyRequests().find(item => item.id === id);
     if (!r) return;
-    const cat = FANTASY_CATEGORIES[r.category] || { label: r.category || '-', icon: 'fa-scroll', color: '#64748b' };
-    const status = FANTASY_STATUSES[r.status] || { label: r.status || '-', color: '#64748b', icon: 'fa-circle' };
+    const cat = FANTASY_CATEGORIES[r.category] || { label: r.category || '-', icon: 'fa-scroll', color: '#8a7b55' };
+    const status = FANTASY_STATUSES[r.status] || { label: r.status || '-', color: '#8a7b55', icon: 'fa-circle' };
     let body = `<p class="admin-view-row"><span class="label">Title</span><span class="value">${escapeHtml(r.title)}</span></p>`;
     body += `<p class="admin-view-row"><span class="label">Category</span><span class="value"><i class="fas ${cat.icon}" style="color:${cat.color}"></i> ${escapeHtml(cat.label)}</span></p>`;
     body += `<p class="admin-view-row"><span class="label">Budget</span><span class="value">R${r.price || 0}</span></p>`;
@@ -2209,10 +2209,10 @@ function adminViewFantasy(id) {
     if (r.responses && r.responses.length > 0) {
         body += `<p class="admin-view-row"><span class="label">Provider Responses</span></p>`;
         r.responses.forEach(res => {
-            body += `<div style="border:1px solid #e2e8f0;border-radius:10px;padding:10px 12px;margin:8px 0">
+            body += `<div style="border:1px solid #e6dec8;border-radius:10px;padding:10px 12px;margin:8px 0">
                 <strong><i class="fas fa-briefcase"></i> ${escapeHtml(res.providerName || 'Provider')}</strong> <span style="color:#10b981">R${res.price || 0}</span>
-                <p style="font-size:0.85rem;color:#475569;margin-top:6px">${escapeHtml(res.message || '')}</p>
-                <span style="font-size:0.75rem;color:#94a3b8">${fmtDate(res.createdAt)}</span>
+                <p style="font-size:0.85rem;color:#54492f;margin-top:6px">${escapeHtml(res.message || '')}</p>
+                <span style="font-size:0.75rem;color:#a99c7e">${fmtDate(res.createdAt)}</span>
             </div>`;
         });
     }

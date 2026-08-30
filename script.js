@@ -110,7 +110,7 @@ const VENUE_TYPES = {
     'hotel': { label: 'Hotel', icon: 'fa-bed', color: '#3b82f6' },
     'fetish-club': { label: 'Fetish Club', icon: 'fa-mask', color: '#8b5cf6' },
     'nightclub': { label: 'Nightclub', icon: 'fa-moon', color: '#6366f1' },
-    'other': { label: 'Other', icon: 'fa-ellipsis', color: '#64748b' }
+    'other': { label: 'Other', icon: 'fa-ellipsis', color: '#8a7b55' }
 };
 
 const AD_CATEGORIES = {
@@ -124,7 +124,7 @@ const AD_CATEGORIES = {
     'services-wanted': { label: 'Services Wanted', icon: 'fa-search', color: '#f59e0b' },
     'friends-with-benefits': { label: 'Friends with Benefits', icon: 'fa-handshake', color: '#0ea5e9' },
     'casual-hookups': { label: 'Casual Hookups', icon: 'fa-fire', color: '#ef4444' },
-    'general': { label: 'General', icon: 'fa-tag', color: '#64748b' }
+    'general': { label: 'General', icon: 'fa-tag', color: '#8a7b55' }
 };
 
 const GIG_TYPES = {
@@ -137,8 +137,8 @@ const GIG_TYPES = {
     'companionship': { label: 'Companionship', icon: 'fa-heart', color: '#ef4444' },
     'event-staff': { label: 'Event Staffing', icon: 'fa-people-group', color: '#6366f1' },
     'content-creation': { label: 'Content Creation', icon: 'fa-video', color: '#a855f7' },
-    'domming': { label: 'Dom / Sub Services', icon: 'fa-link', color: '#64748b' },
-    'other': { label: 'Other', icon: 'fa-ellipsis', color: '#64748b' }
+    'domming': { label: 'Dom / Sub Services', icon: 'fa-link', color: '#8a7b55' },
+    'other': { label: 'Other', icon: 'fa-ellipsis', color: '#8a7b55' }
 };
 
 const SERVICE_TYPES = {}; // Replaced by dynamic custom service types
@@ -166,7 +166,7 @@ const EVENT_TYPES = {
     'club': { label: 'Club Invites', icon: 'fa-compact-disc', color: '#3b82f6' },
     'fun': { label: 'Fun Nights/Days', icon: 'fa-sun', color: '#f59e0b' },
     'cookout': { label: 'Cookout', icon: 'fa-fire-burner', color: '#ef4444' },
-    'other': { label: 'Other', icon: 'fa-ellipsis', color: '#64748b' }
+    'other': { label: 'Other', icon: 'fa-ellipsis', color: '#8a7b55' }
 };
 
 const EXPERIENCE_TYPES = {
@@ -181,7 +181,7 @@ const EXPERIENCE_TYPES = {
     'strategy': { label: 'Strategy & Puzzles', icon: 'fa-brain', color: '#06b6d4' },
     'tournament': { label: 'Tournaments', icon: 'fa-trophy', color: '#f97316' },
     'fantasy': { label: 'Fantasy Games', icon: 'fa-dragon', color: '#d946ef' },
-    'other': { label: 'Other', icon: 'fa-ellipsis', color: '#64748b' }
+    'other': { label: 'Other', icon: 'fa-ellipsis', color: '#8a7b55' }
 };
 
 const FANTASY_CATEGORIES = {
@@ -193,7 +193,7 @@ const FANTASY_CATEGORIES = {
     'strategy': { label: 'Strategy', icon: 'fa-brain', color: '#06b6d4' },
     'virtual': { label: 'Virtual Worlds', icon: 'fa-vr-cardboard', color: '#a855f7' },
     'social': { label: 'Social Games', icon: 'fa-people-group', color: '#3b82f6' },
-    'other': { label: 'Other', icon: 'fa-ellipsis', color: '#64748b' }
+    'other': { label: 'Other', icon: 'fa-ellipsis', color: '#8a7b55' }
 };
 
 const FANTASY_STATUSES = {
@@ -225,7 +225,7 @@ function addCustomServiceType(name) {
 }
 
 function getServiceTypeBySlug(slug) {
-    return getAllServiceTypes().find(t => t.slug === slug) || { label: slug, icon: 'fa-concierge-bell', color: '#64748b' };
+    return getAllServiceTypes().find(t => t.slug === slug) || { label: slug, icon: 'fa-concierge-bell', color: '#8a7b55' };
 }
 
 function getMostUsedServiceType() {
@@ -1926,8 +1926,8 @@ function viewAd(id) {
 
     const typeBadge = document.getElementById('adViewType');
     typeBadge.textContent = cat.label || a.category;
-    typeBadge.style.background = (cat.color || '#64748b') + '20';
-    typeBadge.style.color = cat.color || '#64748b';
+    typeBadge.style.background = (cat.color || '#8a7b55') + '20';
+    typeBadge.style.color = cat.color || '#8a7b55';
 
     const tagsContainer = document.getElementById('adViewTags');
     if (a.tags && a.tags.length > 0) {
@@ -3027,9 +3027,9 @@ function renderUserWallet() {
     }
 
     container.innerHTML = txns.map(t => {
-        const typeColors = { 'top-up': '#10b981', 'tip-sent': '#f59e0b', 'tip-received': '#10b981', 'booking-fee': '#ef4444', 'booking-confirmed': '#3b82f6', 'withdrawal': '#8b5cf6', 'admin-adjust': '#64748b', 'refund': '#06b6d4' };
+        const typeColors = { 'top-up': '#10b981', 'tip-sent': '#f59e0b', 'tip-received': '#10b981', 'booking-fee': '#ef4444', 'booking-confirmed': '#3b82f6', 'withdrawal': '#8b5cf6', 'admin-adjust': '#8a7b55', 'refund': '#06b6d4' };
         const typeLabels = { 'top-up': 'Top Up', 'tip-sent': 'Tip Sent', 'tip-received': 'Tip Received', 'booking-fee': 'Booking Fee', 'booking-confirmed': 'Booking Confirmed', 'withdrawal': 'Withdrawal', 'admin-adjust': 'Admin Adjust', 'refund': 'Refund' };
-        const color = typeColors[t.type] || '#64748b';
+        const color = typeColors[t.type] || '#8a7b55';
         const label = typeLabels[t.type] || t.type;
         return `
             <div class="txn-row">
@@ -3126,9 +3126,9 @@ function renderProviderWallet() {
     }
 
     container.innerHTML = allProviderTxns.slice(0, 30).map(t => {
-        const typeColors = { 'top-up': '#10b981', 'tip-sent': '#f59e0b', 'tip-received': '#10b981', 'booking-fee': '#ef4444', 'booking-confirmed': '#3b82f6', 'withdrawal': '#8b5cf6', 'admin-adjust': '#64748b', 'refund': '#06b6d4' };
+        const typeColors = { 'top-up': '#10b981', 'tip-sent': '#f59e0b', 'tip-received': '#10b981', 'booking-fee': '#ef4444', 'booking-confirmed': '#3b82f6', 'withdrawal': '#8b5cf6', 'admin-adjust': '#8a7b55', 'refund': '#06b6d4' };
         const typeLabels = { 'top-up': 'Top Up', 'tip-sent': 'Tip Sent', 'tip-received': 'Tip Received', 'booking-fee': 'Booking Fee', 'booking-confirmed': 'Booking Confirmed', 'withdrawal': 'Withdrawal', 'admin-adjust': 'Admin Adjust', 'refund': 'Refund' };
-        const color = typeColors[t.type] || '#64748b';
+        const color = typeColors[t.type] || '#8a7b55';
         const label = typeLabels[t.type] || t.type;
         return `
             <div class="txn-row">
@@ -3226,7 +3226,7 @@ function renderContentDirectory() {
     }
 
     container.innerHTML = filtered.map(c => {
-        const type = CONTENT_TYPES[c.type] || { label: c.type, icon: 'fa-file', color: '#64748b' };
+        const type = CONTENT_TYPES[c.type] || { label: c.type, icon: 'fa-file', color: '#8a7b55' };
         const providers = [...Storage.getListings(), ...Storage.getServices()];
         const author = providers.find(p => p.id === c.providerId);
         const authorName = author ? author.name : 'Unknown Creator';
@@ -3259,7 +3259,7 @@ function viewContent(id) {
     if (!item) { showToast('Content not found.', 'error'); return; }
 
     currentContentViewId = id;
-    const type = CONTENT_TYPES[item.type] || { label: item.type, icon: 'fa-file', color: '#64748b' };
+    const type = CONTENT_TYPES[item.type] || { label: item.type, icon: 'fa-file', color: '#8a7b55' };
     const providers = [...Storage.getListings(), ...Storage.getServices()];
     const author = providers.find(p => p.id === item.providerId);
     const authorName = author ? author.name : 'Unknown Creator';
@@ -3340,7 +3340,7 @@ let providerEarningsOverTimeChart = null;
 const TYPE_COLORS = {
     'top-up': '#10b981', 'tip-sent': '#f59e0b', 'tip-received': '#f59e0b',
     'booking-fee': '#ef4444', 'booking-confirmed': '#3b82f6', 'withdrawal': '#8b5cf6',
-    'admin-adjust': '#64748b', 'refund': '#06b6d4'
+    'admin-adjust': '#8a7b55', 'refund': '#06b6d4'
 };
 
 const TYPE_LABELS = {
@@ -3376,7 +3376,7 @@ function renderUserAnalytics() {
     // Spending by Type (Doughnut)
     const byTypeLabels = Object.keys(typeCounts).map(k => TYPE_LABELS[k] || k);
     const byTypeData = Object.values(typeCounts);
-    const byTypeColors = Object.keys(typeCounts).map(k => TYPE_COLORS[k] || '#64748b');
+    const byTypeColors = Object.keys(typeCounts).map(k => TYPE_COLORS[k] || '#8a7b55');
 
     if (userSpendingByTypeChart) userSpendingByTypeChart.destroy();
     const ctx1 = document.getElementById('userSpendingByTypeChart');
@@ -3420,7 +3420,7 @@ function renderUserAnalytics() {
                 responsive: true, maintainAspectRatio: false,
                 plugins: { legend: { display: false } },
                 scales: {
-                    y: { beginAtZero: true, grid: { color: '#f1f5f9' }, ticks: { callback: v => 'R' + v, font: { size: 11 } } },
+                    y: { beginAtZero: true, grid: { color: '#e6dec8' }, ticks: { callback: v => 'R' + v, font: { size: 11 } } },
                     x: { grid: { display: false }, ticks: { font: { size: 11 } } }
                 },
                 animation: { duration: 1000, easing: 'easeOutQuart' }
@@ -3451,7 +3451,7 @@ function renderProviderAnalytics() {
     // Earnings by Type (Doughnut)
     const byTypeLabels = Object.keys(typeCounts).map(k => TYPE_LABELS[k] || k);
     const byTypeData = Object.values(typeCounts);
-    const byTypeColors = Object.keys(typeCounts).map(k => TYPE_COLORS[k] || '#64748b');
+    const byTypeColors = Object.keys(typeCounts).map(k => TYPE_COLORS[k] || '#8a7b55');
 
     if (providerEarningsByTypeChart) providerEarningsByTypeChart.destroy();
     const ctx1 = document.getElementById('providerEarningsByTypeChart');
@@ -3495,7 +3495,7 @@ function renderProviderAnalytics() {
                 responsive: true, maintainAspectRatio: false,
                 plugins: { legend: { display: false } },
                 scales: {
-                    y: { beginAtZero: true, grid: { color: '#f1f5f9' }, ticks: { callback: v => 'R' + v, font: { size: 11 } } },
+                    y: { beginAtZero: true, grid: { color: '#e6dec8' }, ticks: { callback: v => 'R' + v, font: { size: 11 } } },
                     x: { grid: { display: false }, ticks: { font: { size: 11 } } }
                 },
                 animation: { duration: 1000, easing: 'easeOutQuart' }
@@ -3619,7 +3619,7 @@ function renderProviderContent() {
     }
 
     container.innerHTML = filtered.map(c => {
-        const type = CONTENT_TYPES[c.type] || { label: c.type, icon: 'fa-file', color: '#64748b' };
+        const type = CONTENT_TYPES[c.type] || { label: c.type, icon: 'fa-file', color: '#8a7b55' };
         return `
             <div class="provider-card profile-card">
                 <div class="provider-card-icon" style="background:${type.color}22;color:${type.color}"><i class="fas ${type.icon}"></i></div>
@@ -3795,7 +3795,7 @@ const REACTION_TYPES = [
     { type: 'fire', icon: 'fa-fire', label: 'Fire', color: '#f97316' },
     { type: 'laugh', icon: 'fa-face-laugh-beam', label: 'Haha', color: '#f59e0b' },
     { type: 'wow', icon: 'fa-face-surprise', label: 'Wow', color: '#8b5cf6' },
-    { type: 'sad', icon: 'fa-face-sad-tear', label: 'Sad', color: '#64748b' }
+    { type: 'sad', icon: 'fa-face-sad-tear', label: 'Sad', color: '#8a7b55' }
 ];
 
 function renderContentReactions(contentId) {
@@ -4041,7 +4041,7 @@ function renderEventsDirectory() {
     }
 
     container.innerHTML = filtered.map(ev => {
-        const type = EVENT_TYPES[ev.type] || { label: ev.type, icon: 'fa-calendar', color: '#64748b' };
+        const type = EVENT_TYPES[ev.type] || { label: ev.type, icon: 'fa-calendar', color: '#8a7b55' };
         const providers = [...Storage.getListings(), ...Storage.getServices()];
         const author = providers.find(p => p.id === ev.providerId);
         const authorName = author ? author.name : 'Unknown Host';
@@ -4081,7 +4081,7 @@ function viewEvent(id) {
     if (!ev) { showToast('Event not found.', 'error'); return; }
 
     currentEventViewId = id;
-    const type = EVENT_TYPES[ev.type] || { label: ev.type, icon: 'fa-calendar', color: '#64748b' };
+    const type = EVENT_TYPES[ev.type] || { label: ev.type, icon: 'fa-calendar', color: '#8a7b55' };
     const providers = [...Storage.getListings(), ...Storage.getServices()];
     const author = providers.find(p => p.id === ev.providerId);
     const authorName = author ? author.name : 'Unknown Host';
@@ -4136,7 +4136,7 @@ function renderProviderEvents() {
     }
 
     container.innerHTML = filtered.map(ev => {
-        const type = EVENT_TYPES[ev.type] || { label: ev.type, icon: 'fa-calendar', color: '#64748b' };
+        const type = EVENT_TYPES[ev.type] || { label: ev.type, icon: 'fa-calendar', color: '#8a7b55' };
         const eventDateStr = ev.eventDate ? new Date(ev.eventDate).toLocaleDateString('en-ZA', { day: 'numeric', month: 'short' }) : '';
         return `
             <div class="provider-card profile-card">
@@ -4263,7 +4263,7 @@ const FORUM_CATEGORIES = {
     'events': { label: 'Events', icon: 'fa-calendar-days', color: '#0ea5e9', section: 'public' },
     'tips': { label: 'Tips & Tricks', icon: 'fa-lightbulb', color: '#10b981', section: 'public' },
     'newcomers': { label: 'New Members', icon: 'fa-hand-wave', color: '#f59e0b', section: 'public' },
-    'offtopic': { label: 'Off-Topic', icon: 'fa-ellipsis', color: '#64748b', section: 'public' },
+    'offtopic': { label: 'Off-Topic', icon: 'fa-ellipsis', color: '#8a7b55', section: 'public' },
     'premium-exclusive': { label: 'Exclusive Content', icon: 'fa-gem', color: '#d946ef', section: 'premium' },
     'premium-events': { label: 'Premium Events', icon: 'fa-star', color: '#f59e0b', section: 'premium' },
     'premium-providers': { label: 'VIP Providers', icon: 'fa-crown', color: '#d97706', section: 'premium' },
@@ -4455,7 +4455,7 @@ function renderForumThreads() {
     }
 
     container.innerHTML = filtered.map(thread => {
-        const cat = FORUM_CATEGORIES[thread.category] || { label: thread.category, icon: 'fa-comment', color: '#64748b' };
+        const cat = FORUM_CATEGORIES[thread.category] || { label: thread.category, icon: 'fa-comment', color: '#8a7b55' };
         const threadLikes = likes.filter(l => l.targetId === thread.id && l.type === 'thread').length;
         const threadReplies = replies.filter(r => r.threadId === thread.id).length;
         const isLiked = likes.some(l => l.targetId === thread.id && l.type === 'thread' && l.userId === 'current');
@@ -4522,7 +4522,7 @@ function viewForumThread(id) {
 
     const replies = Storage.getForumReplies();
     const likes = Storage.getForumLikes();
-    const cat = FORUM_CATEGORIES[thread.category] || { label: thread.category, icon: 'fa-comment', color: '#64748b' };
+    const cat = FORUM_CATEGORIES[thread.category] || { label: thread.category, icon: 'fa-comment', color: '#8a7b55' };
     const threadLikes = likes.filter(l => l.targetId === id && l.type === 'thread').length;
     const isLiked = likes.some(l => l.targetId === id && l.type === 'thread' && l.userId === 'current');
     const threadReplies = replies.filter(r => r.threadId === id);
@@ -4573,7 +4573,7 @@ function viewForumThread(id) {
     const repliesList = document.getElementById('forumRepliesList');
     if (repliesList) {
         if (threadReplies.length === 0) {
-            repliesList.innerHTML = '<p style="color:var(--text-muted, #94a3b8);font-style:italic;padding:10px 0">No replies yet. Be the first to reply!</p>';
+            repliesList.innerHTML = '<p style="color:var(--text-muted, #a99c7e);font-style:italic;padding:10px 0">No replies yet. Be the first to reply!</p>';
         } else {
             repliesList.innerHTML = threadReplies.map(reply => {
                 const initials = reply.author.split(' ').map(w => w[0]).join('').substring(0, 2).toUpperCase();
@@ -4724,7 +4724,7 @@ function renderUserForumThreads() {
     }
 
     container.innerHTML = userThreads.map(thread => {
-        const cat = FORUM_CATEGORIES[thread.category] || { label: thread.category, icon: 'fa-comment', color: '#64748b' };
+        const cat = FORUM_CATEGORIES[thread.category] || { label: thread.category, icon: 'fa-comment', color: '#8a7b55' };
         const threadLikes = likes.filter(l => l.targetId === thread.id && l.type === 'thread').length;
         const threadReplies = replies.filter(r => r.threadId === thread.id).length;
         const timeAgo = getTimeAgo(thread.createdAt);
@@ -4818,7 +4818,7 @@ function renderGigsBrowse() {
     }
 
     container.innerHTML = filtered.map(gig => {
-        const type = GIG_TYPES[gig.gigType] || { label: gig.gigType, icon: 'fa-briefcase', color: '#64748b' };
+        const type = GIG_TYPES[gig.gigType] || { label: gig.gigType, icon: 'fa-briefcase', color: '#8a7b55' };
         const timeAgo = getTimeAgo(gig.createdAt);
         const rateStr = gig.rate ? `R${gig.rate}/${gig.rateType || 'hr'}` : 'Negotiable';
         return `
@@ -4851,7 +4851,7 @@ function viewGig(id) {
     if (!gig) return;
     currentGigViewId = id;
 
-    const type = GIG_TYPES[gig.gigType] || { label: gig.gigType, icon: 'fa-briefcase', color: '#64748b' };
+    const type = GIG_TYPES[gig.gigType] || { label: gig.gigType, icon: 'fa-briefcase', color: '#8a7b55' };
     const createdStr = new Date(gig.createdAt).toLocaleDateString('en-ZA', { day: 'numeric', month: 'long', year: 'numeric' });
     const rateStr = gig.rate ? `R${gig.rate}/${gig.rateType || 'hr'}` : 'Negotiable';
     const tagsHtml = (gig.tags || []).map(t => `<span class="forum-tag">${t}</span>`).join('');
@@ -4961,7 +4961,7 @@ function renderUserGigs() {
         return;
     }
     container.innerHTML = gigs.map(gig => {
-        const type = GIG_TYPES[gig.gigType] || { label: gig.gigType, icon: 'fa-briefcase', color: '#64748b' };
+        const type = GIG_TYPES[gig.gigType] || { label: gig.gigType, icon: 'fa-briefcase', color: '#8a7b55' };
         return `
         <div class="forum-thread-card" onclick="viewGig('${gig.id}')" style="cursor:pointer">
             <div class="forum-thread-card-inner">
@@ -5144,7 +5144,7 @@ function renderMessageThread() {
                 <div class="conv-avatar lg">${escapeHtml(conv.participantName.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase())}</div>
                 <div>
                     <h3>${escapeHtml(conv.participantName)}</h3>
-                    <p style="color:var(--text-muted, #94a3b8);font-size:0.85rem">${conv.participantRole === 'provider' ? 'Service Provider' : 'Member'}</p>
+                    <p style="color:var(--text-muted, #a99c7e);font-size:0.85rem">${conv.participantRole === 'provider' ? 'Service Provider' : 'Member'}</p>
                 </div>
                 <div style="margin-left:auto;display:flex;gap:8px">
                     <button class="btn btn-secondary btn-sm" onclick="archiveConversation('${conv.id}')"><i class="fas ${conv.status === 'archived' ? 'fa-box-open' : 'fa-box-archive'}"></i> ${conv.status === 'archived' ? 'Unarchive' : 'Archive'}</button>
@@ -5167,7 +5167,7 @@ function renderMessageThread() {
                 <button type="button" class="gist-btn" onclick="toggleMsgGifPicker('messageReplyBody')" title="GIF"><i class="fas fa-images"></i></button>
             </div>
             <div class="form-group" style="margin-top:8px">
-                <textarea id="messageReplyBody" rows="3" placeholder="Type your reply... Add emojis and GIFs 🎉" style="width:100%;padding:12px 14px;border:1px solid var(--border, #e2e8f0);border-radius:10px;font-family:inherit;font-size:0.9rem;resize:none;outline:none;background:var(--card-bg, white);color:var(--text-primary, #1e293b)"></textarea>
+                <textarea id="messageReplyBody" rows="3" placeholder="Type your reply... Add emojis and GIFs 🎉" style="width:100%;padding:12px 14px;border:1px solid var(--border, #e6dec8);border-radius:10px;font-family:inherit;font-size:0.9rem;resize:none;outline:none;background:var(--card-bg, #fdf9ef);color:var(--text-primary, #211a0d)"></textarea>
             </div>
             <div class="form-grid" style="grid-template-columns:2fr 1fr;gap:10px">
                 <div class="form-group">
@@ -5514,9 +5514,9 @@ function getSaveableMeta(kind, id) {
     switch (kind) {
         case 'profile': {
             const u = Storage.getUsers().find(x => x.id === id);
-            if (u) return { title: u.fullName, sub: u.role || 'Member', icon: 'fa-user', color: '#667eea' };
+            if (u) return { title: u.fullName, sub: u.role || 'Member', icon: 'fa-user', color: '#c9a227' };
             const l = [...Storage.getListings(), ...Storage.getServices()].find(x => x.id === id);
-            return { title: l ? l.name : 'Profile', sub: l ? (l.typeLabel || l.type || '') : '', icon: 'fa-user', color: '#667eea' };
+            return { title: l ? l.name : 'Profile', sub: l ? (l.typeLabel || l.type || '') : '', icon: 'fa-user', color: '#c9a227' };
         }
         case 'venue': {
             const v = Storage.getVenues().find(x => x.id === id);
@@ -5552,7 +5552,7 @@ function getSaveableMeta(kind, id) {
             return { title: t ? t.title : 'Thread', sub: cat.label, icon: cat.icon || 'fa-comments', color: '#6366f1' };
         }
         default:
-            return { title: 'Item', sub: '', icon: 'fa-star', color: '#64748b' };
+            return { title: 'Item', sub: '', icon: 'fa-star', color: '#8a7b55' };
     }
 }
 
@@ -5922,7 +5922,7 @@ function renderProviderExperiences() {
     }
 
     container.innerHTML = filtered.map(x => {
-        const type = EXPERIENCE_TYPES[x.type] || { label: x.type, icon: 'fa-gamepad', color: '#64748b' };
+        const type = EXPERIENCE_TYPES[x.type] || { label: x.type, icon: 'fa-gamepad', color: '#8a7b55' };
         const sold = purchases.filter(p => p.experienceId === x.id).length;
         const revenue = purchases.filter(p => p.experienceId === x.id).reduce((s, p) => s + p.amount, 0);
         return `
@@ -5976,7 +5976,7 @@ function renderExperiencesBrowse() {
     }
 
     container.innerHTML = filtered.map(x => {
-        const type = EXPERIENCE_TYPES[x.type] || { label: x.type, icon: 'fa-gamepad', color: '#64748b' };
+        const type = EXPERIENCE_TYPES[x.type] || { label: x.type, icon: 'fa-gamepad', color: '#8a7b55' };
         const purchases = Storage.getExperiencePurchases();
         const soldCount = purchases.filter(p => p.experienceId === x.id).length;
         return `
@@ -6014,7 +6014,7 @@ function viewExperience(id) {
     const item = Storage.getExperiences().find(x => x.id === id);
     if (!item) return;
     currentExperienceViewId = id;
-    const type = EXPERIENCE_TYPES[item.type] || { label: item.type, icon: 'fa-gamepad', color: '#64748b' };
+    const type = EXPERIENCE_TYPES[item.type] || { label: item.type, icon: 'fa-gamepad', color: '#8a7b55' };
     const provider = getExperienceProvider(item.providerId);
     const alreadyBought = Storage.getExperiencePurchases().some(p => p.experienceId === id);
 
@@ -6096,7 +6096,7 @@ function renderMyGames() {
         html += `<h3 style="margin:0 0 12px;color:var(--text-primary)"><i class="fas fa-gamepad"></i> My Experiences</h3>`;
         html += purchases.map(p => {
             const exp = Storage.getExperiences().find(x => x.id === p.experienceId);
-            const type = EXPERIENCE_TYPES[exp?.type] || { label: 'Experience', icon: 'fa-gamepad', color: '#64748b' };
+            const type = EXPERIENCE_TYPES[exp?.type] || { label: 'Experience', icon: 'fa-gamepad', color: '#8a7b55' };
             return `
             <div class="forum-thread-card" style="cursor:pointer" onclick="viewExperience('${p.experienceId}')">
                 <div class="forum-thread-card-inner">
@@ -6122,8 +6122,8 @@ function renderMyGames() {
     if (myRequests.length > 0) {
         html += `<h3 style="margin:0 0 12px;color:var(--text-primary)"><i class="fas fa-scroll"></i> My Fantasy Requests</h3>`;
         html += myRequests.map(r => {
-            const cat = FANTASY_CATEGORIES[r.category] || { label: r.category, icon: 'fa-scroll', color: '#64748b' };
-            const status = FANTASY_STATUSES[r.status] || { label: r.status, color: '#64748b', icon: 'fa-circle' };
+            const cat = FANTASY_CATEGORIES[r.category] || { label: r.category, icon: 'fa-scroll', color: '#8a7b55' };
+            const status = FANTASY_STATUSES[r.status] || { label: r.status, color: '#8a7b55', icon: 'fa-circle' };
             const responseCount = (r.responses || []).length;
             return `
             <div class="forum-thread-card" style="cursor:pointer" onclick="viewFantasyRequest('${r.id}')">
@@ -6225,8 +6225,8 @@ function renderFantasyRequests() {
     }
 
     container.innerHTML = filtered.map(r => {
-        const cat = FANTASY_CATEGORIES[r.category] || { label: r.category, icon: 'fa-scroll', color: '#64748b' };
-        const status = FANTASY_STATUSES[r.status] || { label: r.status, color: '#64748b', icon: 'fa-circle' };
+        const cat = FANTASY_CATEGORIES[r.category] || { label: r.category, icon: 'fa-scroll', color: '#8a7b55' };
+        const status = FANTASY_STATUSES[r.status] || { label: r.status, color: '#8a7b55', icon: 'fa-circle' };
         const responseCount = (r.responses || []).length;
         const isMine = r.authorId === 'current';
         return `
@@ -6265,8 +6265,8 @@ function viewFantasyRequest(id) {
     if (!r) return;
     currentFantasyViewId = id;
     currentProviderFantasyViewId = id;
-    const cat = FANTASY_CATEGORIES[r.category] || { label: r.category, icon: 'fa-scroll', color: '#64748b' };
-    const status = FANTASY_STATUSES[r.status] || { label: r.status, color: '#64748b', icon: 'fa-circle' };
+    const cat = FANTASY_CATEGORIES[r.category] || { label: r.category, icon: 'fa-scroll', color: '#8a7b55' };
+    const status = FANTASY_STATUSES[r.status] || { label: r.status, color: '#8a7b55', icon: 'fa-circle' };
     const canRespond = r.status === 'approved' && currentProviderFantasyViewId === id && document.getElementById('page-provider-fantasy-requests');
 
     const container = document.getElementById('fantasyViewContent');
@@ -6412,7 +6412,7 @@ function renderProviderFantasyRequests() {
     }
 
     container.innerHTML = filtered.map(r => {
-        const cat = FANTASY_CATEGORIES[r.category] || { label: r.category, icon: 'fa-scroll', color: '#64748b' };
+        const cat = FANTASY_CATEGORIES[r.category] || { label: r.category, icon: 'fa-scroll', color: '#8a7b55' };
         const responseCount = (r.responses || []).length;
         const me = getCurrentProviderIdentity();
         const alreadyResponded = (r.responses || []).some(res => res.providerId === me.id);
