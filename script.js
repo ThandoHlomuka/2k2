@@ -592,6 +592,7 @@ function handleUserSubmit(e) {
     const profile = {
         id: id || generateId(),
         userId: currentAuthId(),
+        username: document.getElementById('userUsername').value.trim(),
         fullName: document.getElementById('userFullName').value,
         email: document.getElementById('userFormEmail').value,
         phone: document.getElementById('userFormPhone').value,
@@ -660,6 +661,7 @@ function viewUserProfile(id) {
     currentViewUserId = id;
 
     document.getElementById('userViewName').textContent = u.fullName;
+    document.getElementById('userViewUsername').textContent = u.username || '-';
     document.getElementById('userViewEmail').textContent = u.email;
     document.getElementById('userViewPhone').textContent = u.phone || '-';
     document.getElementById('userViewLocation').textContent = u.location || '-';
@@ -702,6 +704,7 @@ function editUserProfile() {
 
 function populateUserForm(u) {
     document.getElementById('userProfileId').value = u.id;
+    document.getElementById('userUsername').value = u.username || '';
     document.getElementById('userFullName').value = u.fullName || '';
     document.getElementById('userFormEmail').value = u.email || '';
     document.getElementById('userFormPhone').value = u.phone || '';
