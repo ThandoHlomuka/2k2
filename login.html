@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#c9a227">
+<title>Sign In · 2k2</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<link rel="stylesheet" href="auth.css?v=20">
+</head>
+<body class="auth-body">
+  <div class="auth-card">
+    <div class="auth-logo">
+      <div class="brand-mark">2k2</div>
+      <div class="brand-sub">Welcome back</div>
+    </div>
+
+    <div class="auth-error" id="authError"></div>
+    <div class="auth-msg" id="authMsg"></div>
+
+    <!-- Forgot password box -->
+    <div id="forgotBox" style="display:none">
+      <h2 class="auth-title">Reset password</h2>
+      <p class="auth-sub">Enter your email and we'll send a reset link</p>
+      <div class="auth-field">
+        <label>Email</label>
+        <input type="email" id="resetEmail" class="auth-input" placeholder="you@example.com">
+      </div>
+      <div class="auth-row">
+        <button class="auth-btn auth-btn--ghost" onclick="showLogin()">Back</button>
+        <button class="auth-btn" id="resetBtn" onclick="sendReset()">Send reset link</button>
+      </div>
+    </div>
+
+    <!-- Login form -->
+    <form id="loginForm" novalidate>
+      <h2 class="auth-title">Sign In</h2>
+      <p class="auth-sub">Access your 2k2 account</p>
+
+      <div class="auth-field">
+        <label>Email</label>
+        <input type="email" id="email" class="auth-input" autocomplete="email" placeholder="you@example.com">
+      </div>
+
+      <div class="auth-field">
+        <label>Password</label>
+        <input type="password" id="password" class="auth-input" autocomplete="current-password" placeholder="Your password">
+      </div>
+
+      <button type="submit" class="auth-btn" id="submitBtn"><i class="fa-solid fa-right-to-bracket"></i>&nbsp; Sign In</button>
+
+      <div class="auth-link">
+        <a href="javascript:void(0)" onclick="showForgot()">Forgot password?</a>
+      </div>
+      <div class="auth-link">New to 2k2? <a href="register.html">Create an account</a></div>
+    </form>
+
+    <div class="auth-back"><a href="onboarding.html">&larr; Back to 2k2</a></div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <script src="config.js?v=20"></script>
+  <script src="auth.js?v=20"></script>
+  <script>
+    (function () {
+      var form = document.getElementById('loginForm');
+      var forgotBox = document.getElementById('forgotBox');
+      var errEl = document.getElementById('authError');
+      var msgEl = document.getElementById('authMsg');
+      var btn = document.getElementById('submitBtn');
+      var next = new URLSearchParams(window.location.search).get('next');
+      var redirectTo;
+
+      function showErr(msg) { errEl.textContent = msg; errEl.classList.add('show'); msgEl.classList.remove('show'); }
+      function showMsg(msg) { msgEl.textContent = msg; msgEl.classList.add('show'); errEl.classList.remove('show'); }
+      function clearMsg() { errEl.classList.remove('show'); msgEl.classList.remove('show'); }
+
+      function showForgot() { clearMsg(); form.style.display = 'none'; forgotBox.style.display = 'block'; }
+      function showLogin() { clearMsg(); forgotBox.style.display = 'none'; form.style.display = 'block'; }
+      window.showForgot = showForgot;
+      window.showLogin = showLogin;
+
+      function safeNext(v) {
+        if (!v) return false;
+        // allow only known portal destinations
+        return /^(index|provider|admin|upgrade)\.html/.test(v) ? v : false;
+      }
+
+      function goHome(role) {
+        var dest = safeNext(next);
+        if (dest && dest !== 'upgrade.html') {
+          // Only follow next if it's the portal the role is allowed into.
+          if ((dest === 'provider.html' && role === 'provider') ||
+              (dest === 'admin.html' && role === 'admin') ||
+              dest === 'index.html') { redirectTo = dest; }
+          else if (dest === 'index.html' || dest === 'provider.html' || dest === 'admin.html') {
+            redirectTo = null; // fall through to role default below
+          }
+        }
+        if (!redirectTo) {
+          if (role === 'provider') redirectTo = 'provider.html';
+          else if (role === 'admin') redirectTo = 'admin.html';
+          else redirectTo = 'index.html';
+        }
+        window.location.href = redirectTo;
+      }
+
+      form.addEventListener('submit', async function (e) {
+        e.preventDefault();
+        clearMsg();
+        var email = document.getElementById('email').value.trim();
+        var password = document.getElementById('password').value;
+        if (!email || !password) { showErr('Please enter your email and password.'); return; }
+
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>&nbsp; Signing in...';
+
+        var client = window._2k2.getSupabase();
+        if (!client) { showErr('Unable to load Supabase. Please refresh.'); btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-right-to-bracket"></i>&nbsp; Sign In'; return; }
+
+        try {
+          var { data, error } = await client.auth.signInWithPassword({ email, password });
+          if (error) {
+            var m = error.message || 'Invalid login';
+            if (/invalid login credentials/i.test(m)) m = 'Incorrect email or password.';
+            else if (/not confirmed/i.test(m)) m = 'Please verify your email first (check your inbox).';
+            showErr(m);
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fa-solid fa-right-to-bracket"></i>&nbsp; Sign In';
+            return;
+          }
+
+          await window._2k2.Auth.refreshSyncUser();
+          var role = await window._2k2.Auth.currentRole();
+          goHome(role);
+        } catch (ex) {
+          showErr('Something went wrong. Please try again.');
+          btn.disabled = false;
+          btn.innerHTML = '<i class="fa-solid fa-right-to-bracket"></i>&nbsp; Sign In';
+        }
+      });
+
+      window.sendReset = async function () {
+        var email = document.getElementById('resetEmail').value.trim();
+        clearMsg();
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { showErr('Please enter a valid email.'); return; }
+        var client = window._2k2.getSupabase();
+        var rb = document.getElementById('resetBtn');
+        rb.disabled = true;
+        try {
+          var { error } = await client.auth.resetPasswordForEmail(email, { redirectTo: window.location.origin + '/login.html' });
+          if (error) { showErr(error.message || 'Could not send reset link.'); }
+          else { showMsg('If that email exists, a password reset link has been sent.'); }
+        } catch (ex) { showErr('Something went wrong. Please try again.'); }
+        rb.disabled = false;
+      };
+    })();
+  </script>
+</body>
+</html>

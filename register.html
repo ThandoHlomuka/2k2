@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#c9a227">
+<title>Create Account · 2k2</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<link rel="stylesheet" href="auth.css?v=20">
+</head>
+<body class="auth-body">
+  <div class="auth-card">
+    <div class="auth-logo">
+      <div class="brand-mark">2k2</div>
+      <div class="brand-sub">Create your account</div>
+    </div>
+
+    <div class="auth-error" id="authError"></div>
+    <div class="auth-msg" id="authMsg"></div>
+
+    <!-- Verify email box (shown after signup) -->
+    <div class="verify-box" id="verifyBox" style="display:none">
+      <i class="fa-solid fa-envelope"></i>
+      <h3>Check your inbox</h3>
+      <p>We've sent a confirmation link to <span id="verifyEmail" style="color:#d4a853"></span>.<br>Click the link to verify your email, then sign in.</p>
+      <button class="auth-btn" onclick="window.location.href='login.html'">Go to Sign In</button>
+    </div>
+
+    <!-- Signup form -->
+    <form id="registerForm" novalidate>
+      <h2 class="auth-title">Create Account</h2>
+      <p class="auth-sub">Join 2k2 — one account, one profile type</p>
+
+      <div class="auth-row">
+        <div class="auth-field" style="flex:1">
+          <label>First name</label>
+          <input type="text" id="firstName" class="auth-input" autocomplete="given-name" placeholder="First name">
+        </div>
+        <div class="auth-field" style="flex:1">
+          <label>Surname</label>
+          <input type="text" id="lastName" class="auth-input" autocomplete="family-name" placeholder="Surname">
+        </div>
+      </div>
+
+      <div class="auth-field">
+        <label>Email</label>
+        <input type="email" id="email" class="auth-input" autocomplete="email" placeholder="you@example.com">
+      </div>
+
+      <div class="auth-field">
+        <label>Password</label>
+        <input type="password" id="password" class="auth-input" autocomplete="new-password" placeholder="Min 8 characters">
+      </div>
+
+      <div class="auth-field">
+        <label>Confirm password</label>
+        <input type="password" id="confirm" class="auth-input" autocomplete="new-password" placeholder="Repeat password">
+      </div>
+
+      <button type="submit" class="auth-btn" id="submitBtn"><i class="fa-solid fa-user-plus"></i>&nbsp; Create Account</button>
+
+      <div class="auth-link">Already have an account? <a href="login.html">Sign in</a></div>
+    </form>
+
+    <div class="auth-back"><a href="onboarding.html">&larr; Back to 2k2</a></div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <script src="config.js?v=20"></script>
+  <script src="auth.js?v=20"></script>
+    <script>
+    (function () {
+      var form = document.getElementById('registerForm');
+      var errEl = document.getElementById('authError');
+      var msgEl = document.getElementById('authMsg');
+      var verifyBox = document.getElementById('verifyBox');
+      var btn = document.getElementById('submitBtn');
+      var plan = new URLSearchParams(window.location.search).get('plan');
+
+      function showErr(msg) { errEl.textContent = msg; errEl.classList.add('show'); msgEl.classList.remove('show'); }
+      function showMsg(msg) { msgEl.textContent = msg; msgEl.classList.add('show'); errEl.classList.remove('show'); }
+      function clearMsg() { errEl.classList.remove('show'); msgEl.classList.remove('show'); }
+      if (plan === 'provider') { document.title = 'Create Provider Account · 2k2'; }
+
+      form.addEventListener('submit', async function (e) {
+        e.preventDefault();
+        clearMsg();
+        var firstName = document.getElementById('firstName').value.trim();
+        var lastName = document.getElementById('lastName').value.trim();
+        var email = document.getElementById('email').value.trim();
+        var password = document.getElementById('password').value;
+        var confirm = document.getElementById('confirm').value;
+
+        if (!firstName || !lastName) { showErr('Please enter your full name.'); return; }
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { showErr('Please enter a valid email address.'); return; }
+        if (password.length < 8) { showErr('Password must be at least 8 characters.'); return; }
+        if (password !== confirm) { showErr('Passwords do not match.'); return; }
+
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>&nbsp; Creating...';
+
+        var client = window._2k2.getSupabase();
+        if (!client) { showErr('Unable to load Supabase. Please refresh.'); btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-user-plus"></i>&nbsp; Create Account'; return; }
+
+        try {
+          var { data, error } = await client.auth.signUp({
+            email: email,
+            password: password,
+            options: { emailRedirectTo: window.location.origin + '/login.html' }
+          });
+
+          if (error) {
+            var m = error.message || 'Signup failed';
+            if (/already registered/i.test(m)) m = 'An account with this email already exists.';
+            showErr(m);
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fa-solid fa-user-plus"></i>&nbsp; Create Account';
+            return;
+          }
+
+          var user = data.user;
+          if (user) {
+            // Create the profile row (role=user) for this account.
+            try {
+              await client.from('profiles').insert({
+                user_id: user.id,
+                role: 'user',
+                status: 'active',
+                full_name: (firstName + ' ' + lastName).trim(),
+                display_name: firstName || user.email,
+                email: user.email,
+                profile_data: {}
+              });
+            } catch (pe) { /* profile insert handled/may fail if trigger absent; non-fatal */ }
+            await window._2k2.Auth.refreshSyncUser();
+          }
+
+          if (user && user.email_confirmed_at === null) {
+            document.getElementById('verifyEmail').textContent = email;
+            form.style.display = 'none';
+            verifyBox.style.display = 'block';
+          } else if (plan === 'provider') {
+            showMsg('Account created! Redirecting to provider upgrade...');
+            setTimeout(function () { window.location.href = 'upgrade.html'; }, 1400);
+          } else {
+            showMsg('Account created! You can now sign in.');
+            setTimeout(function () { window.location.href = 'login.html'; }, 1400);
+          }
+        } catch (ex) {
+          showErr('Something went wrong. Please try again.');
+          btn.disabled = false;
+          btn.innerHTML = '<i class="fa-solid fa-user-plus"></i>&nbsp; Create Account';
+        }
+      });
+    })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#c9a227">
+<title>Become a Service Provider · 2k2</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<link rel="stylesheet" href="auth.css?v=20">
+<style>
+  .upg-plans { display: flex; flex-direction: column; gap: 12px; margin: 18px 0 6px; }
+  .upg-plan {
+    display: flex; align-items: center; gap: 12px;
+    background: #0a0a0a; border: 1px solid #3a2f16; border-radius: 12px;
+    padding: 14px 16px; cursor: pointer; transition: border-color .15s, background .15s;
+  }
+  .upg-plan:hover { border-color: #c9a227; }
+  .upg-plan.selected { border-color: #c9a227; background: rgba(201,162,39,.08); box-shadow: 0 0 0 2px rgba(201,162,39,.2); }
+  .upg-plan .fa-circle-check { color: #d4a853; }
+  .upg-plan .plan-name { font-weight: 700; color: #fdf9ef; }
+  .upg-plan .plan-price { color: #d4a853; font-weight: 800; }
+  .upg-plan .plan-desc { color: #a99c7e; font-size: 12px; }
+  .upg-note {
+    font-size: 12px; color: #a99c7e; line-height: 1.5;
+    background: rgba(201,162,39,.07); border: 1px solid rgba(201,162,39,.25);
+    border-radius: 10px; padding: 10px 12px; margin: 12px 0;
+  }
+  .upg-status { text-align: center; padding: 6px 0 2px; }
+  .upg-status .fa-hourglass-half { font-size: 36px; color: #d4a853; margin-bottom: 10px; }
+  .upg-status h3 { color: #fdf9ef; margin: 8px 0 6px; }
+  .upg-status p { color: #a99c7e; font-size: 13.5px; line-height: 1.55; margin: 0 0 18px; }
+  .meta-line {
+    display: flex; justify-content: space-between; font-size: 13px;
+    color: #a99c7e; padding: 7px 0; border-bottom: 1px dashed #3a2f16;
+  }
+  .meta-line span:last-child { color: #fdf9ef; font-weight: 600; }
+</style>
+</head>
+<body class="auth-body">
+  <div class="auth-card auth-card--wide">
+    <div class="auth-logo">
+      <div class="brand-mark">2k2</div>
+      <div class="brand-sub">Service Provider</div>
+    </div>
+
+    <div class="auth-error" id="authError"></div>
+    <div class="auth-msg" id="authMsg"></div>
+
+    <!-- Account check box -->
+    <div id="noAuthBox" style="display:none; text-align:center">
+      <div style="font-size:38px; color:#d4a853; margin-bottom:12px"><i class="fa-solid fa-user-lock"></i></div>
+      <h2 class="auth-title">Sign in to upgrade</h2>
+      <p class="auth-sub">You need a 2k2 account before becoming a Service Provider.</p>
+      <button class="auth-btn" onclick="window.location.href='login.html?next=upgrade.html'">Sign In</button>
+      <div class="auth-link">No account? <a href="register.html?plan=provider">Create one</a></div>
+    </div>
+
+    <!-- Pending approval / already provider box -->
+    <div id="pendingBox" style="display:none">
+      <div class="upg-status">
+        <i class="fa-solid fa-hourglass-half"></i>
+        <h3>Upgrade request submitted</h3>
+        <p>Our team is reviewing your payment and application.<br>You'll get provider access here once it's approved.</p>
+        <div class="auth-row">
+          <button class="auth-btn auth-btn--ghost" onclick="window.location.href='index.html'">Continue as General User</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Already provider box -->
+    <div id="providerBox" style="display:none">
+      <div class="upg-status" style="padding-top:10px">
+        <i class="fa-solid fa-circle-check" style="color:#34d399"></i>
+        <h3>You're already a Service Provider</h3>
+        <p>Your account has provider access.</p>
+        <button class="auth-btn" onclick="window.location.href='provider.html'">Go to Provider Portal</button>
+      </div>
+    </div>
+
+    <!-- Upgrade form -->
+    <form id="upgradeForm">
+      <div style="text-align:center"><span class="auth-role-chip">Step 1 of 2 · Choose a plan</span></div>
+      <h2 class="auth-title">Become a Service Provider</h2>
+      <p class="auth-sub">Choose a plan, pay, and we'll approve your provider access</p>
+
+      <div class="upg-plans">
+        <div class="upg-plan" data-plan="standard" data-amount="200" onclick="selectPlan(this)">
+          <i class="fa-regular fa-circle-check" style="font-size:20px; color:#d4a853"></i>
+          <div style="flex:1">
+            <div class="plan-name">Standard Listing</div>
+            <div class="plan-desc">R200/mo · 1 listing, 1 venue, provider dashboard, bookings &amp; tips</div>
+          </div>
+          <div class="plan-price">R200/mo</div>
+        </div>
+        <div class="upg-plan" data-plan="premium" data-amount="500" onclick="selectPlan(this)">
+          <i class="fa-regular fa-circle-check" style="font-size:20px; color:#d4a853"></i>
+          <div style="flex:1">
+            <div class="plan-name">Premium Listing</div>
+            <div class="plan-desc">R500/mo · Everything in Standard + up to 3 listings, priority visibility &amp; premium content</div>
+          </div>
+          <div class="plan-price">R500/mo</div>
+        </div>
+      </div>
+
+      <div class="upg-note"><i class="fa-solid fa-shield-halved" style="margin-right:6px"></i> This is a manual, admin-reviewed upgrade. After payment you'll receive provider access once your application is approved (usually within 24 hours).</div>
+
+      <div id="paySection" style="display:none">
+        <div class="auth-field">
+          <label>Payment reference / details</label>
+          <input type="text" id="paymentRef" class="auth-input" placeholder="e.g. bank EFT reference or proof-of-payment code">
+        </div>
+        <div class="auth-field">
+          <label>Notes for our team (optional)</label>
+          <input type="text" id="paymentNotes" class="auth-input" placeholder="Anything you'd like us to know">
+        </div>
+        <div class="meta-line"><span>Selected plan</span><span id="selPlan">—</span></div>
+        <div class="meta-line"><span>Membership amount</span><span id="selAmount">—</span></div>
+        <div class="meta-line" style="border-bottom:none"><span>Account</span><span id="selAccount">—</span></div>
+        <button type="submit" class="auth-btn" id="payBtn" style="margin-top:18px"><i class="fa-solid fa-lock"></i>&nbsp; Submit Payment &amp; Request Approval</button>
+      </div>
+
+      <button type="button" class="auth-btn" id="chooseBtn" style="margin-top:6px" onclick="revealPayment()">Continue to Payment</button>
+
+      <div class="auth-link">Not ready? <a href="index.html">Continue as General User</a></div>
+    </form>
+
+    <div class="auth-back"><a href="onboarding.html">&larr; Back</a></div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <script src="config.js?v=20"></script>
+  <script src="auth.js?v=20"></script>
+  <script>
+    (function () {
+      var form = document.getElementById('upgradeForm');
+      var errEl = document.getElementById('authError');
+      var msgEl = document.getElementById('authMsg');
+      var chosen = '';
+      var chosenAmount = 0;
+
+      function showErr(msg) { errEl.textContent = msg; errEl.classList.add('show'); msgEl.classList.remove('show'); }
+      function showMsg(msg) { msgEl.textContent = msg; msgEl.classList.add('show'); errEl.classList.remove('show'); }
+      window.selectPlan = function (el) {
+        document.querySelectorAll('.upg-plan').forEach(function (p) { p.classList.remove('selected'); });
+        el.classList.add('selected');
+        chosen = el.getAttribute('data-plan');
+        chosenAmount = el.getAttribute('data-amount');
+        document.getElementById('selPlan').textContent = chosen.charAt(0).toUpperCase() + chosen.slice(1);
+        document.getElementById('selAmount').textContent = 'R' + chosenAmount + ' / month';
+      };
+      window.revealPayment = function () {
+        if (!chosen) { showErr('Please select a plan first.'); return; }
+        showMsg(''); errEl.classList.add('show'); errEl.classList.remove('show');
+        msgEl.classList.remove('show');
+        document.getElementById('paySection').style.display = 'block';
+        document.getElementById('chooseBtn').style.display = 'none';
+      };
+
+      form.addEventListener('submit', async function (e) {
+        e.preventDefault();
+        if (!chosen) { showErr('Please select a plan first.'); return; }
+        var client = window._2k2.getSupabase();
+        var user = await window._2k2.Auth.currentUser();
+        if (!client || !user) { showErr('You must be signed in to upgrade.'); window.location.href = 'login.html?next=upgrade.html'; return; }
+
+        var selAcct = document.getElementById('selAccount');
+        selAcct.textContent = (user.email || 'Signed in');
+
+        var payBtn = document.getElementById('payBtn');
+        payBtn.disabled = true;
+        payBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>&nbsp; Submitting...';
+
+        try {
+          var { error } = await client.from('provider_upgrade_requests').insert({
+            user_id: user.id,
+            plan: chosen,
+            amount: Number(chosenAmount),
+            payment_ref: document.getElementById('paymentRef').value.trim() || null,
+            notes: document.getElementById('paymentNotes').value.trim() || null,
+            status: 'pending'
+          });
+          if (error) { showErr(error.message || 'Could not submit your request.'); payBtn.disabled = false; payBtn.innerHTML = '<i class="fa-solid fa-lock"></i>&nbsp; Submit Payment & Request Approval'; return; }
+          form.style.display = 'none';
+          document.getElementById('pendingBox').style.display = 'block';
+        } catch (ex) {
+          showErr('Something went wrong. Please try again.');
+          payBtn.disabled = false;
+          payBtn.innerHTML = '<i class="fa-solid fa-lock"></i>&nbsp; Submit Payment & Request Approval';
+        }
+      });
+
+      (async function init() {
+        var client = window._2k2.getSupabase();
+        if (!client) { document.getElementById('noAuthBox').style.display = 'block'; return; }
+        var user = await window._2k2.Auth.currentUser();
+        if (!user) { document.getElementById('noAuthBox').style.display = 'block'; return; }
+        var profile = await window._2k2.Auth.getProfile();
+        if (profile && profile.role === 'provider') {
+          document.getElementById('providerBox').style.display = 'block';
+          return;
+        }
+        // check for an existing pending request
+        var { data } = await client.from('provider_upgrade_requests').select('*').eq('user_id', user.id).eq('status', 'pending').order('created_at', { ascending: false }).limit(1);
+        if (data && data.length) {
+          document.getElementById('pendingBox').style.display = 'block';
+          return;
+        }
+        // otherwise show the form
+        form.style.display = 'block';
+      })();
+    })();
+  </script>
+</body>
+</html>

@@ -52,7 +52,7 @@
     <!-- Favicon -->
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💎</text></svg>">
 
-    <link rel="stylesheet" href="style.css?v=19">
+    <link rel="stylesheet" href="style.css?v=20">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700;900&family=Inter:wght@300;400;500;600;700&family=Dancing+Script:wght@700&display=swap" rel="stylesheet">
 
@@ -358,7 +358,7 @@
                                 <div class="onb-pricing-feature"><i class="fas fa-check"></i> Digital wallet & transactions</div>
                                 <div class="onb-pricing-feature"><i class="fas fa-check"></i> SA location filtering (9 provinces)</div>
                             </div>
-                            <a href="index.html" class="onb-pricing-btn onb-pricing-btn-user" onclick="completeOnboarding()"><i class="fas fa-arrow-right"></i> Enter as General User</a>
+                            <a href="register.html" class="onb-pricing-btn onb-pricing-btn-user" onclick="completeOnboarding()"><i class="fas fa-arrow-right"></i> Register as General User</a>
                         </div>
 
                         <!-- Service Provider Plan -->
@@ -383,7 +383,7 @@
                                 <div class="onb-pricing-feature"><i class="fas fa-check"></i> Premium forum access</div>
                                 <div class="onb-pricing-feature"><i class="fas fa-check"></i> Priority visibility in directories</div>
                             </div>
-                            <a href="provider.html" class="onb-pricing-btn onb-pricing-btn-provider" onclick="completeOnboarding()"><i class="fas fa-rocket"></i> Start as Service Provider</a>
+                            <a href="register.html?plan=provider" class="onb-pricing-btn onb-pricing-btn-provider" onclick="completeOnboarding()"><i class="fas fa-rocket"></i> Register as Service Provider</a>
                         </div>
                     </div>
                     <p class="onb-footer-text"><i class="fas fa-lock"></i> 18+ Only | Private & Secure | All prices in ZAR</p>
@@ -544,7 +544,12 @@
         </nav>
 
         <div class="sidebar-footer">
-            <a href="#" class="nav-item">
+            <div id="authUserInfo" style="display:none;padding:8px 16px;font-size:12px;color:#a99c7e;border-top:1px solid var(--border,#e6dec8);margin-bottom:6px"></div>
+            <a href="login.html" class="nav-item" id="signInLink">
+                <i class="fas fa-sign-in-alt"></i>
+                <span>Sign In</span>
+            </a>
+            <a href="#" class="nav-item" id="logoutLink" style="display:none">
                 <i class="fas fa-sign-out-alt"></i>
                 <span>Logout</span>
             </a>
@@ -3168,7 +3173,55 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
-    <script src="script.js?v=19"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+    <script src="config.js?v=20"></script>
+    <script src="auth.js?v=20"></script>
+    <script src="db.js?v=20"></script>
+    <script>
+    // Session-aware sidebar (Sign In / Logout / account chip).
+    (function () {
+      document.addEventListener('DOMContentLoaded', function () {
+        var info = document.getElementById('authUserInfo');
+        var signIn = document.getElementById('signInLink');
+        var logout = document.getElementById('logoutLink');
+        var done = false;
+        function render(user, role) {
+          if (!info || !signIn || !logout) return;
+          if (user) {
+            signIn.style.display = 'none';
+            logout.style.display = '';
+            info.style.display = info.style.display === 'none' ? 'block' : 'block';
+            info.innerHTML = '<i class="fas fa-user-circle" style="margin-right:6px"></i>' +
+              '<span>' + escapeHtml(user.email || 'Account') + '</span>' +
+              (role ? ' <span style="color:#d4a853;text-transform:uppercase;font-size:10px;margin-left:4px">(' + role + ')</span>' : '');
+          } else {
+            signIn.style.display = '';
+            logout.style.display = 'none';
+            if (info) info.style.display = 'none';
+          }
+        }
+        function escapeHtml(s) {
+          return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+        }
+        if (logout) logout.addEventListener('click', async function (e) {
+          e.preventDefault();
+          try { await window._2k2.Auth.signOut(); } catch (err) {}
+          try { localStorage.removeItem('k2_current_user'); } catch (err) {}
+          window.location.href = 'login.html';
+        });
+        (async function () {
+          try {
+            var user = await window._2k2.Auth.currentUser();
+            if (!user) { render(null); return; }
+            await window._2k2.Auth.refreshSyncUser();
+            var profile = await window._2k2.Auth.getProfile();
+            render(user, profile ? profile.role : null);
+          } catch (e) { render(null); }
+        })();
+      });
+    })();
+    </script>
+    <script src="script.js?v=20"></script>
     <script>
         let onbSlide = 0;
         const slides = document.querySelectorAll('.onb-slide');
