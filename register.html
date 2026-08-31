@@ -23,7 +23,7 @@
       <i class="fa-solid fa-envelope"></i>
       <h3>Check your inbox</h3>
       <p>We've sent a confirmation link to <span id="verifyEmail" style="color:#d4a853"></span>.<br>Click the link to verify your email, then sign in.</p>
-      <button class="auth-btn" onclick="window.location.href='login.html'">Go to Sign In</button>
+      <button class="auth-btn" onclick="window.location.href='login.html?setup=1'">Go to Sign In</button>
     </div>
 
     <!-- Signup form -->
@@ -143,8 +143,8 @@
             showMsg('Account created! Redirecting to provider upgrade...');
             setTimeout(function () { window.location.href = 'upgrade.html'; }, 1400);
           } else {
-            showMsg('Account created! You can now sign in.');
-            setTimeout(function () { window.location.href = 'login.html'; }, 1400);
+            showMsg('Account created! Let\'s complete your profile.');
+            setTimeout(function () { window.location.href = 'index.html?setup=1'; }, 1400);
           }
         } catch (ex) {
           showErr('Something went wrong. Please try again.');

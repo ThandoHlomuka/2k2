@@ -514,6 +514,7 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('contentDirectoryList') && renderContentDirectory();
         document.getElementById('eventsDirectoryList') && renderEventsDirectory();
     }
+    maybeShowProfileSetup();
 });
 
 function closeSidebar() {
@@ -551,6 +552,38 @@ function resetUserForm() {
     if (urlInput) urlInput.value = '';
 }
 
+function renderProfileSetupBanner() {
+    const banner = document.getElementById('profileSetupBanner');
+    if (!banner) return;
+    const profiles = getUserProfilesByAuth();
+    if (profiles.length > 0) { banner.style.display = 'none'; return; }
+    banner.style.display = 'flex';
+}
+
+function maybeShowProfileSetup() {
+    if (!document.getElementById('page-user-dashboard')) return;
+    renderProfileSetupBanner();
+    if (new URLSearchParams(window.location.search).get('setup') === '1') {
+        if (getUserProfilesByAuth().length === 0) { navigateTo('user-create'); return; }
+    }
+}
+
+function currentAuthId() {
+    try {
+        const snap = _2k2.Auth && _2k2.Auth.syncUser ? _2k2.Auth.syncUser() : null;
+        return snap && snap.user_id ? snap.user_id : (window._2k2_lastAuthId || '');
+    } catch (e) { return ''; }
+}
+
+function getUserProfilesByAuth() {
+    const users = Storage.getUsers();
+    const authId = currentAuthId();
+    if (authId) return users.filter(u => u.userId === authId);
+    const snap = _2k2.Auth && _2k2.Auth.syncUser ? _2k2.Auth.syncUser() : null;
+    if (snap && snap.email) return users.filter(u => (u.email || '').toLowerCase() === snap.email.toLowerCase());
+    return [];
+}
+
 function handleUserSubmit(e) {
     e.preventDefault();
     const id = document.getElementById('userProfileId').value;
@@ -558,6 +591,7 @@ function handleUserSubmit(e) {
     
     const profile = {
         id: id || generateId(),
+        userId: currentAuthId(),
         fullName: document.getElementById('userFullName').value,
         email: document.getElementById('userFormEmail').value,
         phone: document.getElementById('userFormPhone').value,
@@ -584,6 +618,7 @@ function handleUserSubmit(e) {
         showToast('Profile created successfully!');
     }
     Storage.setUsers(users);
+    renderProfileSetupBanner();
     navigateTo('user-dashboard');
 }
 

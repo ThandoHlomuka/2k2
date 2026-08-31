@@ -422,6 +422,20 @@ h1, h2, h3, h4 {
     line-height: 1.6;
 }
 
+.how-page-card.how-more {
+    border: 1px dashed rgba(201, 162, 39, 0.45);
+    background: rgba(201, 162, 39, 0.05);
+    text-align: center;
+}
+
+.how-page-card.how-more h3 {
+    color: #d4a853;
+}
+
+.how-page-card.how-more p {
+    margin: 0;
+}
+
 .how-links {
     display: flex;
     flex-wrap: wrap;
@@ -437,6 +451,44 @@ h1, h2, h3, h4 {
     height: 1px;
     background: rgba(201, 162, 39, 0.2);
     margin: 26px 0;
+}
+
+/* ============================================
+   Profile Setup Banner
+   ============================================ */
+.profile-setup-banner {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    flex-wrap: wrap;
+    margin: 18px 0;
+    padding: 16px 18px;
+    background: linear-gradient(135deg, rgba(201, 162, 39, 0.16), rgba(201, 162, 39, 0.06));
+    border: 1px solid rgba(201, 162, 39, 0.4);
+    border-radius: 14px;
+    color: #f0e7c8;
+}
+
+.profile-setup-banner > i {
+    font-size: 1.6rem;
+    color: #d4a853;
+}
+
+.profile-setup-banner div {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.profile-setup-banner strong {
+    font-size: 1.02rem;
+    color: #d4a853;
+}
+
+.profile-setup-banner span {
+    font-size: 0.88rem;
+    color: #a99c7e;
 }
 
 /* ============================================

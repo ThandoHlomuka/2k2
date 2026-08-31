@@ -69,6 +69,7 @@
       var msgEl = document.getElementById('authMsg');
       var btn = document.getElementById('submitBtn');
       var next = new URLSearchParams(window.location.search).get('next');
+      var setup = new URLSearchParams(window.location.search).get('setup');
       var redirectTo;
 
       function showErr(msg) { errEl.textContent = msg; errEl.classList.add('show'); msgEl.classList.remove('show'); }
@@ -102,6 +103,7 @@
           else if (role === 'admin') redirectTo = 'admin.html';
           else redirectTo = 'index.html';
         }
+        if (setup === '1' && redirectTo === 'index.html') redirectTo += '?setup=1';
         window.location.href = redirectTo;
       }
 
