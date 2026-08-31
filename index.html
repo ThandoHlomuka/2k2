@@ -1544,6 +1544,20 @@
             </div>
         </div>
 
+        <!-- Account Prompt Modal -->
+        <div class="modal-overlay" id="authPromptModal">
+            <div class="modal">
+                <div class="modal-icon" style="background: linear-gradient(135deg, #c9a227, #a07d12); color:#fff"><i class="fas fa-user-plus"></i></div>
+                <h2>Join 2k2</h2>
+                <p id="authPromptText" style="color:#8a7b55;font-size:0.92rem;margin:4px 0 18px">Create a free account to continue.</p>
+                <div style="display:flex;flex-direction:column;gap:10px">
+                    <button class="btn btn-primary" onclick="window.location.href='register.html'"><i class="fas fa-user-plus"></i> Create a Free Account</button>
+                    <button class="btn btn-secondary" onclick="window.location.href='login.html'"><i class="fas fa-right-to-bracket"></i> I Already Have an Account</button>
+                    <button class="btn btn-secondary" onclick="closeAuthPrompt()" style="background:transparent;box-shadow:none">Maybe Later</button>
+                </div>
+            </div>
+        </div>
+
         <!-- Top Up Modal -->
         <div class="modal-overlay" id="topUpModal">
             <div class="modal">

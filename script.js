@@ -591,6 +591,26 @@ function getUserProfilesByAuth() {
     return [];
 }
 
+// Guests/anon users can browse, but must have an account to engage.
+// Returns true when action can proceed, false when the user was prompted to sign in.
+function requireSignIn(actionText) {
+    if (currentAuthId()) return true;
+    const modal = document.getElementById('authPromptModal');
+    if (modal) {
+        const text = document.getElementById('authPromptText');
+        if (text) text.textContent = (actionText || 'Continue') + ' Create a free account to unlock this feature.';
+        modal.classList.add('active');
+    } else {
+        openSignInToast();
+    }
+    return false;
+}
+
+function closeAuthPrompt() { document.getElementById('authPromptModal')?.classList.remove('active'); }
+
+function openSignInToast() { showToast('Please sign in to continue.', 'info'); }
+
+
 function handleUserSubmit(e) {
     e.preventDefault();
     const id = document.getElementById('userProfileId').value;
@@ -2180,6 +2200,7 @@ function resetAdForm() {
 
 function handleAdSubmit(e) {
     e.preventDefault();
+    if (!requireSignIn('Post an ad.')) return;
     const id = document.getElementById('adId').value;
     const now = new Date().toISOString();
 
@@ -2913,6 +2934,7 @@ function deleteService(id) {
 // BOOKING MODAL
 // ==========================================
 function openBookingModal(providerId, providerType) {
+    if (!requireSignIn('Request a booking.')) return;
     currentBookingProviderId = providerId;
     currentBookingProviderType = providerType;
     document.getElementById('bookingModal').classList.add('active');
@@ -2956,6 +2978,7 @@ function handleBookingSubmit(e) {
 // TIP JAR MODAL
 // ==========================================
 function openTipModal(providerId, providerType, providerName) {
+    if (!requireSignIn('Send a tip.')) return;
     currentBookingProviderId = providerId;
     currentBookingProviderType = providerType;
     document.getElementById('tipProviderName').textContent = providerName;
@@ -3535,6 +3558,7 @@ function viewContent(id) {
 }
 
 function downloadContentView() {
+    if (!requireSignIn('Download content.')) return;
     const item = Storage.getContent().find(c => c.id === currentContentViewId);
     if (!item) { showToast('Content not found.', 'error'); return; }
     if (!item.fileData || item.fileData.length <= 100) {
@@ -4081,6 +4105,7 @@ function renderContentComments(contentId) {
 }
 
 function submitContentComment() {
+    if (!requireSignIn('Comment on content.')) return;
     const input = document.getElementById('contentCommentInput');
     const text = input.value.trim();
     if (!text) return;
@@ -4178,6 +4203,7 @@ function renderReviewsList(targetType, targetId) {
 }
 
 function submitReview(targetType, targetId) {
+    if (!requireSignIn('Leave a review.')) return;
     const container = document.getElementById(targetType + 'StarRating');
     const textEl = document.getElementById(targetType + 'ReviewText');
     if (!container || !textEl) return;
@@ -4837,6 +4863,7 @@ function viewForumThread(id) {
 
 function handleForumThreadSubmit(e) {
     e.preventDefault();
+    if (!requireSignIn('Create a forum thread.')) return;
     const id = document.getElementById('forumThreadId').value;
     const title = document.getElementById('forumThreadTitle').value.trim();
     const section = document.getElementById('forumThreadSectionSelect')?.value || document.getElementById('forumThreadSection')?.value || 'public';
@@ -4877,6 +4904,7 @@ function handleForumThreadSubmit(e) {
 }
 
 function submitForumReply() {
+    if (!requireSignIn('Reply in the forum.')) return;
     if (!currentForumViewId) return;
     const author = document.getElementById('forumReplyAuthor').value.trim();
     const body = document.getElementById('forumReplyBody').value.trim();
@@ -5483,6 +5511,7 @@ function renderMessageCompose() {
 }
 
 function openComposeTo(participantId, participantName, role) {
+    if (!requireSignIn('Send a message.')) return;
     navigateTo('message-compose');
     const select = document.getElementById('msgRecipient');
     const recipients = getMsgRecipients();
@@ -5846,6 +5875,7 @@ function isItemSaved(kind, id) {
 }
 
 function toggleSaveItem(kind, id) {
+    if (!requireSignIn('Save items to your library.')) return;
     const saved = Storage.getSavedItems();
     if (isItemSaved(kind, id)) {
         Storage.setSavedItems(saved.filter(s => !(s.kind === kind && s.itemId === id)));
@@ -6324,6 +6354,7 @@ function openExperienceAccess(id) {
 }
 
 function purchaseExperience(id) {
+    if (!requireSignIn('Join an experience.')) return;
     const item = Storage.getExperiences().find(x => x.id === id);
     if (!item) return;
     if (Storage.getExperiencePurchases().some(p => p.experienceId === id)) {
