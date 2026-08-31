@@ -620,6 +620,96 @@
                     </div>
                 </div>
 
+                <!-- Menu Overview -->
+                <div class="how-section">
+                    <div class="how-section-head">
+                        <div>
+                            <h2><i class="fas fa-compass"></i> Explore 2k2</h2>
+                            <p>Live summary of everything available on the platform</p>
+                        </div>
+                    </div>
+                    <div class="dash-stats-grid">
+                        <div class="dash-stat-card" onclick="navigateTo('directory')">
+                            <div class="dash-stat-icon user-bg"><i class="fas fa-address-book"></i></div>
+                            <div class="dash-stat-info"><span class="dash-stat-value" id="dashCountProfiles">0</span><span class="dash-stat-label">Profiles</span></div>
+                        </div>
+                        <div class="dash-stat-card" onclick="navigateTo('venue-directory')">
+                            <div class="dash-stat-icon green-bg"><i class="fas fa-store"></i></div>
+                            <div class="dash-stat-info"><span class="dash-stat-value" id="dashCountVenues">0</span><span class="dash-stat-label">Venues</span></div>
+                        </div>
+                        <div class="dash-stat-card" onclick="navigateTo('services-directory')">
+                            <div class="dash-stat-icon blue-bg"><i class="fas fa-concierge-bell"></i></div>
+                            <div class="dash-stat-info"><span class="dash-stat-value" id="dashCountServices">0</span><span class="dash-stat-label">Services</span></div>
+                        </div>
+                        <div class="dash-stat-card" onclick="navigateTo('content-directory')">
+                            <div class="dash-stat-icon purple-bg"><i class="fas fa-photo-film"></i></div>
+                            <div class="dash-stat-info"><span class="dash-stat-value" id="dashCountContent">0</span><span class="dash-stat-label">Content</span></div>
+                        </div>
+                        <div class="dash-stat-card" onclick="navigateTo('events-directory')">
+                            <div class="dash-stat-icon orange-bg"><i class="fas fa-calendar-days"></i></div>
+                            <div class="dash-stat-info"><span class="dash-stat-value" id="dashCountEvents">0</span><span class="dash-stat-label">Events</span></div>
+                        </div>
+                        <div class="dash-stat-card" onclick="navigateTo('ads-browse')">
+                            <div class="dash-stat-icon user-bg"><i class="fas fa-bullhorn"></i></div>
+                            <div class="dash-stat-info"><span class="dash-stat-value" id="dashCountAds">0</span><span class="dash-stat-label">Ads</span></div>
+                        </div>
+                        <div class="dash-stat-card" onclick="navigateTo('gigs-browse')">
+                            <div class="dash-stat-icon blue-bg"><i class="fas fa-briefcase"></i></div>
+                            <div class="dash-stat-info"><span class="dash-stat-value" id="dashCountGigs">0</span><span class="dash-stat-label">Gigs</span></div>
+                        </div>
+                        <div class="dash-stat-card" onclick="navigateTo('products-directory')">
+                            <div class="dash-stat-icon green-bg"><i class="fas fa-cart-shopping"></i></div>
+                            <div class="dash-stat-info"><span class="dash-stat-value" id="dashCountProducts">0</span><span class="dash-stat-label">Products</span></div>
+                        </div>
+                        <div class="dash-stat-card" onclick="navigateTo('experiences-browse')">
+                            <div class="dash-stat-icon purple-bg"><i class="fas fa-gamepad"></i></div>
+                            <div class="dash-stat-info"><span class="dash-stat-value" id="dashCountExperiences">0</span><span class="dash-stat-label">Experiences</span></div>
+                        </div>
+                        <div class="dash-stat-card" onclick="navigateTo('fantasy-requests')">
+                            <div class="dash-stat-icon orange-bg"><i class="fas fa-scroll"></i></div>
+                            <div class="dash-stat-info"><span class="dash-stat-value" id="dashCountFantasy">0</span><span class="dash-stat-label">Fantasy Req.</span></div>
+                        </div>
+                        <div class="dash-stat-card" onclick="navigateTo('forum-browse')">
+                            <div class="dash-stat-icon user-bg"><i class="fas fa-comments"></i></div>
+                            <div class="dash-stat-info"><span class="dash-stat-value" id="dashCountThreads">0</span><span class="dash-stat-label">Forum Threads</span></div>
+                        </div>
+                        <div class="dash-stat-card" onclick="navigateTo('online-users')">
+                            <div class="dash-stat-icon blue-bg"><i class="fas fa-user-clock"></i></div>
+                            <div class="dash-stat-info"><span class="dash-stat-value" id="dashCountOnline">0</span><span class="dash-stat-label">Online Users</span></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Dashboard Analytics -->
+                <div class="how-section">
+                    <div class="how-section-head">
+                        <div>
+                            <h2><i class="fas fa-chart-line"></i> Insights &amp; Analytics</h2>
+                            <p>Interactive charts of platform content and your wallet activity</p>
+                        </div>
+                    </div>
+                    <div class="dash-analytics-row">
+                        <div class="analytics-stat"><span class="analytics-stat-label">Wallet Balance</span><span class="analytics-stat-value" id="dashWalletBalance">R0</span></div>
+                        <div class="analytics-stat"><span class="analytics-stat-label">My Profiles</span><span class="analytics-stat-value" id="dashMyProfiles">0</span></div>
+                        <div class="analytics-stat"><span class="analytics-stat-label">Pending Top-ups</span><span class="analytics-stat-value" id="dashPendingTopups">0</span></div>
+                        <div class="analytics-stat"><span class="analytics-stat-label">Total Transactions</span><span class="analytics-stat-value" id="dashMyTxns">0</span></div>
+                    </div>
+                    <div class="dash-charts-grid">
+                        <div class="analytics-chart-card">
+                            <h3>Explore Breakdown</h3>
+                            <div class="chart-wrap"><canvas id="dashExploreChart"></canvas></div>
+                        </div>
+                        <div class="analytics-chart-card">
+                            <h3>Wallet Spending by Category</h3>
+                            <div class="chart-wrap"><canvas id="dashSpendTypeChart"></canvas></div>
+                        </div>
+                        <div class="analytics-chart-card">
+                            <h3>Wallet Balance Trend</h3>
+                            <div class="chart-wrap"><canvas id="dashWalletChart"></canvas></div>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="profiles-section">
                     <div class="section-header">
                         <h2>Your Profiles</h2>

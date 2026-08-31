@@ -343,7 +343,7 @@ function navigateTo(page) {
     const navItem = document.querySelector(`.nav-item[data-page="${page}"]`);
     if (navItem) navItem.classList.add('active');
 
-    if (page === 'user-dashboard') renderUserProfiles();
+    if (page === 'user-dashboard') { renderUserProfiles(); renderUserDashboardStats(); }
     if (page === 'provider-dashboard') renderProviderProfiles();
     if (page === 'user-create') { populateLocationDropdowns(); resetUserForm(); }
     if (page === 'provider-create') { populateLocationDropdowns(); resetProviderForm(); }
@@ -706,6 +706,116 @@ function renderUserProfiles(filter = 'all') {
 }
 
 function filterUserProfiles() { renderUserProfiles(document.getElementById('userFilter').value); }
+
+async function renderUserDashboardStats() {
+    const setNum = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+
+    // Explore counts (platform-wide menu items)
+    const explore = {
+        Profiles: Storage.getUsers().length,
+        Venues: Storage.getVenues().length,
+        Services: Storage.getServices().length,
+        Content: Storage.getContent().length,
+        Events: Storage.getEvents().length,
+        Ads: Storage.getAds().length,
+        Gigs: Storage.getGigs().length,
+        Products: Storage.getProducts().length,
+        Experiences: Storage.getExperiences().length,
+        'Fantasy Req.': Storage.getFantasyRequests().length,
+        'Forum Threads': Storage.getForumThreads().length
+    };
+    setNum('dashCountProfiles', explore.Profiles);
+    setNum('dashCountVenues', explore.Venues);
+    setNum('dashCountServices', explore.Services);
+    setNum('dashCountContent', explore.Content);
+    setNum('dashCountEvents', explore.Events);
+    setNum('dashCountAds', explore.Ads);
+    setNum('dashCountGigs', explore.Gigs);
+    setNum('dashCountProducts', explore.Products);
+    setNum('dashCountExperiences', explore.Experiences);
+    setNum('dashCountFantasy', explore['Fantasy Req.']);
+    setNum('dashCountThreads', explore['Forum Threads']);
+
+    try {
+        const data = await (window._2k2 && _2k2.Presence ? _2k2.Presence.fetchPresence() : { members: [], guests: [] });
+        setNum('dashCountOnline', (data.members || []).length + (data.guests || []).length);
+    } catch (e) { setNum('dashCountOnline', 0); }
+
+    // Personal analytics
+    const meId = currentUserOwnerId();
+    const txns = getWalletTransactions('user', meId);
+    setNum('dashWalletBalance', 'R' + getWalletBalance('user', meId).toFixed(2));
+    setNum('dashMyProfiles', getUserProfilesByAuth().length);
+    setNum('dashPendingTopups', Storage.getTopUpRequests().filter(r => r.status === 'pending' && r.ownerType === 'user' && r.ownerId === meId).length);
+    setNum('dashMyTxns', txns.length);
+
+    // Chart 1: Explore breakdown (bar)
+    if (dashExploreChart) dashExploreChart.destroy();
+    const ctxE = document.getElementById('dashExploreChart');
+    if (ctxE) {
+        dashExploreChart = new Chart(ctxE, {
+            type: 'bar',
+            data: { labels: Object.keys(explore), datasets: [{ label: 'Count', data: Object.values(explore), backgroundColor: '#c9a227', borderRadius: 6 }] },
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    y: { beginAtZero: true, grid: { color: '#eee6d4' }, ticks: { font: { size: 10 } } },
+                    x: { grid: { display: false }, ticks: { font: { size: 10 }, maxRotation: 45, minRotation: 0 } }
+                },
+                animation: { duration: 900, easing: 'easeOutQuart' }
+            }
+        });
+    }
+
+    // Chart 2: Wallet spending by type (doughnut)
+    const spent = txns.filter(t => t.amount < 0);
+    const typeCounts = {};
+    spent.forEach(t => { typeCounts[t.type] = (typeCounts[t.type] || 0) + Math.abs(t.amount); });
+    if (dashSpendTypeChart) dashSpendTypeChart.destroy();
+    const ctxS = document.getElementById('dashSpendTypeChart');
+    if (ctxS) {
+        dashSpendTypeChart = new Chart(ctxS, {
+            type: 'doughnut',
+            data: {
+                labels: Object.keys(typeCounts).map(k => TYPE_LABELS[k] || k),
+                datasets: [{ data: Object.values(typeCounts), backgroundColor: Object.keys(typeCounts).map(k => TYPE_COLORS[k] || '#8a7b55'), borderWidth: 2, borderColor: '#fff' }]
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false, cutout: '62%',
+                plugins: { legend: { position: 'bottom', labels: { padding: 12, usePointStyle: true, font: { size: 11 } } } },
+                animation: { animateRotate: true, duration: 1100, easing: 'easeOutQuart' }
+            }
+        });
+    }
+
+    // Chart 3: Wallet balance trend (line)
+    const trend = {};
+    txns.slice().reverse().forEach(t => {
+        const d = new Date(t.createdAt).toLocaleDateString('en-ZA', { day: 'numeric', month: 'short' });
+        trend[d] = t.newBalance !== undefined ? t.newBalance : (trend[d] || 0);
+    });
+    if (dashWalletChart) dashWalletChart.destroy();
+    const ctxW = document.getElementById('dashWalletChart');
+    if (ctxW) {
+        dashWalletChart = new Chart(ctxW, {
+            type: 'line',
+            data: {
+                labels: Object.keys(trend),
+                datasets: [{ label: 'Balance', data: Object.values(trend), borderColor: '#10b981', backgroundColor: 'rgba(16,185,129,0.10)', fill: true, tension: 0.4, borderWidth: 2.5, pointBackgroundColor: '#10b981', pointRadius: 3, pointHoverRadius: 6 }]
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    y: { beginAtZero: true, grid: { color: '#e6dec8' }, ticks: { callback: v => 'R' + v, font: { size: 11 } } },
+                    x: { grid: { display: false }, ticks: { font: { size: 11 }, maxRotation: 45 } }
+                },
+                animation: { duration: 1000, easing: 'easeOutQuart' }
+            }
+        });
+    }
+}
 
 function viewUserProfile(id) {
     const users = Storage.getUsers();
@@ -3448,6 +3558,9 @@ let userSpendingByTypeChart = null;
 let userSpendingOverTimeChart = null;
 let providerEarningsByTypeChart = null;
 let providerEarningsOverTimeChart = null;
+let dashExploreChart = null;
+let dashSpendTypeChart = null;
+let dashWalletChart = null;
 
 const TYPE_COLORS = {
     'top-up': '#10b981', 'tip-sent': '#f59e0b', 'tip-received': '#f59e0b',
