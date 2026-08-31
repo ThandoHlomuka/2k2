@@ -613,6 +613,7 @@ function openSignInToast() { showToast('Please sign in to continue.', 'info'); }
 
 function handleUserSubmit(e) {
     e.preventDefault();
+    if (!requireSignIn('Create your profile.')) return;
     const id = document.getElementById('userProfileId').value;
     const now = new Date().toISOString();
     
@@ -652,6 +653,7 @@ function handleUserSubmit(e) {
 
 function handleHelpSubmit(e) {
     e.preventDefault();
+    if (!requireSignIn('Submit a help query.')) return;
     const name = document.getElementById('helpName').value.trim();
     const email = document.getElementById('helpEmail').value.trim();
     const topic = document.getElementById('helpTopic').value;
@@ -3283,7 +3285,7 @@ function renderUserWallet() {
     }).join('');
 }
 
-function openTopUpModal() { document.getElementById('topUpModal').classList.add('active'); }
+function openTopUpModal() { if (!requireSignIn('Top up your wallet.')) return; document.getElementById('topUpModal').classList.add('active'); }
 function closeTopUpModal() { document.getElementById('topUpModal').classList.remove('active'); document.getElementById('topUpAmount').value = ''; }
 function setTopUpAmount(amt) { document.getElementById('topUpAmount').value = amt; }
 
@@ -6480,6 +6482,7 @@ function resetFantasyForm() {
 
 function handleFantasySubmit(e) {
     e.preventDefault();
+    if (!requireSignIn('Post a fantasy request.')) return;
     const id = document.getElementById('fantasyRequestId')?.value || '';
     const title = document.getElementById('fantasyTitle').value.trim();
     const category = document.getElementById('fantasyCategory').value;
