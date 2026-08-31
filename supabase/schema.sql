@@ -182,6 +182,138 @@ create trigger on_auth_user_created
 grant execute on function public.handle_new_user() to anon, authenticated;
 
 -- -------------------------------------------------------------
+-- 4. presence  (real online/offline tracking via Realtime heartbeat)
+--    id = auth user id. Clients upsert last_seen on a heartbeat;
+--    others read it to decide online (last_seen < ~60s).
+-- -------------------------------------------------------------
+create table if not exists public.presence (
+  id uuid not null,                          -- auth.users.id
+  role text not null default 'user',
+  display_name text,
+  email text,
+  last_seen timestamptz not null default now(),
+  created_at timestamptz not null default now(),
+  primary key (id)
+);
+alter table public.presence enable row level security;
+
+-- Presence RLS:
+--   select : anon + authenticated may read presence (to see who's online)
+--   upsert : a user may only write their OWN presence row (service_role for system)
+drop policy if exists "presence_select" on public.presence;
+create policy "presence_select"
+  on public.presence for select
+  using (auth.role() in ('anon','authenticated','service_role'));
+
+drop policy if exists "presence_insert_own" on public.presence;
+create policy "presence_insert_own"
+  on public.presence for insert
+  with check (id = auth.uid() or auth.role() = 'service_role');
+
+drop policy if exists "presence_update_own" on public.presence;
+create policy "presence_update_own"
+  on public.presence for update
+  using (id = auth.uid() or auth.role() = 'service_role');
+
+-- Auto-remove presence when an auth user is deleted
+create or replace function public.clear_presence_on_user_delete()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  delete from public.presence where id = old.id;
+  return old;
+end;
+$$;
+
+drop trigger if exists on_auth_user_deleted on auth.users;
+create trigger on_auth_user_deleted
+  after delete on auth.users
+  for each row execute function public.clear_presence_on_user_delete();
+
+-- Enable Realtime for the presence table and broadcast full row data
+do $$
+begin
+  if not exists (
+    select 1 from pg_publication_tables
+    where pubname = 'supabase_realtime' and schemaname = 'public' and tablename = 'presence'
+  ) then
+    alter publication "supabase_realtime" add table public.presence;
+  end if;
+end $$;
+alter table public.presence replica identity full;
+
+-- -------------------------------------------------------------
+-- 4b. guest_presence  (real tracking of anonymous visitors browsing)
+--     guest_id = persistent browser-level UUID stored in localStorage.
+--     Clients (maybe anonymously) call touch_guest_presence() to
+--     heartbeat their guest row. Read to show "Guests browsing now".
+-- -------------------------------------------------------------
+create table if not exists public.guest_presence (
+  guest_id text not null,
+  label text,
+  last_seen timestamptz not null default now(),
+  created_at timestamptz not null default now(),
+  primary key (guest_id)
+);
+alter table public.guest_presence enable row level security;
+
+-- anyone (anon/authenticated) may READ guest presence
+drop policy if exists "guest_presence_select" on public.guest_presence;
+create policy "guest_presence_select"
+  on public.guest_presence for select
+  using (auth.role() in ('anon','authenticated','service_role'));
+
+-- No direct insert/update/delete by clients; they must use
+-- touch_guest_presence() below (security definer). This keeps the
+-- table free of anon-table grants.
+drop policy if exists "guest_presence_no_insert" on public.guest_presence;
+create policy "guest_presence_no_insert"
+  on public.guest_presence for insert
+  with check (false);
+
+drop policy if exists "guest_presence_no_update" on public.guest_presence;
+create policy "guest_presence_no_update"
+  on public.guest_presence for update
+  using (false);
+
+drop policy if exists "guest_presence_no_delete" on public.guest_presence;
+create policy "guest_presence_no_delete"
+  on public.guest_presence for delete
+  using (false);
+
+-- security definer RPC so anonymous clients can heartbeat their guest row
+create or replace function public.touch_guest_presence(p_guest_id text, p_label text)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  insert into public.guest_presence (guest_id, label, last_seen)
+  values (p_guest_id, p_label, now())
+  on conflict (guest_id)
+  do update set label = excluded.label, last_seen = now();
+end;
+$$;
+
+grant execute on function public.touch_guest_presence(text, text) to anon, authenticated;
+
+-- Enable Realtime for guest presence and broadcast full rows
+do $$
+begin
+  if not exists (
+    select 1 from pg_publication_tables
+    where pubname = 'supabase_realtime' and schemaname = 'public' and tablename = 'guest_presence'
+  ) then
+    alter publication "supabase_realtime" add table public.guest_presence;
+  end if;
+end $$;
+alter table public.guest_presence replica identity full;
+
+-- -------------------------------------------------------------
 -- GRANTs  (required since 2026-04-28: new tables are not exposed
 --  to the Data API by default)
 -- -------------------------------------------------------------

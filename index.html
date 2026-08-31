@@ -2967,9 +2967,10 @@
                 </div>
                 <div class="directory-filters">
                     <div class="filter-tabs">
-                        <button class="filter-tab active" onclick="filterOnlineUsers('all')"><i class="fas fa-users"></i> All</button>
-                        <button class="filter-tab" onclick="filterOnlineUsers('online')"><i class="fas fa-circle" style="color:#10b981"></i> Online</button>
-                        <button class="filter-tab" onclick="filterOnlineUsers('offline')"><i class="fas fa-circle" style="color:#a99c7e"></i> Offline</button>
+                        <button class="filter-tab active" data-filter="all" onclick="filterOnlineUsers('all')"><i class="fas fa-users"></i> All</button>
+                        <button class="filter-tab" data-filter="online" onclick="filterOnlineUsers('online')"><i class="fas fa-circle" style="color:#10b981"></i> Online</button>
+                        <button class="filter-tab" data-filter="offline" onclick="filterOnlineUsers('offline')"><i class="fas fa-circle" style="color:#a99c7e"></i> Offline</button>
+                        <button class="filter-tab" data-filter="guests" onclick="filterOnlineUsers('guests')"><i class="fas fa-user-secret"></i> Guests</button>
                     </div>
                     <div class="filter-bar">
                         <input type="text" id="onlineSearch" placeholder="Search users..." oninput="renderOnlineUsers()">
@@ -3177,6 +3178,7 @@
     <script src="config.js?v=20"></script>
     <script src="auth.js?v=20"></script>
     <script src="db.js?v=20"></script>
+    <script src="presence.js?v=21"></script>
     <script>
     // Session-aware sidebar (Sign In / Logout / account chip).
     (function () {
@@ -3221,7 +3223,7 @@
       });
     })();
     </script>
-    <script src="script.js?v=20"></script>
+    <script src="script.js?v=21"></script>
     <script>
         let onbSlide = 0;
         const slides = document.querySelectorAll('.onb-slide');

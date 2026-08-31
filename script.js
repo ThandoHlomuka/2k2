@@ -5383,52 +5383,32 @@ function insertMsgGif(url) {
 let currentOnlineFilter = 'all';
 let currentOnlineViewId = null;
 
-function isMemberOnline(id, createdAt) {
-    if (id === 'current') return true;
-    let hash = 0;
-    const str = id || '';
-    for (let i = 0; i < str.length; i++) { hash = ((hash << 5) - hash) + str.charCodeAt(i); hash |= 0; }
-    const hourBlock = Math.floor(Date.now() / 3600000);
-    return (Math.abs(hash) + hourBlock) % 3 !== 0;
-}
-
 function filterOnlineUsers(filter) {
     currentOnlineFilter = filter;
     document.querySelectorAll('#page-online-users .filter-tab').forEach(t => t.classList.remove('active'));
-    if (event && event.target) event.target.closest('.filter-tab')?.classList.add('active');
+    document.querySelectorAll('#page-online-users .filter-tab').forEach(t => {
+        if (t.getAttribute('data-filter') === filter || t.getAttribute('data-filter') === String(filter)) t.classList.add('active');
+    });
     renderOnlineUsers();
 }
 
-function renderOnlineUsers() {
-    const users = Storage.getUsers().map(u => ({ id: u.id, name: u.fullName || 'User', role: 'user', location: u.location || '', photo: u.photo || '', bio: u.bio || '' }));
-    const providers = Storage.getProviders().map(p => ({ id: p.id, name: p.businessName || 'Provider', role: 'provider', location: p.location || p.address || '', photo: p.logo || '', bio: p.description || '' }));
-    let members = [...users, ...providers];
-
-    const search = (document.getElementById('onlineSearch')?.value || '').toLowerCase();
-    const typeF = document.getElementById('onlineTypeFilter')?.value || 'all';
-    const cityF = document.getElementById('onlineCityFilter')?.value || '';
-
-    if (currentOnlineFilter === 'online') members = members.filter(m => isMemberOnline(m.id));
-    else if (currentOnlineFilter === 'offline') members = members.filter(m => !isMemberOnline(m.id));
-    if (typeF !== 'all') members = members.filter(m => m.role === typeF);
-    if (cityF) members = members.filter(m => (m.location || '').toLowerCase().includes(cityF.toLowerCase()));
-    if (search) members = members.filter(m => m.name.toLowerCase().includes(search) || (m.location || '').toLowerCase().includes(search));
-
-    members.sort((a, b) => (isMemberOnline(b.id) - isMemberOnline(a.id)) || a.name.localeCompare(b.name));
-
-    const container = document.getElementById('onlineUsersList');
-    const countEl = document.getElementById('onlineUserCount');
-    if (countEl) countEl.textContent = members.length;
-    if (!container) return;
-
-    if (members.length === 0) {
-        container.innerHTML = '<div class="forum-empty"><i class="fas fa-user-slash"></i><h3>No users found</h3><p>Try adjusting your filters</p></div>';
-        return;
+function buildOnlineListMarkup(list) {
+    if (!list || list.length === 0) {
+        return '<div class="forum-empty"><i class="fas fa-user-slash"></i><h3>No users found</h3><p>Try adjusting your filters</p></div>';
     }
-
-    container.innerHTML = members.map(m => {
-        const online = isMemberOnline(m.id);
-        const initials = m.name.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase();
+    return list.map(m => {
+        const online = !!m.online;
+        const isGuest = m.role === 'guest';
+        const initials = String(m.name || '?').split(' ').map(w => w[0]).filter(Boolean).slice(0, 2).join('').toUpperCase();
+        const tagBg = isGuest ? 'background:rgba(217,119,6,.15);color:#d97706'
+            : m.role === 'provider' ? 'background:rgba(16,185,129,.15);color:#10b981'
+            : m.role === 'admin' ? 'background:rgba(239,68,68,.15);color:#ef4444'
+            : 'background:rgba(102,126,234,.15);color:#667eea';
+        const tagLabel = isGuest ? 'Guest' : m.role === 'provider' ? 'Provider' : m.role === 'admin' ? 'Admin' : 'User';
+        const safeId = String(m.id || '').replace(/'/g, "\\'");
+        const safeName = String(m.name || '').replace(/'/g, "\\'");
+        const msgBtn = isGuest ? '' : `<button class="btn btn-primary btn-sm" onclick="openComposeTo('${safeId}', '${safeName}', '${m.role}')"><i class="fas fa-paper-plane"></i> Message</button>`;
+        const locText = isGuest ? 'Browsing 2k2' : (m.location || 'Location not set');
         return `
         <div class="online-user-card">
             <div class="online-user-avatar-wrap">
@@ -5436,15 +5416,70 @@ function renderOnlineUsers() {
                 <span class="online-dot ${online ? 'on' : 'off'}" title="${online ? 'Online' : 'Offline'}"></span>
             </div>
             <div class="online-user-info">
-                <div class="online-user-name">${escapeHtml(m.name)} <span class="mini-tag" style="${m.role === 'provider' ? 'background:rgba(16,185,129,.15);color:#10b981' : 'background:rgba(102,126,234,.15);color:#667eea'}">${m.role === 'provider' ? 'Provider' : 'User'}</span></div>
-                <div class="online-user-loc"><i class="fas fa-map-marker-alt"></i> ${escapeHtml(m.location || 'Location not set')}</div>
+                <div class="online-user-name">${escapeHtml(m.name)} <span class="mini-tag" style="${tagBg}">${tagLabel}</span></div>
+                <div class="online-user-loc"><i class="fas fa-map-marker-alt"></i> ${escapeHtml(locText)}</div>
                 <div class="online-user-bio">${escapeHtml((m.bio || '').substring(0, 90))}</div>
             </div>
-            <div class="online-user-actions">
-                <button class="btn btn-primary btn-sm" onclick="openComposeTo('${m.id}', '${m.name.replace(/'/g, "\\'")}', '${m.role}')"><i class="fas fa-paper-plane"></i> Message</button>
-            </div>
+            <div class="online-user-actions">${msgBtn}</div>
         </div>`;
     }).join('');
+}
+
+async function renderOnlineUsers() {
+    let members = [];
+    let guests = [];
+    try {
+        const data = await (window._2k2 && _2k2.Presence ? _2k2.Presence.fetchPresence() : { members: [], guests: [] });
+        members = data.members.slice();
+        guests = data.guests.slice();
+    } catch (e) { members = []; guests = []; }
+
+    // Ensure the current signed-in user is always present in the list.
+    try {
+        const sid = await _2k2.Auth.getSession();
+        if (sid && sid.user && !members.some(m => m.id === sid.user.id)) {
+            const profile = await _2k2.Auth.getProfile();
+            members.push({
+                id: sid.user.id,
+                name: (profile && (profile.display_name || profile.full_name)) || sid.user.email || 'You',
+                role: profile ? profile.role : 'user',
+                email: sid.user.email || '',
+                location: '',
+                photo: '',
+                bio: 'This is you',
+                lastSeen: Date.now(),
+                online: true
+            });
+        }
+    } catch (e) { /* ignore */ }
+
+    const search = (document.getElementById('onlineSearch')?.value || '').toLowerCase();
+    const typeF = document.getElementById('onlineTypeFilter')?.value || 'all';
+    const cityF = document.getElementById('onlineCityFilter')?.value || '';
+
+    const container = document.getElementById('onlineUsersList');
+    const countEl = document.getElementById('onlineUserCount');
+    if (!container) return;
+
+    if (currentOnlineFilter === 'guests') {
+        let list = guests;
+        if (search) list = list.filter(g => g.name.toLowerCase().includes(search));
+        list.sort((a, b) => b.lastSeen - a.lastSeen);
+        if (countEl) countEl.textContent = list.length;
+        container.innerHTML = buildOnlineListMarkup(list);
+        return;
+    }
+
+    if (currentOnlineFilter === 'online') members = members.filter(m => m.online);
+    else if (currentOnlineFilter === 'offline') members = members.filter(m => !m.online);
+    if (typeF !== 'all') members = members.filter(m => m.role === typeF);
+    if (cityF) members = members.filter(m => (m.location || '').toLowerCase().includes(cityF.toLowerCase()));
+    if (search) members = members.filter(m => m.name.toLowerCase().includes(search) || (m.location || '').toLowerCase().includes(search));
+
+    members.sort((a, b) => (b.online - a.online) || a.name.localeCompare(b.name));
+
+    if (countEl) countEl.textContent = members.length;
+    container.innerHTML = buildOnlineListMarkup(members);
 }
 
 // ==========================================
