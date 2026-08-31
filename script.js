@@ -5439,9 +5439,10 @@ async function renderOnlineUsers() {
         const sid = await _2k2.Auth.getSession();
         if (sid && sid.user && !members.some(m => m.id === sid.user.id)) {
             const profile = await _2k2.Auth.getProfile();
+            const emailLocal = (sid.user.email || '').split('@')[0].replace(/[._-]+/g, ' ').trim();
             members.push({
                 id: sid.user.id,
-                name: (profile && (profile.display_name || profile.full_name)) || sid.user.email || 'You',
+                name: (profile && (profile.display_name || profile.full_name)) || emailLocal || sid.user.email || 'You',
                 role: profile ? profile.role : 'user',
                 email: sid.user.email || '',
                 location: '',

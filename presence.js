@@ -28,6 +28,12 @@
     return id;
   }
 
+  function usernameFromEmail(email) {
+    if (!email) return '';
+    const local = String(email).split('@')[0].replace(/[._-]+/g, ' ');
+    return local.trim() || String(email);
+  }
+
   // ---------------- signed-in user heartbeat ----------------
   function startUserHeartbeat() {
     const client = getClient();
@@ -44,6 +50,8 @@
         const displayName =
           (profile && (profile.display_name || profile.full_name)) ||
           sid.user.user_metadata?.full_name ||
+          sid.user.user_metadata?.name ||
+          usernameFromEmail(sid.user.email) ||
           sid.user.email ||
           'User';
         await client.from('presence').upsert(
@@ -111,7 +119,7 @@
           const t = m.last_seen ? new Date(m.last_seen).getTime() : 0;
           return {
             id: m.id,
-            name: m.display_name || m.email || 'Member',
+            name: m.display_name || usernameFromEmail(m.email) || m.email || 'Member',
             role: m.role || 'user',
             email: m.email || '',
             location: '',
