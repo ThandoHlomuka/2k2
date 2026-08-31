@@ -1987,7 +1987,7 @@ h1, h2, h3, h4 {
     }
 
     .form-grid {
-        grid-template-columns: 1fr;
+        grid-template-columns: 1fr !important;
     }
 
     .view-grid {
@@ -5730,6 +5730,7 @@ h1, h2, h3, h4 {
 
     .forum-emoji-picker {
         width: 280px;
+        max-width: calc(100vw - 24px);
     }
 
     .forum-gist-toolbar {
@@ -6639,7 +6640,7 @@ h1, h2, h3, h4 {
     .online-user-card { flex-wrap: wrap; }
     .online-user-actions { width: 100%; }
     .online-user-actions .btn { width: 100%; }
-    .msg-gif-picker { width: 280px; }
+    .msg-gif-picker { width: 280px; max-width: calc(100vw - 24px); }
     .msg-gif-grid { grid-template-columns: repeat(2, 1fr); }
 }
 
@@ -6778,3 +6779,15 @@ h1, h2, h3, h4 {
 @media (max-width: 576px) {
     .form-row { grid-template-columns: 1fr; }
 }
+
+/* ============================================
+   Small-device safety net
+   ============================================ */
+@media (max-width: 480px) {
+    .analytics-stats-row,
+    .dash-analytics-row {
+        grid-template-columns: 1fr;
+    }
+    .analytics-stats-row .small-doughnut-wrap { max-width: 100%; }
+}
+

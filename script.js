@@ -6597,7 +6597,7 @@ function viewFantasyRequest(id) {
             <form onsubmit="submitFantasyResponse(event)">
                 <input type="hidden" id="fantasyResponseId" value="${r.id}">
                 <input type="hidden" id="fantasyResponseProviderId" value="${getCurrentProviderIdentity().id}">
-                <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+                <div class="form-grid" style="gap:12px">
                     <input type="text" id="fantasyResponseProvider" placeholder="Provider business name" value="${escapeHtml(getCurrentProviderIdentity().name)}" required>
                     <input type="number" id="fantasyResponsePrice" placeholder="Your offer (R)" min="0" step="0.01" required>
                 </div>

@@ -117,15 +117,15 @@
     var photo = p.photo || '';
     document.getElementById('productViewContent').innerHTML =
       '<div class="profile-card view-header-card">' +
-        '<div class="view-avatar" style="width:180px;height:180px;border-radius:14px;overflow:hidden">' +
+        '<div class="view-avatar" style="width:140px;height:140px;max-width:100%;border-radius:14px;overflow:hidden;flex-shrink:0;margin:0 auto">' +
           (photo ? '<img src="' + esc(photo) + '" style="width:100%;height:100%;object-fit:cover" alt="">'
-                 : '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:60px;color:#c9a227"><i class="fas ' + ci.icon + '"></i></div>') +
+                 : '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:52px;color:#c9a227"><i class="fas ' + ci.icon + '"></i></div>') +
         '</div>' +
-        '<div class="view-header-info" style="flex:1">' +
+        '<div class="view-header-info" style="flex:1;min-width:0">' +
           '<div class="mini-tag" style="background:rgba(201,162,39,.15);color:#d4a853">' + esc(ci.label) + '</div>' +
           '<h2 style="margin:6px 0">' + esc(p.name || 'Untitled') + '</h2>' +
           '<div style="color:#a99c7e;margin:4px 0"><i class="fas fa-user"></i> Sold by ' + esc(p.authorName || 'Provider') + '</div>' +
-          '<div style="font-size:30px;font-weight:800;color:#d4a853;margin:10px 0">R' + esc(Number(p.price || 0).toFixed(2)) + '</div>' +
+          '<div style="font-size:26px;font-weight:800;color:#d4a853;margin:10px 0">R' + esc(Number(p.price || 0).toFixed(2)) + '</div>' +
           '<div style="color:#a99c7e;font-size:13px">Stock: <strong>' + esc((p.stock == null ? 0 : p.stock)) + '</strong> available</div>' +
         '</div>' +
       '</div>' +
@@ -325,8 +325,8 @@
     }
     var badges = { pending: 'rgba(245,158,11,.15);color:#f59e0b', processing: 'rgba(59,130,246,.15);color:#3b82f6', shipped: 'rgba(16,185,129,.15);color:#10b981', completed: 'rgba(16,185,129,.15);color:#10b981', cancelled: 'rgba(239,68,68,.15);color:#ef4444' };
     container.innerHTML = '<div class="admin-summary-cards" style="display:flex;gap:12px;margin-bottom:16px;flex-wrap:wrap">' +
-        '<div style="flex:1;min-width:180px;background:#17140e;border:1px solid #c9a227;border-radius:12px;padding:16px"><div style="color:#a99c7e;font-size:12px">Total Orders</div><div style="font-size:26px;font-weight:800;color:#fdf9ef">' + esc(list.length) + '</div></div>' +
-        '<div style="flex:1;min-width:180px;background:#17140e;border:1px solid #f59e0b;border-radius:12px;padding:16px"><div style="color:#a99c7e;font-size:12px">Pending</div><div style="font-size:26px;font-weight:800;color:#f59e0b">' + esc(pending) + '</div></div>' +
+        '<div style="flex:1;min-width:140px;background:#17140e;border:1px solid #c9a227;border-radius:12px;padding:16px"><div style="color:#a99c7e;font-size:12px">Total Orders</div><div style="font-size:26px;font-weight:800;color:#fdf9ef">' + esc(list.length) + '</div></div>' +
+        '<div style="flex:1;min-width:140px;background:#17140e;border:1px solid #f59e0b;border-radius:12px;padding:16px"><div style="color:#a99c7e;font-size:12px">Pending</div><div style="font-size:26px;font-weight:800;color:#f59e0b">' + esc(pending) + '</div></div>' +
       '</div>' +
       list.map(function (o) {
         var bg = badges[o.status] || badges.pending;

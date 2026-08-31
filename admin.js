@@ -351,13 +351,13 @@ function renderAdminDashboard() {
         });
         const deg = total ? grad + ')' : 'conic-gradient(#e6dec8 0deg 360deg)';
         pie.innerHTML = `
-            <div style="flex:0 0 160px;width:160px;height:160px;border-radius:50%;background:${deg};position:relative">
-                <div style="position:absolute;inset:34px;background:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-direction:column">
-                    <span style="font-size:1.4rem;font-weight:800;color:#211a0d">${total}</span>
+            <div style="flex:0 0 140px;width:140px;height:140px;border-radius:50%;background:${deg};position:relative">
+                <div style="position:absolute;inset:30px;background:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-direction:column">
+                    <span style="font-size:1.3rem;font-weight:800;color:#211a0d">${total}</span>
                     <span style="font-size:0.68rem;color:#a99c7e">Accounts</span>
                 </div>
             </div>
-            <div style="flex:1;min-width:140px">
+            <div style="flex:1;min-width:110px">
                 ${slices.map(s => `
                     <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin:8px 0">
                         <span style="display:flex;align-items:center;gap:8px;font-size:0.82rem;color:#54492f">

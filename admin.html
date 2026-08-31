@@ -51,6 +51,18 @@
         .admin-form-input { width: 100%; padding: 10px 14px; border: 2px solid #e6dec8; border-radius: 10px; font-size: 0.88rem; font-family: inherit; color: #3a3121; background: var(--cream-white, #fdf9ef); transition: border-color 0.2s; box-sizing: border-box; }
         .admin-form-input:focus { outline: none; border-color: #c9a227; box-shadow: 0 0 0 3px rgba(201,162,39,0.15); }
         .admin-form-input[type="checkbox"] { width: auto; }
+        .admin-dash-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 24px; }
+        @media (max-width: 768px) {
+            .admin-dash-grid { grid-template-columns: 1fr; }
+            .admin-quick-actions { grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 10px; }
+            .admin-view-content { padding: 20px 16px; max-width: 100%; }
+            .admin-view-content h2 { font-size: 1.15rem; }
+            .admin-view-row { flex-direction: column; gap: 4px; align-items: flex-start; }
+            .admin-view-row .value { text-align: left; }
+            .admin-chart-card { padding: 16px; }
+            .admin-bar { min-width: 26px; }
+        }
+
     </style>
 </head>
 <body>
@@ -332,7 +344,7 @@
                     <a class="admin-quick-btn" onclick="navigateTo('admin-logs')"><i class="fas fa-file-alt"></i><span>View Logs</span></a>
                 </div>
 
-                <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:24px">
+                <div class="admin-dash-grid">
                     <div class="admin-chart-card">
                         <h3><i class="fas fa-chart-bar" style="color:#d3ad44;margin-right:8px"></i>Content Distribution</h3>
                         <div class="admin-bar-chart" id="adminBarChart"></div>
@@ -343,7 +355,7 @@
                     </div>
                 </div>
 
-                <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:24px">
+                <div class="admin-dash-grid">
                     <div class="admin-chart-card">
                         <h3><i class="fas fa-chart-pie" style="color:#d3ad44;margin-right:8px"></i>Account Distribution</h3>
                         <div id="adminPieChart" style="display:flex;align-items:center;gap:20px;flex-wrap:wrap"></div>
@@ -354,7 +366,7 @@
                     </div>
                 </div>
 
-                <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:24px">
+                <div class="admin-dash-grid">
                     <div class="admin-chart-card">
                         <h3><i class="fas fa-ranking-star" style="color:#d3ad44;margin-right:8px"></i>Top Providers by Listings</h3>
                         <div id="adminTopProviders"></div>
