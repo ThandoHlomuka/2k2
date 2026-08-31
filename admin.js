@@ -1101,6 +1101,19 @@ function renderAdminWallets() {
                     const p = providers.find(x => x.id === r.ownerId);
                     ownerLabel = p ? p.name : r.ownerId;
                 }
+                let reqDetail = '';
+                if (isTopUp) {
+                    const identity = r.username || r.email || ownerLabel;
+                    const mail = r.email ? `<div><i class="fas fa-envelope" style="width:16px"></i> ${escapeHtml(r.email)}</div>` : '';
+                    const phone = r.phone ? `<div><i class="fas fa-phone" style="width:16px"></i> ${escapeHtml(r.phone)}</div>` : '';
+                    const addr = r.address ? `<div><i class="fas fa-map-marker-alt" style="width:16px"></i> ${escapeHtml(r.address)}</div>` : '';
+                    reqDetail = `
+                        <div style="margin-top:8px;padding-left:10px;border-left:2px solid ${typeColor}44;font-size:0.82rem;color:#d8cebd;line-height:1.5">
+                            <div style="font-weight:700;color:#fff">${escapeHtml(identity)}</div>
+                            ${mail}${phone}${addr}
+                            ${r.ownerId && r.ownerId !== 'general' ? `<div style="color:#a99c7e;font-size:0.72rem;margin-top:2px">ID: ${escapeHtml(r.ownerId)}</div>` : ''}
+                        </div>`;
+                }
                 return `
                     <div class="admin-request-row">
                         <div class="admin-request-info">
@@ -1110,6 +1123,7 @@ function renderAdminWallets() {
                                 <span style="color:#a99c7e;font-size:0.82rem;margin-left:8px">${ownerLabel}</span>
                             </div>
                             <span style="color:#a99c7e;font-size:0.8rem">${fmtDate(r.createdAt)}</span>
+                            ${reqDetail}
                         </div>
                         <div class="admin-actions">
                             <button class="btn btn-primary btn-xs" style="background:#10b981;border:none" onclick="adminApproveRequest('${isTopUp ? 'topup' : 'withdrawal'}','${r.id}')"><i class="fas fa-check"></i> Approve</button>

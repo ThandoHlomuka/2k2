@@ -3152,10 +3152,16 @@ function processTopUp() {
     if (!amount || amount <= 0) { showToast('Enter a valid amount.', 'error'); return; }
 
     const requests = Storage.getTopUpRequests();
+    const me = getUserProfilesByAuth()[0] || {};
+    const authSnap = (_2k2.Auth && _2k2.Auth.syncUser) ? _2k2.Auth.syncUser() : null;
     requests.push({
         id: generateId(),
         ownerType: 'user',
-        ownerId: 'general',
+        ownerId: currentAuthId() || 'general',
+        username: me.username || '',
+        email: me.email || (authSnap && authSnap.email) || '',
+        phone: me.phone || '',
+        address: me.location || '',
         amount,
         status: 'pending',
         createdAt: new Date().toISOString()
