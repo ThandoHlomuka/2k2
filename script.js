@@ -205,6 +205,12 @@ function getServiceTypeFilterHTML() {
 // ==========================================
 function getWalletId(ownerType, ownerId) { return `wallet_${ownerType}_${ownerId}`; }
 
+// Per-user wallets are keyed by the signed-in user's ID (fallback: 'general').
+function currentUserOwnerId() {
+    const id = currentAuthId();
+    return id ? id : 'general';
+}
+
 function getOrCreateWallet(ownerType, ownerId) {
     const wallets = Storage.getWallets();
     const walletId = getWalletId(ownerType, ownerId);
@@ -2827,7 +2833,7 @@ function handleBookingSubmit(e) {
     };
 
     // Deduct booking fee from user wallet
-    adjustWallet('user', 'general', -50, 'booking-fee', `Booking request sent to provider`, { bookingId: booking.id });
+    adjustWallet('user', currentUserOwnerId(), -50, 'booking-fee', `Booking request sent to provider`, { bookingId: booking.id });
 
     const bookings = Storage.getBookings();
     bookings.push(booking);
@@ -2873,7 +2879,7 @@ function handleTipSubmit(e) {
     if (tip.amount <= 0) { showToast('Please enter a valid amount.', 'error'); return; }
 
     // Deduct from user wallet, credit provider wallet
-    adjustWallet('user', 'general', -tip.amount, 'tip-sent', `Tip sent to provider`, { tipId: tip.id, providerId: tip.providerId });
+    adjustWallet('user', currentUserOwnerId(), -tip.amount, 'tip-sent', `Tip sent to provider`, { tipId: tip.id, providerId: tip.providerId });
     adjustWallet('provider', tip.providerId, tip.amount, 'tip-received', `Tip received from ${tip.tipperName}`, { tipId: tip.id, tipperName: tip.tipperName });
 
     const tips = Storage.getTips();
@@ -3083,11 +3089,12 @@ function renderProviderTips() {
 // WALLET PAGES
 // ==========================================
 function renderUserWallet() {
-    const wallet = getOrCreateWallet('user', 'general');
+    const meId = currentUserOwnerId();
+    const wallet = getOrCreateWallet('user', meId);
     document.getElementById('userWalletBalance').textContent = `R${wallet.balance.toFixed(2)}`;
     document.getElementById('userWalletUpdated').textContent = formatDate(wallet.updatedAt);
 
-    const txns = getWalletTransactions('user', 'general');
+    const txns = getWalletTransactions('user', meId);
     const income = txns.filter(t => t.amount > 0).reduce((s, t) => s + t.amount, 0);
     const spent = txns.filter(t => t.amount < 0).reduce((s, t) => s + Math.abs(t.amount), 0);
 
@@ -3098,7 +3105,7 @@ function renderUserWallet() {
     renderUserAnalytics();
 
     // Pending top-up requests
-    const pendingRequests = Storage.getTopUpRequests().filter(r => r.status === 'pending');
+    const pendingRequests = Storage.getTopUpRequests().filter(r => r.status === 'pending' && r.ownerType === 'user' && r.ownerId === meId);
     const pendingContainer = document.getElementById('userPendingRequests');
     if (pendingContainer) {
         if (pendingRequests.length === 0) {
@@ -3463,7 +3470,7 @@ function filterTxnsByPeriod(txns, period) {
 }
 
 function renderUserAnalytics() {
-    const txns = filterTxnsByPeriod(getWalletTransactions('user', 'general'), document.getElementById('userAnalyticsPeriod')?.value || 'all');
+    const txns = filterTxnsByPeriod(getWalletTransactions('user', currentUserOwnerId()), document.getElementById('userAnalyticsPeriod')?.value || 'all');
     const spentTxns = txns.filter(t => t.amount < 0);
 
     const totalSpent = spentTxns.reduce((s, t) => s + Math.abs(t.amount), 0);
@@ -6106,7 +6113,7 @@ function filterProviderExperiences() {
 function renderExperiencesBrowse() {
     const experiences = Storage.getExperiences().filter(x => x.status === 'active');
     const walletBalanceEl = document.getElementById('expWalletBalance');
-    if (walletBalanceEl) walletBalanceEl.textContent = 'R' + getWalletBalance('user', 'general');
+    if (walletBalanceEl) walletBalanceEl.textContent = 'R' + getWalletBalance('user', currentUserOwnerId());
     let filtered = [...experiences];
 
     if (currentExperienceFilter !== 'all') filtered = filtered.filter(x => x.type === currentExperienceFilter);
@@ -6220,13 +6227,13 @@ function purchaseExperience(id) {
         viewExperience(id);
         return;
     }
-    const balance = getWalletBalance('user', 'general');
+    const balance = getWalletBalance('user', currentUserOwnerId());
     if (balance < price) {
         showToast('Insufficient wallet balance. Please top up your wallet first.', 'error');
         navigateTo('user-wallet');
         return;
     }
-    adjustWallet('user', 'general', -price, 'experience-purchase', `Joined experience: ${item.title}`, { experienceId: id });
+    adjustWallet('user', currentUserOwnerId(), -price, 'experience-purchase', `Joined experience: ${item.title}`, { experienceId: id });
     adjustWallet('provider', item.providerId, price, 'experience-sale', `Experience sold: ${item.title}`, { experienceId: id });
     Storage.setExperiencePurchases([...Storage.getExperiencePurchases(), {
         id: generateId(), experienceId: id, buyerId: 'current', amount: price, title: item.title, providerId: item.providerId,

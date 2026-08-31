@@ -1143,15 +1143,24 @@ function renderAdminWallets() {
         } else {
             wTbody.innerHTML = wallets.map(w => {
                 let ownerName = w.ownerId;
-                if (w.ownerType === 'user') ownerName = 'General User';
-                else if (w.ownerType === 'provider') {
+                let ownerSub = w.ownerId;
+                if (w.ownerType === 'user') {
+                    const users = Storage.getUsers();
+                    const u = users.find(x => x.userId === w.ownerId);
+                    if (u && (u.username || u.fullName || u.email)) {
+                        ownerName = u.username || u.fullName || u.email;
+                        ownerSub = u.email || (u.fullName || '') || w.ownerId;
+                    } else {
+                        ownerName = w.ownerId === 'general' ? 'General User' : w.ownerId;
+                    }
+                } else if (w.ownerType === 'provider') {
                     const providers = Storage.getProviders();
                     const p = providers.find(x => x.id === w.ownerId);
                     ownerName = p ? p.name : w.ownerId;
                 }
                 return `
                     <tr>
-                        <td><strong>${truncate(ownerName, 25)}</strong><br><span style="font-size:0.75rem;color:#a99c7e">${w.ownerId}</span></td>
+                        <td><strong>${truncate(ownerName, 25)}</strong><br><span style="font-size:0.75rem;color:#a99c7e">${ownerSub}</span></td>
                         <td><span class="badge" style="background:${w.ownerType === 'user' ? '#667eea22; color:#667eea' : '#8b5cf622; color:#8b5cf6'}">${w.ownerType}</span></td>
                         <td><strong>R${w.balance.toFixed(2)}</strong></td>
                         <td>${fmtDate(w.updatedAt)}</td>
