@@ -153,6 +153,10 @@
                 <i class="fas fa-cog"></i>
                 <span>Settings</span>
             </a>
+            <a href="#" class="nav-item" data-page="admin-help-queries">
+                <i class="fas fa-life-ring"></i>
+                <span>Help &amp; Queries</span>
+            </a>
             <div class="nav-divider"></div>
             <a href="index.html" class="nav-item">
                 <i class="fas fa-arrow-left"></i>
@@ -783,6 +787,80 @@
                     <h3><i class="fas fa-ellipsis-h"></i> And much more</h3>
                     <p>Review reviews, wallets, messages, saved items and downloads, and keep every corner of the platform running smoothly.</p>
                 </div>
+            </div>
+        </div>
+
+        <!-- Help Queries -->
+        <div class="page" id="page-admin-help-queries">
+            <div class="container">
+                <div class="dashboard-header">
+                    <div>
+                        <h1><i class="fas fa-life-ring"></i> Help &amp; Queries</h1>
+                        <p>Review and respond to support queries submitted by users</p>
+                    </div>
+                </div>
+
+                <div class="stats-row" style="margin-bottom:16px">
+                    <div class="stat-card">
+                        <div class="stat-icon blue-bg"><i class="fas fa-envelope-open-text"></i></div>
+                        <div class="stat-info">
+                            <span class="stat-number" id="adminHelpQueryCount">0</span>
+                            <span class="stat-label">Total Queries</span>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon orange-bg"><i class="fas fa-inbox"></i></div>
+                        <div class="stat-info">
+                            <span class="stat-number" id="adminHelpOpenCount">0</span>
+                            <span class="stat-label">Open</span>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon green-bg"><i class="fas fa-check-circle"></i></div>
+                        <div class="stat-info">
+                            <span class="stat-number" id="adminHelpResolvedCount">0</span>
+                            <span class="stat-label">Resolved</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="directory-filters">
+                    <div class="filter-tabs">
+                        <button class="filter-tab active" onclick="filterAdminHelp('all')"><i class="fas fa-globe"></i> All</button>
+                        <button class="filter-tab" onclick="filterAdminHelp('open')"><i class="fas fa-inbox"></i> Open</button>
+                        <button class="filter-tab" onclick="filterAdminHelp('resolved')"><i class="fas fa-check"></i> Resolved</button>
+                    </div>
+                    <div class="filter-bar">
+                        <input type="text" id="adminHelpSearch" placeholder="Search queries... (name, email, topic, message)" oninput="renderAdminHelpQueries()">
+                    </div>
+                </div>
+
+                <div class="admin-table-wrap">
+                    <table class="admin-table" id="adminHelpTable">
+                        <thead>
+                            <tr>
+                                <th>From</th>
+                                <th>Topic</th>
+                                <th>Message</th>
+                                <th>Status</th>
+                                <th>Submitted</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="adminHelpTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Reply to query modal -->
+        <div class="admin-view-modal" id="adminHelpReplyModal">
+            <div class="admin-view-content">
+                <div class="admin-modal-header">
+                    <h3>Respond to Query</h3>
+                    <button class="btn btn-secondary btn-xs" onclick="closeModal('adminHelpReplyModal')"><i class="fas fa-times"></i></button>
+                </div>
+                <div class="admin-view-block" id="adminHelpReplyBody"></div>
             </div>
         </div>
 

@@ -549,6 +549,10 @@
                 <i class="fas fa-circle-question"></i>
                 <span>How It Works</span>
             </a>
+            <a href="#" class="nav-item" data-page="help-queries">
+                <i class="fas fa-life-ring"></i>
+                <span>Help</span>
+            </a>
         </nav>
 
         <div class="sidebar-footer">
@@ -901,6 +905,79 @@
                     <h3><i class="fas fa-ellipsis-h"></i> And much more</h3>
                     <p>Follow favourites, save items, share your experiences, earn rewards and keep exploring everything 2k2 has for you.</p>
                 </div>
+            </div>
+        </div>
+
+        <!-- Help & Support -->
+        <div class="page" id="page-help-queries">
+            <div class="container">
+                <div class="dashboard-header">
+                    <div>
+                        <h1><i class="fas fa-life-ring"></i> Help &amp; Support</h1>
+                        <p>Need a hand? We're here to help you get the most out of 2k2.</p>
+                    </div>
+                </div>
+
+                <div class="profile-setup-banner" id="helpIntroBanner" style="display:flex">
+                    <i class="fas fa-headset"></i>
+                    <div>
+                        <strong>Get assistance from our support team</strong>
+                        <span>Use the form below to send us a query or let us know if you need help with the app. Our team will review your message and get back to you.</span>
+                    </div>
+                </div>
+
+                <div class="how-grid" style="margin:18px 0">
+                    <div class="how-step">
+                        <div class="how-step-num"><i class="fas fa-bug"></i></div>
+                        <h4>Report an issue</h4>
+                        <p>Tell us about a bug or something not working the way it should.</p>
+                    </div>
+                    <div class="how-step">
+                        <div class="how-step-num"><i class="fas fa-question"></i></div>
+                        <h4>Ask a question</h4>
+                        <p>Not sure how something works? Send us your question.</p>
+                    </div>
+                    <div class="how-step">
+                        <div class="how-step-num"><i class="fas fa-circle-info"></i></div>
+                        <h4>Request assistance</h4>
+                        <p>Need a hand with your account, a booking, an order or payments?</p>
+                    </div>
+                </div>
+
+                <form id="helpQueryForm" onsubmit="handleHelpSubmit(event)">
+                    <div class="profile-card">
+                        <h2><i class="fas fa-paper-plane"></i> Send us a message</h2>
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label>Your Name</label>
+                                <input type="text" id="helpName" placeholder="Your name" maxlength="80">
+                            </div>
+                            <div class="form-group">
+                                <label>Contact Email</label>
+                                <input type="email" id="helpEmail" placeholder="you@example.com">
+                            </div>
+                            <div class="form-group">
+                                <label>Topic *</label>
+                                <select id="helpTopic" required>
+                                    <option value="">Select a topic...</option>
+                                    <option value="account">Account &amp; Profile</option>
+                                    <option value="booking">Bookings &amp; Orders</option>
+                                    <option value="payment">Payments &amp; Wallet</option>
+                                    <option value="technical">Technical Issue / Bug</option>
+                                    <option value="other">Other</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Your Message *</label>
+                            <textarea id="helpMessage" rows="6" placeholder="Tell us how we can help..." required></textarea>
+                        </div>
+                        <div class="form-actions">
+                            <button type="button" class="btn btn-secondary" onclick="navigateTo('user-dashboard')">Cancel</button>
+                            <button type="submit" class="btn btn-primary" id="helpSubmitBtn"><i class="fas fa-paper-plane"></i> Submit Query</button>
+                        </div>
+                    </div>
+                </form>
             </div>
         </div>
 

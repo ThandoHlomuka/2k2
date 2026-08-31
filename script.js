@@ -375,6 +375,7 @@ function navigateTo(page) {
     if (page === 'message-view') renderMessageThread();
     if (page === 'message-compose') renderMessageCompose();
     if (page === 'online-users') { populateOnlineCityFilters(); renderOnlineUsers(); }
+    if (page === 'help-queries') prefillHelpForm();
     if (page === 'saved-items') renderSavedItems();
     if (page === 'downloads') renderDownloads();
     if (page === 'experiences-browse') renderExperiencesBrowse();
@@ -621,6 +622,52 @@ function handleUserSubmit(e) {
     Storage.setUsers(users);
     renderProfileSetupBanner();
     navigateTo('user-dashboard');
+}
+
+function handleHelpSubmit(e) {
+    e.preventDefault();
+    const name = document.getElementById('helpName').value.trim();
+    const email = document.getElementById('helpEmail').value.trim();
+    const topic = document.getElementById('helpTopic').value;
+    const message = document.getElementById('helpMessage').value.trim();
+
+    if (!topic) { showToast('Please choose a topic.', 'error'); return; }
+    if (!message) { showToast('Please enter your message.', 'error'); return; }
+
+    const queries = Storage.getHelpQueries();
+    queries.push({
+        id: generateId(),
+        userId: currentAuthId(),
+        name,
+        email,
+        topic,
+        message,
+        status: 'open',
+        adminReply: '',
+        repliedAt: null,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+    });
+    Storage.setHelpQueries(queries);
+
+    e.target.reset();
+    prefillHelpForm();
+    showToast('Your query has been sent to our support team. We\'ll be in touch soon!', 'success');
+}
+
+function prefillHelpForm() {
+    try {
+        const snap = _2k2.Auth && _2k2.Auth.syncUser ? _2k2.Auth.syncUser() : null;
+        if (snap && snap.email) {
+            const emailEl = document.getElementById('helpEmail');
+            const nameEl = document.getElementById('helpName');
+            if (emailEl && !emailEl.value) emailEl.value = snap.email;
+            if (nameEl && !nameEl.value) {
+                const p = Storage.getUsers().find(u => (u.userId && snap.user_id && u.userId === snap.user_id) || (u.email && u.email.toLowerCase() === snap.email.toLowerCase()));
+                if (p && p.fullName) nameEl.value = p.fullName;
+            }
+        }
+    } catch (e) {}
 }
 
 function renderUserProfiles(filter = 'all') {

@@ -48,6 +48,7 @@ function navigateTo(page) {
     if (page === 'admin-logs') renderAdminLogs();
     if (page === 'admin-products') renderAdminProducts();
     if (page === 'admin-product-orders') renderAdminProductOrders();
+    if (page === 'admin-help-queries') renderAdminHelpQueries();
 
     const sidebar = document.getElementById('sidebar');
     const main = document.getElementById('mainContent');
@@ -1984,6 +1985,122 @@ function adminToggleArchive(id) {
 function adminDeleteConversation(id) {
     const conv = Storage.getConversations().find(c => c.id === id);
     promptAdminDelete('conversation', id, conv ? conv.subject : 'Conversation');
+}
+
+// ==========================================
+// HELP & QUERIES
+// ==========================================
+let currentAdminHelpFilter = 'all';
+let currentHelpQueryId = null;
+
+function filterAdminHelp(filter) {
+    currentAdminHelpFilter = filter;
+    const tabs = document.querySelectorAll('#page-admin-help-queries .filter-tab');
+    tabs.forEach(t => t.classList.toggle('active', (t.getAttribute('onclick') || '').includes("'" + filter + "'")));
+    renderAdminHelpQueries();
+}
+
+function renderAdminHelpQueries() {
+    let queries = [...Storage.getHelpQueries()];
+    const search = document.getElementById('adminHelpSearch')?.value?.toLowerCase() || '';
+
+    document.getElementById('adminHelpQueryCount').textContent = queries.length;
+    document.getElementById('adminHelpOpenCount').textContent = queries.filter(q => q.status === 'open').length;
+    document.getElementById('adminHelpResolvedCount').textContent = queries.filter(q => q.status === 'resolved').length;
+
+    if (currentAdminHelpFilter === 'open') {
+        queries = queries.filter(q => q.status === 'open');
+    } else if (currentAdminHelpFilter === 'resolved') {
+        queries = queries.filter(q => q.status === 'resolved');
+    }
+
+    if (search) {
+        queries = queries.filter(q =>
+            (q.name || '').toLowerCase().includes(search) ||
+            (q.email || '').toLowerCase().includes(search) ||
+            (q.topic || '').toLowerCase().includes(search) ||
+            (q.message || '').toLowerCase().includes(search)
+        );
+    }
+
+    queries.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+    const tbody = document.getElementById('adminHelpTableBody');
+    if (!tbody) return;
+
+    if (queries.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" class="empty-cell">No help queries found</td></tr>';
+        return;
+    }
+
+    tbody.innerHTML = queries.map(q => {
+        const isOpen = q.status === 'open';
+        return `
+            <tr>
+                <td>
+                    <strong>${escapeHtml(q.name || '-')}</strong>
+                    <div class="truncate" style="max-width:200px;font-size:0.8rem;color:#a99c7e">${escapeHtml(q.email || '')}</div>
+                </td>
+                <td>${escapeHtml(q.topic || 'Other')}</td>
+                <td class="truncate" style="max-width:240px">${escapeHtml(q.message || '')}</td>
+                <td>${isOpen ? '<span style="color:#f59e0b;font-weight:700">Open</span>' : '<span style="color:#10b981;font-weight:700">Resolved</span>'}</td>
+                <td>${fmtDate(q.createdAt)}</td>
+                <td>
+                    <div class="admin-actions">
+                        <button class="btn btn-secondary btn-xs" onclick="openAdminHelpReply('${q.id}')"><i class="fas fa-reply"></i> Reply</button>
+                    </div>
+                </td>
+            </tr>
+        `;
+    }).join('');
+}
+
+function openAdminHelpReply(id) {
+    const q = Storage.getHelpQueries().find(x => x.id === id);
+    if (!q) return;
+    currentHelpQueryId = id;
+    const body = document.getElementById('adminHelpReplyBody');
+    const preview = q.adminReply
+        ? `<div class="admin-view-block"><h4 style="color:#d4a853;margin:0 0 6px">Your Reply</h4><p style="margin:0">${escapeHtml(q.adminReply)}</p></div>`
+        : '';
+    body.innerHTML = `
+        <div class="admin-view-block">
+            <h4 style="margin:0 0 6px">${escapeHtml(q.name || 'Unknown')} <span style="font-size:0.75rem;color:#a99c7e">${escapeHtml(q.email || '')}</span></h4>
+            <p style="margin:0 0 4px"><span style="color:#d4a853">${escapeHtml(q.topic || 'Other')}</span></p>
+            <p style="margin:0">${escapeHtml(q.message || '')}</p>
+            <div style="font-size:0.78rem;color:#a99c7e;margin-top:6px">Submitted ${fmtDate(q.createdAt)} &middot; Status: ${q.status === 'open' ? 'Open' : 'Resolved'}</div>
+        </div>
+        ${preview}
+        <div class="form-group" style="margin-top:14px">
+            <label>Your Response</label>
+            <textarea id="adminHelpReplyText" rows="5" placeholder="Type your reply to this user...">${escapeHtml(q.adminReply || '')}</textarea>
+        </div>
+        <div style="text-align:right;margin-top:14px;display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap">
+            <button class="btn btn-secondary" onclick="closeAdminHelpReply()">Close</button>
+            <button class="btn btn-primary" onclick="saveAdminHelpReply('${q.id}')">${q.status === 'open' ? 'Send Reply &amp; Resolve' : 'Update Reply'}</button>
+        </div>
+    `;
+    document.getElementById('adminHelpReplyModal').classList.add('active');
+}
+
+function closeAdminHelpReply() {
+    document.getElementById('adminHelpReplyModal').classList.remove('active');
+}
+
+function saveAdminHelpReply(id) {
+    const reply = document.getElementById('adminHelpReplyText').value.trim();
+    if (!reply) { showToast('Please type a reply.', 'error'); return; }
+    const queries = Storage.getHelpQueries();
+    const q = queries.find(x => x.id === id);
+    if (!q) return;
+    q.adminReply = reply;
+    q.status = 'resolved';
+    q.repliedAt = new Date().toISOString();
+    q.updatedAt = new Date().toISOString();
+    Storage.setHelpQueries(queries);
+    closeAdminHelpReply();
+    renderAdminHelpQueries();
+    showToast('Reply sent to the user. Query marked as resolved.');
 }
 
 function adminMessageLogsSearch() { renderAdminMessageLogs(); }
