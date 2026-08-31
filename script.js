@@ -298,6 +298,7 @@ let userTags = [];
 let providerTags = [];
 let listingTags = [];
 let listingGallery = [];
+let listingLinks = [];
 let currentDirectoryFilter = 'all';
 let venueTags = [];
 let venueGallery = [];
@@ -309,6 +310,7 @@ let providerAdTags = [];
 let providerAdGallery = [];
 let serviceTags = [];
 let serviceGallery = [];
+let serviceLinks = [];
 let currentServicesFilter = 'all';
 let providerServiceTags = [];
 let providerServiceGallery = [];
@@ -1412,6 +1414,25 @@ function filterDirectory(type) {
 
 function searchDirectory() { renderDirectory(); }
 
+function safeExternalUrl(u) {
+    if (!u) return null;
+    let s = String(u).trim();
+    if (!/^https?:\/\//i.test(s)) s = 'https://' + s;
+    return /^https?:\/\//i.test(s) ? s : null;
+}
+
+function renderProfileLinks(containerId, links) {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+    const valid = (links || []).filter(l => l && l.url).map(l => ({ label: String(l.label || '').trim(), url: safeExternalUrl(l.url) })).filter(l => l.url).slice(0, 5);
+    if (valid.length === 0) { container.innerHTML = ''; return; }
+    container.innerHTML = valid.map(l => `
+        <a class="profile-link" href="${escapeHtml(l.url)}" target="_blank" rel="noopener noreferrer">
+            <i class="fas fa-external-link-alt"></i> ${escapeHtml(l.label || l.url)}
+        </a>
+    `).join('');
+}
+
 function viewDirectoryListing(id) {
     const listings = Storage.getListings();
     const l = listings.find(item => item.id === id);
@@ -1428,6 +1449,7 @@ function viewDirectoryListing(id) {
     document.getElementById('dirViewBio').textContent = l.bio || '-';
     document.getElementById('dirViewWebsite').textContent = l.website || '-';
     document.getElementById('dirViewWebsite').href = l.website || '#';
+    renderProfileLinks('dirViewLinks', l.links);
 
     const typeBadge = document.getElementById('dirViewType');
     typeBadge.textContent = type.label || l.category;
@@ -1476,8 +1498,10 @@ function resetListingForm() {
     document.getElementById('listingSubmitBtn').textContent = 'Publish Listing';
     listingTags = [];
     listingGallery = [];
+    listingLinks = [];
     renderListingTags();
     renderGalleryUpload();
+    renderListingLinks();
     document.getElementById('listingPhotoPreview').innerHTML = '<i class="fas fa-camera"></i><span>Click to upload</span>';
 }
 
@@ -1496,6 +1520,7 @@ function handleListingSubmit(e) {
         rate: document.getElementById('listingRate').value,
         bookingFee: parseFloat(document.getElementById('listingBookingFee')?.value) || null,
         website: document.getElementById('listingWebsite').value,
+        links: collectListingLinks(),
         bio: document.getElementById('listingBio').value,
         tags: [...listingTags],
         gallery: [...listingGallery],
@@ -1588,8 +1613,10 @@ function populateListingForm(l) {
 
     listingTags = [...(l.tags || [])];
     listingGallery = [...(l.gallery || [])];
+    listingLinks = [...(l.links || [])];
     renderListingTags();
     renderGalleryUpload();
+    renderListingLinks();
 
     if (l.availability) {
         document.getElementById('listMon').checked = l.availability.mon || false;
@@ -1635,6 +1662,44 @@ function renderListingTags() {
     if (!container) return;
     container.innerHTML = listingTags.map((t, i) => `<span class="tag provider-tag">${t}<button type="button" onclick="removeListingTag(${i})"><i class="fas fa-times"></i></button></span>`).join('');
 }
+
+// ==========================================
+// DIRECTORY - External Links (max 5)
+// ==========================================
+function addListingLink() {
+    if (listingLinks.length >= 5) return;
+    listingLinks.push({ label: '', url: '' });
+    renderListingLinks();
+}
+
+function removeListingLink(index) {
+    listingLinks.splice(index, 1);
+    renderListingLinks();
+}
+
+function renderListingLinks() {
+    const container = document.getElementById('listingLinksContainer');
+    if (!container) return;
+    if (listingLinks.length === 0) {
+        container.innerHTML = '<p style="color:#a99c7e;font-size:0.85rem">No external links added yet.</p>';
+        return;
+    }
+    container.innerHTML = listingLinks.map((link, i) => `
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:10px">
+            <input type="text" data-link-label="${i}" value="${escapeHtml(link.label)}" placeholder="Label (e.g. Instagram, X, OnlyFans)" class="form-input" style="flex:1;min-width:120px">
+            <input type="url" data-link-url="${i}" value="${escapeHtml(link.url)}" placeholder="https://..." class="form-input" style="flex:2;min-width:180px">
+            <button type="button" class="btn btn-danger btn-sm" onclick="removeListingLink(${i})"><i class="fas fa-times"></i></button>
+        </div>
+    `).join('');
+}
+
+function collectListingLinks() {
+    return (listingLinks || []).map((_, i) => ({
+        label: (document.querySelector(`#listingLinksContainer input[data-link-label="${i}"]`)?.value || '').trim(),
+        url: (document.querySelector(`#listingLinksContainer input[data-link-url="${i}"]`)?.value || '').trim()
+    })).filter(l => l.url).slice(0, 5);
+}
+
 
 // ==========================================
 // DIRECTORY - Gallery
@@ -2673,6 +2738,7 @@ function viewServiceDirectory(id) {
     const website = document.getElementById('svcViewWebsite');
     if (s.website) { website.href = s.website; website.textContent = s.website; }
     else { website.href = '#'; website.textContent = '-'; }
+    renderProfileLinks('svcViewLinks', s.links);
 
     const tagsContainer = document.getElementById('svcViewTags');
     if (s.tags && s.tags.length) {
@@ -2770,8 +2836,10 @@ function resetServiceForm() {
     document.getElementById('serviceSubmitBtn').textContent = 'Publish Service';
     serviceTags = [];
     serviceGallery = [];
+    serviceLinks = [];
     renderServiceTags();
     renderServiceGalleryUpload();
+    renderServiceLinks();
     renderServicePhotoPreview();
     // Auto-fill category based on most used
     const mostUsed = getMostUsedServiceType();
@@ -2833,6 +2901,43 @@ function addServiceTag(value) {
 
 function addServiceSuggestedTag(value) { addServiceTag(value); }
 
+// ==========================================
+// SERVICE - External Links (max 5)
+// ==========================================
+function addServiceLink() {
+    if (serviceLinks.length >= 5) return;
+    serviceLinks.push({ label: '', url: '' });
+    renderServiceLinks();
+}
+
+function removeServiceLink(index) {
+    serviceLinks.splice(index, 1);
+    renderServiceLinks();
+}
+
+function renderServiceLinks() {
+    const container = document.getElementById('serviceLinksContainer');
+    if (!container) return;
+    if (serviceLinks.length === 0) {
+        container.innerHTML = '<p style="color:#a99c7e;font-size:0.85rem">No external links added yet.</p>';
+        return;
+    }
+    container.innerHTML = serviceLinks.map((link, i) => `
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:10px">
+            <input type="text" data-link-label="${i}" value="${escapeHtml(link.label)}" placeholder="Label (e.g. Instagram, X, OnlyFans)" class="form-input" style="flex:1;min-width:120px">
+            <input type="url" data-link-url="${i}" value="${escapeHtml(link.url)}" placeholder="https://..." class="form-input" style="flex:2;min-width:180px">
+            <button type="button" class="btn btn-danger btn-sm" onclick="removeServiceLink(${i})"><i class="fas fa-times"></i></button>
+        </div>
+    `).join('');
+}
+
+function collectServiceLinks() {
+    return (serviceLinks || []).map((_, i) => ({
+        label: (document.querySelector(`#serviceLinksContainer input[data-link-label="${i}"]`)?.value || '').trim(),
+        url: (document.querySelector(`#serviceLinksContainer input[data-link-url="${i}"]`)?.value || '').trim()
+    })).filter(l => l.url).slice(0, 5);
+}
+
 function renderServiceGalleryUpload() {
     const container = document.getElementById('serviceGalleryUploadGrid');
     if (!container) return;
@@ -2872,6 +2977,7 @@ function handleServiceSubmit(e) {
         rate: document.getElementById('serviceRate').value.trim(),
         bookingFee: parseFloat(document.getElementById('serviceBookingFee')?.value) || null,
         website: document.getElementById('serviceWebsite').value.trim(),
+        links: collectServiceLinks(),
         bio: document.getElementById('serviceBio').value.trim(),
         tags: [...serviceTags],
         gallery: [...serviceGallery],
@@ -2922,8 +3028,10 @@ function editService(id) {
 
     serviceTags = [...(s.tags || [])];
     serviceGallery = [...(s.gallery || [])];
+    serviceLinks = [...(s.links || [])];
     renderServiceTags();
     renderServiceGalleryUpload();
+    renderServiceLinks();
 
     // Set category with dynamic select
     updateServiceCategorySelect();

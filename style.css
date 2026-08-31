@@ -903,6 +903,29 @@ h1, h2, h3, h4 {
     background: #fcfaf1;
 }
 
+.form-input {
+    padding: 12px 16px;
+    border: 2px solid #e6dec8;
+    border-radius: 12px;
+    font-size: 0.925rem;
+    font-family: inherit;
+    color: #211a0d;
+    background: var(--cream-white, #fdf9ef);
+    transition: all var(--transition-speed) ease;
+    outline: none;
+}
+
+.form-input::placeholder {
+    color: #a99c7e;
+}
+
+.form-input:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 4px rgba(201, 162, 39, 0.1);
+    background: #fcfaf1;
+}
+
+
 .form-group select {
     appearance: auto;
     cursor: pointer;
@@ -1195,6 +1218,33 @@ h1, h2, h3, h4 {
     color: var(--primary-dark);
     text-decoration: underline;
 }
+
+.profile-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 14px;
+}
+
+.profile-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 14px;
+    border-radius: 999px;
+    background: #c9a22714;
+    border: 1px solid #c9a22744;
+    color: #c9a227;
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-decoration: none;
+    transition: all var(--transition-speed) ease;
+}
+
+.profile-link:hover {
+    background: #c9a22726;
+    border-color: #c9a227;
+} 
 
 /* ============================================
    Tags
