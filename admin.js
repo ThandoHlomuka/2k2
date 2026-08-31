@@ -311,6 +311,139 @@ function renderAdminDashboard() {
                 </div>
             </div>
         `).join('');
+
+    // ---- Additional stat counts ----
+    const gigs = Storage.getGigs();
+    const products = Storage.getProducts();
+    const forumThreads = Storage.getForumThreads();
+    const experiences = Storage.getExperiences();
+    const fantasy = Storage.getFantasyRequests();
+    const topUps = Storage.getTopUpRequests();
+    const helpQueries = Storage.getHelpQueries();
+
+    setEl('adminContentCount', content.length);
+    setEl('adminEventCount', events.length);
+    setEl('adminReviewCount', reviews.length);
+    setEl('adminGigCount', gigs.length);
+    setEl('adminProductCount', products.length);
+    setEl('adminForumCount', forumThreads.length);
+    setEl('adminExperienceCount', experiences.length);
+    setEl('adminFantasyCount', fantasy.length);
+    setEl('adminTopUpCount', topUps.length);
+    setEl('adminHelpCount', helpQueries.length);
+
+    // ---- Account Distribution (donut) ----
+    const pie = document.getElementById('adminPieChart');
+    if (pie) {
+        const slices = [
+            { label: 'Users', value: users.length, color: '#667eea' },
+            { label: 'Providers', value: providers.length, color: '#8b5cf6' },
+            { label: 'Admins', value: users.filter(u => u.role === 'admin').length + (providers.filter(p => p.role === 'admin').length), color: '#d3ad44' }
+        ];
+        const total = slices.reduce((s, x) => s + x.value, 0);
+        let grad = 'conic-gradient(';
+        let acc = 0;
+        slices.forEach((s, i) => {
+            const start = total ? (acc / total) * 360 : 0;
+            const end = total ? ((acc + s.value) / total) * 360 : 0;
+            grad += `${s.color} ${start}deg ${end}deg${i < slices.length - 1 ? ',' : ''}`;
+            acc += s.value;
+        });
+        const deg = total ? grad + ')' : 'conic-gradient(#e6dec8 0deg 360deg)';
+        pie.innerHTML = `
+            <div style="flex:0 0 160px;width:160px;height:160px;border-radius:50%;background:${deg};position:relative">
+                <div style="position:absolute;inset:34px;background:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-direction:column">
+                    <span style="font-size:1.4rem;font-weight:800;color:#211a0d">${total}</span>
+                    <span style="font-size:0.68rem;color:#a99c7e">Accounts</span>
+                </div>
+            </div>
+            <div style="flex:1;min-width:140px">
+                ${slices.map(s => `
+                    <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin:8px 0">
+                        <span style="display:flex;align-items:center;gap:8px;font-size:0.82rem;color:#54492f">
+                            <span style="width:12px;height:12px;border-radius:3px;background:${s.color};display:inline-block"></span>
+                            ${s.label}
+                        </span>
+                        <strong style="color:#211a0d">${s.value} ${total ? '(' + Math.round((s.value / total) * 100) + '%)' : ''}</strong>
+                    </div>`).join('')}
+            </div>`;
+    }
+
+    // ---- Financial Overview (transactions by type) ----
+    const fin = document.getElementById('adminFinanceChart');
+    if (fin) {
+        const txns = Storage.getTransactions();
+        const types = {};
+        txns.forEach(t => { const k = t.type || (t.amount < 0 ? 'Debit' : 'Credit') || 'Other'; types[k] = (types[k] || 0) + Math.abs(t.amount || 0); });
+        let finRows;
+        const finKeys = Object.keys(types);
+        if (finKeys.length === 0) {
+            finRows = `<p style="color:#a99c7e;font-size:0.85rem;padding:12px 0">No transactions yet</p>`;
+        } else {
+            const maxTxn = Math.max(...Object.values(types), 1);
+            finRows = finKeys.map(k => `
+                <div style="margin:10px 0">
+                    <div style="display:flex;justify-content:space-between;font-size:0.8rem;color:#54492f;margin-bottom:4px">
+                        <span>${k}</span><strong style="color:#211a0d">R${Math.round(types[k]).toLocaleString()}</strong>
+                    </div>
+                    <div style="height:10px;background:#f0ead8;border-radius:6px;overflow:hidden">
+                        <div style="height:100%;width:${(types[k] / maxTxn) * 100}%;background:linear-gradient(90deg,#d3ad44,#8b5cf6);border-radius:6px"></div>
+                    </div>
+                </div>`).join('');
+        }
+        fin.innerHTML = `<div style="font-size:0.9rem;color:#211a0d;margin-bottom:6px"><strong>Volume handled</strong>: R${Math.round(txns.reduce((s,t) => s + Math.abs(t.amount||0),0)).toLocaleString()} <span style="color:#a99c7e;font-size:0.75rem">(${txns.length} txns)</span></div>` + finRows;
+    }
+
+    // ---- Top Providers by Listings ----
+    const top = document.getElementById('adminTopProviders');
+    if (top) {
+        const counts = {};
+        listings.forEach(l => { const pid = l.providerId || l.authorId || l.author || 'unknown'; counts[pid] = (counts[pid] || 0) + 1; });
+        const rows = Object.entries(counts).map(([pid, c]) => {
+            const prov = providers.find(p => p.id === pid);
+            return { name: (prov && (prov.name || prov.businessName)) ? (prov.name || prov.businessName) : (pid === 'unknown' ? 'Unknown' : 'Provider ' + pid.slice(0, 6)), c: c, color: '#8b5cf6' };
+        }).sort((a, b) => b.c - a.c).slice(0, 6);
+        top.innerHTML = rows.length === 0
+            ? '<p style="color:#a99c7e;font-size:0.85rem;padding:12px 0">No listings yet</p>'
+            : rows.map(r => { const max = rows[0].c || 1; return `
+                <div style="display:flex;align-items:center;gap:10px;margin:10px 0">
+                    <div style="flex:1">
+                        <div style="display:flex;justify-content:space-between;font-size:0.8rem;color:#54492f;margin-bottom:4px">
+                            <span>${truncate(r.name, 22)}</span><strong style="color:#211a0d">${r.c}</strong>
+                        </div>
+                        <div style="height:9px;background:#f0ead8;border-radius:6px;overflow:hidden">
+                            <div style="height:100%;width:${(r.c / max) * 100}%;background:${r.color};border-radius:6px"></div>
+                        </div>
+                    </div>
+                </div>`;
+            }).join('');
+    }
+
+    // ---- Wallet Distribution (top balances) ----
+    const wd = document.getElementById('adminWalletDist');
+    if (wd) {
+        const walletsAll = Storage.getWallets();
+        const topW = [...walletsAll].sort((a, b) => (b.balance || 0) - (a.balance || 0)).slice(0, 6);
+        const maxW = topW.length ? Math.max(...topW.map(w => w.balance || 0), 1) : 1;
+        wd.innerHTML = topW.length === 0
+            ? '<p style="color:#a99c7e;font-size:0.85rem;padding:12px 0">No wallets yet</p>'
+            : topW.map(w => {
+                const name = w.ownerName || w.username || w.email || ('User ' + (w.ownerId || '').slice(0, 6)) || 'General';
+                return `
+                <div style="display:flex;align-items:center;gap:10px;margin:9px 0">
+                    <span style="width:34px;font-size:0.72rem;color:#a99c7e;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${truncate(name, 12)}</span>
+                    <div style="flex:1;height:10px;background:#f0ead8;border-radius:6px;overflow:hidden">
+                        <div style="height:100%;width:${((w.balance || 0) / maxW) * 100}%;background:linear-gradient(90deg,#ec4899,#f59e0b);border-radius:6px"></div>
+                    </div>
+                    <strong style="font-size:0.78rem;color:#211a0d">R${Math.round(w.balance || 0).toLocaleString()}</strong>
+                </div>`;
+            }).join('');
+    }
+}
+
+function setEl(id, val) {
+    const el = document.getElementById(id);
+    if (el) el.textContent = val;
 }
 
 // ==========================================

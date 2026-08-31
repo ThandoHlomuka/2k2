@@ -249,6 +249,79 @@
                     </div>
                 </div>
 
+                <div class="stats-row" id="adminStatsRow2" style="margin-top:14px">
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background:#fee2e2;color:#ef4444"><i class="fas fa-file-alt"></i></div>
+                        <div class="stat-info">
+                            <span class="stat-number" id="adminContentCount">0</span>
+                            <span class="stat-label">Content</span>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background:#ffedd5;color:#f97316"><i class="fas fa-calendar-day"></i></div>
+                        <div class="stat-info">
+                            <span class="stat-number" id="adminEventCount">0</span>
+                            <span class="stat-label">Events</span>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background:#fefce8;color:#eab308"><i class="fas fa-star"></i></div>
+                        <div class="stat-info">
+                            <span class="stat-number" id="adminReviewCount">0</span>
+                            <span class="stat-label">Reviews</span>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background:#f3e8ff;color:#a855f7"><i class="fas fa-briefcase"></i></div>
+                        <div class="stat-info">
+                            <span class="stat-number" id="adminGigCount">0</span>
+                            <span class="stat-label">Gigs</span>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background:#dcfce7;color:#16a34a"><i class="fas fa-box"></i></div>
+                        <div class="stat-info">
+                            <span class="stat-number" id="adminProductCount">0</span>
+                            <span class="stat-label">Products</span>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background:#e0f2fe;color:#0284c7"><i class="fas fa-comments"></i></div>
+                        <div class="stat-info">
+                            <span class="stat-number" id="adminForumCount">0</span>
+                            <span class="stat-label">Forum Threads</span>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background:#ede9fe;color:#7c3aed"><i class="fas fa-rocket"></i></div>
+                        <div class="stat-info">
+                            <span class="stat-number" id="adminExperienceCount">0</span>
+                            <span class="stat-label">Experiences</span>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background:#fae8ff;color:#c026d3"><i class="fas fa-wand-magic-sparkles"></i></div>
+                        <div class="stat-info">
+                            <span class="stat-number" id="adminFantasyCount">0</span>
+                            <span class="stat-label">Fantasy Requests</span>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background:#fef9c3;color:#ca8a04"><i class="fas fa-arrow-up"></i></div>
+                        <div class="stat-info">
+                            <span class="stat-number" id="adminTopUpCount">0</span>
+                            <span class="stat-label">Top-Up Requests</span>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background:#fee2e2;color:#ef4444"><i class="fas fa-life-ring"></i></div>
+                        <div class="stat-info">
+                            <span class="stat-number" id="adminHelpCount">0</span>
+                            <span class="stat-label">Help Queries</span>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="admin-quick-actions">
                     <a class="admin-quick-btn" onclick="navigateTo('admin-users')"><i class="fas fa-users"></i><span>Manage Users</span></a>
                     <a class="admin-quick-btn" onclick="navigateTo('admin-providers')"><i class="fas fa-user-tie"></i><span>Manage Providers</span></a>
@@ -267,6 +340,28 @@
                     <div class="admin-chart-card">
                         <h3><i class="fas fa-clock" style="color:#d3ad44;margin-right:8px"></i>Recent Activity</h3>
                         <div id="adminActivityFeed" style="max-height:180px;overflow-y:auto"></div>
+                    </div>
+                </div>
+
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:24px">
+                    <div class="admin-chart-card">
+                        <h3><i class="fas fa-chart-pie" style="color:#d3ad44;margin-right:8px"></i>Account Distribution</h3>
+                        <div id="adminPieChart" style="display:flex;align-items:center;gap:20px;flex-wrap:wrap"></div>
+                    </div>
+                    <div class="admin-chart-card">
+                        <h3><i class="fas fa-chart-line" style="color:#d3ad44;margin-right:8px"></i>Financial Overview</h3>
+                        <div id="adminFinanceChart"></div>
+                    </div>
+                </div>
+
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:24px">
+                    <div class="admin-chart-card">
+                        <h3><i class="fas fa-ranking-star" style="color:#d3ad44;margin-right:8px"></i>Top Providers by Listings</h3>
+                        <div id="adminTopProviders"></div>
+                    </div>
+                    <div class="admin-chart-card">
+                        <h3><i class="fas fa-circle-half-stroke" style="color:#d3ad44;margin-right:8px"></i>Wallet Distribution</h3>
+                        <div id="adminWalletDist"></div>
                     </div>
                 </div>
 
