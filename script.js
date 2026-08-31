@@ -610,6 +610,23 @@ function closeAuthPrompt() { document.getElementById('authPromptModal')?.classLi
 
 function openSignInToast() { showToast('Please sign in to continue.', 'info'); }
 
+function openPhotoModal(src) {
+    const modal = document.getElementById('photoModal');
+    const img = document.getElementById('photoModalImg');
+    if (!modal || !img) return;
+    img.src = src;
+    modal.classList.add('active');
+    document.body.style.overflow = 'hidden';
+}
+
+function closePhotoModal(event) {
+    if (event) event.stopPropagation();
+    const modal = document.getElementById('photoModal');
+    if (!modal) return;
+    modal.classList.remove('active');
+    document.body.style.overflow = '';
+}
+
 
 function handleUserSubmit(e) {
     e.preventDefault();
@@ -1431,7 +1448,7 @@ function viewDirectoryListing(id) {
 
     const galleryContainer = document.getElementById('dirViewGallery');
     if (l.gallery && l.gallery.length > 0) {
-        galleryContainer.innerHTML = l.gallery.map(img => `<div class="gallery-item"><img src="${img}" alt=""></div>`).join('');
+        galleryContainer.innerHTML = l.gallery.map(img => `<div class="gallery-item" onclick="openPhotoModal('${img}')"><img src="${img}" alt=""></div>`).join('');
     } else {
         galleryContainer.innerHTML = '<p class="empty-text">No gallery images</p>';
     }
@@ -1844,7 +1861,7 @@ function viewVenueDirectory(id) {
 
     const galleryContainer = document.getElementById('venViewGallery');
     if (v.gallery && v.gallery.length > 0) {
-        galleryContainer.innerHTML = v.gallery.map(img => `<div class="gallery-item"><img src="${img}" alt=""></div>`).join('');
+        galleryContainer.innerHTML = v.gallery.map(img => `<div class="gallery-item" onclick="openPhotoModal('${img}')"><img src="${img}" alt=""></div>`).join('');
     } else {
         galleryContainer.innerHTML = '<p class="empty-text">No gallery images</p>';
     }
@@ -2175,7 +2192,7 @@ function viewAd(id) {
 
     const galleryContainer = document.getElementById('adViewGallery');
     if (a.gallery && a.gallery.length > 0) {
-        galleryContainer.innerHTML = a.gallery.map(img => `<div class="gallery-item"><img src="${img}" alt=""></div>`).join('');
+        galleryContainer.innerHTML = a.gallery.map(img => `<div class="gallery-item" onclick="openPhotoModal('${img}')"><img src="${img}" alt=""></div>`).join('');
     } else {
         galleryContainer.innerHTML = '<p class="empty-text">No photos attached</p>';
     }

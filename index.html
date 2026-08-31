@@ -1558,6 +1558,14 @@
             </div>
         </div>
 
+        <!-- Photo Lightbox Modal -->
+        <div class="modal-overlay photo-overlay" id="photoModal" onclick="closePhotoModal(event)">
+            <div class="photo-viewer" onclick="event.stopPropagation()">
+                <button class="photo-viewer-close" onclick="closePhotoModal(event)"><i class="fas fa-times"></i></button>
+                <img id="photoModalImg" src="" alt="Full size view">
+            </div>
+        </div>
+
         <!-- Top Up Modal -->
         <div class="modal-overlay" id="topUpModal">
             <div class="modal">
