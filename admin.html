@@ -315,6 +315,7 @@
             <div class="container">
                 <div class="dashboard-header">
                     <div><h1>User Management</h1><p>View and manage general user accounts</p></div>
+                    <button class="btn btn-primary" onclick="openAdminAddUser()"><i class="fas fa-user-plus"></i> Add User</button>
                 </div>
                 <div class="admin-table-wrap">
                     <table class="admin-table" id="adminUsersTable">
@@ -1180,6 +1181,48 @@
                         </thead>
                         <tbody id="adminFantasyBody"></tbody>
                     </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Add User Modal -->
+        <div class="modal-overlay" id="addUserModal">
+            <div class="modal">
+                <div class="modal-icon" style="background:linear-gradient(135deg,#c9a227,#a07d12);color:#fff"><i class="fas fa-user-plus"></i></div>
+                <h2>Add User</h2>
+                <p style="color:#a99c7e;font-size:0.88rem;margin:4px 0 14px">Create a user manually and assign an account type.</p>
+                <div class="admin-form">
+                    <label class="admin-form-label">Name / Business Name *</label>
+                    <input id="addUserName" class="admin-form-input" type="text" placeholder="e.g. John Doe" />
+                    <div style="height:10px"></div>
+                    <label class="admin-form-label">Email *</label>
+                    <input id="addUserEmail" class="admin-form-input" type="email" placeholder="name@example.com" />
+                    <div style="height:10px"></div>
+                    <label class="admin-form-label">Phone</label>
+                    <input id="addUserPhone" class="admin-form-input" type="text" placeholder="+27..." />
+                    <div style="height:10px"></div>
+                    <label class="admin-form-label">Location</label>
+                    <input id="addUserLocation" class="admin-form-input" type="text" placeholder="City / Province" />
+                    <div style="height:10px"></div>
+                    <label class="admin-form-label">Account Type *</label>
+                    <select id="addUserType" class="admin-form-input">
+                        <option value="user">General User</option>
+                        <option value="provider">Service Provider</option>
+                        <option value="admin">Admin</option>
+                    </select>
+                    <div style="height:10px"></div>
+                    <label class="admin-form-label">Status</label>
+                    <select id="addUserStatus" class="admin-form-input">
+                        <option value="active">Active</option>
+                        <option value="suspended">Suspended</option>
+                    </select>
+                    <div style="height:10px"></div>
+                    <label class="admin-form-label">Bio</label>
+                    <textarea id="addUserBio" class="admin-form-input" rows="2" placeholder="Short description"></textarea>
+                </div>
+                <div class="modal-actions">
+                    <button class="btn btn-secondary" onclick="closeAdminAddUser()">Cancel</button>
+                    <button class="btn btn-primary" onclick="adminSaveNewUser()"><i class="fas fa-check"></i> Save User</button>
                 </div>
             </div>
         </div>

@@ -357,6 +357,92 @@ function adminToggleUserStatus(id) {
     renderAdminUsers();
 }
 
+function openAdminAddUser() {
+    const modal = document.getElementById('addUserModal');
+    if (modal) modal.classList.add('active');
+}
+
+function closeAdminAddUser() {
+    const modal = document.getElementById('addUserModal');
+    if (modal) modal.classList.remove('active');
+}
+
+function adminSaveNewUser() {
+    const name = (document.getElementById('addUserName').value || '').trim();
+    const email = (document.getElementById('addUserEmail').value || '').trim();
+    const phone = (document.getElementById('addUserPhone').value || '').trim();
+    const location = (document.getElementById('addUserLocation').value || '').trim();
+    const type = document.getElementById('addUserType').value;
+    const status = document.getElementById('addUserStatus').value;
+    const bio = (document.getElementById('addUserBio').value || '').trim();
+
+    if (!name) { showToast('Please enter a name.', 'error'); return; }
+    if (!email) { showToast('Please enter an email.', 'error'); return; }
+
+    const id = generateId();
+    const now = new Date().toISOString();
+
+    if (type === 'provider') {
+        const providers = Storage.getProviders();
+        providers.push({
+            id: id,
+            userId: '',
+            name: name,
+            businessName: name,
+            businessType: '',
+            contactPerson: name,
+            email: email,
+            phone: phone,
+            location: location,
+            address: location,
+            description: bio,
+            tagline: '',
+            website: '',
+            services: [],
+            categories: [],
+            logo: '',
+            accountType: 'provider',
+            role: 'provider',
+            status: status,
+            createdAt: now,
+            updatedAt: now
+        });
+        Storage.setProviders(providers);
+    } else {
+        const users = Storage.getUsers();
+        users.push({
+            id: id,
+            userId: '',
+            username: name,
+            fullName: name,
+            name: name,
+            email: email,
+            phone: phone,
+            location: location,
+            bio: bio,
+            interests: [],
+            tags: [],
+            accountType: type,
+            role: type,
+            status: status,
+            createdAt: now,
+            updatedAt: now
+        });
+        Storage.setUsers(users);
+    }
+
+    const modal = document.getElementById('addUserModal');
+    if (modal) modal.classList.remove('active');
+    document.getElementById('addUserName').value = '';
+    document.getElementById('addUserEmail').value = '';
+    document.getElementById('addUserPhone').value = '';
+    document.getElementById('addUserLocation').value = '';
+    document.getElementById('addUserBio').value = '';
+    showToast('User added successfully.');
+    renderAdminUsers();
+    renderAdminProviders();
+}
+
 function adminViewUser(id) {
     const u = Storage.getUsers().find(x => x.id === id);
     if (!u) return;
