@@ -314,6 +314,7 @@ let providerServiceTags = [];
 let providerServiceGallery = [];
 let currentBookingProviderId = null;
 let currentBookingProviderType = null;
+let currentBookingFee = 0;
 let currentBookingFilter = 'all';
 let currentServiceViewId = null;
 let currentWalletTab = 'overview';
@@ -1493,6 +1494,7 @@ function handleListingSubmit(e) {
         phone: document.getElementById('listingPhone').value,
         location: document.getElementById('listingLocation').value,
         rate: document.getElementById('listingRate').value,
+        bookingFee: parseFloat(document.getElementById('listingBookingFee')?.value) || null,
         website: document.getElementById('listingWebsite').value,
         bio: document.getElementById('listingBio').value,
         tags: [...listingTags],
@@ -1578,6 +1580,7 @@ function populateListingForm(l) {
     document.getElementById('listingPhone').value = l.phone || '';
     document.getElementById('listingLocation').value = l.location || '';
     document.getElementById('listingRate').value = l.rate || '';
+    if (document.getElementById('listingBookingFee')) document.getElementById('listingBookingFee').value = l.bookingFee ?? '';
     document.getElementById('listingWebsite').value = l.website || '';
     document.getElementById('listingBio').value = l.bio || '';
     document.getElementById('listingFormTitle').textContent = 'Edit Directory Listing';
@@ -2867,6 +2870,7 @@ function handleServiceSubmit(e) {
         phone: document.getElementById('servicePhone').value.trim(),
         location: document.getElementById('serviceLocation').value,
         rate: document.getElementById('serviceRate').value.trim(),
+        bookingFee: parseFloat(document.getElementById('serviceBookingFee')?.value) || null,
         website: document.getElementById('serviceWebsite').value.trim(),
         bio: document.getElementById('serviceBio').value.trim(),
         tags: [...serviceTags],
@@ -2913,6 +2917,7 @@ function editService(id) {
     document.getElementById('servicePhone').value = s.phone || '';
     document.getElementById('serviceLocation').value = s.location || '';
     document.getElementById('serviceRate').value = s.rate || '';
+    if (document.getElementById('serviceBookingFee')) document.getElementById('serviceBookingFee').value = s.bookingFee ?? '';
     document.getElementById('serviceWebsite').value = s.website || '';
 
     serviceTags = [...(s.tags || [])];
@@ -2952,10 +2957,20 @@ function deleteService(id) {
 // ==========================================
 // BOOKING MODAL
 // ==========================================
+function getBookingFeeFor(providerId, providerType) {
+    const items = providerType === 'service' ? Storage.getServices() : Storage.getListings();
+    const item = items.find(x => x.id === providerId);
+    if (item && item.bookingFee != null && item.bookingFee >= 0) return item.bookingFee;
+    return (getAdminSettings().bookingFee || 50);
+}
+
 function openBookingModal(providerId, providerType) {
     if (!requireSignIn('Request a booking.')) return;
     currentBookingProviderId = providerId;
     currentBookingProviderType = providerType;
+    currentBookingFee = getBookingFeeFor(providerId, providerType);
+    const feeEl = document.getElementById('bookingFeeDisplay');
+    if (feeEl) feeEl.textContent = 'R' + currentBookingFee;
     document.getElementById('bookingModal').classList.add('active');
 }
 
@@ -2964,14 +2979,17 @@ function closeBookingModal() {
     document.getElementById('bookingForm').reset();
     currentBookingProviderId = null;
     currentBookingProviderType = null;
+    currentBookingFee = 0;
 }
 
 function handleBookingSubmit(e) {
     e.preventDefault();
+    const fee = currentBookingFee || getBookingFeeFor(currentBookingProviderId, currentBookingProviderType);
     const booking = {
         id: generateId(),
         providerId: currentBookingProviderId,
         providerType: currentBookingProviderType,
+        fee,
         clientName: document.getElementById('bookingClientName').value.trim(),
         clientEmail: document.getElementById('bookingClientEmail').value.trim(),
         clientPhone: document.getElementById('bookingClientPhone').value.trim(),
@@ -2983,14 +3001,14 @@ function handleBookingSubmit(e) {
         createdAt: new Date().toISOString()
     };
 
-    // Deduct booking fee from user wallet
-    adjustWallet('user', currentUserOwnerId(), -50, 'booking-fee', `Booking request sent to provider`, { bookingId: booking.id });
+    // Deduct this provider's booking fee from the user wallet
+    adjustWallet('user', currentUserOwnerId(), -fee, 'booking-fee', `Booking request sent to provider`, { bookingId: booking.id, providerId: booking.providerId });
 
     const bookings = Storage.getBookings();
     bookings.push(booking);
     Storage.setBookings(bookings);
     closeBookingModal();
-    showToast('Booking request sent! R50 booking fee deducted.', 'success');
+    showToast(`Booking request sent! R${fee} booking fee deducted.`, 'success');
 }
 
 // ==========================================
@@ -3079,6 +3097,7 @@ function renderUserBookings() {
                     <div class="booking-detail"><i class="fas fa-calendar"></i> ${b.date || '-'}</div>
                     <div class="booking-detail"><i class="fas fa-clock"></i> ${b.time || '-'}</div>
                     <div class="booking-detail"><i class="fas fa-tag"></i> ${b.serviceType || '-'}</div>
+                    <div class="booking-detail"><i class="fas fa-wallet"></i> Booking Fee: R${b.fee != null ? b.fee : getBookingFeeFor(b.providerId, b.providerType)}</div>
                     ${b.notes ? `<div class="booking-detail booking-notes"><i class="fas fa-comment"></i> ${b.notes}</div>` : ''}
                 </div>
                 <div class="booking-card-footer">
@@ -3153,6 +3172,7 @@ function renderProviderBookings() {
                     <div class="booking-detail"><i class="fas fa-calendar"></i> ${b.date || '-'}</div>
                     <div class="booking-detail"><i class="fas fa-clock"></i> ${b.time || '-'}</div>
                     <div class="booking-detail"><i class="fas fa-tag"></i> ${b.serviceType || '-'}</div>
+                    <div class="booking-detail"><i class="fas fa-wallet"></i> Your Fee: R${b.fee != null ? b.fee : getBookingFeeFor(b.providerId, b.providerType)}</div>
                     ${b.notes ? `<div class="booking-detail booking-notes"><i class="fas fa-comment"></i> ${b.notes}</div>` : ''}
                 </div>
                 <div class="booking-card-footer">
@@ -3182,9 +3202,12 @@ function updateBookingStatus(id, status) {
         booking.status = status;
         Storage.setBookings(bookings);
 
-        // Credit provider wallet on confirmation
+        // Credit provider wallet on confirmation with their own booking fee
         if (status === 'confirmed') {
-            adjustWallet('provider', booking.providerId, 50, 'booking-confirmed', `Booking confirmed from ${booking.clientName}`, { bookingId: booking.id });
+            const providerFee = (booking.fee != null) ? booking.fee : getBookingFeeFor(booking.providerId, booking.providerType);
+            booking.fee = providerFee;
+            Storage.setBookings(bookings);
+            adjustWallet('provider', booking.providerId, providerFee, 'booking-confirmed', `Booking confirmed from ${booking.clientName}`, { bookingId: booking.id });
         }
 
         showToast(`Booking ${status}.`, 'success');

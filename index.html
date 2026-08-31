@@ -305,7 +305,7 @@
                     <h1 class="onb-title" style="font-size:2.4rem">How You <span class="onb-highlight">Earn</span></h1>
                     <p class="onb-subtitle">Multiple ways to make money</p>
                     <div class="onb-features">
-                        <div class="onb-feature"><i class="fas fa-calendar-check" style="color:#10b981"></i><div><h4>Service Bookings</h4><p>Clients book you directly — R50 platform fee per booking</p></div></div>
+                        <div class="onb-feature"><i class="fas fa-calendar-check" style="color:#10b981"></i><div><h4>Service Bookings</h4><p>Clients book you directly - set your own booking fee</p></div></div>
                         <div class="onb-feature"><i class="fas fa-fire" style="color:#ef4444"></i><div><h4>Tips & Donations</h4><p>Receive tips from fans — R50, R100, R250, R500</p></div></div>
                         <div class="onb-feature"><i class="fas fa-play-circle" style="color:#8b5cf6"></i><div><h4>Content Sales</h4><p>Sell exclusive content — videos, images, ASMR, stories</p></div></div>
                         <div class="onb-feature"><i class="fas fa-shop" style="color:#d4a853"></i><div><h4>Venue & Events</h4><p>List venues, host events, sell tickets and experiences</p></div></div>
@@ -1391,6 +1391,11 @@
                             <label>Notes</label>
                             <textarea id="bookingNotes" placeholder="Any details or special requests..." rows="3"></textarea>
                         </div>
+                    </div>
+                    <div style="display:flex;align-items:center;gap:10px;background:linear-gradient(135deg,#c9a2271a,#c9a2270d);border:1px solid #c9a22744;border-radius:12px;padding:12px 14px;margin-bottom:16px;">
+                        <i class="fas fa-wallet" style="color:#c9a227"></i>
+                        <span style="font-size:0.9rem;color:#8a7b55">This provider's booking fee:</span>
+                        <strong id="bookingFeeDisplay" style="margin-left:auto;color:#c9a227;font-size:1.1rem">R50</strong>
                     </div>
                     <div class="modal-actions">
                         <button type="button" class="btn btn-secondary" onclick="closeBookingModal()">Cancel</button>
