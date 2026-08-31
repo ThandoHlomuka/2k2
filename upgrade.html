@@ -84,21 +84,13 @@
       <p class="auth-sub">Choose a plan, pay, and we'll approve your provider access</p>
 
       <div class="upg-plans">
-        <div class="upg-plan" data-plan="standard" data-amount="200" onclick="selectPlan(this)">
+        <div class="upg-plan selected" data-plan="standard" data-amount="200" onclick="selectPlan(this)">
           <i class="fa-regular fa-circle-check" style="font-size:20px; color:#d4a853"></i>
           <div style="flex:1">
             <div class="plan-name">Standard Listing</div>
             <div class="plan-desc">R200/mo · 1 listing, 1 venue, provider dashboard, bookings &amp; tips</div>
           </div>
           <div class="plan-price">R200/mo</div>
-        </div>
-        <div class="upg-plan" data-plan="premium" data-amount="500" onclick="selectPlan(this)">
-          <i class="fa-regular fa-circle-check" style="font-size:20px; color:#d4a853"></i>
-          <div style="flex:1">
-            <div class="plan-name">Premium Listing</div>
-            <div class="plan-desc">R500/mo · Everything in Standard + up to 3 listings, priority visibility &amp; premium content</div>
-          </div>
-          <div class="plan-price">R500/mo</div>
         </div>
       </div>
 
@@ -135,8 +127,8 @@
       var form = document.getElementById('upgradeForm');
       var errEl = document.getElementById('authError');
       var msgEl = document.getElementById('authMsg');
-      var chosen = '';
-      var chosenAmount = 0;
+      var chosen = 'standard';
+      var chosenAmount = 200;
 
       function showErr(msg) { errEl.textContent = msg; errEl.classList.add('show'); msgEl.classList.remove('show'); }
       function showMsg(msg) { msgEl.textContent = msg; msgEl.classList.add('show'); errEl.classList.remove('show'); }
