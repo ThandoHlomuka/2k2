@@ -451,6 +451,10 @@
                 <i class="fas fa-briefcase"></i>
                 <span>Browse Gigs</span>
             </a>
+            <a href="#" class="nav-item" data-page="products-directory">
+                <i class="fas fa-cart-shopping"></i>
+                <span>Products</span>
+            </a>
             <div class="nav-divider"></div>
             <span class="nav-section-title">Fun &amp; Games</span>
             <a href="#" class="nav-item" data-page="experiences-browse">
@@ -1638,6 +1642,55 @@
                 </div>
 
                 <div class="profiles-grid directory-grid" id="servicesDirectoryList"></div>
+            </div>
+        </div>
+
+        <!-- Products Directory (Browse) -->
+        <div class="page" id="page-products-directory">
+            <div class="container">
+                <div class="dashboard-header">
+                    <div>
+                        <h1>Products</h1>
+                        <p>Discover products from service providers across South Africa</p>
+                    </div>
+                </div>
+
+                <div class="directory-filters">
+                    <div class="filter-tabs" id="productsFilterTabs">
+                        <button class="filter-tab active" onclick="filterProductsCategory()">All Products</button>
+                    </div>
+                    <div class="filter-bar">
+                        <input type="text" id="productsSearch" placeholder="Search products, categories, or providers..." oninput="renderProductsBrowser()">
+                        <select id="productsCategoryFilter" onchange="renderProductsBrowser()">
+                            <option value="all">All Categories</option>
+                        </select>
+                        <select id="productsSort" onchange="renderProductsBrowser()">
+                            <option value="newest">Newest</option>
+                            <option value="price-asc">Price: Low to High</option>
+                            <option value="price-desc">Price: High to Low</option>
+                            <option value="name-asc">Name: A-Z</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="directory-stats">
+                    <span id="productsDirectoryCount">0</span> products found
+                </div>
+
+                <div class="profiles-grid directory-grid" id="productsDirectoryList"></div>
+            </div>
+        </div>
+
+        <!-- Product Detail / Checkout -->
+        <div class="page" id="page-product-view">
+            <div class="container">
+                <div class="form-header">
+                    <button class="btn-back" onclick="navigateTo('products-directory')">
+                        <i class="fas fa-arrow-left"></i> Back to Products
+                    </button>
+                    <h1>Product</h1>
+                </div>
+                <div id="productViewContent"></div>
             </div>
         </div>
 
@@ -3224,6 +3277,7 @@
     })();
     </script>
     <script src="script.js?v=21"></script>
+    <script src="products.js?v=21"></script>
     <script>
         let onbSlide = 0;
         const slides = document.querySelectorAll('.onb-slide');

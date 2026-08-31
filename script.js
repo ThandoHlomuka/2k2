@@ -384,7 +384,11 @@ function navigateTo(page) {
     if (page === 'provider-experiences') renderProviderExperiences();
     if (page === 'provider-experience-create') { populateExperienceDropdowns(); resetProviderExperienceForm(); }
     if (page === 'provider-fantasy-requests') { populateFantasyDropdowns(); renderProviderFantasyRequests(); }
-    if (['directory','venue-directory','services-directory','content-directory','events-directory','ads-browse','gigs-browse','forum-browse'].includes(page)) renderSaveButtons();
+    if (page === 'products-directory') renderProductsBrowser();
+    if (page === 'provider-products') renderProviderProducts();
+    if (page === 'provider-product-create') { resetProductForm(); }
+    if (page === 'provider-orders') renderProviderOrders();
+    if (['directory','venue-directory','services-directory','content-directory','events-directory','ads-browse','gigs-browse','forum-browse','products-directory'].includes(page)) renderSaveButtons();
 }
 
 function populateGigDropdowns() {

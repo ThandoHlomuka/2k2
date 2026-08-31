@@ -46,6 +46,8 @@ function navigateTo(page) {
     if (page === 'admin-experiences') renderAdminExperiences();
     if (page === 'admin-fantasy') renderAdminFantasy();
     if (page === 'admin-logs') renderAdminLogs();
+    if (page === 'admin-products') renderAdminProducts();
+    if (page === 'admin-product-orders') renderAdminProductOrders();
 
     const sidebar = document.getElementById('sidebar');
     const main = document.getElementById('mainContent');

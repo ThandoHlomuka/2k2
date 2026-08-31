@@ -43,7 +43,9 @@
     { name: 'Downloads', col: 'downloads', key: 'k2_downloads' },
     { name: 'Experiences', col: 'experiences', key: 'k2_experiences' },
     { name: 'ExperiencePurchases', col: 'experience_purchases', key: 'k2_experience_purchases' },
-    { name: 'FantasyRequests', col: 'fantasy_requests', key: 'k2_fantasy_requests' }
+    { name: 'FantasyRequests', col: 'fantasy_requests', key: 'k2_fantasy_requests' },
+    { name: 'Products', col: 'products', key: 'k2_products' },
+    { name: 'ProductOrders', col: 'product_orders', key: 'k2_product_orders' }
   ];
 
   const cache = {};      // col -> array
