@@ -3040,6 +3040,14 @@
         <div class="toast-container" id="toastContainer"></div>
     </div>
 
+    <!-- Mobile Bottom Navigation -->
+    <div class="bottom-nav" id="bottomNav">
+        <button class="bottom-nav-item" data-page="provider-dashboard" onclick="navBottom('provider-dashboard')"><i class="fas fa-home"></i><span>Home</span></button>
+        <button class="bottom-nav-item" data-page="provider-directory" onclick="navBottom('provider-directory')"><i class="fas fa-compass"></i><span>Browse</span></button>
+        <button class="bottom-nav-item" data-page="inbox" onclick="navBottom('inbox')"><i class="fas fa-envelope"></i><span>Messages</span></button>
+        <button class="bottom-nav-item" data-page="provider-profile" onclick="navBottom('provider-profile')"><i class="fas fa-user"></i><span>Profile</span></button>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
     <script src="config.js?v=20"></script>

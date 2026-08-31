@@ -286,6 +286,49 @@ h1, h2, h3, h4 {
 }
 
 /* ============================================
+   Mobile Bottom Navigation
+   ============================================ */
+.bottom-nav {
+    display: none;
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 1050;
+    background: #14110b;
+    border-top: 1px solid rgba(201, 162, 39, 0.35);
+    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.45);
+    padding: 6px 8px calc(6px + env(safe-area-inset-bottom));
+    justify-content: space-around;
+}
+
+.bottom-nav-item {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    padding: 8px 4px;
+    border: none;
+    background: transparent;
+    color: #a99c7e;
+    font-size: 11px;
+    cursor: pointer;
+    font-family: inherit;
+    border-radius: 10px;
+    transition: color 0.2s ease;
+}
+
+.bottom-nav-item i {
+    font-size: 20px;
+}
+
+.bottom-nav-item:hover,
+.bottom-nav-item.active {
+    color: #d4a853;
+}
+
+/* ============================================
    Welcome Hero
    ============================================ */
 .welcome-hero {
@@ -1284,6 +1327,34 @@ h1, h2, h3, h4 {
     display: none;
 }
 
+.field-hint {
+    color: #a99c7e;
+    font-size: 0.85rem;
+    margin: -6px 0 14px;
+}
+
+.photo-url-row {
+    display: flex;
+    gap: 10px;
+    margin-top: 14px;
+    max-width: 100%;
+}
+
+.photo-url-row input[type="url"] {
+    flex: 1;
+    min-width: 0;
+    padding: 10px 14px;
+    border: 1px solid #3a3527;
+    border-radius: 10px;
+    background: #0f0d09;
+    color: #fdf9ef;
+    font-family: inherit;
+}
+
+.photo-url-row input[type="url"]::placeholder {
+    color: #6b6147;
+}
+
 /* ============================================
    Availability Grid
    ============================================ */
@@ -1720,10 +1791,15 @@ h1, h2, h3, h4 {
 
     .main-content {
         margin-left: 0;
+        padding-bottom: 74px;
     }
 
     .menu-toggle {
         display: flex !important;
+    }
+
+    .bottom-nav {
+        display: flex;
     }
 
     .container {

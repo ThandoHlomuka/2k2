@@ -55,6 +55,19 @@ function navigateTo(page) {
         sidebar.classList.remove('active');
         main.classList.remove('shifted');
     }
+    setAdminBottomNav(page);
+}
+
+function setAdminBottomNav(page) {
+    const nav = document.getElementById('bottomNav');
+    if (!nav) return;
+    nav.querySelectorAll('.bottom-nav-item').forEach(btn => {
+        btn.classList.toggle('active', btn.getAttribute('data-page') === page);
+    });
+}
+
+function navBottom(page) {
+    navigateTo(page);
 }
 
 // ==========================================

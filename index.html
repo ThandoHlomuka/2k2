@@ -703,12 +703,17 @@
 
                     <div class="profile-card">
                         <h2><i class="fas fa-image"></i> Profile Photo</h2>
+                        <p class="field-hint">Upload a photo from your device or add it from an image link. Accepted formats: JPG, JPEG, GIF, WebP, PNG.</p>
                         <div class="photo-upload">
-                            <div class="photo-preview" id="userPhotoPreview">
+                            <label for="userPhotoInput" class="photo-preview" id="userPhotoPreview">
                                 <i class="fas fa-camera"></i>
                                 <span>Click to upload</span>
-                            </div>
-                            <input type="file" id="userPhotoInput" accept="image/*" onchange="previewPhoto(this, 'userPhotoPreview')">
+                            </label>
+                            <input type="file" id="userPhotoInput" accept=".jpg,.jpeg,.gif,.webp,.png,image/jpeg,image/jpg,image/gif,image/webp,image/png" onchange="validateUserPhoto(this, 'userPhotoPreview')">
+                        </div>
+                        <div class="photo-url-row">
+                            <input type="url" id="userPhotoUrl" placeholder="Or paste an image link (https://...jpg)">
+                            <button type="button" class="btn btn-secondary" onclick="setUserPhotoFromUrl()"><i class="fas fa-link"></i> Use Link</button>
                         </div>
                     </div>
 
@@ -3224,6 +3229,14 @@
         </div>
 
         <div class="toast-container" id="toastContainer"></div>
+    </div>
+
+    <!-- Mobile Bottom Navigation -->
+    <div class="bottom-nav" id="bottomNav">
+        <button class="bottom-nav-item" data-page="user-dashboard" onclick="navBottom('user-dashboard')"><i class="fas fa-home"></i><span>Home</span></button>
+        <button class="bottom-nav-item" data-page="directory" onclick="navBottom('directory')"><i class="fas fa-compass"></i><span>Browse</span></button>
+        <button class="bottom-nav-item" data-page="inbox" onclick="navBottom('inbox')"><i class="fas fa-envelope"></i><span>Messages</span></button>
+        <button class="bottom-nav-item" data-page="user-profile" onclick="navBottom('user-profile')"><i class="fas fa-user"></i><span>Profile</span></button>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>

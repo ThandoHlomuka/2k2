@@ -389,6 +389,29 @@ function navigateTo(page) {
     if (page === 'provider-product-create') { resetProductForm(); }
     if (page === 'provider-orders') renderProviderOrders();
     if (['directory','venue-directory','services-directory','content-directory','events-directory','ads-browse','gigs-browse','forum-browse','products-directory'].includes(page)) renderSaveButtons();
+    setActiveBottomNav(page);
+}
+
+function setActiveBottomNav(page) {
+    const nav = document.getElementById('bottomNav');
+    if (!nav) return;
+    nav.querySelectorAll('.bottom-nav-item').forEach(btn => {
+        btn.classList.toggle('active', btn.getAttribute('data-page') === page);
+    });
+}
+
+function navBottom(page) {
+    closeSidebar();
+    navigateTo(page);
+}
+
+function maybeCloseSidebar() {
+    const sidebar = document.getElementById('sidebar');
+    const menuToggle = document.getElementById('menuToggle');
+    if (sidebar && menuToggle && window.innerWidth <= 768) {
+        sidebar.classList.add('hidden');
+        menuToggle.classList.add('visible');
+    }
 }
 
 function populateGigDropdowns() {
@@ -444,6 +467,7 @@ document.addEventListener('DOMContentLoaded', function() {
         item.addEventListener('click', function(e) {
             e.preventDefault();
             navigateTo(this.getAttribute('data-page'));
+            maybeCloseSidebar();
         });
     });
 
@@ -523,6 +547,8 @@ function resetUserForm() {
     userTags = [];
     renderUserTags();
     document.getElementById('userPhotoPreview').innerHTML = '<i class="fas fa-camera"></i><span>Click to upload</span>';
+    const urlInput = document.getElementById('userPhotoUrl');
+    if (urlInput) urlInput.value = '';
 }
 
 function handleUserSubmit(e) {
@@ -1025,6 +1051,48 @@ function previewPhoto(input, previewId) {
         };
         reader.readAsDataURL(input.files[0]);
     }
+}
+
+const USER_PHOTO_EXTENSIONS = ['jpg', 'jpeg', 'gif', 'webp', 'png'];
+
+function userPhotoExtErrMsg() {
+    return 'Please choose a valid image. Accepted formats: JPG, JPEG, GIF, WebP, PNG.';
+}
+
+function validateUserPhoto(input, previewId) {
+    if (!input.files || !input.files[0]) return;
+    const file = input.files[0];
+    const name = (file.name || '').toLowerCase();
+    const ext = name.split('.').pop();
+    if (!USER_PHOTO_EXTENSIONS.includes(ext)) {
+        alert(userPhotoExtErrMsg());
+        input.value = '';
+        return;
+    }
+    previewPhoto(input, previewId);
+}
+
+function setUserPhotoFromUrl() {
+    const input = document.getElementById('userPhotoUrl');
+    const preview = document.getElementById('userPhotoPreview');
+    if (!input || !preview) return;
+    let url = (input.value || '').trim();
+    if (!url) { alert('Please paste an image link first.'); return; }
+
+    const okHttp = /^https?:\/\/.+/i.test(url);
+    const dataOk = /^data:image\/(jpeg|jpg|gif|webp|png);base64,/i.test(url);
+    if (!okHttp && !dataOk) {
+        alert('Please enter a valid image link (http or https) or a supported data image.');
+        return;
+    }
+
+    const ext = url.split('?')[0].split('#')[0].toLowerCase().split('.').pop() || '';
+    if (okHttp && !USER_PHOTO_EXTENSIONS.includes(ext)) {
+        alert('Image link must end in one of: JPG, JPEG, GIF, WebP, PNG.');
+        return;
+    }
+
+    preview.innerHTML = `<img src="${url.replace(/"/g, '&quot;')}" alt="" onerror="this.onerror=null;this.parentElement.innerHTML='<i class=&quot;fas fa-camera&quot;></i><span>Click to upload</span>';">`;
 }
 
 // ==========================================
