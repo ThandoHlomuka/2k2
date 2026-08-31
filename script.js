@@ -5556,12 +5556,13 @@ function buildOnlineListMarkup(list) {
     return list.map(m => {
         const online = !!m.online;
         const isGuest = m.role === 'guest';
-        const initials = String(m.name || '?').split(' ').map(w => w[0]).filter(Boolean).slice(0, 2).join('').toUpperCase();
+        const displayName = m.username || m.email || m.name || 'Member';
+        const initials = String(displayName || '?').split(' ').map(w => w[0]).filter(Boolean).slice(0, 2).join('').toUpperCase();
         const tagBg = isGuest ? 'background:rgba(217,119,6,.15);color:#d97706'
             : m.role === 'provider' ? 'background:rgba(16,185,129,.15);color:#10b981'
             : m.role === 'admin' ? 'background:rgba(239,68,68,.15);color:#ef4444'
             : 'background:rgba(102,126,234,.15);color:#667eea';
-        const tagLabel = isGuest ? 'Guest' : m.role === 'provider' ? 'Provider' : m.role === 'admin' ? 'Admin' : 'User';
+        const tagLabel = isGuest ? 'Guest' : m.role === 'provider' ? 'Service Provider' : m.role === 'admin' ? 'Admin' : 'General User';
         const safeId = String(m.id || '').replace(/'/g, "\\'");
         const safeName = String(m.name || '').replace(/'/g, "\\'");
         const msgBtn = isGuest ? '' : `<button class="btn btn-primary btn-sm" onclick="openComposeTo('${safeId}', '${safeName}', '${m.role}')"><i class="fas fa-paper-plane"></i> Message</button>`;
@@ -5573,7 +5574,7 @@ function buildOnlineListMarkup(list) {
                 <span class="online-dot ${online ? 'on' : 'off'}" title="${online ? 'Online' : 'Offline'}"></span>
             </div>
             <div class="online-user-info">
-                <div class="online-user-name">${escapeHtml(m.name)} <span class="mini-tag" style="${tagBg}">${tagLabel}</span></div>
+                <div class="online-user-name">${escapeHtml(displayName)} <span class="mini-tag" style="${tagBg}">${tagLabel}</span></div>
                 <div class="online-user-loc"><i class="fas fa-map-marker-alt"></i> ${escapeHtml(locText)}</div>
                 <div class="online-user-bio">${escapeHtml((m.bio || '').substring(0, 90))}</div>
             </div>
@@ -5600,6 +5601,7 @@ async function renderOnlineUsers() {
             members.push({
                 id: sid.user.id,
                 name: (profile && (profile.display_name || profile.full_name)) || emailLocal || sid.user.email || 'You',
+                username: (profile && profile.profile_data && profile.profile_data.username) || '',
                 role: profile ? profile.role : 'user',
                 email: sid.user.email || '',
                 location: '',
@@ -5610,6 +5612,15 @@ async function renderOnlineUsers() {
             });
         }
     } catch (e) { /* ignore */ }
+
+    // Overlay usernames from the users collection (edits made via the profile form).
+    const userMap = {};
+    Storage.getUsers().forEach(u => {
+        if (u.userId && u.username) userMap[u.userId] = u.username;
+    });
+    members.forEach(m => {
+        if (!m.username && userMap[m.id]) m.username = userMap[m.id];
+    });
 
     const search = (document.getElementById('onlineSearch')?.value || '').toLowerCase();
     const typeF = document.getElementById('onlineTypeFilter')?.value || 'all';

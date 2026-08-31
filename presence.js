@@ -114,12 +114,24 @@
       const { data: members, error: e1 } = await client
         .from('presence')
         .select('id, role, display_name, email, last_seen');
+      // usernames (set at registration / edit) live on profiles.profile_data.username
+      let profMap = {};
+      const { data: profiles, error: e1p } = await client
+        .from('profiles')
+        .select('user_id, profile_data');
+      if (!e1p && profiles) {
+        profiles.forEach(function (p) {
+          const pd = (p.profile_data && typeof p.profile_data === 'object') ? p.profile_data : {};
+          if (p.user_id && pd.username) profMap[p.user_id] = pd.username;
+        });
+      }
       if (!e1 && members) {
         out.members = members.map(function (m) {
           const t = m.last_seen ? new Date(m.last_seen).getTime() : 0;
           return {
             id: m.id,
             name: m.display_name || usernameFromEmail(m.email) || m.email || 'Member',
+            username: profMap[m.id] || '',
             role: m.role || 'user',
             email: m.email || '',
             location: '',
