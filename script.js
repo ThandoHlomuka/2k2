@@ -7443,34 +7443,47 @@ function ensureTourDOM() {
     btn.innerHTML = '<i class="fas fa-compass"></i><span>Tour</span>';
     btn.title = 'Take the guided tour';
     btn.addEventListener('click', () => startSidebarTour());
+    frag.appendChild(btn);
 
+    // The dim scrim. Kept BELOW the lifted sidebar z-index (11002) so the
+    // menu stays visibly/clickable while the tour highlights an item.
     const overlay = document.createElement('div');
     overlay.id = 'k2TourOverlay';
     overlay.className = 'k2-tour-overlay';
-    overlay.innerHTML =
-        '<div class="k2-tour-highlight" id="k2TourHighlight"></div>' +
-        '<div class="k2-tour-tooltip" id="k2TourTooltip">' +
-            '<button class="k2-tour-close" id="k2TourClose" title="Skip tour"><i class="fas fa-xmark"></i></button>' +
-            '<div class="k2-tour-badge" id="k2TourBadge"></div>' +
-            '<h3 class="k2-tour-title" id="k2TourTitle"></h3>' +
-            '<p class="k2-tour-text" id="k2TourText"></p>' +
-            '<div class="k2-tour-progress" id="k2TourProgress"></div>' +
-            '<div class="k2-tour-actions">' +
-                '<button class="k2-tour-btn k2-tour-skip" id="k2TourSkip">Skip tour</button>' +
-                '<button class="k2-tour-btn k2-tour-prev" id="k2TourPrev"><i class="fas fa-chevron-left"></i> Back</button>' +
-                '<button class="k2-tour-btn k2-tour-next" id="k2TourNext">Next <i class="fas fa-chevron-right"></i></button>' +
-            '</div>' +
-        '</div>';
-
-    frag.appendChild(btn);
+    overlay.addEventListener('click', (e) => { if (e.target === overlay) stepTour(1); });
     frag.appendChild(overlay);
+
+    // Highlight + tooltip are appended DIRECTLY to <body> (siblings of the
+    // overlay/sidebar), each in its own stacking context. Their z-index sits
+    // ABOVE the lifted sidebar (11002) so the menu can never cover the
+    // tooltip, while the dim overlay still stays beneath the menu.
+    const highlight = document.createElement('div');
+    highlight.id = 'k2TourHighlight';
+    highlight.className = 'k2-tour-highlight';
+    frag.appendChild(highlight);
+
+    const tooltip = document.createElement('div');
+    tooltip.id = 'k2TourTooltip';
+    tooltip.className = 'k2-tour-tooltip';
+    tooltip.innerHTML =
+        '<button class="k2-tour-close" id="k2TourClose" title="Skip tour"><i class="fas fa-xmark"></i></button>' +
+        '<div class="k2-tour-badge" id="k2TourBadge"></div>' +
+        '<h3 class="k2-tour-title" id="k2TourTitle"></h3>' +
+        '<p class="k2-tour-text" id="k2TourText"></p>' +
+        '<div class="k2-tour-progress" id="k2TourProgress"></div>' +
+        '<div class="k2-tour-actions">' +
+            '<button class="k2-tour-btn k2-tour-skip" id="k2TourSkip">Skip tour</button>' +
+            '<button class="k2-tour-btn k2-tour-prev" id="k2TourPrev"><i class="fas fa-chevron-left"></i> Back</button>' +
+            '<button class="k2-tour-btn k2-tour-next" id="k2TourNext">Next <i class="fas fa-chevron-right"></i></button>' +
+        '</div>';
+    frag.appendChild(tooltip);
+
     document.body.appendChild(frag);
 
     document.getElementById('k2TourClose').addEventListener('click', skipSidebarTour);
     document.getElementById('k2TourSkip').addEventListener('click', skipSidebarTour);
     document.getElementById('k2TourPrev').addEventListener('click', () => stepTour(-1));
     document.getElementById('k2TourNext').addEventListener('click', () => stepTour(1));
-    overlay.addEventListener('click', (e) => { if (e.target === overlay) stepTour(1); });
 }
 
 function tourKeyHandler(e) {

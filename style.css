@@ -7079,7 +7079,9 @@ h1, h2, h3, h4 {
 
 .k2-tour-highlight {
     position: fixed;
-    z-index: 11001;
+    /* Above the lifted sidebar (#sidebar/.bottom-nav at 11002) so the
+       highlight ring can never be hidden beneath the menu. */
+    z-index: 12001;
     border-radius: 10px;
     box-shadow: 0 0 0 9999px rgba(10, 10, 15, 0.30),
                 0 0 0 2px var(--gold, #d4a853),
@@ -7091,7 +7093,10 @@ h1, h2, h3, h4 {
 
 .k2-tour-tooltip {
     position: fixed;
-    z-index: 11003;
+    /* Above the lifted sidebar (11002) so the menu NEVER covers the tooltip.
+       Appended directly to <body>, outside the dim overlay's stacking
+       context, so this z-index is not capped by the overlay. */
+    z-index: 12003;
     width: 340px;
     max-width: calc(100vw - 32px);
     background: #fff;
