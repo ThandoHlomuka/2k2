@@ -7215,7 +7215,12 @@ h1, h2, h3, h4 {
 }
 
 .k2-tour-btn.k2-tour-prev {
-    display: none;
+    color: var(--text-primary, #211a0d);
+}
+
+.k2-tour-btn.k2-tour-prev:hover {
+    border-color: var(--primary, #c9a227);
+    color: var(--primary-dark, #a07d12);
 }
 
 /* Lift the sidebar/bottom-nav above the dim overlay so the menu buttons
