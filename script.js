@@ -348,6 +348,7 @@ function navigateTo(page) {
     if (navItem) navItem.classList.add('active');
 
     if (page === 'user-dashboard') { renderUserProfiles(); renderUserDashboardStats(); }
+    if (page === 'my-network') renderMyNetwork();
     if (page === 'provider-dashboard') renderProviderProfiles();
     if (page === 'user-create') { populateLocationDropdowns(); resetUserForm(); }
     if (page === 'provider-create') { populateLocationDropdowns(); resetProviderForm(); }
@@ -611,6 +612,195 @@ function getUserProfilesByAuth() {
     return [];
 }
 
+// ==========================================
+// Followers / Following
+// ==========================================
+function followKey(type, id) { return (type || 'user') + ':' + String(id); }
+
+function currentFollowActor() {
+    try {
+        const profile = getUserProfilesByAuth()[0];
+        if (profile) return { type: 'user', id: profile.id, name: profile.fullName || profile.username || 'Member' };
+        const authId = currentAuthId();
+        if (!authId) return null;
+        const listing = Storage.getListings().find(l => String(l.ownerId) === String(authId));
+        if (listing) return { type: 'listing', id: listing.id, name: listing.name };
+        const snap = _2k2.Auth && _2k2.Auth.syncUser ? _2k2.Auth.syncUser() : null;
+        return { type: 'auth', id: authId, name: ((snap && snap.email) || 'Member').split('@')[0] || 'Member' };
+    } catch (e) { return null; }
+}
+
+function getMyFollowIdentityKeys() {
+    const keys = [];
+    getUserProfilesByAuth().forEach(p => keys.push('user:' + p.id));
+    const authId = currentAuthId();
+    if (authId) {
+        Storage.getListings().filter(l => String(l.ownerId) === String(authId)).forEach(l => keys.push('listing:' + l.id));
+        keys.push('auth:' + authId);
+    }
+    return keys;
+}
+
+function isFollowing(targetType, targetId) {
+    const actor = currentFollowActor();
+    if (!actor) return false;
+    const key = followKey(actor.type, actor.id);
+    return Storage.getFollows().some(f => f.followerKey === key && f.followeeType === targetType && String(f.followeeId) === String(targetId));
+}
+
+function getFollowerCount(targetType, targetId) {
+    return Storage.getFollows().filter(f => f.followeeType === targetType && String(f.followeeId) === String(targetId)).length;
+}
+
+function getProfileFollowingCount(type, id) {
+    return Storage.getFollows().filter(f => f.followerType === type && String(f.followerId) === String(id)).length;
+}
+
+function myFollowerCount() {
+    const myKeys = getMyFollowIdentityKeys();
+    return Storage.getFollows().filter(f => myKeys.includes(followKey(f.followeeType, f.followeeId))).length;
+}
+
+function myFollowingCount() {
+    const actor = currentFollowActor();
+    if (!actor) return 0;
+    return Storage.getFollows().filter(f => f.followerKey === followKey(actor.type, actor.id)).length;
+}
+
+function toggleFollow(targetType, targetId, targetName) {
+    if (!requireSignIn('Follow profiles to stay connected.')) return false;
+    const actor = currentFollowActor();
+    if (!actor) { showToast('Sign in with a profile to follow others.', 'error'); return false; }
+    const myKeys = getMyFollowIdentityKeys();
+    if (myKeys.includes(followKey(targetType, targetId))) { showToast('You cannot follow your own profile.', 'info'); return false; }
+
+    const follows = Storage.getFollows();
+    const key = followKey(actor.type, actor.id);
+    const existingIndex = follows.findIndex(f => f.followerKey === key && f.followeeType === targetType && String(f.followeeId) === String(targetId));
+    if (existingIndex !== -1) {
+        follows.splice(existingIndex, 1);
+        Storage.setFollows(follows);
+        showToast('Unfollowed ' + (targetName || 'profile') + '.', 'info');
+    } else {
+        follows.push({
+            id: generateId(),
+            followerType: actor.type,
+            followerId: actor.id,
+            followerName: actor.name,
+            followerKey: key,
+            followeeType: targetType,
+            followeeId: String(targetId),
+            followeeName: targetName || '',
+            createdAt: new Date().toISOString()
+        });
+        Storage.setFollows(follows);
+        showToast('You are now following ' + (targetName || 'this profile') + '.');
+    }
+    refreshFollowUI();
+    return true;
+}
+
+function updateDashNetworkCounts() {
+    const f = document.getElementById('dashFollowers');
+    const g = document.getElementById('dashFollowing');
+    if (f) f.textContent = myFollowerCount();
+    if (g) g.textContent = myFollowingCount();
+}
+
+function refreshFollowUI() {
+    document.querySelectorAll('[data-follow-btn]').forEach(btn => {
+        const t = btn.getAttribute('data-t');
+        const id = btn.getAttribute('data-id');
+        if (!t || !id) return;
+        const following = isFollowing(t, id);
+        btn.classList.toggle('follow-active', following);
+        btn.classList.toggle('btn-secondary', following);
+        btn.classList.toggle('btn-primary', !following);
+        if (btn.hasAttribute('data-unfollow')) {
+            btn.innerHTML = following ? '<i class="fas fa-user-minus"></i> Unfollow' : '<i class="fas fa-user-plus"></i> Follow';
+        } else {
+            btn.innerHTML = following ? '<i class="fas fa-check"></i> Following' : '<i class="fas fa-user-plus"></i> Follow';
+        }
+    });
+    document.querySelectorAll('[data-follower-count]').forEach(el => {
+        const t = el.getAttribute('data-t');
+        const id = el.getAttribute('data-id');
+        if (t && id) el.textContent = getFollowerCount(t, id);
+    });
+    document.querySelectorAll('[data-following-count]').forEach(el => {
+        const t = el.getAttribute('data-t');
+        const id = el.getAttribute('data-id');
+        if (t && id) el.textContent = getProfileFollowingCount(t, id);
+    });
+    updateDashNetworkCounts();
+    const netPage = document.getElementById('page-my-network');
+    if (netPage && netPage.classList.contains('active')) renderMyNetwork();
+}
+
+function followButtonHTML(targetType, targetId, extraClass) {
+    const following = isFollowing(targetType, targetId);
+    return `<button type="button" class="btn ${following ? 'btn-secondary follow-active' : 'btn-primary'} ${extraClass || ''}" data-follow-btn="1" data-t="${targetType}" data-id="${targetId}" onclick="event.stopPropagation(); toggleFollow('${targetType}','${targetId}')"><i class="fas ${following ? 'fa-check' : 'fa-user-plus'}"></i> ${following ? 'Following' : 'Follow'}</button>`;
+}
+
+function resolveFollowProfile(type, id, fallbackName) {
+    if (type === 'listing') {
+        const l = Storage.getListings().find(x => String(x.id) === String(id));
+        if (l) return { name: l.name || fallbackName || 'Provider', photo: l.photo || '', typeLabel: 'Provider' };
+    } else if (type === 'user') {
+        const u = Storage.getUsers().find(x => String(x.id) === String(id));
+        if (u) return { name: u.fullName || u.username || fallbackName || 'Member', photo: u.photo || '', typeLabel: 'Member' };
+    }
+    return { name: fallbackName || 'Member', photo: '', typeLabel: type === 'listing' ? 'Provider' : 'Member' };
+}
+
+function renderMyNetwork() {
+    if (!requireSignIn('View your network.')) { if (document.getElementById('page-user-dashboard')) navigateTo('user-dashboard'); return; }
+    const myKeys = getMyFollowIdentityKeys();
+    const follows = Storage.getFollows();
+    const actor = currentFollowActor();
+    const myFollowKey = actor ? followKey(actor.type, actor.id) : null;
+
+    const followers = follows.filter(f => myKeys.includes(followKey(f.followeeType, f.followeeId)));
+    const following = myFollowKey ? follows.filter(f => f.followerKey === myFollowKey) : [];
+
+    document.getElementById('netFollowersCount').textContent = followers.length;
+    document.getElementById('netFollowingCount').textContent = following.length;
+
+    const folContainer = document.getElementById('netFollowersList');
+    if (followers.length === 0) {
+        folContainer.innerHTML = `<div class="empty-state"><i class="fas fa-user-plus"></i><h3>No followers yet</h3><p>When other members follow you, they'll appear here.</p></div>`;
+    } else {
+        folContainer.innerHTML = followers.map(f => {
+            const p = resolveFollowProfile(f.followerType, f.followerId, f.followerName);
+            const icon = f.followerType === 'listing' ? 'store' : 'user';
+            return `
+            <div class="network-item">
+                <div class="network-item-avatar">${p.photo ? `<img src="${p.photo}" alt="">` : `<i class="fas fa-${icon}"></i>`}</div>
+                <div class="network-item-info"><h4>${escapeHtml(p.name)}</h4><span>${p.typeLabel}</span></div>
+                <div class="network-item-actions">${followButtonHTML(f.followerType, f.followerId)}</div>
+            </div>`;
+        }).join('');
+    }
+
+    const folFollowing = document.getElementById('netFollowingList');
+    if (following.length === 0) {
+        folFollowing.innerHTML = `<div class="empty-state"><i class="fas fa-users"></i><h3>Not following anyone yet</h3><p>Use the Follow button on any profile to build your network.</p></div>`;
+    } else {
+        folFollowing.innerHTML = following.map(f => {
+            const p = resolveFollowProfile(f.followeeType, f.followeeId, f.followeeName);
+            const icon = f.followeeType === 'listing' ? 'store' : 'user';
+            return `
+            <div class="network-item">
+                <div class="network-item-avatar">${p.photo ? `<img src="${p.photo}" alt="">` : `<i class="fas fa-${icon}"></i>`}</div>
+                <div class="network-item-info"><h4>${escapeHtml(p.name)}</h4><span>${p.typeLabel}</span></div>
+                <div class="network-item-actions">
+                    <button type="button" class="btn btn-secondary follow-active" data-follow-btn="1" data-unfollow="1" data-t="${f.followeeType}" data-id="${f.followeeId}" onclick="toggleFollow('${f.followeeType}','${f.followeeId}')"><i class="fas fa-user-minus"></i> Unfollow</button>
+                </div>
+            </div>`;
+        }).join('');
+    }
+}
+
 // Guests/anon users can browse, but must have an account to engage.
 // Returns true when action can proceed, false when the user was prompted to sign in.
 function requireSignIn(actionText) {
@@ -758,6 +948,7 @@ function renderUserProfiles(filter = 'all') {
             </div>
             <div class="list-card-actions">
                 <span class="status-badge status-${u.status}">${u.status}</span>
+                ${followButtonHTML('user', u.id, 'follow-mini')}
                 <button class="btn-icon" onclick="event.stopPropagation(); editUserById('${u.id}')"><i class="fas fa-edit"></i></button>
                 <button class="btn-icon danger-icon" onclick="event.stopPropagation(); promptDeleteUser('${u.id}')"><i class="fas fa-trash"></i></button>
             </div>
@@ -808,6 +999,7 @@ async function renderUserDashboardStats() {
     setNum('dashMyProfiles', getUserProfilesByAuth().length);
     setNum('dashPendingTopups', Storage.getTopUpRequests().filter(r => r.status === 'pending' && r.ownerType === 'user' && r.ownerId === meId).length);
     setNum('dashMyTxns', txns.length);
+    updateDashNetworkCounts();
 
     // Chart 1: Explore breakdown (bar)
     if (dashExploreChart) dashExploreChart.destroy();
@@ -915,6 +1107,18 @@ function viewUserProfile(id) {
     const delBtn = document.getElementById('deleteUserProfileBtn');
     if (editBtn) editBtn.style.display = isOwnProfile ? '' : 'none';
     if (delBtn) delBtn.style.display = isOwnProfile ? '' : 'none';
+
+    const uBtn = document.getElementById('userViewFollowBtn');
+    if (uBtn) {
+        uBtn.setAttribute('data-t', 'user');
+        uBtn.setAttribute('data-id', u.id);
+        uBtn.style.display = isOwnProfile ? 'none' : '';
+    }
+    document.querySelectorAll('#page-user-profile [data-follower-count], #page-user-profile [data-following-count]').forEach(el => {
+        el.setAttribute('data-t', 'user');
+        el.setAttribute('data-id', u.id);
+    });
+    refreshFollowUI();
 
     navigateTo('user-profile');
 }
@@ -1423,7 +1627,11 @@ function renderDirectory() {
                 <p class="directory-card-location"><i class="fas fa-map-marker-alt"></i> ${l.location}</p>
                 <div class="directory-card-tags">${(l.tags || []).slice(0, 3).map(t => `<span class="mini-tag">${t}</span>`).join('')}</div>
                 <div class="directory-card-footer">
-                    <span class="directory-card-rate">${l.rate || 'Contact'}</span>
+                    <div class="directory-card-foot-left">
+                        <span class="directory-card-rate">${l.rate || 'Contact'}</span>
+                        <span class="follow-count-chip"><i class="fas fa-user-plus"></i> <span data-follower-count data-t="listing" data-id="${l.id}">${getFollowerCount('listing', l.id)}</span></span>
+                    </div>
+                    ${followButtonHTML('listing', l.id)}
                 </div>
             </div>
         </div>`;
@@ -1633,6 +1841,18 @@ function viewDirectoryListing(id) {
 
     currentActivityOwner = { id: l.ownerId, name: l.ownerName };
     renderProviderActivity('directoryActivityContent', 'experiences');
+
+    const dBtn = document.getElementById('dirViewFollowBtn');
+    if (dBtn) {
+        dBtn.setAttribute('data-t', 'listing');
+        dBtn.setAttribute('data-id', l.id);
+        dBtn.style.display = getMyFollowIdentityKeys().includes('listing:' + l.id) ? 'none' : '';
+    }
+    document.querySelectorAll('#page-directory-view [data-follower-count], #page-directory-view [data-following-count]').forEach(el => {
+        el.setAttribute('data-t', 'listing');
+        el.setAttribute('data-id', l.id);
+    });
+    refreshFollowUI();
 
     navigateTo('directory-view');
 }

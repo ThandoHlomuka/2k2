@@ -46,7 +46,8 @@
     { name: 'FantasyRequests', col: 'fantasy_requests', key: 'k2_fantasy_requests' },
     { name: 'Products', col: 'products', key: 'k2_products' },
     { name: 'ProductOrders', col: 'product_orders', key: 'k2_product_orders' },
-    { name: 'HelpQueries', col: 'help_queries', key: 'k2_help_queries' }
+    { name: 'HelpQueries', col: 'help_queries', key: 'k2_help_queries' },
+    { name: 'Follows', col: 'follows', key: 'k2_follows' }
   ];
 
   const cache = {};      // col -> array

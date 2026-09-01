@@ -52,7 +52,7 @@
     <!-- Favicon -->
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💎</text></svg>">
 
-    <link rel="stylesheet" href="style.css?v=22">
+    <link rel="stylesheet" href="style.css?v=23">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700;900&family=Inter:wght@300;400;500;600;700&family=Dancing+Script:wght@700&display=swap" rel="stylesheet">
 
@@ -421,6 +421,10 @@
                 <i class="fas fa-user-circle"></i>
                 <span>View Profile</span>
             </a>
+            <a href="#" class="nav-item" data-page="my-network">
+                <i class="fas fa-users"></i>
+                <span>My Network</span>
+            </a>
             <div class="nav-divider"></div>
             <span class="nav-section-title">Browse</span>
             <a href="#" class="nav-item" data-page="directory">
@@ -691,6 +695,8 @@
                     <div class="dash-analytics-row">
                         <div class="analytics-stat"><span class="analytics-stat-label">Wallet Balance</span><span class="analytics-stat-value" id="dashWalletBalance">R0</span></div>
                         <div class="analytics-stat"><span class="analytics-stat-label">My Profiles</span><span class="analytics-stat-value" id="dashMyProfiles">0</span></div>
+                        <div class="analytics-stat" style="cursor:pointer" title="View your network" onclick="navigateTo('my-network')"><span class="analytics-stat-label">Followers</span><span class="analytics-stat-value" id="dashFollowers">0</span></div>
+                        <div class="analytics-stat" style="cursor:pointer" title="View your network" onclick="navigateTo('my-network')"><span class="analytics-stat-label">Following</span><span class="analytics-stat-value" id="dashFollowing">0</span></div>
                         <div class="analytics-stat"><span class="analytics-stat-label">Pending Top-ups</span><span class="analytics-stat-value" id="dashPendingTopups">0</span></div>
                         <div class="analytics-stat"><span class="analytics-stat-label">Total Transactions</span><span class="analytics-stat-value" id="dashMyTxns">0</span></div>
                     </div>
@@ -894,7 +900,15 @@
                             <h1 id="userViewName">-</h1>
                             <span class="badge badge-user">General User</span>
                             <p id="userViewEmail" class="view-email">-</p>
+                            <div class="profile-follow-stats">
+                                <span><i class="fas fa-user-plus"></i> <b data-follower-count data-t="user" data-id="">0</b> Followers</span>
+                                <span><i class="fas fa-users"></i> <b data-following-count data-t="user" data-id="">0</b> Following</span>
+                            </div>
                         </div>
+                    </div>
+
+                    <div class="view-actions-row">
+                        <button type="button" id="userViewFollowBtn" class="btn btn-primary view-follow" data-follow-btn="1" data-t="user" data-id="" onclick="event.stopPropagation(); toggleFollow('user', currentViewUserId, document.getElementById('userViewName').textContent)"><i class="fas fa-user-plus"></i> Follow</button>
                     </div>
 
                     <div class="view-grid">
@@ -927,6 +941,37 @@
                         <div class="detail-row"><span class="detail-label">Last Updated</span><span class="detail-value" id="userViewUpdated">-</span></div>
                         <div class="detail-row"><span class="detail-label">Status</span><span class="detail-value" id="userViewStatus">-</span></div>
                     </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- My Network -->
+        <div class="page" id="page-my-network">
+            <div class="container">
+                <div class="form-header">
+                    <button class="btn-back" onclick="navigateTo('user-dashboard')">
+                        <i class="fas fa-arrow-left"></i> Back
+                    </button>
+                    <h1>My Network</h1>
+                </div>
+
+                <div class="network-stat-row">
+                    <div class="analytics-stat"><span class="analytics-stat-label">Followers</span><span class="analytics-stat-value" id="netFollowersCount">0</span></div>
+                    <div class="analytics-stat"><span class="analytics-stat-label">Following</span><span class="analytics-stat-value" id="netFollowingCount">0</span></div>
+                </div>
+
+                <div class="profiles-section">
+                    <div class="section-header">
+                        <h2><i class="fas fa-user-plus"></i> Followers</h2>
+                    </div>
+                    <div class="network-list" id="netFollowersList"></div>
+                </div>
+
+                <div class="profiles-section">
+                    <div class="section-header">
+                        <h2><i class="fas fa-users"></i> Following</h2>
+                    </div>
+                    <div class="network-list" id="netFollowingList"></div>
                 </div>
             </div>
         </div>
@@ -1273,8 +1318,13 @@
                             <h1 id="dirViewName">-</h1>
                             <span class="badge" id="dirViewType">-</span>
                             <p id="dirViewLocation" class="view-email"><i class="fas fa-map-marker-alt"></i> -</p>
+                            <div class="profile-follow-stats">
+                                <span><i class="fas fa-user-plus"></i> <b data-follower-count data-t="listing" data-id="">0</b> Followers</span>
+                                <span><i class="fas fa-users"></i> <b data-following-count data-t="listing" data-id="">0</b> Following</span>
+                            </div>
                         </div>
                         <div class="view-actions-row">
+                            <button type="button" id="dirViewFollowBtn" class="btn btn-primary view-follow" data-follow-btn="1" data-t="listing" data-id="" onclick="event.stopPropagation(); toggleFollow('listing', currentViewListingId, document.getElementById('dirViewName').textContent)"><i class="fas fa-user-plus"></i> Follow</button>
                             <button class="btn btn-primary" onclick="viewProviderServices(currentActivityOwner)"><i class="fas fa-calendar-check"></i> Book a Service</button>
                             <button class="btn btn-primary" id="dirBookBtn" onclick="openBookingModal(currentViewListingId, 'listing')"><i class="fas fa-calendar-plus"></i> Book Provider</button>
                             <button class="btn btn-primary provider-btn" onclick="openComposeTo(currentViewListingId, document.getElementById('dirViewName').textContent, 'listing')"><i class="fas fa-paper-plane"></i> Message</button>
@@ -3625,7 +3675,7 @@
       });
     })();
     </script>
-    <script src="script.js?v=26"></script>
+    <script src="script.js?v=27"></script>
     <script src="products.js?v=21"></script>
     <script>
         let onbSlide = 0;

@@ -7272,3 +7272,128 @@ h1, h2, h3, h4 {
     margin-left: auto;
 }
 
+/* ============================================
+   FOLLOWERS / FOLLOWING
+   ============================================ */
+.btn.follow-active {
+    background: linear-gradient(135deg, #64748b, #475569) !important;
+    color: #fff !important;
+    border: none !important;
+}
+
+.profile-follow-stats {
+    display: flex;
+    gap: 16px;
+    margin-top: 8px;
+    color: #7a7263;
+    font-size: 0.85rem;
+}
+
+.profile-follow-stats b {
+    color: #d3ad44;
+    margin-right: 2px;
+}
+
+.follow-count-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.8rem;
+    color: #7a7263;
+    margin-left: 10px;
+}
+
+.follow-count-chip i {
+    color: #d3ad44;
+}
+
+.directory-card-foot-left {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.directory-card-footer .btn,
+.list-card-actions .follow-mini {
+    padding: 6px 12px;
+    font-size: 0.78rem;
+    border-radius: 8px;
+    font-weight: 600;
+}
+
+.list-card-actions .follow-mini {
+    align-self: center;
+}
+
+.network-stat-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 12px;
+    margin: 0 0 22px;
+}
+
+.network-list {
+    display: grid;
+    gap: 10px;
+    margin-top: 6px;
+}
+
+.network-item {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    background: #fff;
+    border: 1px solid #f3eddd;
+    border-radius: 12px;
+    padding: 12px 14px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
+}
+
+.network-item-avatar {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #c9a227, #a07d12);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    flex-shrink: 0;
+}
+
+.network-item-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.network-item-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.network-item-info h4 {
+    margin: 0;
+    font-size: 0.95rem;
+    color: #222;
+}
+
+.network-item-info span {
+    font-size: 0.78rem;
+    color: #8a8273;
+}
+
+.network-item-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.network-item-actions .btn {
+    padding: 7px 14px;
+    font-size: 0.8rem;
+    border-radius: 8px;
+    font-weight: 600;
+}
+
