@@ -672,6 +672,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (document.getElementById('serviceCategory')) updateServiceCategorySelect();
     } else {
         document.getElementById('userProfilesList') && renderUserProfiles();
+        if (document.getElementById('page-user-dashboard')) renderUserDashboardStats();
         document.getElementById('directoryList') && renderDirectory();
         document.getElementById('venueDirectoryList') && renderVenueDirectory();
         document.getElementById('adsBrowseList') && renderAdsBrowse();
@@ -1191,6 +1192,9 @@ async function renderUserDashboardStats() {
     setNum('dashCountExperiences', explore.Experiences);
     setNum('dashCountFantasy', explore['Fantasy Req.']);
     setNum('dashCountThreads', explore['Forum Threads']);
+    setNum('userCount', Storage.getUsers().length);
+    setNum('userInterestsCount', Storage.getUsers().reduce((s, u) => s + (u.interests || []).length, 0));
+    setNum('userActiveCount', Storage.getUsers().filter(u => u.status === 'active').length);
 
     try {
         const data = await (window._2k2 && _2k2.Presence ? _2k2.Presence.fetchPresence() : { members: [], guests: [] });
