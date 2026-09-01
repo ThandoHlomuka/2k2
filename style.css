@@ -6902,3 +6902,134 @@ h1, h2, h3, h4 {
     .analytics-stats-row .small-doughnut-wrap { max-width: 100%; }
 }
 
+/* ============================================
+   Provider Activity (profile tabs)
+   ============================================ */
+.activity-subtitle {
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+    margin: 4px 0 14px;
+}
+
+.activity-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 14px;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 12px;
+}
+
+.activity-tab {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 14px;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    background: var(--card-bg);
+    color: var(--text-secondary);
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.activity-tab:hover {
+    border-color: var(--primary);
+    color: var(--primary-dark);
+}
+
+.activity-tab.active {
+    background: var(--primary);
+    border-color: var(--primary);
+    color: #211a0d;
+}
+
+.activity-section {
+    min-height: 40px;
+}
+
+.activity-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.activity-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    background: #fff;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.activity-item:hover {
+    border-color: var(--primary);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.06);
+}
+
+.activity-item-icon {
+    flex: 0 0 42px;
+    width: 42px;
+    height: 42px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.05rem;
+}
+
+.activity-item-body {
+    flex: 1;
+    min-width: 0;
+}
+
+.activity-item-body h4 {
+    font-size: 0.95rem;
+    color: var(--text-primary);
+    margin: 0 0 2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.activity-item-body span {
+    display: block;
+    font-size: 0.78rem;
+    color: var(--text-secondary);
+    margin-bottom: 2px;
+}
+
+.activity-item-body small {
+    font-size: 0.72rem;
+    color: var(--text-secondary);
+    opacity: 0.85;
+}
+
+.activity-empty {
+    text-align: center;
+    padding: 22px;
+    color: var(--text-secondary);
+}
+
+.activity-empty i {
+    font-size: 1.8rem;
+    margin-bottom: 6px;
+    opacity: 0.5;
+}
+
+.activity-empty p {
+    font-size: 0.85rem;
+}
+
+.activity-view-more {
+    margin-top: 14px;
+    width: 100%;
+}
+

@@ -1433,6 +1433,114 @@ function renderProfileLinks(containerId, links) {
     `).join('');
 }
 
+let currentActivityOwner = { id: null, name: null };
+
+const ACTIVITY_NAV = {
+    experiences: 'experiences-browse',
+    gigs: 'gigs-browse',
+    content: 'content-directory',
+    forums: 'forum-browse',
+    events: 'events-directory'
+};
+
+function providerItemMatches(item, owner) {
+    if (!item || !owner) return false;
+    const id = owner.id && owner.id !== 'current' && owner.id !== 'unknown' ? String(owner.id) : null;
+    const name = owner.name ? String(owner.name).toLowerCase() : null;
+    if (id && (item.ownerId === id || item.providerId === id || item.authorId === id)) return true;
+    if (name) {
+        const fields = [item.ownerName, item.providerName, item.author, item.authorName, item.owner, item.businessName];
+        if (fields.some(f => f && String(f).toLowerCase() === name)) return true;
+    }
+    return false;
+}
+
+function getProviderActivityItems(type) {
+    const owner = currentActivityOwner;
+    switch (type) {
+        case 'experiences': return Storage.getExperiences().filter(x => providerItemMatches(x, owner));
+        case 'gigs':        return Storage.getGigs().filter(g => providerItemMatches(g, owner));
+        case 'content':     return Storage.getContent().filter(c => providerItemMatches(c, owner));
+        case 'forums':      return Storage.getForumThreads().filter(t => providerItemMatches(t, owner));
+        case 'events':      return Storage.getEvents().filter(e => providerItemMatches(e, owner));
+    }
+    return [];
+}
+
+function providerActivityCardHTML(type, item) {
+    switch (type) {
+        case 'experiences':
+            return `<div class="activity-item" onclick="viewExperience('${item.id}')">
+                <div class="activity-item-icon" style="background:#7c3aed22;color:#7c3aed"><i class="fas fa-gem"></i></div>
+                <div class="activity-item-body">
+                    <h4>${escapeHtml(item.title || 'Untitled Experience')}</h4>
+                    <span>${escapeHtml(item.type || 'Experience')}${item.location ? ' &middot; ' + escapeHtml(item.location) : ''}</span>
+                    <small>${item.price ? 'R' + escapeHtml(item.price) : 'Free'}${item.createdAt ? ' &middot; ' + new Date(item.createdAt).toLocaleDateString() : ''}</small>
+                </div>
+            </div>`;
+        case 'gigs':
+            return `<div class="activity-item" onclick="viewGig('${item.id}')">
+                <div class="activity-item-icon" style="background:#0ea5e922;color:#0ea5e9"><i class="fas fa-briefcase"></i></div>
+                <div class="activity-item-body">
+                    <h4>${escapeHtml(item.title || 'Untitled Gig')}</h4>
+                    <span>${escapeHtml(item.gigType || 'Gig')}${item.location ? ' &middot; ' + escapeHtml(item.location) : ''}</span>
+                    <small>${item.rate ? 'R' + escapeHtml(item.rate) + (item.rateType ? ' / ' + escapeHtml(item.rateType) : '') : 'Rate on enquiry'}${item.createdAt ? ' &middot; ' + new Date(item.createdAt).toLocaleDateString() : ''}</small>
+                </div>
+            </div>`;
+        case 'content':
+            return `<div class="activity-item" onclick="viewContent('${item.id}')">
+                <div class="activity-item-icon" style="background:#f59e0b22;color:#f59e0b"><i class="fas fa-photo-film"></i></div>
+                <div class="activity-item-body">
+                    <h4>${escapeHtml(item.title || 'Untitled Content')}</h4>
+                    <span>${escapeHtml(item.type || 'Content')}${item.location ? ' &middot; ' + escapeHtml(item.location) : ''}</span>
+                    <small>${item.createdAt ? new Date(item.createdAt).toLocaleDateString() : ''}</small>
+                </div>
+            </div>`;
+        case 'forums':
+            return `<div class="activity-item" onclick="viewForumThread('${item.id}')">
+                <div class="activity-item-icon" style="background:#10b98122;color:#10b981"><i class="fas fa-comments"></i></div>
+                <div class="activity-item-body">
+                    <h4>${escapeHtml(item.title || 'Untitled Thread')}</h4>
+                    <span>${escapeHtml(item.category || 'Forum')}${item.pinned ? ' &middot; Pinned' : ''}</span>
+                    <small>${item.createdAt ? new Date(item.createdAt).toLocaleDateString() : ''}</small>
+                </div>
+            </div>`;
+        case 'events':
+            return `<div class="activity-item" onclick="viewEvent('${item.id}')">
+                <div class="activity-item-icon" style="background:#ef444422;color:#ef4444"><i class="fas fa-calendar"></i></div>
+                <div class="activity-item-body">
+                    <h4>${escapeHtml(item.name || 'Untitled Event')}</h4>
+                    <span>${escapeHtml(item.type || 'Event')}${item.venue ? ' &middot; ' + escapeHtml(item.venue) : ''}</span>
+                    <small>${item.eventDate ? new Date(item.eventDate).toLocaleDateString() : ''}${item.fee ? ' &middot; R' + escapeHtml(item.fee) : ''}</small>
+                </div>
+            </div>`;
+    }
+    return '';
+}
+
+function renderProviderActivity(containerId, type) {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+    const items = getProviderActivityItems(type);
+    const shown = items.slice(0, 5);
+    const nav = ACTIVITY_NAV[type] || '';
+    if (shown.length === 0) {
+        container.innerHTML = `<div class="activity-empty"><i class="fas fa-box-open"></i><p>No ${escapeHtml(type)} from this provider yet.</p></div>`;
+        return;
+    }
+    container.innerHTML = `<div class="activity-list">${shown.map(i => providerActivityCardHTML(type, i)).join('')}</div>
+        ${nav ? `<button class="btn btn-secondary btn-sm activity-view-more" onclick="navigateTo('${nav}')"><i class="fas fa-arrow-right"></i> View More ${escapeHtml(type)}</button>` : ''}`;
+}
+
+function switchProviderActivity(type, containerId, btn) {
+    const content = document.getElementById(containerId);
+    if (!content) return;
+    const card = content.closest('.profile-card');
+    if (card) card.querySelectorAll('.activity-tab').forEach(t => t.classList.remove('active'));
+    if (btn) btn.classList.add('active');
+    renderProviderActivity(containerId, type);
+}
+
 function viewDirectoryListing(id) {
     const listings = Storage.getListings();
     const l = listings.find(item => item.id === id);
@@ -1483,6 +1591,10 @@ function viewDirectoryListing(id) {
 
     renderReviewsList('profile', id);
     initStarRating('profileStarRating');
+
+    currentActivityOwner = { id: l.ownerId, name: l.ownerName };
+    renderProviderActivity('directoryActivityContent', 'experiences');
+
     navigateTo('directory-view');
 }
 
@@ -1535,6 +1647,8 @@ function handleListingSubmit(e) {
             sun: document.getElementById('listSun').checked
         },
         status: 'active',
+        ownerId: getCurrentProviderIdentity().id,
+        ownerName: getCurrentProviderIdentity().name,
         updatedAt: now
     };
 
@@ -2767,6 +2881,9 @@ function viewServiceDirectory(id) {
         avail.innerHTML = '<p class="empty-text">No availability set</p>';
     }
 
+    currentActivityOwner = { id: s.ownerId, name: s.ownerName };
+    renderProviderActivity('serviceActivityContent', 'experiences');
+
     navigateTo('service-directory-view');
 }
 
@@ -2996,11 +3113,13 @@ function handleServiceSubmit(e) {
     const services = Storage.getServices();
     if (id) {
         const idx = services.findIndex(s => s.id === id);
-        if (idx !== -1) { services[idx] = { ...services[idx], ...serviceData, updatedAt: new Date().toISOString() }; }
+        if (idx !== -1) { services[idx] = { ...services[idx], ...serviceData, ownerId: getCurrentProviderIdentity().id, ownerName: getCurrentProviderIdentity().name, updatedAt: new Date().toISOString() }; }
         showToast('Service updated!', 'success');
     } else {
         serviceData.id = generateId();
         serviceData.createdAt = new Date().toISOString();
+        serviceData.ownerId = getCurrentProviderIdentity().id;
+        serviceData.ownerName = getCurrentProviderIdentity().name;
         services.push(serviceData);
         showToast('Service published!', 'success');
     }
@@ -4126,13 +4245,16 @@ function handleContentSubmit(e) {
         }
         showToast('Content updated!', 'success');
     } else {
+        const owner = getCurrentProviderIdentity();
         content.push({
             id: generateId(),
             title, type, location, description,
             fileData: fileData || '',
             fileType: fileType || '',
             tags: [...contentTags],
-            providerId: currentProvider?.id || 'unknown',
+            providerId: owner.id,
+            ownerId: owner.id,
+            ownerName: owner.name,
             createdAt: new Date().toISOString()
         });
         showToast('Content published!', 'success');
@@ -4607,11 +4729,14 @@ function handleEventSubmit(e) {
         }
         showToast('Event updated!', 'success');
     } else {
+        const owner = getCurrentProviderIdentity();
         events.push({
             id: generateId(),
             name, type, eventDate, eventTime, venue, province, fee, dressCode, description,
             tags: [...eventTags],
-            providerId: currentProvider?.id || 'unknown',
+            providerId: owner.id,
+            ownerId: owner.id,
+            ownerName: owner.name,
             createdAt: new Date().toISOString()
         });
         showToast('Event published!', 'success');
