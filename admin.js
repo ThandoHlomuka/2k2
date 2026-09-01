@@ -262,6 +262,10 @@ function renderAdminDashboard() {
     const totalWallet = wallets.reduce((s, w) => s + w.balance, 0);
     document.getElementById('adminWalletTotal').textContent = `R${Math.round(totalWallet)}`;
 
+    const commissionTotal = Storage.getTransactions().filter(t => t.type === 'commission').reduce((s, t) => s + t.amount, 0);
+    const commissionEl = document.getElementById('adminCommissionTotal');
+    if (commissionEl) commissionEl.textContent = `R${Math.round(commissionTotal)}`;
+
     // Bar chart
     const chartData = [
         { label: 'Users', value: users.length, color: '#667eea' },
@@ -1400,8 +1404,8 @@ function renderAdminWallets() {
             tTbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:#a99c7e;padding:40px">No transactions yet</td></tr>';
         } else {
             tTbody.innerHTML = txns.slice(0, 50).map(t => {
-                const typeColors = { 'top-up': '#10b981', 'tip-sent': '#f59e0b', 'tip-received': '#10b981', 'booking-fee': '#ef4444', 'booking-confirmed': '#3b82f6', 'withdrawal': '#8b5cf6', 'admin-adjust': '#8a7b55', 'refund': '#06b6d4', 'credit': '#10b981', 'deduct': '#ef4444', 'experience-sale': '#7c3aed', 'experience-purchase': '#db2777' };
-                const typeLabels = { 'top-up': 'Top Up', 'tip-sent': 'Tip Sent', 'tip-received': 'Tip Received', 'booking-fee': 'Booking Fee', 'booking-confirmed': 'Booking Confirmed', 'withdrawal': 'Withdrawal', 'admin-adjust': 'Admin Adjust', 'refund': 'Refund', 'credit': 'Credit', 'deduct': 'Deduct', 'experience-sale': 'Experience Sale', 'experience-purchase': 'Experience Purchase' };
+                const typeColors = { 'top-up': '#10b981', 'tip-sent': '#f59e0b', 'tip-received': '#10b981', 'booking-fee': '#ef4444', 'booking-confirmed': '#3b82f6', 'withdrawal': '#8b5cf6', 'admin-adjust': '#8a7b55', 'refund': '#06b6d4', 'credit': '#10b981', 'deduct': '#ef4444', 'experience-sale': '#7c3aed', 'experience-purchase': '#db2777', 'commission': '#f59e0b' };
+                const typeLabels = { 'top-up': 'Top Up', 'tip-sent': 'Tip Sent', 'tip-received': 'Tip Received', 'booking-fee': 'Booking Fee', 'booking-confirmed': 'Booking Confirmed', 'withdrawal': 'Withdrawal', 'admin-adjust': 'Admin Adjust', 'refund': 'Refund', 'credit': 'Credit', 'deduct': 'Deduct', 'experience-sale': 'Experience Sale', 'experience-purchase': 'Experience Purchase', 'commission': 'Platform Commission' };
                 const color = typeColors[t.type] || '#8a7b55';
                 const label = typeLabels[t.type] || t.type;
                 return `

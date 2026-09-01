@@ -211,6 +211,36 @@ function currentUserOwnerId() {
     return id ? id : 'general';
 }
 
+// ==========================================
+// PLATFORM COMMISSION (10% on gross earnings)
+// A flat 10% commission is taken on every gross earning credited to a
+// provider's wallet and paid into the admin's own wallet.
+// ==========================================
+const PLATFORM_COMMISSION = 0.10;
+const ADMIN_WALLET_TYPE = 'admin';
+const ADMIN_WALLET_ID = 'platform';
+// Types that represent gross earnings from sales (commissionable). Refunds,
+// top-ups, admin-adjusts and other flows are intentionally NOT commissioned.
+const COMMISSIONABLE_TYPES = { 'booking-confirmed': 1, 'tip-received': 1, 'experience-sale': 1 };
+
+function adminWalletOwner() { return { ownerType: ADMIN_WALLET_TYPE, ownerId: ADMIN_WALLET_ID }; }
+
+// Credit the admin wallet with the 10% commission on a gross earning.
+function creditAdminCommission(grossAmount, sourceType, meta) {
+    if (!(grossAmount > 0)) return;
+    const commission = Math.round(grossAmount * PLATFORM_COMMISSION * 100) / 100;
+    if (commission <= 0) return;
+    const adm = adminWalletOwner();
+    adjustWallet(adm.ownerType, adm.ownerId, commission, 'commission',
+        `10% commission on ${sourceType || 'transaction'}`, Object.assign({ commissionOn: grossAmount, rate: PLATFORM_COMMISSION }, meta || {}));
+    return commission;
+}
+
+// True when a wallet credit represents gross earnings (subject to commission).
+function isCommissionableCredit(type, amount) {
+    return amount > 0 && !!COMMISSIONABLE_TYPES[type];
+}
+
 function getOrCreateWallet(ownerType, ownerId) {
     const wallets = Storage.getWallets();
     const walletId = getWalletId(ownerType, ownerId);
@@ -256,6 +286,9 @@ function adjustWallet(ownerType, ownerId, amount, type, description, meta = {}) 
         createdAt: new Date().toISOString()
     });
     Storage.setTransactions(transactions);
+    if (isCommissionableCredit(type, amount) && ownerType !== ADMIN_WALLET_TYPE) {
+        creditAdminCommission(amount, type, { sourceType: type, sourceWallet: walletId });
+    }
     return wallet.balance;
 }
 
@@ -4028,8 +4061,8 @@ function renderUserWallet() {
     }
 
     container.innerHTML = txns.map(t => {
-        const typeColors = { 'top-up': '#10b981', 'tip-sent': '#f59e0b', 'tip-received': '#10b981', 'booking-fee': '#ef4444', 'booking-confirmed': '#3b82f6', 'booking-escrow': '#8b5cf6', 'booking-escrow-released': '#8b5cf6', 'booking-refund': '#06b6d4', 'withdrawal': '#8b5cf6', 'admin-adjust': '#8a7b55', 'refund': '#06b6d4' };
-        const typeLabels = { 'top-up': 'Top Up', 'tip-sent': 'Tip Sent', 'tip-received': 'Tip Received', 'booking-fee': 'Booking Fee', 'booking-confirmed': 'Booking Confirmed', 'booking-escrow': 'In Escrow', 'booking-escrow-released': 'Escrow Released', 'booking-refund': 'Booking Refund', 'withdrawal': 'Withdrawal', 'admin-adjust': 'Admin Adjust', 'refund': 'Refund' };
+        const typeColors = { 'top-up': '#10b981', 'tip-sent': '#f59e0b', 'tip-received': '#10b981', 'booking-fee': '#ef4444', 'booking-confirmed': '#3b82f6', 'booking-escrow': '#8b5cf6', 'booking-escrow-released': '#8b5cf6', 'booking-refund': '#06b6d4', 'withdrawal': '#8b5cf6', 'admin-adjust': '#8a7b55', 'refund': '#06b6d4', 'commission': '#f59e0b' };
+        const typeLabels = { 'top-up': 'Top Up', 'tip-sent': 'Tip Sent', 'tip-received': 'Tip Received', 'booking-fee': 'Booking Fee', 'booking-confirmed': 'Booking Confirmed', 'booking-escrow': 'In Escrow', 'booking-escrow-released': 'Escrow Released', 'booking-refund': 'Booking Refund', 'withdrawal': 'Withdrawal', 'admin-adjust': 'Admin Adjust', 'refund': 'Refund', 'commission': 'Platform Commission' };
         const color = typeColors[t.type] || '#8a7b55';
         const label = typeLabels[t.type] || t.type;
         return `
@@ -4135,8 +4168,8 @@ function renderProviderWallet() {
     }
 
     container.innerHTML = allProviderTxns.slice(0, 30).map(t => {
-        const typeColors = { 'top-up': '#10b981', 'tip-sent': '#f59e0b', 'tip-received': '#10b981', 'booking-fee': '#ef4444', 'booking-confirmed': '#3b82f6', 'booking-escrow': '#8b5cf6', 'booking-escrow-released': '#8b5cf6', 'booking-refund': '#06b6d4', 'withdrawal': '#8b5cf6', 'admin-adjust': '#8a7b55', 'refund': '#06b6d4' };
-        const typeLabels = { 'top-up': 'Top Up', 'tip-sent': 'Tip Sent', 'tip-received': 'Tip Received', 'booking-fee': 'Booking Fee', 'booking-confirmed': 'Booking Confirmed', 'booking-escrow': 'In Escrow', 'booking-escrow-released': 'Escrow Released', 'booking-refund': 'Booking Refund', 'withdrawal': 'Withdrawal', 'admin-adjust': 'Admin Adjust', 'refund': 'Refund' };
+        const typeColors = { 'top-up': '#10b981', 'tip-sent': '#f59e0b', 'tip-received': '#10b981', 'booking-fee': '#ef4444', 'booking-confirmed': '#3b82f6', 'booking-escrow': '#8b5cf6', 'booking-escrow-released': '#8b5cf6', 'booking-refund': '#06b6d4', 'withdrawal': '#8b5cf6', 'admin-adjust': '#8a7b55', 'refund': '#06b6d4', 'commission': '#f59e0b' };
+        const typeLabels = { 'top-up': 'Top Up', 'tip-sent': 'Tip Sent', 'tip-received': 'Tip Received', 'booking-fee': 'Booking Fee', 'booking-confirmed': 'Booking Confirmed', 'booking-escrow': 'In Escrow', 'booking-escrow-released': 'Escrow Released', 'booking-refund': 'Booking Refund', 'withdrawal': 'Withdrawal', 'admin-adjust': 'Admin Adjust', 'refund': 'Refund', 'commission': 'Platform Commission' };
         const color = typeColors[t.type] || '#8a7b55';
         const label = typeLabels[t.type] || t.type;
         return `
@@ -4351,13 +4384,14 @@ let dashWalletChart = null;
 const TYPE_COLORS = {
     'top-up': '#10b981', 'tip-sent': '#f59e0b', 'tip-received': '#f59e0b',
     'booking-fee': '#ef4444', 'booking-confirmed': '#3b82f6', 'withdrawal': '#8b5cf6',
-    'admin-adjust': '#8a7b55', 'refund': '#06b6d4'
+    'admin-adjust': '#8a7b55', 'refund': '#06b6d4', 'commission': '#f59e0b'
 };
 
 const TYPE_LABELS = {
     'top-up': 'Top Up', 'tip-sent': 'Tips Sent', 'tip-received': 'Tips Received',
     'booking-fee': 'Booking Fees', 'booking-confirmed': 'Booking Income',
-    'withdrawal': 'Withdrawals', 'admin-adjust': 'Admin Adjust', 'refund': 'Refunds'
+    'withdrawal': 'Withdrawals', 'admin-adjust': 'Admin Adjust', 'refund': 'Refunds',
+    'commission': 'Platform Commission'
 };
 
 function filterTxnsByPeriod(txns, period) {
