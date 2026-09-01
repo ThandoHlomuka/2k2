@@ -1620,11 +1620,16 @@
                 <div class="modal-icon" style="background: linear-gradient(135deg, #c9a227, #a07d12); color:#fff"><i class="fas fa-user-plus"></i></div>
                 <h2>Join 2k2</h2>
                 <p id="authPromptText" style="color:#8a7b55;font-size:0.92rem;margin:4px 0 18px">Create a free account to continue. Choose your account type:</p>
-                <div style="display:flex;flex-direction:column;gap:10px">
-                    <button class="btn btn-primary" onclick="window.location.href='register.html'"><i class="fas fa-user"></i> Join as a Member</button>
-                    <button class="btn btn-primary provider-btn" onclick="window.location.href='register.html?plan=provider'"><i class="fas fa-briefcase"></i> Join as a Service Provider</button>
-                    <button class="btn btn-secondary" onclick="window.location.href='login.html'"><i class="fas fa-right-to-bracket"></i> I Already Have an Account</button>
+                <div id="authPromptActions" style="display:flex;flex-direction:column;gap:10px">
+                    <button class="btn btn-primary" id="authMemberBtn" onclick="window.location.href='register.html'"><i class="fas fa-user"></i> Join as a Member</button>
+                    <button class="btn btn-primary provider-btn" id="authProviderBtn" onclick="applyAsProvider()"><i class="fas fa-briefcase"></i> Join as a Service Provider</button>
+                    <button class="btn btn-secondary" id="authLoginBtn" onclick="window.location.href='login.html'"><i class="fas fa-right-to-bracket"></i> I Already Have an Account</button>
                     <button class="btn btn-secondary" onclick="closeAuthPrompt()" style="background:transparent;box-shadow:none">Maybe Later</button>
+                </div>
+                <div id="authProviderPending" style="display:none">
+                    <div style="padding:10px 0 6px"><i class="fas fa-hourglass-half" style="font-size:1.7rem;color:#d4a853"></i></div>
+                    <p style="color:#8a7b55;font-size:0.92rem;line-height:1.55;margin:0 0 16px">You've already submitted your Service Provider request. Our team is reviewing it — you'll get provider access here once it's approved.</p>
+                    <button class="btn btn-secondary" onclick="closeAuthPrompt()" style="background:transparent;box-shadow:none">Ok, Got It</button>
                 </div>
             </div>
         </div>
@@ -3676,7 +3681,7 @@
       });
     })();
     </script>
-    <script src="script.js?v=36"></script>
+    <script src="script.js?v=37"></script>
     <script src="products.js?v=21"></script>
     <script>
         let onbSlide = 0;

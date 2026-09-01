@@ -1021,6 +1021,7 @@ function requireSignIn(actionText) {
         const text = document.getElementById('authPromptText');
         if (text) text.textContent = (actionText || 'Continue') + ' Create a free account to unlock this feature. Choose Member or Service Provider.';
         modal.classList.add('active');
+        updateAuthPrompt();
     } else {
         openSignInToast();
     }
@@ -1030,6 +1031,52 @@ function requireSignIn(actionText) {
 function closeAuthPrompt() { document.getElementById('authPromptModal')?.classList.remove('active'); }
 
 function openSignInToast() { showToast('Please sign in to continue.', 'info'); }
+
+function applyAsProvider() {
+    window.location.href = currentAuthId() ? 'upgrade.html' : 'register.html?plan=provider';
+}
+
+async function hasPendingProviderRequest() {
+    const client = window._2k2 && typeof window._2k2.getSupabase === 'function' ? window._2k2.getSupabase() : null;
+    const id = currentAuthId();
+    if (!client || !id) return false;
+    try {
+        const { data } = await client.from('provider_upgrade_requests')
+            .select('id').eq('user_id', id).eq('status', 'pending').limit(1);
+        return !!(data && data.length);
+    } catch (e) { return false; }
+}
+
+async function updateAuthPrompt() {
+    const actions = document.getElementById('authPromptActions');
+    const pendingBox = document.getElementById('authProviderPending');
+    if (!actions || !pendingBox) return;
+    const id = currentAuthId();
+    let alreadySubmitted = false;
+    if (id) {
+        alreadySubmitted = await hasPendingProviderRequest();
+    } else {
+        alreadySubmitted = localStorage.getItem('k2_provider_requested') === '1';
+    }
+    const memberBtn = document.getElementById('authMemberBtn');
+    const providerBtn = document.getElementById('authProviderBtn');
+    const loginBtn = document.getElementById('authLoginBtn');
+    if (alreadySubmitted) {
+        if (memberBtn) memberBtn.style.display = 'none';
+        if (providerBtn) providerBtn.style.display = 'none';
+        if (loginBtn) loginBtn.style.display = 'none';
+        actions.style.display = 'none';
+        pendingBox.style.display = 'block';
+        return;
+    }
+    pendingBox.style.display = 'none';
+    actions.style.display = '';
+    if (id) {
+        if (memberBtn) memberBtn.style.display = 'none';
+        if (loginBtn) loginBtn.style.display = 'none';
+        if (providerBtn) providerBtn.innerHTML = '<i class="fas fa-briefcase"></i> Apply to Become a Service Provider';
+    }
+}
 
 function openPhotoModal(src) {
     const modal = document.getElementById('photoModal');

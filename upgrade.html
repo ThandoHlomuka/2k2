@@ -172,6 +172,7 @@
             status: 'pending'
           });
           if (error) { showErr(error.message || 'Could not submit your request.'); payBtn.disabled = false; payBtn.innerHTML = '<i class="fa-solid fa-lock"></i>&nbsp; Submit Payment & Request Approval'; return; }
+          localStorage.setItem('k2_provider_requested', '1');
           form.style.display = 'none';
           document.getElementById('pendingBox').style.display = 'block';
         } catch (ex) {
