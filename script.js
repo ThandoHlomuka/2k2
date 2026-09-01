@@ -555,6 +555,55 @@ function navigateTo(page) {
     setActiveBottomNav(page);
 }
 
+// Re-render the page that is currently visible (called after Supabase
+// hydration so fresh remote data shows without a manual refresh).
+function rerenderCurrentPage() {
+    if (typeof renderSaveButtons === 'function') renderSaveButtons();
+    const active = document.querySelector('.page.active');
+    if (!active) return;
+    const id = active.id;
+    const r = {
+        'page-user-dashboard': () => { renderUserProfiles(); renderUserDashboardStats(); },
+        'page-my-network': () => renderMyNetwork(),
+        'page-provider-dashboard': () => renderProviderProfiles(),
+        'page-directory': () => renderDirectory(),
+        'page-provider-directory': () => renderListings(),
+        'page-venue-directory': () => renderVenueDirectory(),
+        'page-provider-venue-directory': () => renderVenueListings(),
+        'page-ads-browse': () => renderAdsBrowse(),
+        'page-user-ads': () => renderUserAds(),
+        'page-provider-ads': () => renderProviderAds(),
+        'page-services-directory': () => renderServicesDirectory(),
+        'page-provider-services': () => renderProviderServices(),
+        'page-user-bookings': () => renderUserBookings(),
+        'page-provider-bookings': () => renderProviderBookings(),
+        'page-provider-tips': () => renderProviderTips(),
+        'page-user-wallet': () => renderUserWallet(),
+        'page-provider-wallet': () => renderProviderWallet(),
+        'page-content-directory': () => renderContentDirectory(),
+        'page-provider-content': () => renderProviderContent(),
+        'page-events-directory': () => renderEventsDirectory(),
+        'page-provider-events': () => renderProviderEvents(),
+        'page-gigs-browse': () => renderGigsBrowse(),
+        'page-provider-gigs': () => renderProviderGigs(),
+        'page-inbox': () => renderInbox(),
+        'page-message-view': () => renderMessageThread(),
+        'page-online-users': () => renderOnlineUsers(),
+        'page-saved-items': () => renderSavedItems(),
+        'page-downloads': () => renderDownloads(),
+        'page-experiences-browse': () => renderExperiencesBrowse(),
+        'page-experiences-my': () => renderMyGames(),
+        'page-fantasy-requests': () => renderFantasyRequests(),
+        'page-provider-experiences': () => renderProviderExperiences(),
+        'page-provider-fantasy-requests': () => renderProviderFantasyRequests(),
+        'page-products-directory': () => renderProductsBrowser(),
+        'page-provider-products': () => renderProviderProducts(),
+        'page-provider-orders': () => renderProviderOrders()
+    };
+    const fn = r[id];
+    if (fn) { try { fn(); } catch (e) {} }
+}
+
 function setActiveBottomNav(page) {
     const nav = document.getElementById('bottomNav');
     if (!nav) return;
@@ -1394,8 +1443,12 @@ function editUserById(id) {
 }
 
 function editUserProfile() {
-    if (!currentViewUserId) return;
-    editUserById(currentViewUserId);
+    let id = currentViewUserId;
+    if (!id) {
+        const mine = getUserProfilesByAuth();
+        if (mine.length > 0) id = mine[0].id;
+    }
+    if (id) editUserById(id);
 }
 
 function populateUserForm(u) {
@@ -1698,7 +1751,11 @@ function editProviderById(id) {
     populateProviderForm(p);
 }
 
-function editProviderProfile() { if (currentViewProviderId) editProviderById(currentViewProviderId); }
+function editProviderProfile() {
+    let id = currentViewProviderId;
+    if (!id) id = findCurrentProviderId();
+    if (id) editProviderById(id);
+}
 
 function populateProviderForm(p) {
     document.getElementById('providerProfileId').value = p.id;
@@ -1837,7 +1894,7 @@ function renderDirectory() {
     const container = document.getElementById('directoryList');
     if (!container) return;
 
-    let filtered = listings.filter(l => l.status === 'active');
+    let filtered = listings.filter(l => !l.status || l.status === 'active');
     
     if (currentDirectoryFilter !== 'all') {
         filtered = filtered.filter(l => l.category === currentDirectoryFilter);
@@ -2457,7 +2514,7 @@ function renderVenueDirectory() {
     const container = document.getElementById('venueDirectoryList');
     if (!container) return;
 
-    let filtered = venues.filter(v => v.status === 'active');
+    let filtered = venues.filter(v => !v.status || v.status === 'active');
 
     if (currentVenueDirectoryFilter !== 'all') {
         filtered = filtered.filter(v => v.category === currentVenueDirectoryFilter);
@@ -2797,7 +2854,7 @@ function renderAdsBrowse() {
     const container = document.getElementById('adsBrowseList');
     if (!container) return;
 
-    let filtered = ads.filter(a => a.status === 'active');
+    let filtered = ads.filter(a => !a.status || a.status === 'active');
 
     if (currentAdsFilter !== 'all') {
         filtered = filtered.filter(a => a.category === currentAdsFilter);
@@ -7177,7 +7234,7 @@ function filterProviderExperiences() {
 }
 
 function renderExperiencesBrowse() {
-    const experiences = Storage.getExperiences().filter(x => x.status === 'active');
+    const experiences = Storage.getExperiences().filter(x => !x.status || x.status === 'active');
     const walletBalanceEl = document.getElementById('expWalletBalance');
     if (walletBalanceEl) walletBalanceEl.textContent = 'R' + getWalletBalance('user', currentUserOwnerId());
     let filtered = [...experiences];

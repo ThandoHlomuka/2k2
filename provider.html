@@ -479,10 +479,10 @@
                     <div class="profile-card">
                         <h2><i class="fas fa-image"></i> Business Logo</h2>
                         <div class="photo-upload">
-                            <div class="photo-preview" id="providerLogoPreview">
+                            <label for="providerLogoInput" class="photo-preview" id="providerLogoPreview">
                                 <i class="fas fa-cloud-upload-alt"></i>
                                 <span>Click to upload logo</span>
-                            </div>
+                            </label>
                             <input type="file" id="providerLogoInput" accept="image/*" onchange="previewPhoto(this, 'providerLogoPreview')">
                         </div>
                     </div>
@@ -955,10 +955,10 @@
                     <div class="profile-card">
                         <h2><i class="fas fa-image"></i> Profile Photo</h2>
                         <div class="photo-upload">
-                            <div class="photo-preview" id="listingPhotoPreview">
+                            <label for="listingPhotoInput" class="photo-preview" id="listingPhotoPreview">
                                 <i class="fas fa-camera"></i>
                                 <span>Click to upload</span>
-                            </div>
+                            </label>
                             <input type="file" id="listingPhotoInput" accept="image/*" onchange="previewPhoto(this, 'listingPhotoPreview')">
                         </div>
                     </div>
@@ -1428,10 +1428,10 @@
                     <div class="profile-card">
                         <h2><i class="fas fa-image"></i> Cover Photo</h2>
                         <div class="photo-upload">
-                            <div class="photo-preview" id="servicePhotoPreview">
+                            <label for="servicePhotoInput" class="photo-preview" id="servicePhotoPreview">
                                 <i class="fas fa-camera"></i>
                                 <span>Click to upload</span>
-                            </div>
+                            </label>
                             <input type="file" id="servicePhotoInput" accept="image/*" onchange="previewPhoto(this, 'servicePhotoPreview')">
                         </div>
                     </div>
@@ -1513,10 +1513,10 @@
                             </div>
                             <div class="form-group">
                                 <label>Cover Photo</label>
-                                <div class="photo-preview" id="productCoverPreview">
+                                <label for="productPhotoInput" class="photo-preview" id="productCoverPreview">
                                     <i class="fas fa-camera"></i>
                                     <span>Click to upload</span>
-                                </div>
+                                </label>
                                 <input type="file" id="productPhotoInput" accept="image/*" onchange="previewPhoto(this, 'productCoverPreview')">
                             </div>
                         </div>
@@ -2087,10 +2087,10 @@
                     <div class="profile-card">
                         <h2><i class="fas fa-image"></i> Cover Photo</h2>
                         <div class="photo-upload">
-                            <div class="photo-preview" id="venuePhotoPreview">
+                            <label for="venuePhotoInput" class="photo-preview" id="venuePhotoPreview">
                                 <i class="fas fa-camera"></i>
                                 <span>Click to upload</span>
-                            </div>
+                            </label>
                             <input type="file" id="venuePhotoInput" accept="image/*" onchange="previewPhoto(this, 'venuePhotoPreview')">
                         </div>
                     </div>
@@ -3189,7 +3189,7 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
     <script src="config.js?v=20"></script>
     <script src="auth.js?v=20"></script>
-    <script src="db.js?v=21"></script>
+    <script src="db.js?v=22"></script>
     <script src="presence.js?v=21"></script>
     <script>
     // Gate: only approved Service Providers may access this portal.
@@ -3217,7 +3217,7 @@
       });
     })();
     </script>
-    <script src="script.js?v=39"></script>
+    <script src="script.js?v=40"></script>
     <script src="products.js?v=21"></script>
 </body>
 </html>

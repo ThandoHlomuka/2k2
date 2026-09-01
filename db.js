@@ -130,6 +130,13 @@
       // Offline / RLS failure: fall back to localStorage-only (degraded).
       readyState = true;
     }
+
+    // After hydration, re-render the currently visible page so fresh remote
+    // data appears immediately (no manual refresh needed).
+    try {
+      var rerender = window.rerenderCurrentPage;
+      if (typeof rerender === 'function') rerender();
+    } catch (e) {}
   }
 
   _2k2.DB = {
