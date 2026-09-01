@@ -70,7 +70,9 @@ h1, h2, h3, h4 {
     top: 0;
     left: 0;
     width: var(--sidebar-width);
+    max-width: 100vw;
     height: 100vh;
+    height: 100dvh;
     background: linear-gradient(180deg, #0a0a0a 0%, #141006 100%);
     z-index: 1000;
     display: flex;
@@ -2023,11 +2025,37 @@ h1, h2, h3, h4 {
 @media (max-width: 768px) {
     .sidebar {
         width: 100%;
+        max-width: 100vw;
+        height: 100vh;
+        height: 100dvh;
         box-shadow: none;
     }
 
     .sidebar.hidden {
         transform: translateX(-100%);
+    }
+
+    /* Compact spacing so the full menu fits on small screens without the user
+       having to hunt for items like Profile. */
+    .sidebar-header {
+        padding: 16px 16px;
+    }
+
+    .nav-item {
+        padding: 10px 14px;
+        font-size: 0.88rem;
+    }
+
+    .nav-section-title {
+        padding: 6px 14px 2px;
+    }
+
+    .nav-menu {
+        padding: 12px 10px 20px 10px;
+    }
+
+    .sidebar-footer {
+        padding-bottom: max(12px, env(safe-area-inset-bottom));
     }
 
     .main-content {
@@ -7056,6 +7084,8 @@ h1, h2, h3, h4 {
 
 .k2-tour-tooltip {
     position: fixed;
+    /* Hidden until a tour positions it (avoids an empty box sitting on screen). */
+    display: none;
     /* Above the lifted sidebar (11002) so the menu NEVER covers the tooltip.
        Appended directly to <body>, outside the dim overlay's stacking
        context, so this z-index is not capped by the overlay. */

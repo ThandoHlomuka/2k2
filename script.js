@@ -7602,7 +7602,7 @@ const PORT_TOUR_STEPS = {
     ],
     userBottom: [
         { id: 'tourBH', el: () => document.querySelector('#bottomNav .bottom-nav-item[data-page="user-dashboard"]'), title: 'Home', text: 'Your dashboard and quick access hub.' },
-        { id: 'tourBB', el: () => document.querySelector('#bottomNav .bottom-nav-item[data-page="directory"]'), title: 'Browse', text: 'Browse provider profiles, venues and listings.' },
+        { id: 'tourBMenu', el: () => document.getElementById('bottomNavMenu'), title: 'Menu', text: 'Open the main navigation menu to jump anywhere on 2k2.' },
         { id: 'tourBM', el: () => document.querySelector('#bottomNav .bottom-nav-item[data-page="inbox"]'), title: 'Messages', text: 'Open your private inbox.' },
         { id: 'tourBP', el: () => document.querySelector('#bottomNav .bottom-nav-item[data-page="user-profile"]'), title: 'Profile', text: 'View your public profile.' }
     ],
@@ -7648,7 +7648,7 @@ const PORT_TOUR_STEPS = {
     ],
     providerBottom: [
         { id: 'tourPBH', el: () => document.querySelector('#bottomNav .bottom-nav-item[data-page="provider-dashboard"]'), title: 'Home', text: 'Your provider dashboard.' },
-        { id: 'tourPBB', el: () => document.querySelector('#bottomNav .bottom-nav-item[data-page="provider-directory"]'), title: 'Browse', text: 'Browse your listings and offerings.' },
+        { id: 'tourPBMenu', el: () => document.getElementById('bottomNavMenu'), title: 'Menu', text: 'Open the main navigation menu to manage your listings, bookings and earnings.' },
         { id: 'tourPBM', el: () => document.querySelector('#bottomNav .bottom-nav-item[data-page="inbox"]'), title: 'Messages', text: 'Open your client inbox.' },
         { id: 'tourPBP', el: () => document.querySelector('#bottomNav .bottom-nav-item[data-page="provider-profile"]'), title: 'Profile', text: 'View your provider profile.' }
     ]
@@ -7726,7 +7726,11 @@ function ensureTourDOM() {
     document.getElementById('k2TourClose').addEventListener('click', skipSidebarTour);
     document.getElementById('k2TourSkip').addEventListener('click', skipSidebarTour);
     document.getElementById('k2TourPrev').addEventListener('click', () => stepTour(-1));
-    document.getElementById('k2TourNext').addEventListener('click', () => stepTour(1));
+    document.getElementById('k2TourNext').addEventListener('click', () => {
+        // "Done" (last step) must end the tour immediately; otherwise advance.
+        if (tourState.index >= tourState.steps.length - 1) finishTour();
+        else stepTour(1);
+    });
 }
 
 function tourKeyHandler(e) {
@@ -7754,7 +7758,14 @@ function startSidebarTour() {
 }
 
 function markTourDone() {
-    localStorage.setItem(tourDoneKey(), '1');
+    try { localStorage.setItem(tourDoneKey(), '1'); } catch (e) { /* storage unavailable/private mode */ }
+}
+
+function hideTourChrome() {
+    const h = document.getElementById('k2TourHighlight');
+    const t = document.getElementById('k2TourTooltip');
+    if (h) h.style.display = 'none';
+    if (t) t.style.display = 'none';
 }
 
 function tourCleanup() {
@@ -7776,6 +7787,7 @@ function skipSidebarTour() {
     document.getElementById('k2TourTrigger').classList.remove('hidden');
     document.removeEventListener('keydown', tourKeyHandler);
     tourCleanup();
+    hideTourChrome();
 }
 
 function stepTour(dir) {
@@ -7797,6 +7809,7 @@ function finishTour() {
     if (tr) tr.classList.remove('hidden');
     document.removeEventListener('keydown', tourKeyHandler);
     tourCleanup();
+    hideTourChrome();
 }
 
 function renderTourStep() {
@@ -7846,6 +7859,7 @@ function renderTourStep() {
         setTimeout(() => positionTour(el), 320);
     } else {
         document.getElementById('k2TourHighlight').style.display = 'none';
+        document.getElementById('k2TourTooltip').style.display = 'block';
         document.getElementById('k2TourTooltip').style.top = '40%';
         document.getElementById('k2TourTooltip').style.left = '50%';
         document.getElementById('k2TourTooltip').style.transform = 'translate(-50%, -50%)';
@@ -7858,6 +7872,7 @@ function positionTour(el) {
     const tip = document.getElementById('k2TourTooltip');
     const pad = 6;
     h.style.display = 'block';
+    tip.style.display = 'block';
     h.style.top = (rect.top - pad) + 'px';
     h.style.left = (rect.left - pad) + 'px';
     h.style.width = (rect.width + pad * 2) + 'px';

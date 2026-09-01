@@ -51,11 +51,9 @@ function navigateTo(page) {
     if (page === 'admin-help-queries') renderAdminHelpQueries();
 
     const sidebar = document.getElementById('sidebar');
+    if (sidebar && window.innerWidth <= 768) sidebar.classList.add('hidden');
     const main = document.getElementById('mainContent');
-    if (window.innerWidth <= 768) {
-        sidebar.classList.remove('active');
-        main.classList.remove('shifted');
-    }
+    if (main) main.classList.remove('shifted');
     setAdminBottomNav(page);
 }
 
