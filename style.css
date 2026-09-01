@@ -7069,7 +7069,7 @@ h1, h2, h3, h4 {
     position: fixed;
     inset: 0;
     z-index: 11000;
-    background: rgba(10, 10, 10, 0.78);
+    background: rgba(10, 10, 15, 0.30);
     display: none;
 }
 
@@ -7081,9 +7081,9 @@ h1, h2, h3, h4 {
     position: fixed;
     z-index: 11001;
     border-radius: 10px;
-    box-shadow: 0 0 0 9999px rgba(10, 10, 10, 0.78),
+    box-shadow: 0 0 0 9999px rgba(10, 10, 15, 0.30),
                 0 0 0 2px var(--gold, #d4a853),
-                0 0 22px rgba(212, 168, 83, 0.55);
+                0 0 18px rgba(212, 168, 83, 0.6);
     pointer-events: none;
     display: none;
     transition: all 0.3s ease;
@@ -7091,11 +7091,11 @@ h1, h2, h3, h4 {
 
 .k2-tour-tooltip {
     position: fixed;
-    z-index: 11002;
+    z-index: 11003;
     width: 340px;
     max-width: calc(100vw - 32px);
-    background: var(--card-bg, #fdf9ef);
-    border: 1px solid var(--border, #e6dec8);
+    background: #fff;
+    border: 2px solid var(--gold, #d4a853);
     border-radius: 16px;
     padding: 18px 18px 14px;
     box-shadow: 0 18px 44px rgba(0, 0, 0, 0.35);
@@ -7211,5 +7211,34 @@ h1, h2, h3, h4 {
 
 .k2-tour-btn.k2-tour-prev {
     display: none;
+}
+
+/* Lift the sidebar/bottom-nav above the dim overlay so the menu buttons
+   stay visible (not hidden by the overlay) while the tour is running. */
+.k2-tour-lift {
+    position: fixed !important;
+    z-index: 11002 !important;
+}
+
+/* Highlight the current menu button as the tour steps through it. */
+.k2-tour-active-item {
+    position: relative;
+    z-index: 1;
+    background: var(--gold, #d4a853) !important;
+    color: #211a0d !important;
+    border-radius: 10px !important;
+    box-shadow: 0 0 0 3px #fff, 0 6px 22px rgba(0, 0, 0, 0.45);
+    transform: scale(1.04);
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.k2-tour-active-item i {
+    color: #211a0d !important;
+}
+
+.k2-tour-active-item span,
+.k2-tour-active-item .nav-label,
+.k2-tour-active-item .menu-label {
+    color: #211a0d !important;
 }
 

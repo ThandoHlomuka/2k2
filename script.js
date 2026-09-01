@@ -7050,7 +7050,7 @@ function completeOnboarding() {
 // ==========================================
 const TOUR_LS_KEY = 'k2_sidebar_tour_done';
 function tourDoneKey() { return TOUR_LS_KEY + '_' + currentTourPort(); }
-const tourState = { active: false, index: 0, steps: [] };
+const tourState = { active: false, index: 0, steps: [], prevEl: null };
 
 const PORT_TOUR_STEPS = {
     user: [
@@ -7218,11 +7218,26 @@ function startSidebarTour() {
     document.addEventListener('keydown', tourKeyHandler);
     document.getElementById('k2TourTrigger').classList.add('hidden');
     document.getElementById('k2TourOverlay').classList.add('active');
+    const liftSidebar = document.getElementById('sidebar');
+    if (liftSidebar) liftSidebar.classList.add('k2-tour-lift');
+    const liftBottom = document.getElementById('bottomNav');
+    if (liftBottom) liftBottom.classList.add('k2-tour-lift');
     renderTourStep();
 }
 
 function markTourDone() {
     localStorage.setItem(tourDoneKey(), '1');
+}
+
+function tourCleanup() {
+    const ls = document.getElementById('sidebar');
+    if (ls) ls.classList.remove('k2-tour-lift');
+    const lb = document.getElementById('bottomNav');
+    if (lb) lb.classList.remove('k2-tour-lift');
+    if (tourState.prevEl) {
+        tourState.prevEl.classList.remove('k2-tour-active-item');
+        tourState.prevEl = null;
+    }
 }
 
 function skipSidebarTour() {
@@ -7232,6 +7247,7 @@ function skipSidebarTour() {
     document.getElementById('k2TourOverlay').classList.remove('active');
     document.getElementById('k2TourTrigger').classList.remove('hidden');
     document.removeEventListener('keydown', tourKeyHandler);
+    tourCleanup();
 }
 
 function stepTour(dir) {
@@ -7252,6 +7268,7 @@ function finishTour() {
     const tr = document.getElementById('k2TourTrigger');
     if (tr) tr.classList.remove('hidden');
     document.removeEventListener('keydown', tourKeyHandler);
+    tourCleanup();
 }
 
 function renderTourStep() {
@@ -7261,6 +7278,11 @@ function renderTourStep() {
     const total = tourState.steps.length;
     const port = currentTourPort();
     const cfg = PORT_CONTENT[port];
+
+    if (tourState.prevEl && tourState.prevEl !== el) {
+        tourState.prevEl.classList.remove('k2-tour-active-item');
+        tourState.prevEl = null;
+    }
 
     const badge = document.getElementById('k2TourBadge');
     if (badge) badge.innerHTML = '<i class="fas ' + (port === 'provider' ? 'fa-briefcase' : 'fa-user') + '"></i> ' + cfg.badge +
@@ -7290,6 +7312,8 @@ function renderTourStep() {
     prev.style.display = tourState.index === 0 ? 'none' : '';
 
     if (el) {
+        el.classList.add('k2-tour-active-item');
+        tourState.prevEl = el;
         el.scrollIntoView({ block: 'center', behavior: 'smooth' });
         setTimeout(() => positionTour(el), 320);
     } else {
