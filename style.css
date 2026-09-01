@@ -7033,3 +7033,183 @@ h1, h2, h3, h4 {
     width: 100%;
 }
 
+/* ============================================
+   Guided Tour (tooltip coachmarks)
+   ============================================ */
+.k2-tour-trigger {
+    position: fixed;
+    right: 20px;
+    bottom: 86px;
+    z-index: 12000;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 16px;
+    border: none;
+    border-radius: 999px;
+    background: linear-gradient(135deg, var(--primary, #c9a227), var(--primary-dark, #a07d12));
+    color: #211a0d;
+    font-weight: 700;
+    font-size: 0.85rem;
+    cursor: pointer;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.k2-tour-trigger:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.3);
+}
+
+.k2-tour-trigger.hidden {
+    display: none;
+}
+
+.k2-tour-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 11000;
+    background: rgba(10, 10, 10, 0.78);
+    display: none;
+}
+
+.k2-tour-overlay.active {
+    display: block;
+}
+
+.k2-tour-highlight {
+    position: fixed;
+    z-index: 11001;
+    border-radius: 10px;
+    box-shadow: 0 0 0 9999px rgba(10, 10, 10, 0.78),
+                0 0 0 2px var(--gold, #d4a853),
+                0 0 22px rgba(212, 168, 83, 0.55);
+    pointer-events: none;
+    display: none;
+    transition: all 0.3s ease;
+}
+
+.k2-tour-tooltip {
+    position: fixed;
+    z-index: 11002;
+    width: 340px;
+    max-width: calc(100vw - 32px);
+    background: var(--card-bg, #fdf9ef);
+    border: 1px solid var(--border, #e6dec8);
+    border-radius: 16px;
+    padding: 18px 18px 14px;
+    box-shadow: 0 18px 44px rgba(0, 0, 0, 0.35);
+    color: var(--text-primary, #211a0d);
+}
+
+.k2-tour-close {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    width: 28px;
+    height: 28px;
+    border: none;
+    border-radius: 50%;
+    background: transparent;
+    color: var(--text-secondary, #8a7b55);
+    cursor: pointer;
+    font-size: 0.95rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.k2-tour-close:hover {
+    background: rgba(0, 0, 0, 0.06);
+    color: var(--text-primary, #211a0d);
+}
+
+.k2-tour-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    border-radius: 999px;
+    background: var(--primary, #c9a227)18;
+    color: var(--primary-dark, #a07d12);
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    margin-bottom: 8px;
+}
+
+.k2-tour-title {
+    font-size: 1.05rem;
+    margin: 0 0 6px;
+    color: var(--text-primary, #211a0d);
+}
+
+.k2-tour-text {
+    font-size: 0.88rem;
+    line-height: 1.5;
+    color: var(--text-secondary, #8a7b55);
+    margin: 0 0 12px;
+}
+
+.k2-tour-progress {
+    display: flex;
+    gap: 5px;
+    margin-bottom: 12px;
+}
+
+.k2-tour-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--border, #e6dec8);
+    transition: background 0.2s ease;
+}
+
+.k2-tour-dot.active {
+    background: var(--primary, #c9a227);
+}
+
+.k2-tour-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.k2-tour-btn {
+    padding: 8px 12px;
+    border: 1px solid var(--border, #e6dec8);
+    border-radius: 10px;
+    background: #fff;
+    color: var(--text-primary, #211a0d);
+    font-size: 0.82rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    transition: all 0.2s ease;
+}
+
+.k2-tour-btn:hover {
+    border-color: var(--primary, #c9a227);
+}
+
+.k2-tour-btn.k2-tour-skip {
+    color: var(--text-secondary, #8a7b55);
+    background: transparent;
+    border-color: transparent;
+}
+
+.k2-tour-btn.k2-tour-next {
+    margin-left: auto;
+    background: var(--primary, #c9a227);
+    border-color: var(--primary, #c9a227);
+    color: #211a0d;
+}
+
+.k2-tour-btn.k2-tour-prev {
+    display: none;
+}
+

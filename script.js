@@ -7044,3 +7044,318 @@ function completeOnboarding() {
         setTimeout(() => overlay.classList.remove('active', 'exiting'), 800);
     }
 }
+
+// ==========================================
+// SIDEBAR / MENU TOUR (tooltip coachmarks)
+// ==========================================
+const TOUR_LS_KEY = 'k2_sidebar_tour_done';
+function tourDoneKey() { return TOUR_LS_KEY + '_' + currentTourPort(); }
+const tourState = { active: false, index: 0, steps: [] };
+
+const PORT_TOUR_STEPS = {
+    user: [
+        { id: 'tourUserDash', el: () => document.querySelector('#sidebar .nav-item[href="index.html"]'), title: 'Dashboard', text: 'Your home base. See your recent activity, saved items and quick access in one place.' },
+        { id: 'tourUserCreate', el: () => document.querySelector('#sidebar .nav-item[data-page="user-create"]'), title: 'Create Profile', text: 'Build your own 2k2 profile so other members and providers can find and message you.' },
+        { id: 'tourUserProfile', el: () => document.querySelector('#sidebar .nav-item[data-page="user-profile"]'), title: 'View Profile', text: 'Preview your public-facing profile exactly as other members see it.' },
+        { id: 'tourDirectory', el: () => document.querySelector('#sidebar .nav-item[data-page="directory"]'), title: 'Profiles Directory', text: 'Browse service providers across all 9 provinces. Filter by category, view their full profile, book them or send a tip.' },
+        { id: 'tourVenues', el: () => document.querySelector('#sidebar .nav-item[data-page="venue-directory"]'), title: 'Venues', text: 'Discover venues such as lodges, clubs and fetish venues available near you.' },
+        { id: 'tourServices', el: () => document.querySelector('#sidebar .nav-item[data-page="services-directory"]'), title: 'Services', text: 'Browse bookable services offered by providers and request appointments with your chosen fee.' },
+        { id: 'tourContent', el: () => document.querySelector('#sidebar .nav-item[data-page="content-directory"]'), title: 'Content', text: 'Explore premium content: videos, images, ASMR, podcasts and stories from creators.' },
+        { id: 'tourEvents', el: () => document.querySelector('#sidebar .nav-item[data-page="events-directory"]'), title: 'Events', text: 'See upcoming events and parties you can attend or RSVP to.' },
+        { id: 'tourBrowseAds', el: () => document.querySelector('#sidebar .nav-item[data-page="ads-browse"]'), title: 'Browse Ads', text: 'Browse personal and classified ads - everything from companionship to casual connections.' },
+        { id: 'tourBrowseGigs', el: () => document.querySelector('#sidebar .nav-item[data-page="gigs-browse"]'), title: 'Browse Gigs', text: 'Find jobs and gigs, or browse talent you can hire for events and services.' },
+        { id: 'tourProducts', el: () => document.querySelector('#sidebar .nav-item[data-page="products-directory"]'), title: 'Products', text: 'Shop physical and digital products listed by providers.' },
+        { id: 'tourExperiences', el: () => document.querySelector('#sidebar .nav-item[data-page="experiences-browse"]'), title: 'Browse Experiences', text: 'Discover paid experiences - from dates to group sessions - offered by providers.' },
+        { id: 'tourFantasy', el: () => document.querySelector('#sidebar .nav-item[data-page="fantasy-requests"]'), title: 'Fantasy Requests', text: 'Browse fantasy requests posted by members, or find one you can fulfil.' },
+        { id: 'tourFantasyCreate', el: () => document.querySelector('#sidebar .nav-item[data-page="fantasy-request-create"]'), title: 'Post Fantasy Request', text: 'Post your own fantasy request so providers can make you an offer.' },
+        { id: 'tourForum', el: () => document.querySelector('#sidebar .nav-item[data-page="forum-browse"]'), title: 'Browse Forum', text: 'Join community discussion across public and premium forums.' },
+        { id: 'tourForumCreate', el: () => document.querySelector('#sidebar .nav-item[data-page="forum-create"]'), title: 'New Thread', text: 'Start a new forum thread and engage with the community.' },
+        { id: 'tourMyThreads', el: () => document.querySelector('#sidebar .nav-item[data-page="user-forum-threads"]'), title: 'My Threads', text: 'Review, edit or delete the forum threads you have started.' },
+        { id: 'tourPostAd', el: () => document.querySelector('#sidebar .nav-item[data-page="ads-create"]'), title: 'Post an Ad', text: 'Create your own personal or classified ad.' },
+        { id: 'tourMyAds', el: () => document.querySelector('#sidebar .nav-item[data-page="user-ads"]'), title: 'My Ads', text: 'Manage and update the ads you have posted.' },
+        { id: 'tourInbox', el: () => document.querySelector('#sidebar .nav-item[data-page="inbox"]'), title: 'Inbox', text: 'Read and reply to all your private messages.' },
+        { id: 'tourCompose', el: () => document.querySelector('#sidebar .nav-item[data-page="message-compose"]'), title: 'New Message', text: 'Send a direct message to another member.' },
+        { id: 'tourOnline', el: () => document.querySelector('#sidebar .nav-item[data-page="online-users"]'), title: 'Online Users', text: 'See who is currently online and start a conversation.' },
+        { id: 'tourBookings', el: () => document.querySelector('#sidebar .nav-item[data-page="user-bookings"]'), title: 'My Bookings', text: 'Track your bookings, confirmations and any booking fees paid.' },
+        { id: 'tourWallet', el: () => document.querySelector('#sidebar .nav-item[data-page="user-wallet"]'), title: 'My Wallet', text: 'Top up, withdraw and keep track of your balance and transactions.' },
+        { id: 'tourSaved', el: () => document.querySelector('#sidebar .nav-item[data-page="saved-items"]'), title: 'Saved Items', text: 'One place to view every profile, listing or item you have bookmarked.' },
+        { id: 'tourDownloads', el: () => document.querySelector('#sidebar .nav-item[data-page="downloads"]'), title: 'Downloads', text: 'Access the premium content you have purchased or downloaded.' },
+        { id: 'tourUserSettings', el: () => document.querySelector('#sidebar .nav-item[data-page="user-settings"]'), title: 'Settings', text: 'Manage your account, privacy and notification preferences.' },
+        { id: 'tourSwitchProvider', el: () => document.querySelector('#sidebar .nav-item[href="provider.html"]'), title: 'Service Provider Portal', text: 'Switch to the provider portal to sell services, host events and start earning.' },
+        { id: 'tourHowItWorks', el: () => document.querySelector('#sidebar .nav-item[data-page="how-it-works"]'), title: 'How It Works', text: 'Learn how 2k2 works - costs, features and how to get started.' },
+        { id: 'tourHelp', el: () => document.querySelector('#sidebar .nav-item[data-page="help-queries"]'), title: 'Help', text: 'Get support or submit an enquiry to the 2k2 team.' }
+    ],
+    userBottom: [
+        { id: 'tourBH', el: () => document.querySelector('#bottomNav .bottom-nav-item[data-page="user-dashboard"]'), title: 'Home', text: 'Your dashboard and quick access hub.' },
+        { id: 'tourBB', el: () => document.querySelector('#bottomNav .bottom-nav-item[data-page="directory"]'), title: 'Browse', text: 'Browse provider profiles, venues and listings.' },
+        { id: 'tourBM', el: () => document.querySelector('#bottomNav .bottom-nav-item[data-page="inbox"]'), title: 'Messages', text: 'Open your private inbox.' },
+        { id: 'tourBP', el: () => document.querySelector('#bottomNav .bottom-nav-item[data-page="user-profile"]'), title: 'Profile', text: 'View your public profile.' }
+    ],
+    provider: [
+        { id: 'tourPdash', el: () => document.querySelector('#sidebar .nav-item[href="provider.html"]'), title: 'Dashboard', text: 'Your provider control centre - see earnings, bookings and platform stats at a glance.' },
+        { id: 'tourPcreate', el: () => document.querySelector('#sidebar .nav-item[data-page="provider-create"]'), title: 'Create Profile', text: 'Set up your provider business profile for members to find.' },
+        { id: 'tourPprofile', el: () => document.querySelector('#sidebar .nav-item[data-page="provider-profile"]'), title: 'View Profile', text: 'Preview how your public provider profile appears to clients.' },
+        { id: 'tourPlistings', el: () => document.querySelector('#sidebar .nav-item[data-page="provider-directory"]'), title: 'My Listings', text: 'Manage the directory listings you have published with your own booking fees and links.' },
+        { id: 'tourPlistingNew', el: () => document.querySelector('#sidebar .nav-item[data-page="provider-listing-create"]'), title: 'New Listing', text: 'Create a new directory listing so clients can find, book and tip you.' },
+        { id: 'tourPvenues', el: () => document.querySelector('#sidebar .nav-item[data-page="provider-venue-directory"]'), title: 'My Venues', text: 'Manage the venues you host at or operate.' },
+        { id: 'tourPvenueNew', el: () => document.querySelector('#sidebar .nav-item[data-page="provider-venue-create"]'), title: 'New Venue', text: 'Add a new venue to attract clients.' },
+        { id: 'tourPservices', el: () => document.querySelector('#sidebar .nav-item[data-page="provider-services"]'), title: 'My Services', text: 'Manage the services you offer, each with its own price and booking fee.' },
+        { id: 'tourPserviceNew', el: () => document.querySelector('#sidebar .nav-item[data-page="provider-service-create"]'), title: 'New Service', text: 'Create a bookable service with your own rate and booking fee.' },
+        { id: 'tourProducts', el: () => document.querySelector('#sidebar .nav-item[data-page="provider-products"]'), title: 'My Products', text: 'Manage the physical and digital products you sell.' },
+        { id: 'tourPproductNew', el: () => document.querySelector('#sidebar .nav-item[data-page="provider-product-create"]'), title: 'New Product', text: 'Add a new product to your store.' },
+        { id: 'tourPorders', el: () => document.querySelector('#sidebar .nav-item[data-page="provider-orders"]'), title: 'Product Orders', text: 'Review and fulfil orders placed by customers.' },
+        { id: 'tourPcontent', el: () => document.querySelector('#sidebar .nav-item[data-page="provider-content"]'), title: 'My Content', text: 'Manage your premium content catalogue.' },
+        { id: 'tourPcontentNew', el: () => document.querySelector('#sidebar .nav-item[data-page="provider-content-create"]'), title: 'New Content', text: 'Publish premium content such as videos, images or audio to sell.' },
+        { id: 'tourPevents', el: () => document.querySelector('#sidebar .nav-item[data-page="provider-events"]'), title: 'My Events', text: 'Manage the events you host and their promotion.' },
+        { id: 'tourPeventNew', el: () => document.querySelector('#sidebar .nav-item[data-page="provider-event-create"]'), title: 'New Event', text: 'Create a new event or party for members to attend.' },
+        { id: 'tourForum', el: () => document.querySelector('#sidebar .nav-item[data-page="forum-browse"]'), title: 'Browse Forum', text: 'Participate in community forums to build your presence.' },
+        { id: 'tourForumCreate', el: () => document.querySelector('#sidebar .nav-item[data-page="forum-create"]'), title: 'New Thread', text: 'Start a forum thread to engage with members.' },
+        { id: 'tourPMyThreads', el: () => document.querySelector('#sidebar .nav-item[data-page="user-forum-threads"]'), title: 'My Threads', text: 'Review threads you have started in the forum.' },
+        { id: 'tourPBrowseGigs', el: () => document.querySelector('#sidebar .nav-item[data-page="gigs-browse"]'), title: 'Browse Gigs', text: 'Browse gigs and job opportunities in the marketplace.' },
+        { id: 'tourPMyGigs', el: () => document.querySelector('#sidebar .nav-item[data-page="provider-gigs"]'), title: 'My Gigs', text: 'Manage the gigs or job posts you have created.' },
+        { id: 'tourPPostGig', el: () => document.querySelector('#sidebar .nav-item[data-page="provider-gig-create"]'), title: 'Post a Gig', text: 'Post a gig - advertise work you offer or talent you need.' },
+        { id: 'tourPMyAds', el: () => document.querySelector('#sidebar .nav-item[data-page="provider-ads"]'), title: 'My Ads', text: 'Manage your personal and classified ads.' },
+        { id: 'tourPPostAd', el: () => document.querySelector('#sidebar .nav-item[data-page="provider-ads-create"]'), title: 'Post an Ad', text: 'Create an ad to promote yourself or your offerings.' },
+        { id: 'tourInbox', el: () => document.querySelector('#sidebar .nav-item[data-page="inbox"]'), title: 'Inbox', text: 'Read and reply to client messages.' },
+        { id: 'tourCompose', el: () => document.querySelector('#sidebar .nav-item[data-page="message-compose"]'), title: 'New Message', text: 'Compose a direct message to a member.' },
+        { id: 'tourOnline', el: () => document.querySelector('#sidebar .nav-item[data-page="online-users"]'), title: 'Online Users', text: 'See who is online to engage with.' },
+        { id: 'tourPBookings', el: () => document.querySelector('#sidebar .nav-item[data-page="provider-bookings"]'), title: 'Bookings', text: 'Manage incoming bookings, confirm them and collect your booking fees.' },
+        { id: 'tourPTips', el: () => document.querySelector('#sidebar .nav-item[data-page="provider-tips"]'), title: 'Tips Received', text: 'See tips sent to you by grateful clients.' },
+        { id: 'tourPExps', el: () => document.querySelector('#sidebar .nav-item[data-page="provider-experiences"]'), title: 'My Experiences', text: 'Manage the paid experiences you host.' },
+        { id: 'tourPExpNew', el: () => document.querySelector('#sidebar .nav-item[data-page="provider-experience-create"]'), title: 'Add Experience', text: 'Create and price a new paid experience.' },
+        { id: 'tourPFantasy', el: () => document.querySelector('#sidebar .nav-item[data-page="provider-fantasy-requests"]'), title: 'Fantasy Requests', text: 'Browse and respond to fantasy requests from members.' },
+        { id: 'tourPWallet', el: () => document.querySelector('#sidebar .nav-item[data-page="provider-wallet"]'), title: 'My Earnings', text: 'Track earnings, withdrawals and your wallet balance.' },
+        { id: 'tourSaved', el: () => document.querySelector('#sidebar .nav-item[data-page="saved-items"]'), title: 'Saved Items', text: 'Items you have saved across the platform.' },
+        { id: 'tourPDownloads', el: () => document.querySelector('#sidebar .nav-item[data-page="downloads"]'), title: 'Downloads', text: 'Files and content you have downloaded.' },
+        { id: 'tourPSwitchUser', el: () => document.querySelector('#sidebar .nav-item[href="index.html"]'), title: 'General User Portal', text: 'Switch back to the general user view of the app.' },
+        { id: 'tourPsettings', el: () => document.querySelector('#sidebar .nav-item[data-page="provider-settings"]'), title: 'Settings', text: 'Manage your provider account settings.' },
+        { id: 'tourPHowItWorks', el: () => document.querySelector('#sidebar .nav-item[data-page="how-it-works"]'), title: 'How It Works', text: 'Understand how the provider side of 2k2 works.' }
+    ],
+    providerBottom: [
+        { id: 'tourPBH', el: () => document.querySelector('#bottomNav .bottom-nav-item[data-page="provider-dashboard"]'), title: 'Home', text: 'Your provider dashboard.' },
+        { id: 'tourPBB', el: () => document.querySelector('#bottomNav .bottom-nav-item[data-page="provider-directory"]'), title: 'Browse', text: 'Browse your listings and offerings.' },
+        { id: 'tourPBM', el: () => document.querySelector('#bottomNav .bottom-nav-item[data-page="inbox"]'), title: 'Messages', text: 'Open your client inbox.' },
+        { id: 'tourPBP', el: () => document.querySelector('#bottomNav .bottom-nav-item[data-page="provider-profile"]'), title: 'Profile', text: 'View your provider profile.' }
+    ]
+};
+
+const PORT_CONTENT = {
+    user: { badge: 'General User', stepsKey: 'user', bottomKey: 'userBottom' },
+    provider: { badge: 'Service Provider', stepsKey: 'provider', bottomKey: 'providerBottom' }
+};
+
+function currentTourPort() {
+    return isProviderPage ? 'provider' : 'user';
+}
+
+function buildTourSteps() {
+    const port = currentTourPort();
+    const cfg = PORT_CONTENT[port];
+    if (typeof window !== 'undefined' && window.innerWidth <= 768) {
+        return (PORT_TOUR_STEPS[cfg.bottomKey] || []).filter(s => s.el() != null);
+    }
+    return (PORT_TOUR_STEPS[cfg.stepsKey] || []).filter(s => s.el() != null);
+}
+
+function ensureTourDOM() {
+    if (document.getElementById('k2TourOverlay')) return;
+    const frag = document.createDocumentFragment();
+
+    const btn = document.createElement('button');
+    btn.id = 'k2TourTrigger';
+    btn.className = 'k2-tour-trigger';
+    btn.innerHTML = '<i class="fas fa-compass"></i><span>Tour</span>';
+    btn.title = 'Take the guided tour';
+    btn.addEventListener('click', () => startSidebarTour());
+
+    const overlay = document.createElement('div');
+    overlay.id = 'k2TourOverlay';
+    overlay.className = 'k2-tour-overlay';
+    overlay.innerHTML =
+        '<div class="k2-tour-highlight" id="k2TourHighlight"></div>' +
+        '<div class="k2-tour-tooltip" id="k2TourTooltip">' +
+            '<button class="k2-tour-close" id="k2TourClose" title="Skip tour"><i class="fas fa-xmark"></i></button>' +
+            '<div class="k2-tour-badge" id="k2TourBadge"></div>' +
+            '<h3 class="k2-tour-title" id="k2TourTitle"></h3>' +
+            '<p class="k2-tour-text" id="k2TourText"></p>' +
+            '<div class="k2-tour-progress" id="k2TourProgress"></div>' +
+            '<div class="k2-tour-actions">' +
+                '<button class="k2-tour-btn k2-tour-skip" id="k2TourSkip">Skip tour</button>' +
+                '<button class="k2-tour-btn k2-tour-prev" id="k2TourPrev"><i class="fas fa-chevron-left"></i> Back</button>' +
+                '<button class="k2-tour-btn k2-tour-next" id="k2TourNext">Next <i class="fas fa-chevron-right"></i></button>' +
+            '</div>' +
+        '</div>';
+
+    frag.appendChild(btn);
+    frag.appendChild(overlay);
+    document.body.appendChild(frag);
+
+    document.getElementById('k2TourClose').addEventListener('click', skipSidebarTour);
+    document.getElementById('k2TourSkip').addEventListener('click', skipSidebarTour);
+    document.getElementById('k2TourPrev').addEventListener('click', () => stepTour(-1));
+    document.getElementById('k2TourNext').addEventListener('click', () => stepTour(1));
+    overlay.addEventListener('click', (e) => { if (e.target === overlay) stepTour(1); });
+}
+
+function tourKeyHandler(e) {
+    if (!tourState.active) return;
+    if (e.key === 'Escape') { skipSidebarTour(); }
+    else if (e.key === 'ArrowRight') { e.preventDefault(); stepTour(1); }
+    else if (e.key === 'ArrowLeft') { e.preventDefault(); stepTour(-1); }
+}
+
+function startSidebarTour() {
+    if (tourState.active) return;
+    ensureTourDOM();
+    tourState.steps = buildTourSteps();
+    if (!tourState.steps.length) return;
+    tourState.index = 0;
+    tourState.active = true;
+    document.addEventListener('keydown', tourKeyHandler);
+    document.getElementById('k2TourTrigger').classList.add('hidden');
+    document.getElementById('k2TourOverlay').classList.add('active');
+    renderTourStep();
+}
+
+function markTourDone() {
+    localStorage.setItem(tourDoneKey(), '1');
+}
+
+function skipSidebarTour() {
+    if (!tourState.active) return;
+    tourState.active = false;
+    markTourDone();
+    document.getElementById('k2TourOverlay').classList.remove('active');
+    document.getElementById('k2TourTrigger').classList.remove('hidden');
+    document.removeEventListener('keydown', tourKeyHandler);
+}
+
+function stepTour(dir) {
+    if (!tourState.active) return;
+    tourState.index += dir;
+    if (tourState.index < 0 || tourState.index >= tourState.steps.length) {
+        finishTour();
+        return;
+    }
+    renderTourStep();
+}
+
+function finishTour() {
+    tourState.active = false;
+    markTourDone();
+    const ov = document.getElementById('k2TourOverlay');
+    if (ov) ov.classList.remove('active');
+    const tr = document.getElementById('k2TourTrigger');
+    if (tr) tr.classList.remove('hidden');
+    document.removeEventListener('keydown', tourKeyHandler);
+}
+
+function renderTourStep() {
+    if (!tourState.steps.length) return;
+    const step = tourState.steps[tourState.index];
+    const el = step.el && step.el();
+    const total = tourState.steps.length;
+    const port = currentTourPort();
+    const cfg = PORT_CONTENT[port];
+
+    const badge = document.getElementById('k2TourBadge');
+    if (badge) badge.innerHTML = '<i class="fas ' + (port === 'provider' ? 'fa-briefcase' : 'fa-user') + '"></i> ' + cfg.badge +
+        ' &middot; ' + (tourState.index + 1) + ' / ' + total;
+
+    document.getElementById('k2TourTitle').textContent = step.title || '';
+    document.getElementById('k2TourText').textContent = step.text || '';
+
+    const progress = document.getElementById('k2TourProgress');
+    progress.innerHTML = '';
+    for (let i = 0; i < total; i++) {
+        const dot = document.createElement('span');
+        dot.className = 'k2-tour-dot' + (i === tourState.index ? ' active' : '');
+        progress.appendChild(dot);
+    }
+
+    const next = document.getElementById('k2TourNext');
+    const prev = document.getElementById('k2TourPrev');
+    const skip = document.getElementById('k2TourSkip');
+    if (tourState.index === total - 1) {
+        next.innerHTML = '<i class="fas fa-check"></i> Done';
+        skip.style.display = 'none';
+    } else {
+        next.innerHTML = 'Next <i class="fas fa-chevron-right"></i>';
+        skip.style.display = '';
+    }
+    prev.style.display = tourState.index === 0 ? 'none' : '';
+
+    if (el) {
+        el.scrollIntoView({ block: 'center', behavior: 'smooth' });
+        setTimeout(() => positionTour(el), 320);
+    } else {
+        document.getElementById('k2TourHighlight').style.display = 'none';
+        document.getElementById('k2TourTooltip').style.top = '40%';
+        document.getElementById('k2TourTooltip').style.left = '50%';
+        document.getElementById('k2TourTooltip').style.transform = 'translate(-50%, -50%)';
+    }
+}
+
+function positionTour(el) {
+    const rect = el.getBoundingClientRect();
+    const h = document.getElementById('k2TourHighlight');
+    const tip = document.getElementById('k2TourTooltip');
+    const pad = 6;
+    h.style.display = 'block';
+    h.style.top = (rect.top - pad) + 'px';
+    h.style.left = (rect.left - pad) + 'px';
+    h.style.width = (rect.width + pad * 2) + 'px';
+    h.style.height = (rect.height + pad * 2) + 'px';
+
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+    const tw = tip.offsetWidth;
+    const th = tip.offsetHeight;
+
+    let top, left;
+    // Default: below the target
+    if (rect.bottom + th + 16 <= vh - 16) {
+        top = rect.bottom + 16;
+    } else if (rect.top - th - 16 >= 16) {
+        top = rect.top - th - 16;
+    } else {
+        top = Math.max(16, Math.min(vh - th - 16, (vh - th) / 2));
+    }
+    left = rect.left + rect.width / 2 - tw / 2;
+    if (left < 16) left = 16;
+    if (left + tw > vw - 16) left = vw - tw - 16;
+
+    tip.style.top = top + 'px';
+    tip.style.left = left + 'px';
+    tip.style.transform = 'none';
+}
+
+function isTourAvailable() {
+    if (isProviderPage) return true;
+    const p = (window.location.pathname.split('/').pop() || '').toLowerCase();
+    if (!p || p === 'index.html') return true;
+    return false;
+}
+
+function initTour() {
+    if (!document.body || !isTourAvailable()) return;
+    ensureTourDOM();
+    if (localStorage.getItem(tourDoneKey())) return;
+    const port = currentTourPort();
+    const cfg = PORT_CONTENT[port];
+    const steps = (window.innerWidth <= 768 ? PORT_TOUR_STEPS[cfg.bottomKey] : PORT_TOUR_STEPS[cfg.stepsKey]) || [];
+    if (!steps.length) return;
+    window.setTimeout(() => {
+        const onb = document.getElementById('onboardingOverlay');
+        if (onb && onb.classList.contains('active')) return;
+        startSidebarTour();
+    }, 1800);
+}
+
+(function () {
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initTour);
+    } else {
+        initTour();
+    }
+})();
