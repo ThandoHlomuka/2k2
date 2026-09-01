@@ -13,7 +13,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🛡️</text></svg>">
-    <link rel="stylesheet" href="style.css?v=25">
+    <link rel="stylesheet" href="style.css?v=26">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <style>
         .admin-badge { background: linear-gradient(135deg, #ef4444, #dc2626); color: white; padding: 3px 10px; border-radius: 6px; font-size: 0.65rem; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; margin-left: 8px; }
@@ -188,8 +188,6 @@
             </a>
         </div>
     </div>
-
-    <button class="menu-toggle" id="menuToggle"><i class="fas fa-bars"></i></button>
 
     <div class="main-content" id="mainContent">
 
@@ -1361,7 +1359,7 @@
     <!-- Mobile Bottom Navigation -->
     <div class="bottom-nav" id="bottomNav">
         <button class="bottom-nav-item" data-page="admin-dashboard" onclick="navBottom('admin-dashboard')"><i class="fas fa-home"></i><span>Home</span></button>
-        <button class="bottom-nav-item" data-page="admin-users" onclick="navBottom('admin-users')"><i class="fas fa-compass"></i><span>Browse</span></button>
+        <button class="bottom-nav-item" onclick="openSidebar()"><i class="fas fa-compass"></i><span>Browse</span></button>
         <button class="bottom-nav-item" data-page="admin-messages" onclick="navBottom('admin-messages')"><i class="fas fa-envelope"></i><span>Messages</span></button>
         <button class="bottom-nav-item" data-page="admin-settings" onclick="navBottom('admin-settings')"><i class="fas fa-user"></i><span>Profile</span></button>
     </div>
@@ -1397,8 +1395,8 @@
       });
     })();
     </script>
-    <script src="script.js?v=32"></script>
-    <script src="admin.js?v=21"></script>
+    <script src="script.js?v=33"></script>
+    <script src="admin.js?v=22"></script>
     <script src="admin-upgrades.js?v=20"></script>
     <script src="products.js?v=21"></script>
 </body>

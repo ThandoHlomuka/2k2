@@ -235,39 +235,6 @@ h1, h2, h3, h4 {
 }
 
 /* ============================================
-   Menu Toggle
-   ============================================ */
-.menu-toggle {
-    position: fixed;
-    top: 20px;
-    left: 20px;
-    z-index: 1100;
-    background: linear-gradient(135deg, #d4a853, #c9a227 55%, #a07d12);
-    color: #0a0a0a;
-    border: none;
-    width: 48px;
-    height: 48px;
-    border-radius: 14px;
-    font-size: 1.15rem;
-    cursor: pointer;
-    display: none;
-    align-items: center;
-    justify-content: center;
-    box-shadow: 0 4px 16px rgba(201, 162, 39, 0.4);
-    transition: all var(--transition-speed) ease;
-}
-
-.menu-toggle.visible {
-    display: flex;
-    animation: bounceIn 0.5s cubic-bezier(0.68, -0.55, 0.27, 1.55);
-}
-
-.menu-toggle:hover {
-    transform: scale(1.08);
-    box-shadow: 0 6px 24px rgba(201, 162, 39, 0.5);
-}
-
-/* ============================================
    Main Content & Pages
    ============================================ */
 .main-content {
@@ -2066,10 +2033,6 @@ h1, h2, h3, h4 {
     .main-content {
         margin-left: 0;
         padding-bottom: 74px;
-    }
-
-    .menu-toggle {
-        display: flex !important;
     }
 
     .bottom-nav {

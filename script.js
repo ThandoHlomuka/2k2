@@ -482,7 +482,6 @@ let currentEventViewId = null;
 // ==========================================
 function navigateTo(page) {
     const sidebar = document.getElementById('sidebar');
-    const menuToggle = document.getElementById('menuToggle');
     
     document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
     document.querySelectorAll('.nav-item[data-page]').forEach(n => n.classList.remove('active'));
@@ -570,11 +569,7 @@ function navBottom(page) {
 
 function maybeCloseSidebar() {
     const sidebar = document.getElementById('sidebar');
-    const menuToggle = document.getElementById('menuToggle');
-    if (sidebar && menuToggle && window.innerWidth <= 768) {
-        sidebar.classList.add('hidden');
-        menuToggle.classList.add('visible');
-    }
+    if (sidebar && window.innerWidth <= 768) sidebar.classList.add('hidden');
 }
 
 function populateGigDropdowns() {
@@ -614,17 +609,14 @@ function populateOnlineCityFilters() {
 // ==========================================
 document.addEventListener('DOMContentLoaded', function() {
     const sidebar = document.getElementById('sidebar');
-    const menuToggle = document.getElementById('menuToggle');
     const closeBtn = document.getElementById('closeBtn');
 
-    // Start the sidebar hidden on mobile so it slides in via the toggle.
+    // Start the sidebar hidden on mobile so it slides in via the Browse button.
     if (sidebar && window.innerWidth <= 768) {
         sidebar.classList.add('hidden');
-        if (menuToggle) menuToggle.classList.add('visible');
     }
 
-    menuToggle.addEventListener('click', () => { sidebar.classList.remove('hidden'); menuToggle.classList.remove('visible'); });
-    closeBtn.addEventListener('click', () => { sidebar.classList.add('hidden'); menuToggle.classList.add('visible'); });
+    if (closeBtn) closeBtn.addEventListener('click', () => { if (sidebar && window.innerWidth <= 768) sidebar.classList.add('hidden'); });
 
     document.querySelectorAll('.nav-item[data-page]').forEach(item => {
         item.addEventListener('click', function(e) {
@@ -688,8 +680,14 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 function closeSidebar() {
-    document.getElementById('sidebar').classList.add('hidden');
-    document.getElementById('menuToggle').classList.add('visible');
+    const sidebar = document.getElementById('sidebar');
+    if (sidebar) sidebar.classList.add('hidden');
+}
+
+// Opens the slide-in navigation menu (mobile Browse button / hamburger replacement).
+function openSidebar() {
+    const sidebar = document.getElementById('sidebar');
+    if (sidebar) sidebar.classList.remove('hidden');
 }
 
 // ==========================================

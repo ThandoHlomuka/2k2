@@ -1561,12 +1561,6 @@ function adminRejectRequest(type, reqId) {
     renderAdminWallets();
 }
 
-// Sidebar toggle
-document.getElementById('menuToggle')?.addEventListener('click', () => {
-    document.getElementById('sidebar').classList.toggle('active');
-    document.getElementById('mainContent').classList.toggle('shifted');
-});
-
 document.getElementById('closeBtn')?.addEventListener('click', () => {
     document.getElementById('sidebar').classList.remove('active');
     document.getElementById('mainContent').classList.remove('shifted');
