@@ -477,7 +477,12 @@ document.addEventListener('DOMContentLoaded', function() {
     document.querySelectorAll('.nav-item[data-page]').forEach(item => {
         item.addEventListener('click', function(e) {
             e.preventDefault();
-            navigateTo(this.getAttribute('data-page'));
+            const page = this.getAttribute('data-page');
+            if (page === 'user-create' && getUserProfilesByAuth().length > 0) {
+                editUserById(getUserProfilesByAuth()[0].id);
+            } else {
+                navigateTo(page);
+            }
             maybeCloseSidebar();
         });
     });
@@ -526,6 +531,7 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('eventsDirectoryList') && renderEventsDirectory();
     }
     maybeShowProfileSetup();
+    updateUserNavLabels();
 });
 
 function closeSidebar() {
@@ -577,6 +583,16 @@ function maybeShowProfileSetup() {
     if (new URLSearchParams(window.location.search).get('setup') === '1') {
         if (getUserProfilesByAuth().length === 0) { navigateTo('user-create'); return; }
     }
+}
+
+function updateUserNavLabels() {
+    const nav = document.querySelector('#sidebar .nav-item[data-page="user-create"]');
+    if (!nav) return;
+    const hasProfile = getUserProfilesByAuth().length > 0;
+    const span = nav.querySelector('span');
+    const icon = nav.querySelector('i');
+    if (span) span.textContent = hasProfile ? 'Edit Profile' : 'Create Profile';
+    if (icon) icon.className = hasProfile ? 'fas fa-user-edit' : 'fas fa-user-plus';
 }
 
 function currentAuthId() {
@@ -669,6 +685,7 @@ function handleUserSubmit(e) {
     }
     Storage.setUsers(users);
     renderProfileSetupBanner();
+    updateUserNavLabels();
     navigateTo('user-dashboard');
 }
 
@@ -891,6 +908,13 @@ function viewUserProfile(id) {
     } else {
         interestsContainer.innerHTML = '<span class="tag empty-tag">No interests added</span>';
     }
+
+    const mine = getUserProfilesByAuth();
+    const isOwnProfile = mine.some(p => p.id === u.id) || (!!currentAuthId() && u.userId === currentAuthId());
+    const editBtn = document.getElementById('editUserProfileBtn');
+    const delBtn = document.getElementById('deleteUserProfileBtn');
+    if (editBtn) editBtn.style.display = isOwnProfile ? '' : 'none';
+    if (delBtn) delBtn.style.display = isOwnProfile ? '' : 'none';
 
     navigateTo('user-profile');
 }

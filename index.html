@@ -878,9 +878,9 @@
                     </button>
                     <h1>View Profile</h1>
                     <div class="header-actions">
-                        <button class="btn btn-secondary" onclick="editUserProfile()"><i class="fas fa-edit"></i> Edit</button>
+                        <button class="btn btn-secondary" id="editUserProfileBtn" onclick="editUserProfile()"><i class="fas fa-edit"></i> Edit</button>
                         <button class="btn btn-primary" onclick="openComposeTo(currentViewUserId, document.getElementById('userViewName').textContent, 'user')"><i class="fas fa-paper-plane"></i> Message</button>
-                        <button class="btn btn-danger" onclick="deleteUserProfile()"><i class="fas fa-trash"></i> Delete</button>
+                        <button class="btn btn-danger" id="deleteUserProfileBtn" onclick="deleteUserProfile()"><i class="fas fa-trash"></i> Delete</button>
                     </div>
                 </div>
 
@@ -3625,7 +3625,7 @@
       });
     })();
     </script>
-    <script src="script.js?v=25"></script>
+    <script src="script.js?v=26"></script>
     <script src="products.js?v=21"></script>
     <script>
         let onbSlide = 0;
