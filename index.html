@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Security-Policy" content="object-src 'none'; base-uri 'self'; frame-src 'none'; upgrade-insecure-requests">
     <title>2k2 - South Africa's #1 Adult Portal | Connect, Explore & Earn</title>
     <meta name="description" content="2k2 is South Africa's premier adult services platform. Browse profiles, venues, events, personal ads, premium content & services. Free for general users. Service providers earn money with bookings, tips, content sales & events. Covering all 9 SA provinces.">
     <meta name="keywords" content="adult services South Africa, escort directory, adult portal, personal ads, hookups, fetish clubs, adult content, premium content, service provider, adult dating, Johannesburg, Cape Town, Durban, Pretoria, Sandton, adult entertainment, nightlife, events, bookings, tips, wallet, forum, gigs, jobs">
@@ -1548,6 +1549,7 @@
                         <div class="wallet-balance-label">Available Balance</div>
                         <div class="wallet-balance-amount" id="userWalletBalance">R0.00</div>
                         <div class="wallet-balance-meta">Last updated: <span id="userWalletUpdated">-</span></div>
+                        <div class="wallet-balance-meta"><i class="fas fa-lock"></i> Held in Escrow: <strong id="userWalletHeld">R0.00</strong></div>
                     </div>
                     <div class="wallet-balance-decoration"></div>
                 </div>
@@ -1579,6 +1581,7 @@
                         </div>
                     </div>
                 </div>
+                <div id="userWalletEscrow"></div>
                 <div class="profile-card">
                     <h2><i class="fas fa-history"></i> Transaction History</h2>
                     <div class="wallet-transactions" id="userWalletTransactions"></div>
@@ -3629,7 +3632,7 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
     <script src="config.js?v=20"></script>
     <script src="auth.js?v=20"></script>
-    <script src="db.js?v=20"></script>
+    <script src="db.js?v=21"></script>
     <script src="presence.js?v=21"></script>
     <script>
     // Session-aware sidebar (Sign In / Logout / account chip).
@@ -3675,7 +3678,7 @@
       });
     })();
     </script>
-    <script src="script.js?v=28"></script>
+    <script src="script.js?v=29"></script>
     <script src="products.js?v=21"></script>
     <script>
         let onbSlide = 0;

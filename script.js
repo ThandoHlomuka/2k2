@@ -216,7 +216,7 @@ function getOrCreateWallet(ownerType, ownerId) {
     const walletId = getWalletId(ownerType, ownerId);
     let wallet = wallets.find(w => w.id === walletId);
     if (!wallet) {
-        wallet = { id: walletId, ownerType, ownerId, balance: 0, currency: 'ZAR', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() };
+        wallet = { id: walletId, ownerType, ownerId, balance: 0, held: 0, currency: 'ZAR', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() };
         wallets.push(wallet);
         Storage.setWallets(wallets);
     }
@@ -262,6 +262,123 @@ function adjustWallet(ownerType, ownerId, amount, type, description, meta = {}) 
 function getWalletTransactions(ownerType, ownerId) {
     const walletId = getWalletId(ownerType, ownerId);
     return Storage.getTransactions().filter(t => t.walletId === walletId).sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+}
+
+// ==========================================
+// ESCROW / HELD FUNDS
+// Every escrow movement is mirrored to the wallet `held` field and to the
+// transaction ledger so the wallet always reconciles (balance + held = total).
+// ==========================================
+function getWalletHeld(ownerType, ownerId) {
+    return getOrCreateWallet(ownerType, ownerId).held || 0;
+}
+
+function setWalletHeld(ownerType, ownerId, held) {
+    const wallets = Storage.getWallets();
+    const wallet = wallets.find(w => w.id === getWalletId(ownerType, ownerId));
+    if (wallet) {
+        wallet.held = Math.max(0, Math.round(held * 100) / 100);
+        wallet.updatedAt = new Date().toISOString();
+        Storage.setWallets(wallets);
+        return wallet.held;
+    }
+    return 0;
+}
+
+// Mutate the held amount on a wallet without touching its available balance.
+// Records a transaction so the audit trail stays intact.
+function adjustWalletHeld(ownerType, ownerId, deltaHeld, type, description, meta = {}) {
+    const wallet = getOrCreateWallet(ownerType, ownerId);
+    const prevHeld = wallet.held || 0;
+    const newHeld = Math.max(0, Math.round((prevHeld + deltaHeld) * 100) / 100);
+    setWalletHeld(ownerType, ownerId, newHeld);
+
+    const transactions = Storage.getTransactions();
+    transactions.push({
+        id: generateId(),
+        walletId: getWalletId(ownerType, ownerId),
+        ownerType,
+        ownerId,
+        type,
+        amount: deltaHeld,
+        prevBalance: wallet.balance,
+        newBalance: wallet.balance,
+        prevHeld,
+        newHeld,
+        description,
+        meta,
+        createdAt: new Date().toISOString()
+    });
+    Storage.setTransactions(transactions);
+    return newHeld;
+}
+
+function getEscrowForBooking(bookingId) {
+    return Storage.getEscrowFunds().find(e => e.bookingId === bookingId);
+}
+
+// Called on booking request: record the hold and raise the user's held amount.
+function holdBookingFee(booking, fee) {
+    const escrows = Storage.getEscrowFunds();
+    escrows.push({
+        id: generateId(),
+        bookingId: booking.id,
+        fromType: 'user',
+        fromId: currentUserOwnerId(),
+        payeeType: 'provider',
+        payeeId: booking.providerId,
+        amount: fee,
+        status: 'held',
+        createdAt: new Date().toISOString()
+    });
+    Storage.setEscrowFunds(escrows);
+    adjustWalletHeld('user', currentUserOwnerId(), fee, 'booking-escrow', `Booking fee of R${fee.toFixed(2)} held in escrow`, { bookingId: booking.id });
+}
+
+// Called on provider confirmation: release the held fee to the provider.
+function releaseBookingEscrow(booking, fee) {
+    const escrows = Storage.getEscrowFunds();
+    let escrow = escrows.find(e => e.bookingId === booking.id);
+    if (!escrow) {
+        escrow = { id: generateId(), bookingId: booking.id, fromType: 'user', fromId: booking.clientOwnerId || 'general', payeeType: 'provider', payeeId: booking.providerId, amount: fee, status: 'held', createdAt: new Date().toISOString() };
+        escrows.push(escrow);
+    }
+    if (escrow.status !== 'released') {
+        escrow.status = 'released';
+        escrow.releasedAt = new Date().toISOString();
+        Storage.setEscrowFunds(escrows);
+
+        const fromId = escrow.fromId;
+        adjustWalletHeld('user', fromId, -fee, 'booking-escrow-released', `Booking escrow released`, { bookingId: booking.id });
+        adjustWallet('provider', booking.providerId, fee, 'booking-confirmed', `Booking confirmed from ${booking.clientName || 'client'}`, { bookingId: booking.id, escrowId: escrow.id });
+    }
+}
+
+// Called on cancellation/decline: refund the held fee back to the client.
+function refundBookingEscrow(booking, fee, reason) {
+    const escrows = Storage.getEscrowFunds();
+    const escrow = escrows.find(e => e.bookingId === booking.id);
+    if (escrow && escrow.status === 'held') {
+        escrow.status = 'refunded';
+        escrow.refundedAt = new Date().toISOString();
+        Storage.setEscrowFunds(escrows);
+
+        const fromId = escrow.fromId;
+        adjustWalletHeld('user', fromId, -fee, 'booking-escrow-released', `Booking escrow returned`, { bookingId: booking.id, escrowId: escrow.id });
+        adjustWallet('user', fromId, fee, 'booking-refund', reason || `Refund for cancelled booking`, { bookingId: booking.id, escrowId: escrow.id });
+        return true;
+    }
+    return false;
+}
+
+function getActiveEscrowTotal(ownerType, ownerId) {
+    return Storage.getEscrowFunds()
+        .filter(e => e.status === 'held' && e.fromType === ownerType && String(e.fromId) === String(ownerId))
+        .reduce((s, e) => s + (e.amount || 0), 0);
+}
+
+function getAllEscrow() {
+    return Storage.getEscrowFunds().sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 }
 
 function getAllWallets() {
@@ -557,6 +674,60 @@ function showToast(message, type = 'success') {
 // GENERAL USER - CRUD
 // ==========================================
 function generateId() { return Date.now().toString(36) + Math.random().toString(36).substr(2, 9); }
+
+// ==========================================
+// SECURITY - input sanitization + rate limiting
+// ==========================================
+// Hardened HTML escaper (also escapes single quotes so attributes are safe).
+function escapeHtml(str) {
+    if (str === null || str === undefined) return '';
+    return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+
+// Neutralize dangerous schemes that can run code or exfiltrate data.
+function sanitizeUrl(url) {
+    if (!url) return '';
+    const raw = String(url).trim();
+    if (/^(javascript|data|vbscript):/i.test(raw)) return '';
+    if (raw.startsWith('//')) return 'https:' + raw;
+    if (!/^https?:\/\//i.test(raw)) return '';
+    return raw;
+}
+
+// Anti-DDoS / rate limiting: allow at most `limit` invocations of a named
+// action per `windowMs` per browser tab. Returns false and fires a warning
+// when the caller should be throttled.
+const __throttleStore = {};
+function securityThrottle(action, limit, windowMs) {
+    try {
+        if (!action || limit <= 0) return true;
+        const now = Date.now();
+        const key = action + '|' + (currentAuthId() || 'anon');
+        const rec = __throttleStore[key];
+        if (!rec || (now - rec.start) > windowMs) {
+            __throttleStore[key] = { start: now, count: 1 };
+            return true;
+        }
+        rec.count += 1;
+        if (rec.count > limit) {
+            showToast('You are moving too fast. Please slow down.', 'error');
+            return false;
+        }
+        return true;
+    } catch (e) { return true; }
+}
+
+// Guard a money-mutating action: require sign-in + throttle + positive amount.
+function guardFinancial(action, amount, limit, windowMs) {
+    if (!requireSignIn('Complete this transaction.')) return false;
+    if (typeof amount === 'number' && (!isFinite(amount) || amount < 0)) { showToast('Invalid amount.', 'error'); return false; }
+    return securityThrottle(action, limit || 2, windowMs || 2000);
+}
 
 function resetUserForm() {
     document.getElementById('userProfileForm').reset();
@@ -3497,12 +3668,14 @@ function closeBookingModal() {
 
 function handleBookingSubmit(e) {
     e.preventDefault();
+    if (!requireSignIn('Send a booking request.')) return;
     const fee = currentBookingFee || getBookingFeeFor(currentBookingProviderId, currentBookingProviderType);
     const booking = {
         id: generateId(),
         providerId: currentBookingProviderId,
         providerType: currentBookingProviderType,
         fee,
+        clientOwnerId: currentUserOwnerId(),
         clientName: document.getElementById('bookingClientName').value.trim(),
         clientEmail: document.getElementById('bookingClientEmail').value.trim(),
         clientPhone: document.getElementById('bookingClientPhone').value.trim(),
@@ -3514,14 +3687,15 @@ function handleBookingSubmit(e) {
         createdAt: new Date().toISOString()
     };
 
-    // Deduct this provider's booking fee from the user wallet
+    // Deduct this provider's booking fee from the user wallet and hold it in escrow.
     adjustWallet('user', currentUserOwnerId(), -fee, 'booking-fee', `Booking request sent to provider`, { bookingId: booking.id, providerId: booking.providerId });
+    holdBookingFee(booking, fee);
 
     const bookings = Storage.getBookings();
     bookings.push(booking);
     Storage.setBookings(bookings);
     closeBookingModal();
-    showToast(`Booking request sent! R${fee} booking fee deducted.`, 'success');
+    showToast(`Booking request sent! R${fee} held in escrow until the provider confirms.`, 'success');
 }
 
 // ==========================================
@@ -3548,18 +3722,19 @@ function setTipAmount(amount) {
 
 function handleTipSubmit(e) {
     e.preventDefault();
+    const amount = parseFloat(document.getElementById('tipAmount').value) || 0;
+    if (!guardFinancial('tip', amount, 3, 2000)) return;
+    if (!(amount > 0) || amount > 50000) { showToast('Please enter a valid amount.', 'error'); return; }
     const tip = {
         id: generateId(),
         providerId: currentBookingProviderId,
         providerType: currentBookingProviderType,
         tipperName: document.getElementById('tipperName').value.trim(),
         tipperEmail: document.getElementById('tipperEmail').value.trim(),
-        amount: parseFloat(document.getElementById('tipAmount').value) || 0,
+        amount,
         message: document.getElementById('tipMessage').value.trim(),
         createdAt: new Date().toISOString()
     };
-
-    if (tip.amount <= 0) { showToast('Please enter a valid amount.', 'error'); return; }
 
     // Deduct from user wallet, credit provider wallet
     adjustWallet('user', currentUserOwnerId(), -tip.amount, 'tip-sent', `Tip sent to provider`, { tipId: tip.id, providerId: tip.providerId });
@@ -3628,13 +3803,16 @@ function cancelBooking(id) {
     const bookings = Storage.getBookings();
     const booking = bookings.find(b => b.id === id);
     if (booking) {
+        const fee = (booking.fee != null) ? booking.fee : getBookingFeeFor(booking.providerId, booking.providerType);
         booking.status = 'cancelled';
         Storage.setBookings(bookings);
-        showToast('Booking cancelled.', 'info');
+        refundBookingEscrow(booking, fee, 'Refund for booking cancelled by client');
+        showToast('Booking cancelled. Escrowed fee refunded to your wallet.', 'info');
         if (window.location.pathname.includes('provider.html')) {
             renderProviderBookings();
         } else {
             renderUserBookings();
+            if (typeof renderUserWallet === 'function') renderUserWallet();
         }
     }
 }
@@ -3715,16 +3893,21 @@ function updateBookingStatus(id, status) {
         booking.status = status;
         Storage.setBookings(bookings);
 
-        // Credit provider wallet on confirmation with their own booking fee
+        // Release the escrowed booking fee to the provider on confirmation.
         if (status === 'confirmed') {
             const providerFee = (booking.fee != null) ? booking.fee : getBookingFeeFor(booking.providerId, booking.providerType);
             booking.fee = providerFee;
             Storage.setBookings(bookings);
-            adjustWallet('provider', booking.providerId, providerFee, 'booking-confirmed', `Booking confirmed from ${booking.clientName}`, { bookingId: booking.id });
+            releaseBookingEscrow(booking, providerFee);
+        } else if (status === 'cancelled') {
+            refundBookingEscrow(booking, booking.fee != null ? booking.fee : 0, `Refund for cancelled booking`);
         }
 
         showToast(`Booking ${status}.`, 'success');
         renderProviderBookings();
+        if (window.location.pathname.includes('provider.html')) {
+            renderProviderWallet && renderProviderWallet();
+        }
     }
 }
 
@@ -3781,6 +3964,30 @@ function renderUserWallet() {
     const wallet = getOrCreateWallet('user', meId);
     document.getElementById('userWalletBalance').textContent = `R${wallet.balance.toFixed(2)}`;
     document.getElementById('userWalletUpdated').textContent = formatDate(wallet.updatedAt);
+    const held = wallet.held || 0;
+    const heldEl = document.getElementById('userWalletHeld');
+    if (heldEl) heldEl.textContent = `R${held.toFixed(2)}`;
+    const escrowList = document.getElementById('userWalletEscrow');
+    const escrows = Storage.getEscrowFunds().filter(e => e.status === 'held' && e.fromType === 'user' && String(e.fromId) === String(meId));
+    if (escrowList) {
+        if (escrows.length === 0) {
+            escrowList.innerHTML = '<div class="empty-section"><i class="fas fa-lock"></i><p>No funds held in escrow</p><span>Booking fees are securely held until providers confirm.</span></div>';
+        } else {
+            escrowList.innerHTML = '<div class="profile-card pend-requests-card escrow-card"><h2><i class="fas fa-lock"></i> Escrowed Funds</h2>' +
+                escrows.map(es => `
+                    <div class="pending-request-row">
+                        <div class="pending-request-info">
+                            <span class="badge" style="background:#8b5cf622;color:#8b5cf6;border:1px solid #8b5cf644"><i class="fas fa-lock"></i> In Escrow</span>
+                            <span><strong>R${es.amount.toFixed(2)}</strong> held for your booking</span>
+                        </div>
+                        <span class="pending-request-date">Held ${formatDate(es.createdAt)}</span>
+                    </div>
+                `).join('') + '</div>';
+        }
+    }
+    const activeHeld = getActiveEscrowTotal('user', meId);
+    const heldStat = document.getElementById('userWalletHeldStat');
+    if (heldStat) heldStat.textContent = `R${activeHeld.toFixed(2)}`;
 
     const txns = getWalletTransactions('user', meId);
     const income = txns.filter(t => t.amount > 0).reduce((s, t) => s + t.amount, 0);
@@ -3821,8 +4028,8 @@ function renderUserWallet() {
     }
 
     container.innerHTML = txns.map(t => {
-        const typeColors = { 'top-up': '#10b981', 'tip-sent': '#f59e0b', 'tip-received': '#10b981', 'booking-fee': '#ef4444', 'booking-confirmed': '#3b82f6', 'withdrawal': '#8b5cf6', 'admin-adjust': '#8a7b55', 'refund': '#06b6d4' };
-        const typeLabels = { 'top-up': 'Top Up', 'tip-sent': 'Tip Sent', 'tip-received': 'Tip Received', 'booking-fee': 'Booking Fee', 'booking-confirmed': 'Booking Confirmed', 'withdrawal': 'Withdrawal', 'admin-adjust': 'Admin Adjust', 'refund': 'Refund' };
+        const typeColors = { 'top-up': '#10b981', 'tip-sent': '#f59e0b', 'tip-received': '#10b981', 'booking-fee': '#ef4444', 'booking-confirmed': '#3b82f6', 'booking-escrow': '#8b5cf6', 'booking-escrow-released': '#8b5cf6', 'booking-refund': '#06b6d4', 'withdrawal': '#8b5cf6', 'admin-adjust': '#8a7b55', 'refund': '#06b6d4' };
+        const typeLabels = { 'top-up': 'Top Up', 'tip-sent': 'Tip Sent', 'tip-received': 'Tip Received', 'booking-fee': 'Booking Fee', 'booking-confirmed': 'Booking Confirmed', 'booking-escrow': 'In Escrow', 'booking-escrow-released': 'Escrow Released', 'booking-refund': 'Booking Refund', 'withdrawal': 'Withdrawal', 'admin-adjust': 'Admin Adjust', 'refund': 'Refund' };
         const color = typeColors[t.type] || '#8a7b55';
         const label = typeLabels[t.type] || t.type;
         return `
@@ -3845,6 +4052,8 @@ function setTopUpAmount(amt) { document.getElementById('topUpAmount').value = am
 function processTopUp() {
     const amount = parseFloat(document.getElementById('topUpAmount').value);
     if (!amount || amount <= 0) { showToast('Enter a valid amount.', 'error'); return; }
+    if (!guardFinancial('topup', amount, 1, 4000)) return;
+    if (amount > 100000) { showToast('Amount exceeds the single top-up limit.', 'error'); return; }
 
     const requests = Storage.getTopUpRequests();
     const me = getUserProfilesByAuth()[0] || {};
@@ -3926,8 +4135,8 @@ function renderProviderWallet() {
     }
 
     container.innerHTML = allProviderTxns.slice(0, 30).map(t => {
-        const typeColors = { 'top-up': '#10b981', 'tip-sent': '#f59e0b', 'tip-received': '#10b981', 'booking-fee': '#ef4444', 'booking-confirmed': '#3b82f6', 'withdrawal': '#8b5cf6', 'admin-adjust': '#8a7b55', 'refund': '#06b6d4' };
-        const typeLabels = { 'top-up': 'Top Up', 'tip-sent': 'Tip Sent', 'tip-received': 'Tip Received', 'booking-fee': 'Booking Fee', 'booking-confirmed': 'Booking Confirmed', 'withdrawal': 'Withdrawal', 'admin-adjust': 'Admin Adjust', 'refund': 'Refund' };
+        const typeColors = { 'top-up': '#10b981', 'tip-sent': '#f59e0b', 'tip-received': '#10b981', 'booking-fee': '#ef4444', 'booking-confirmed': '#3b82f6', 'booking-escrow': '#8b5cf6', 'booking-escrow-released': '#8b5cf6', 'booking-refund': '#06b6d4', 'withdrawal': '#8b5cf6', 'admin-adjust': '#8a7b55', 'refund': '#06b6d4' };
+        const typeLabels = { 'top-up': 'Top Up', 'tip-sent': 'Tip Sent', 'tip-received': 'Tip Received', 'booking-fee': 'Booking Fee', 'booking-confirmed': 'Booking Confirmed', 'booking-escrow': 'In Escrow', 'booking-escrow-released': 'Escrow Released', 'booking-refund': 'Booking Refund', 'withdrawal': 'Withdrawal', 'admin-adjust': 'Admin Adjust', 'refund': 'Refund' };
         const color = typeColors[t.type] || '#8a7b55';
         const label = typeLabels[t.type] || t.type;
         return `
@@ -3956,12 +4165,14 @@ function closeWithdrawModal() { document.getElementById('withdrawModal').classLi
 function processWithdraw() {
     const amount = parseFloat(document.getElementById('withdrawAmount').value);
     if (!amount || amount <= 0) { showToast('Enter a valid amount.', 'error'); return; }
+    if (!guardFinancial('withdraw', amount, 1, 4000)) return;
 
     const providers = [...Storage.getListings().map(l => l.id), ...Storage.getServices().map(s => s.id)];
     let totalBalance = 0;
     providers.forEach(pid => { totalBalance += getOrCreateWallet('provider', pid).balance; });
 
     if (amount > totalBalance) { showToast('Insufficient balance.', 'error'); return; }
+    if (amount > 50000) { showToast('Amount exceeds the single withdrawal limit.', 'error'); return; }
 
     const requests = Storage.getWithdrawalRequests();
     requests.push({
@@ -4067,7 +4278,7 @@ function viewContent(id) {
     document.getElementById('contentDetailViewTitle').textContent = item.title;
     document.getElementById('contentDetailViewDate').textContent = formatDate(item.createdAt);
     document.getElementById('contentDetailViewAuthor').textContent = `By ${authorName}`;
-    document.getElementById('contentDetailViewBody').innerHTML = item.description ? `<p>${item.description.replace(/\n/g, '<br>')}</p>` : '<p class="empty-text">No description</p>';
+    document.getElementById('contentDetailViewBody').innerHTML = item.description ? `<p>${escapeHtml(item.description).replace(/\n/g, '<br>')}</p>` : '<p class="empty-text">No description</p>';
 
     // Media player
     const mediaContainer = document.getElementById('contentDetailMedia');
@@ -4905,7 +5116,7 @@ function viewEvent(id) {
             <div class="event-meta-item"><i class="fas fa-user"></i><span>Hosted by ${authorName}</span></div>
         </div>
     `;
-    document.getElementById('eventDetailViewBody').innerHTML = ev.description ? `<p>${ev.description.replace(/\n/g, '<br>')}</p>` : '<p class="empty-text">No description</p>';
+    document.getElementById('eventDetailViewBody').innerHTML = ev.description ? `<p>${escapeHtml(ev.description).replace(/\n/g, '<br>')}</p>` : '<p class="empty-text">No description</p>';
 
     const tagsContainer = document.getElementById('eventDetailViewTags');
     if (ev.tags && ev.tags.length > 0) {
@@ -5837,11 +6048,6 @@ function getTimeAgo(dateStr) {
     if (diff < 86400) return Math.floor(diff / 3600) + 'h ago';
     if (diff < 2592000) return Math.floor(diff / 86400) + 'd ago';
     return date.toLocaleDateString('en-ZA', { day: 'numeric', month: 'short', year: 'numeric' });
-}
-
-function escapeHtml(str) {
-    if (!str) return '';
-    return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
 
 // ==========================================

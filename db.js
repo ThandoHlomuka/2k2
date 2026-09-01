@@ -47,7 +47,8 @@
     { name: 'Products', col: 'products', key: 'k2_products' },
     { name: 'ProductOrders', col: 'product_orders', key: 'k2_product_orders' },
     { name: 'HelpQueries', col: 'help_queries', key: 'k2_help_queries' },
-    { name: 'Follows', col: 'follows', key: 'k2_follows' }
+    { name: 'Follows', col: 'follows', key: 'k2_follows' },
+    { name: 'EscrowFunds', col: 'escrow_funds', key: 'k2_escrow_funds' }
   ];
 
   const cache = {};      // col -> array
