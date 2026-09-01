@@ -7558,6 +7558,8 @@ function completeOnboarding() {
         overlay.classList.add('exiting');
         setTimeout(() => overlay.classList.remove('active', 'exiting'), 800);
     }
+    const tr = document.getElementById('k2TourTrigger');
+    if (tr) tr.classList.remove('hidden');
 }
 
 // ==========================================
@@ -7911,16 +7913,19 @@ function isTourAvailable() {
 function initTour() {
     if (!document.body || !isTourAvailable()) return;
     ensureTourDOM();
+    const onb = document.getElementById('onboardingOverlay');
+    if (onb && onb.classList.contains('active')) {
+        // Keep the floating Tour button off the onboarding cards; completeOnboarding() restores it.
+        const tr = document.getElementById('k2TourTrigger');
+        if (tr) tr.classList.add('hidden');
+        return;
+    }
     if (localStorage.getItem(tourDoneKey())) return;
     const port = currentTourPort();
     const cfg = PORT_CONTENT[port];
     const steps = (window.innerWidth <= 768 ? PORT_TOUR_STEPS[cfg.bottomKey] : PORT_TOUR_STEPS[cfg.stepsKey]) || [];
     if (!steps.length) return;
-    window.setTimeout(() => {
-        const onb = document.getElementById('onboardingOverlay');
-        if (onb && onb.classList.contains('active')) return;
-        startSidebarTour();
-    }, 1800);
+    window.setTimeout(() => startSidebarTour(), 1800);
 }
 
 (function () {
