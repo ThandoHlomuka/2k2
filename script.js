@@ -312,6 +312,7 @@ let serviceTags = [];
 let serviceGallery = [];
 let serviceLinks = [];
 let currentServicesFilter = 'all';
+let currentServicesOwnerFilter = null;
 let providerServiceTags = [];
 let providerServiceGallery = [];
 let currentBookingProviderId = null;
@@ -2762,6 +2763,30 @@ function formatDate(iso) {
 // ==========================================
 // SERVICES DIRECTORY
 // ==========================================
+function renderServicesOwnerBanner() {
+    const banner = document.getElementById('servicesOwnerBanner');
+    if (!banner) return;
+    if (!currentServicesOwnerFilter) {
+        banner.style.display = 'none';
+        return;
+    }
+    const name = currentServicesOwnerFilter.name ? String(currentServicesOwnerFilter.name) : 'this provider';
+    const title = document.getElementById('servicesOwnerBannerTitle');
+    if (title) title.textContent = name;
+    banner.style.display = 'flex';
+}
+
+function viewProviderServices(owner) {
+    currentServicesOwnerFilter = owner || null;
+    currentServicesFilter = 'all';
+    if (typeof navigateTo === 'function') navigateTo('services-directory');
+}
+
+function clearServicesOwnerFilter() {
+    currentServicesOwnerFilter = null;
+    renderServicesDirectory();
+}
+
 function renderServicesDirectory() {
     const services = Storage.getServices();
     const search = (document.getElementById('servicesSearch')?.value || '').toLowerCase();
@@ -2772,8 +2797,11 @@ function renderServicesDirectory() {
     const filterContainer = document.querySelector('#page-services-directory .filter-tabs');
     if (filterContainer) filterContainer.innerHTML = getServiceTypeFilterHTML();
 
+    renderServicesOwnerBanner();
+
     let filtered = services.filter(s => {
         if (currentServicesFilter !== 'all' && s.category !== currentServicesFilter) return false;
+        if (currentServicesOwnerFilter && !providerItemMatches(s, currentServicesOwnerFilter)) return false;
         if (location && s.location !== location) return false;
         if (search) {
             const searchFields = [s.name, s.email, s.phone, s.location, s.rate, s.bio, s.category, ...(s.tags || [])].join(' ').toLowerCase();

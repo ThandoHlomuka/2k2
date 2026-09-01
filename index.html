@@ -52,7 +52,7 @@
     <!-- Favicon -->
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💎</text></svg>">
 
-    <link rel="stylesheet" href="style.css?v=21">
+    <link rel="stylesheet" href="style.css?v=22">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700;900&family=Inter:wght@300;400;500;600;700&family=Dancing+Script:wght@700&display=swap" rel="stylesheet">
 
@@ -1275,6 +1275,7 @@
                             <p id="dirViewLocation" class="view-email"><i class="fas fa-map-marker-alt"></i> -</p>
                         </div>
                         <div class="view-actions-row">
+                            <button class="btn btn-primary" onclick="viewProviderServices(currentActivityOwner)"><i class="fas fa-calendar-check"></i> Book a Service</button>
                             <button class="btn btn-primary" id="dirBookBtn" onclick="openBookingModal(currentViewListingId, 'listing')"><i class="fas fa-calendar-plus"></i> Book Provider</button>
                             <button class="btn btn-primary provider-btn" onclick="openComposeTo(currentViewListingId, document.getElementById('dirViewName').textContent, 'listing')"><i class="fas fa-paper-plane"></i> Message</button>
                             <button class="btn btn-secondary" id="dirTipBtn" onclick="openTipModal(currentViewListingId, 'listing', document.getElementById('dirViewName').textContent)"><i class="fas fa-hand-holding-heart"></i> Tip Jar</button>
@@ -1955,6 +1956,12 @@
                             <option value="name-desc">Name Z-A</option>
                         </select>
                     </div>
+                </div>
+
+                <div class="services-owner-banner" id="servicesOwnerBanner" style="display:none">
+                    <i class="fas fa-user-tie"></i>
+                    <span>Showing services by <strong id="servicesOwnerBannerTitle"></strong></span>
+                    <button class="btn btn-secondary btn-sm" onclick="clearServicesOwnerFilter()"><i class="fas fa-times"></i> Clear</button>
                 </div>
 
                 <div class="directory-stats" id="servicesDirectoryStats">
@@ -3618,7 +3625,7 @@
       });
     })();
     </script>
-    <script src="script.js?v=24"></script>
+    <script src="script.js?v=25"></script>
     <script src="products.js?v=21"></script>
     <script>
         let onbSlide = 0;
