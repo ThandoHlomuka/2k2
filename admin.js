@@ -933,14 +933,13 @@ function renderAdminContent() {
         return;
     }
 
-    const providers = [...Storage.getListings(), ...Storage.getServices()];
     tbody.innerHTML = filtered.map(c => {
         const type = CONTENT_TYPES[c.type] || { label: c.type, icon: 'fa-file', color: '#8a7b55' };
-        const author = providers.find(p => p.id === c.providerId);
+        const authorName = resolveProviderAuthorName(c, 'Unknown');
         return `<tr>
             <td><strong>${c.title}</strong></td>
             <td><span class="badge" style="background:${type.color}22;color:${type.color};border:1px solid ${type.color}44"><i class="fas ${type.icon}"></i> ${type.label}</span></td>
-            <td>${author ? author.name : 'Unknown'}</td>
+            <td>${escapeHtml(authorName)}</td>
             <td>${fmtDate(c.createdAt)}</td>
             <td>
                 <div class="admin-actions">
@@ -960,8 +959,7 @@ function adminViewContent(id) {
     const c = Storage.getContent().find(x => x.id === id);
     if (!c) return;
     const type = CONTENT_TYPES[c.type] || { label: c.type, icon: 'fa-file', color: '#8a7b55' };
-    const providers = [...Storage.getListings(), ...Storage.getServices()];
-    const author = providers.find(p => p.id === c.providerId);
+    const authorName = resolveProviderAuthorName(c, 'Unknown');
     let mediaHtml = '';
     if (c.type === 'audio' || c.type === 'podcast') {
         mediaHtml = c.fileUrl ? `<div style="margin:14px 0"><audio controls style="width:100%" src="${escapeHtml(c.fileUrl)}"></audio></div>` : '';
@@ -975,7 +973,7 @@ function adminViewContent(id) {
         <div style="margin-top:16px">
             <div class="admin-view-row"><span class="label">Title</span><span class="value">${escapeHtml(c.title || '-')}</span></div>
             <div class="admin-view-row"><span class="label">Type</span><span class="value">${type.label}</span></div>
-            <div class="admin-view-row"><span class="label">Creator</span><span class="value">${author ? escapeHtml(author.name) : 'Unknown'}</span></div>
+            <div class="admin-view-row"><span class="label">Creator</span><span class="value">${escapeHtml(authorName)}</span></div>
             <div class="admin-view-row"><span class="label">Status</span><span class="value">${c.status || 'active'}</span></div>
             <div class="admin-view-row"><span class="label">Price</span><span class="value">${c.price ? 'R' + c.price : 'Free'}</span></div>
             <div class="admin-view-row"><span class="label">Downloads</span><span class="value">${(c.downloads || 0)}</span></div>
@@ -1062,17 +1060,16 @@ function renderAdminEvents() {
         return;
     }
 
-    const providers = [...Storage.getListings(), ...Storage.getServices()];
     tbody.innerHTML = filtered.map(ev => {
         const type = EVENT_TYPES[ev.type] || { label: ev.type, icon: 'fa-calendar', color: '#8a7b55' };
-        const host = providers.find(p => p.id === ev.providerId);
+        const hostName = resolveProviderAuthorName(ev, 'Unknown');
         const eventDate = ev.eventDate ? new Date(ev.eventDate).toLocaleDateString('en-ZA', { day: 'numeric', month: 'short', year: 'numeric' }) : '-';
         return `<tr>
             <td><strong>${ev.name}</strong></td>
             <td><span class="badge" style="background:${type.color}22;color:${type.color};border:1px solid ${type.color}44"><i class="fas ${type.icon}"></i> ${type.label}</span></td>
             <td>${eventDate}</td>
             <td>${ev.venue || '-'}</td>
-            <td>${host ? host.name : 'Unknown'}</td>
+            <td>${escapeHtml(hostName)}</td>
             <td>
                 <div class="admin-actions">
                     <button class="btn btn-secondary btn-xs" onclick="adminViewEvent('${ev.id}')"><i class="fas fa-eye"></i></button>
@@ -1091,8 +1088,7 @@ function adminViewEvent(id) {
     const ev = Storage.getEvents().find(x => x.id === id);
     if (!ev) return;
     const type = EVENT_TYPES[ev.type] || { label: ev.type, icon: 'fa-calendar', color: '#8a7b55' };
-    const providers = [...Storage.getListings(), ...Storage.getServices()];
-    const host = providers.find(p => p.id === ev.providerId);
+    const hostName = resolveProviderAuthorName(ev, 'Unknown');
     showAdminView(`
         <h2><i class="fas ${type.icon}" style="color:${type.color};margin-right:8px"></i> Event Details</h2>
         <div style="margin-top:12px">
@@ -1101,7 +1097,7 @@ function adminViewEvent(id) {
             <div class="admin-view-row"><span class="label">Date</span><span class="value">${ev.eventDate ? new Date(ev.eventDate).toLocaleString('en-ZA', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '-'}</span></div>
             <div class="admin-view-row"><span class="label">Venue</span><span class="value">${escapeHtml(ev.venue || '-')}</span></div>
             <div class="admin-view-row"><span class="label">Entry</span><span class="value">${ev.entryFee ? 'R' + ev.entryFee : 'Free'}</span></div>
-            <div class="admin-view-row"><span class="label">Host</span><span class="value">${host ? escapeHtml(host.name) : 'Unknown'}</span></div>
+            <div class="admin-view-row"><span class="label">Host</span><span class="value">${escapeHtml(hostName)}</span></div>
             <div class="admin-view-row"><span class="label">Status</span><span class="value">${ev.status || 'active'}</span></div>
             <div class="admin-view-row"><span class="label">Created</span><span class="value">${fmtDate(ev.createdAt)}</span></div>
         </div>

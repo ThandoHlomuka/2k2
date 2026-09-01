@@ -1455,6 +1455,20 @@ function providerItemMatches(item, owner) {
     return false;
 }
 
+function resolveProviderAuthorName(item, fallback) {
+    if (!item) return fallback || 'Unknown';
+    if (item.ownerName || item.authorName) return item.ownerName || item.authorName;
+    if (item.author) return item.author;
+    if (item.providerId && item.providerId !== 'unknown') {
+        const pool = [...Storage.getListings(), ...Storage.getServices(), ...Storage.getProviders()];
+        const byId = pool.find(p => p.id === item.providerId);
+        if (byId) return byId.name || byId.businessName || byId.authorName || '';
+        const byName = [...Storage.getListings(), ...Storage.getServices()].find(p => (p.name || '') === item.providerId);
+        if (byName) return byName.name;
+    }
+    return fallback || 'Unknown';
+}
+
 function getProviderActivityItems(type) {
     const owner = currentActivityOwner;
     switch (type) {
@@ -3741,9 +3755,7 @@ function renderContentDirectory() {
 
     container.innerHTML = filtered.map(c => {
         const type = CONTENT_TYPES[c.type] || { label: c.type, icon: 'fa-file', color: '#8a7b55' };
-        const providers = [...Storage.getListings(), ...Storage.getServices()];
-        const author = providers.find(p => p.id === c.providerId);
-        const authorName = author ? author.name : 'Unknown Creator';
+        const authorName = resolveProviderAuthorName(c, 'Unknown Creator');
         const hasMedia = c.fileData && c.fileData.length > 100;
         return `
             <div class="content-card profile-card" onclick="viewContent('${c.id}')">
@@ -3774,9 +3786,7 @@ function viewContent(id) {
 
     currentContentViewId = id;
     const type = CONTENT_TYPES[item.type] || { label: item.type, icon: 'fa-file', color: '#8a7b55' };
-    const providers = [...Storage.getListings(), ...Storage.getServices()];
-    const author = providers.find(p => p.id === item.providerId);
-    const authorName = author ? author.name : 'Unknown Creator';
+    const authorName = resolveProviderAuthorName(item, 'Unknown Creator');
 
     document.getElementById('contentDetailViewType').innerHTML = `<i class="fas ${type.icon}"></i> ${type.label}`;
     document.getElementById('contentDetailViewType').style.background = `${type.color}22`;
@@ -4565,9 +4575,7 @@ function renderEventsDirectory() {
 
     container.innerHTML = filtered.map(ev => {
         const type = EVENT_TYPES[ev.type] || { label: ev.type, icon: 'fa-calendar', color: '#8a7b55' };
-        const providers = [...Storage.getListings(), ...Storage.getServices()];
-        const author = providers.find(p => p.id === ev.providerId);
-        const authorName = author ? author.name : 'Unknown Host';
+        const authorName = resolveProviderAuthorName(ev, 'Unknown Host');
         const eventDate = ev.eventDate ? new Date(ev.eventDate).toLocaleDateString('en-ZA', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' }) : '';
         return `
             <div class="content-card profile-card event-grid-card" onclick="viewEvent('${ev.id}')">
@@ -4605,9 +4613,7 @@ function viewEvent(id) {
 
     currentEventViewId = id;
     const type = EVENT_TYPES[ev.type] || { label: ev.type, icon: 'fa-calendar', color: '#8a7b55' };
-    const providers = [...Storage.getListings(), ...Storage.getServices()];
-    const author = providers.find(p => p.id === ev.providerId);
-    const authorName = author ? author.name : 'Unknown Host';
+    const authorName = resolveProviderAuthorName(ev, 'Unknown Host');
 
     document.getElementById('eventDetailViewType').innerHTML = `<i class="fas ${type.icon}"></i> ${type.label}`;
     document.getElementById('eventDetailViewType').style.background = `${type.color}22`;
@@ -5166,8 +5172,10 @@ function handleForumThreadSubmit(e) {
         }
         showToast('Thread updated!', 'success');
     } else {
+        const threadOwner = getCurrentProviderIdentity();
         threads.push({
             id: generateId(), title, section, category, province, author, body, tags,
+            ownerId: threadOwner.id, ownerName: threadOwner.name,
             views: 0, pinned: false, locked: false,
             createdAt: new Date().toISOString()
         });
@@ -5453,9 +5461,11 @@ function handleGigSubmit(e) {
         }
         showToast('Gig updated!', 'success');
     } else {
+        const gigOwner = getCurrentProviderIdentity();
         gigs.push({
             id: generateId(), title, gigType, location, rate: rate ? parseFloat(rate) : null, rateType,
             contact, author, authorId: 'current', description, tags, urgent,
+            ownerId: gigOwner.id, ownerName: gigOwner.name,
             featured: false, status: 'active',
             createdAt: new Date().toISOString()
         });
@@ -6416,7 +6426,7 @@ function handleExperienceSubmit(e) {
     } else {
         experiences.push({
             id: generateId(), title, type, location, price, description, rules, includes, capacity,
-            duration, coverPhoto, author, providerId, authorId: 'current', status: 'active', tags: [],
+            duration, coverPhoto, author, providerId, authorId: 'current', ownerId: providerId, ownerName: author, status: 'active', tags: [],
             createdAt: new Date().toISOString(), updatedAt: new Date().toISOString()
         });
         showToast('Experience published!', 'success');
