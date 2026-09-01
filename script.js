@@ -1388,8 +1388,8 @@ function editUserById(id) {
     const users = Storage.getUsers();
     const u = users.find(p => p.id === id);
     if (!u) return;
-    populateUserForm(u);
     navigateTo('user-create');
+    populateUserForm(u);
 }
 
 function editUserProfile() {
@@ -1693,8 +1693,8 @@ function editProviderById(id) {
     const providers = Storage.getProviders();
     const p = providers.find(pr => pr.id === id);
     if (!p) return;
-    populateProviderForm(p);
     navigateTo('provider-create');
+    populateProviderForm(p);
 }
 
 function editProviderProfile() { if (currentViewProviderId) editProviderById(currentViewProviderId); }
