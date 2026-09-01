@@ -43,7 +43,8 @@ const DIRECTORY_TYPES = {
     'model': { label: 'Model', icon: 'fa-camera-retro', color: '#ec4899' },
     'exotic-dancer': { label: 'Exotic Dancer', icon: 'fa-music', color: '#f59e0b' },
     'escort': { label: 'Escort', icon: 'fa-gem', color: '#6366f1' },
-    'nude-chef': { label: 'Nude Chef', icon: 'fa-utensils', color: '#ef4444' }
+    'nude-chef': { label: 'Nude Chef', icon: 'fa-utensils', color: '#ef4444' },
+    'masseuse': { label: 'Masseuse', icon: 'fa-spa', color: '#0ea5e9' }
 };
 
 const VENUE_TYPES = {
