@@ -53,7 +53,7 @@
     <!-- Favicon -->
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💎</text></svg>">
 
-    <link rel="stylesheet" href="style.css?v=27">
+    <link rel="stylesheet" href="style.css?v=28">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700;900&family=Inter:wght@300;400;500;600;700&family=Dancing+Script:wght@700&display=swap" rel="stylesheet">
 
@@ -1619,9 +1619,10 @@
             <div class="modal">
                 <div class="modal-icon" style="background: linear-gradient(135deg, #c9a227, #a07d12); color:#fff"><i class="fas fa-user-plus"></i></div>
                 <h2>Join 2k2</h2>
-                <p id="authPromptText" style="color:#8a7b55;font-size:0.92rem;margin:4px 0 18px">Create a free account to continue.</p>
+                <p id="authPromptText" style="color:#8a7b55;font-size:0.92rem;margin:4px 0 18px">Create a free account to continue. Choose your account type:</p>
                 <div style="display:flex;flex-direction:column;gap:10px">
-                    <button class="btn btn-primary" onclick="window.location.href='register.html'"><i class="fas fa-user-plus"></i> Create a Free Account</button>
+                    <button class="btn btn-primary" onclick="window.location.href='register.html'"><i class="fas fa-user"></i> Join as a Member</button>
+                    <button class="btn btn-primary provider-btn" onclick="window.location.href='register.html?plan=provider'"><i class="fas fa-briefcase"></i> Join as a Service Provider</button>
                     <button class="btn btn-secondary" onclick="window.location.href='login.html'"><i class="fas fa-right-to-bracket"></i> I Already Have an Account</button>
                     <button class="btn btn-secondary" onclick="closeAuthPrompt()" style="background:transparent;box-shadow:none">Maybe Later</button>
                 </div>
@@ -3675,7 +3676,7 @@
       });
     })();
     </script>
-    <script src="script.js?v=35"></script>
+    <script src="script.js?v=36"></script>
     <script src="products.js?v=21"></script>
     <script>
         let onbSlide = 0;

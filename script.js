@@ -569,7 +569,10 @@ function navBottom(page) {
 
 function maybeCloseSidebar() {
     const sidebar = document.getElementById('sidebar');
-    if (sidebar && window.innerWidth <= 768) sidebar.classList.add('hidden');
+    if (sidebar && window.innerWidth <= 768) {
+        sidebar.classList.add('hidden');
+        sidebar.classList.remove('menu-open');
+    }
 }
 
 function populateGigDropdowns() {
@@ -611,12 +614,11 @@ document.addEventListener('DOMContentLoaded', function() {
     const sidebar = document.getElementById('sidebar');
     const closeBtn = document.getElementById('closeBtn');
 
-    // Start the sidebar hidden on mobile so it slides in via the Browse button.
-    if (sidebar && window.innerWidth <= 768) {
-        sidebar.classList.add('hidden');
-    }
+    // The sidebar is hidden by CSS by default on mobile (translateX(-100%))
+    // and opened via the .menu-open class, so it can never flash over the
+    // screen while scripts are still loading.
 
-    if (closeBtn) closeBtn.addEventListener('click', () => { if (sidebar && window.innerWidth <= 768) sidebar.classList.add('hidden'); });
+    if (closeBtn) closeBtn.addEventListener('click', () => { if (sidebar && window.innerWidth <= 768) closeSidebar(); });
 
     document.querySelectorAll('.nav-item[data-page]').forEach(item => {
         item.addEventListener('click', function(e) {
@@ -681,13 +683,18 @@ document.addEventListener('DOMContentLoaded', function() {
 
 function closeSidebar() {
     const sidebar = document.getElementById('sidebar');
-    if (sidebar) sidebar.classList.add('hidden');
+    if (!sidebar || window.innerWidth > 768) return;
+    sidebar.classList.add('hidden');
+    sidebar.classList.remove('menu-open');
 }
 
-// Opens the slide-in navigation menu (mobile Browse button / hamburger replacement).
+// Opens the slide-in navigation menu (mobile Menu button).
 function openSidebar() {
     const sidebar = document.getElementById('sidebar');
-    if (sidebar) sidebar.classList.remove('hidden');
+    if (sidebar) {
+        sidebar.classList.remove('hidden');
+        sidebar.classList.add('menu-open');
+    }
 }
 
 // ==========================================
@@ -1012,7 +1019,7 @@ function requireSignIn(actionText) {
     const modal = document.getElementById('authPromptModal');
     if (modal) {
         const text = document.getElementById('authPromptText');
-        if (text) text.textContent = (actionText || 'Continue') + ' Create a free account to unlock this feature.';
+        if (text) text.textContent = (actionText || 'Continue') + ' Create a free account to unlock this feature. Choose Member or Service Provider.';
         modal.classList.add('active');
     } else {
         openSignInToast();

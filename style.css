@@ -72,6 +72,7 @@ h1, h2, h3, h4 {
     width: var(--sidebar-width);
     max-width: 100vw;
     height: 100vh;
+    height: 100svh;
     height: 100dvh;
     background: linear-gradient(180deg, #0a0a0a 0%, #141006 100%);
     z-index: 1000;
@@ -86,6 +87,10 @@ h1, h2, h3, h4 {
 
 .sidebar.hidden {
     transform: translateX(-100%);
+}
+
+.sidebar.menu-open {
+    transform: translateX(0);
 }
 
 .sidebar::-webkit-scrollbar {
@@ -2027,12 +2032,20 @@ h1, h2, h3, h4 {
         width: 100%;
         max-width: 100vw;
         height: 100vh;
+        height: 100svh;
         height: 100dvh;
         box-shadow: none;
+        /* Hidden by default on mobile (pure CSS, no JS needed) so the drawer
+           can never flash over the page while scripts load. */
+        transform: translateX(-100%);
     }
 
     .sidebar.hidden {
         transform: translateX(-100%);
+    }
+
+    .sidebar.menu-open {
+        transform: translateX(0);
     }
 
     /* Compact spacing so the full menu fits on small screens without the user
@@ -2056,6 +2069,28 @@ h1, h2, h3, h4 {
 
     .sidebar-footer {
         padding-bottom: max(12px, env(safe-area-inset-bottom));
+    }
+
+    /* Mobile safety belt: nothing may overflow the viewport width. */
+    img,
+    video {
+        max-width: 100%;
+        height: auto;
+    }
+
+    pre {
+        max-width: 100%;
+        overflow-x: auto;
+        white-space: pre-wrap;
+        word-wrap: break-word;
+    }
+
+    h1, h2, h3, h4 {
+        overflow-wrap: break-word;
+    }
+
+    .modal {
+        padding: 28px 18px;
     }
 
     .main-content {
@@ -5642,6 +5677,7 @@ h1, h2, h3, h4 {
     animation: emojiPickerIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
     margin-bottom: 8px;
     width: 320px;
+    max-width: calc(100vw - 24px);
 }
 
 @keyframes emojiPickerIn {
@@ -6615,6 +6651,7 @@ h1, h2, h3, h4 {
     animation: emojiPickerIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
     margin-bottom: 8px;
     width: 340px;
+    max-width: calc(100vw - 24px);
 }
 
 .msg-gif-grid {
