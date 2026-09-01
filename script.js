@@ -462,6 +462,7 @@ let providerAdGallery = [];
 let serviceTags = [];
 let serviceGallery = [];
 let serviceLinks = [];
+let serviceRates = [];
 let currentServicesFilter = 'all';
 let currentServicesOwnerFilter = null;
 let providerServiceTags = [];
@@ -3309,7 +3310,7 @@ function renderServicesDirectory() {
         if (currentServicesOwnerFilter && !providerItemMatches(s, currentServicesOwnerFilter)) return false;
         if (location && s.location !== location) return false;
         if (search) {
-            const searchFields = [s.name, s.email, s.phone, s.location, s.rate, s.bio, s.category, ...(s.tags || [])].join(' ').toLowerCase();
+            const searchFields = [s.name, s.email, s.phone, s.location, s.rate, s.bio, s.category, ...(s.tags || []), ...(s.rates || []).map(r => r.label + ' ' + r.amount)].join(' ').toLowerCase();
             if (!searchFields.includes(search)) return false;
         }
         return true;
@@ -3394,7 +3395,13 @@ function viewServiceDirectory(id) {
     document.getElementById('svcViewCategory').textContent = cat.label;
     document.getElementById('svcViewEmail').textContent = s.email || '-';
     document.getElementById('svcViewPhone').textContent = s.phone || '-';
-    document.getElementById('svcViewRate').textContent = s.rate || '-';
+    if (s.rates && s.rates.length) {
+        document.getElementById('svcViewRate').innerHTML = s.rates.map(r =>
+            (r.label ? `<strong>${escapeHtml(r.label)}</strong> &mdash; ` : '') + escapeHtml(r.amount)
+        ).join('<br>');
+    } else {
+        document.getElementById('svcViewRate').textContent = s.rate || '-';
+    }
     document.getElementById('svcViewBio').textContent = s.bio || 'No description provided.';
     const website = document.getElementById('svcViewWebsite');
     if (s.website) { website.href = s.website; website.textContent = s.website; }
@@ -3501,9 +3508,13 @@ function resetServiceForm() {
     serviceTags = [];
     serviceGallery = [];
     serviceLinks = [];
+    serviceRates = [{ label: '', amount: '' }];
     renderServiceTags();
     renderServiceGalleryUpload();
     renderServiceLinks();
+    renderServiceRates();
+    const addBtn = document.getElementById('serviceSubmitAddBtn');
+    if (addBtn) addBtn.style.display = '';
     renderServicePhotoPreview();
     // Auto-fill category based on most used
     const mostUsed = getMostUsedServiceType();
@@ -3602,6 +3613,43 @@ function collectServiceLinks() {
     })).filter(l => l.url).slice(0, 5);
 }
 
+// ==========================================
+// SERVICE - Rates & Pricing (multiple rates)
+// ==========================================
+function addServiceRate() {
+    serviceRates.push({ label: '', amount: '' });
+    renderServiceRates();
+}
+
+function removeServiceRate(i) {
+    serviceRates.splice(i, 1);
+    renderServiceRates();
+}
+
+function renderServiceRates() {
+    const box = document.getElementById('serviceRatesContainer');
+    if (!box) return;
+    if (serviceRates.length === 0) serviceRates = [{ label: '', amount: '' }];
+    box.innerHTML = serviceRates.map((r, i) => `
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:10px">
+            <input type="text" data-rate-label="${i}" value="${escapeHtml(r.label)}" placeholder="Option (e.g. 60 min session)" class="form-input" style="flex:1;min-width:140px">
+            <input type="text" data-rate-amount="${i}" value="${escapeHtml(r.amount)}" placeholder="Amount (e.g. R500)" class="form-input" style="flex:1;min-width:140px">
+            <button type="button" class="btn btn-danger btn-sm" onclick="removeServiceRate(${i})"><i class="fas fa-times"></i></button>
+        </div>
+    `).join('');
+}
+
+function collectServiceRates() {
+    return (serviceRates || []).map((_, i) => ({
+        label: (document.querySelector(`#serviceRatesContainer input[data-rate-label="${i}"]`)?.value || '').trim(),
+        amount: (document.querySelector(`#serviceRatesContainer input[data-rate-amount="${i}"]`)?.value || '').trim()
+    })).filter(r => r.amount);
+}
+
+function serviceRatesDisplay(rates) {
+    return rates.map(r => (r.label ? r.label + ' \u2014 ' : '') + r.amount).join(' \u00b7 ');
+}
+
 function renderServiceGalleryUpload() {
     const container = document.getElementById('serviceGalleryUploadGrid');
     if (!container) return;
@@ -3631,14 +3679,20 @@ function removeServiceGalleryImage(i) { serviceGallery.splice(i, 1); renderServi
 
 function handleServiceSubmit(e) {
     e.preventDefault();
+    submitService(false);
+}
+
+function submitService(addAnother) {
     const id = document.getElementById('serviceId').value;
+    const rates = collectServiceRates();
     const serviceData = {
+        rates,
+        rate: serviceRatesDisplay(rates),
         name: document.getElementById('serviceName').value.trim(),
         category: document.getElementById('serviceCategory').value,
         email: document.getElementById('serviceEmail').value.trim(),
         phone: document.getElementById('servicePhone').value.trim(),
         location: document.getElementById('serviceLocation').value,
-        rate: document.getElementById('serviceRate').value.trim(),
         bookingFee: parseFloat(document.getElementById('serviceBookingFee')?.value) || null,
         website: document.getElementById('serviceWebsite').value.trim(),
         links: collectServiceLinks(),
@@ -3658,6 +3712,7 @@ function handleServiceSubmit(e) {
     };
 
     const services = Storage.getServices();
+    let createdNew = false;
     if (id) {
         const idx = services.findIndex(s => s.id === id);
         if (idx !== -1) { services[idx] = { ...services[idx], ...serviceData, ownerId: getCurrentProviderIdentity().id, ownerName: getCurrentProviderIdentity().name, updatedAt: new Date().toISOString() }; }
@@ -3668,9 +3723,14 @@ function handleServiceSubmit(e) {
         serviceData.ownerId = getCurrentProviderIdentity().id;
         serviceData.ownerName = getCurrentProviderIdentity().name;
         services.push(serviceData);
+        createdNew = true;
         showToast('Service published!', 'success');
     }
     Storage.setServices(services);
+    if (createdNew && addAnother) {
+        resetServiceForm();
+        return;
+    }
     navigateTo('provider-services');
 }
 
@@ -3688,7 +3748,16 @@ function editService(id) {
     document.getElementById('serviceEmail').value = s.email || '';
     document.getElementById('servicePhone').value = s.phone || '';
     document.getElementById('serviceLocation').value = s.location || '';
-    document.getElementById('serviceRate').value = s.rate || '';
+    if (s.rates && s.rates.length) {
+        serviceRates = JSON.parse(JSON.stringify(s.rates));
+    } else if (s.rate) {
+        serviceRates = [{ label: '', amount: s.rate }];
+    } else {
+        serviceRates = [{ label: '', amount: '' }];
+    }
+    renderServiceRates();
+    const addAnother = document.getElementById('serviceSubmitAddBtn');
+    if (addAnother) addAnother.style.display = 'none';
     if (document.getElementById('serviceBookingFee')) document.getElementById('serviceBookingFee').value = s.bookingFee ?? '';
     document.getElementById('serviceWebsite').value = s.website || '';
 

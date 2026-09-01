@@ -1349,9 +1349,11 @@
                                     </optgroup>
                                 </select>
                             </div>
-                            <div class="form-group">
-                                <label>Price</label>
-                                <input type="text" id="serviceRate" placeholder="e.g. R500/session">
+                            <div class="form-group full-width">
+                                <label>Rates &amp; Pricing</label>
+                                <p style="color:#a99c7e;font-size:0.85rem;margin-bottom:10px">Add each option you charge for (e.g. 30 min session, 60 min session, full day).</p>
+                                <div id="serviceRatesContainer"></div>
+                                <button type="button" class="btn btn-secondary btn-sm" onclick="addServiceRate()" style="margin-top:8px"><i class="fas fa-plus"></i> Add Rate</button>
                             </div>
                             <div class="form-group">
                                 <label>Your Booking Fee (R) *</label>
@@ -1436,6 +1438,7 @@
 
                     <div class="form-actions">
                         <button type="button" class="btn btn-secondary" onclick="navigateTo('provider-services')">Cancel</button>
+                        <button type="button" class="btn btn-secondary" id="serviceSubmitAddBtn" onclick="submitService(true)" style="display:none"><i class="fas fa-plus"></i> Publish &amp; Add Another</button>
                         <button type="submit" class="btn btn-primary provider-btn" id="serviceSubmitBtn">Publish Service</button>
                     </div>
                 </form>
@@ -3214,7 +3217,7 @@
       });
     })();
     </script>
-    <script src="script.js?v=38"></script>
+    <script src="script.js?v=39"></script>
     <script src="products.js?v=21"></script>
 </body>
 </html>
