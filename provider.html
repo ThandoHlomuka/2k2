@@ -26,7 +26,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💰</text></svg>">
-    <link rel="stylesheet" href="style.css?v=28">
+    <link rel="stylesheet" href="style.css?v=29">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <script type="application/ld+json">
     {
@@ -950,6 +950,18 @@
                             </div>
                         </div>
                         <input type="file" id="galleryInput" accept="image/*" style="display:none" onchange="addGalleryImage(this)">
+                    </div>
+
+                    <div class="profile-card">
+                        <h2><i class="fas fa-video"></i> Video Gallery</h2>
+                        <p class="empty-text" style="margin-bottom:16px">Upload one video (max 30 seconds, max 8MB)</p>
+                        <div id="listingVideoPreview" class="video-upload-preview">
+                            <label for="listingVideoInput" class="photo-preview video-add-box">
+                                <i class="fas fa-video"></i>
+                                <span>Click to upload video</span>
+                            </label>
+                        </div>
+                        <input type="file" id="listingVideoInput" accept="video/*" style="display:none" onchange="handleListingVideoUpload(this)">
                     </div>
 
                     <div class="profile-card">

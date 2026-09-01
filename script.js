@@ -449,6 +449,7 @@ let userTags = [];
 let providerTags = [];
 let listingTags = [];
 let listingGallery = [];
+let listingVideo = '';
 let listingLinks = [];
 let currentDirectoryFilter = 'all';
 let venueTags = [];
@@ -2150,6 +2151,15 @@ function viewDirectoryListing(id) {
         galleryContainer.innerHTML = '<p class="empty-text">No gallery images</p>';
     }
 
+    const videoContainer = document.getElementById('dirViewVideo');
+    if (videoContainer) {
+        if (l.video) {
+            videoContainer.innerHTML = `<video controls preload="metadata" style="width:100%;max-height:400px;border-radius:12px;background:#000"><source src="${l.video}"></video>`;
+        } else {
+            videoContainer.innerHTML = '<p class="empty-text">No video uploaded</p>';
+        }
+    }
+
     const days = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
     const dayLabels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
     const availContainer = document.getElementById('dirViewAvailability');
@@ -2189,8 +2199,10 @@ function resetListingForm() {
     listingTags = [];
     listingGallery = [];
     listingLinks = [];
+    listingVideo = '';
     renderListingTags();
     renderGalleryUpload();
+    renderListingVideo();
     renderListingLinks();
     document.getElementById('listingPhotoPreview').innerHTML = '<i class="fas fa-camera"></i><span>Click to upload</span>';
 }
@@ -2214,6 +2226,7 @@ function handleListingSubmit(e) {
         bio: document.getElementById('listingBio').value,
         tags: [...listingTags],
         gallery: [...listingGallery],
+        video: listingVideo,
         photo: document.getElementById('listingPhotoPreview').querySelector('img')?.src || '',
         availability: {
             mon: document.getElementById('listMon').checked,
@@ -2306,8 +2319,10 @@ function populateListingForm(l) {
     listingTags = [...(l.tags || [])];
     listingGallery = [...(l.gallery || [])];
     listingLinks = [...(l.links || [])];
+    listingVideo = l.video || '';
     renderListingTags();
     renderGalleryUpload();
+    renderListingVideo();
     renderListingLinks();
 
     if (l.availability) {
@@ -2429,6 +2444,73 @@ function renderGalleryUpload() {
     }
 
     container.innerHTML = html;
+}
+
+// ==========================================
+// DIRECTORY - Video Gallery (one video, 30s max, 8MB max)
+// ==========================================
+function handleListingVideoUpload(input) {
+    if (!input.files || !input.files[0]) return;
+    const file = input.files[0];
+
+    if (file.size > 8 * 1024 * 1024) {
+        alert('Video size exceeds the 8MB limit.');
+        input.value = '';
+        return;
+    }
+    if (!file.type.startsWith('video/')) {
+        alert('Please choose a valid video file.');
+        input.value = '';
+        return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        const dataUrl = e.target.result;
+        checkVideoDuration(dataUrl, function(duration) {
+            if (duration > 30) {
+                alert('Video must be 30 seconds or shorter.');
+                input.value = '';
+                return;
+            }
+            listingVideo = dataUrl;
+            renderListingVideo();
+        });
+    };
+    reader.onerror = function() { alert('Failed to read the video file.'); input.value = ''; };
+    reader.readAsDataURL(file);
+}
+
+function checkVideoDuration(dataUrl, callback) {
+    const vid = document.createElement('video');
+    vid.preload = 'metadata';
+    vid.onloadedmetadata = function() { callback(vid.duration || 0); };
+    vid.onerror = function() { callback(0); };
+    vid.src = dataUrl;
+}
+
+function renderListingVideo() {
+    const container = document.getElementById('listingVideoPreview');
+    if (!container) return;
+    if (listingVideo) {
+        container.innerHTML = `
+            <div class="video-upload-item has-video">
+                <video src="${listingVideo}" controls muted preload="metadata"></video>
+                <p class="field-hint">Video uploaded (max 30s / 8MB)</p>
+                <button type="button" class="btn btn-secondary btn-sm" onclick="removeListingVideo()"><i class="fas fa-trash"></i> Remove Video</button>
+            </div>`;
+    } else {
+        container.innerHTML = `
+            <label for="listingVideoInput" class="photo-preview video-add-box">
+                <i class="fas fa-video"></i>
+                <span>Click to upload video</span>
+            </label>`;
+    }
+}
+
+function removeListingVideo() {
+    listingVideo = '';
+    renderListingVideo();
 }
 
 // ==========================================

@@ -2783,6 +2783,39 @@ h1, h2, h3, h4 {
 }
 
 /* ============================================
+   DIRECTORY - Video Gallery Upload
+   ============================================ */
+.video-upload-preview {
+    text-align: center;
+}
+
+.video-add-box {
+    width: 100%;
+    max-width: 320px;
+    height: 140px;
+}
+
+.video-upload-item.has-video {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+}
+
+.video-upload-item.has-video video {
+    width: 100%;
+    max-width: 480px;
+    max-height: 320px;
+    border-radius: 14px;
+    background: #000;
+}
+
+.directory-gallery video {
+    width: 100%;
+    border-radius: 12px;
+}
+
+/* ============================================
    DIRECTORY - Listings Manager (Provider Page)
    ============================================ */
 .profiles-section {
