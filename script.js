@@ -7144,8 +7144,12 @@ const PORT_CONTENT = {
     provider: { badge: 'Service Provider', stepsKey: 'provider', bottomKey: 'providerBottom' }
 };
 
+function isProviderPortalPage() {
+    return typeof window !== 'undefined' && window.location.pathname.includes('provider.html');
+}
+
 function currentTourPort() {
-    return isProviderPage ? 'provider' : 'user';
+    return isProviderPortalPage() ? 'provider' : 'user';
 }
 
 function buildTourSteps() {
@@ -7331,7 +7335,7 @@ function positionTour(el) {
 }
 
 function isTourAvailable() {
-    if (isProviderPage) return true;
+    if (isProviderPortalPage()) return true;
     const p = (window.location.pathname.split('/').pop() || '').toLowerCase();
     if (!p || p === 'index.html') return true;
     return false;
