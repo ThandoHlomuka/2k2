@@ -343,7 +343,7 @@ function renderAdminDashboard() {
     const dashTile = document.getElementById('adminApprovalsTile');
     if (dashTile) {
         dashTile.style.display = '';
-        const numEl = dashTile.querySelector('.stat-card-number');
+        const numEl = dashTile.querySelector('.stat-number');
         if (numEl) numEl.textContent = pendingCount;
     }
 
