@@ -2493,7 +2493,7 @@ h1, h2, h3, h4 {
 }
 
 .filter-tab {
-    padding: 10px 20px;
+    padding: 9px 18px;
     border: 2px solid #e6dec8;
     border-radius: 12px;
     background: white;
@@ -2501,25 +2501,27 @@ h1, h2, h3, h4 {
     font-size: 0.9rem;
     font-weight: 600;
     color: #8a7b55;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    display: flex;
+    transition: background 0.25s, color 0.25s, border-color 0.25s, box-shadow 0.25s;
+    display: inline-flex;
     align-items: center;
+    justify-content: center;
     gap: 8px;
+    white-space: nowrap;
+    flex-shrink: 0;
+    line-height: 1.2;
 }
 
 .filter-tab:hover {
     border-color: #e4c05a;
     color: #e4c05a;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(228, 192, 90, 0.2);
+    box-shadow: 0 3px 10px rgba(228, 192, 90, 0.18);
 }
 
 .filter-tab.active {
     background: linear-gradient(135deg, #d3ad44, #a07d12);
     border-color: transparent;
     color: white;
-    box-shadow: 0 4px 15px rgba(211, 173, 68, 0.4);
-    transform: translateY(-2px);
+    box-shadow: 0 4px 14px rgba(211, 173, 68, 0.35);
 }
 
 .filter-bar {

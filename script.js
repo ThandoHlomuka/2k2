@@ -1154,6 +1154,24 @@ function getUserProfilesByAuth() {
     return [];
 }
 
+function currentDisplayName() {
+    try {
+        const profile = getUserProfilesByAuth()[0];
+        if (profile && (profile.fullName || profile.username)) return profile.fullName || profile.username;
+        const authId = currentAuthId();
+        if (authId) {
+            const pv = Storage.getProviders().find(p => String(p.ownerId) === String(authId) || String(p.userId) === String(authId));
+            if (pv && pv.businessName) return pv.businessName;
+            const ad = Storage.getAds().find(a => String(a.ownerId) === String(authId) && a.author);
+            if (ad && ad.author) return ad.author;
+        }
+        const snap = _2k2.Auth && _2k2.Auth.syncUser ? _2k2.Auth.syncUser() : null;
+        if (snap && snap.full_name) return snap.full_name;
+        if (snap && snap.email) return String(snap.email).split('@')[0].replace(/[._-]+/g, ' ').trim() || 'Member';
+        return 'Member';
+    } catch (e) { return 'Member'; }
+}
+
 // ==========================================
 // Followers / Following
 // ==========================================
@@ -5652,7 +5670,7 @@ function submitReview(targetType, targetId) {
         targetId: targetId,
         rating: rating,
         text: text,
-        authorName: 'General User',
+        authorName: currentDisplayName(),
         flagged: false,
         createdAt: new Date().toISOString()
     });
