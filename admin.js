@@ -1605,6 +1605,7 @@ function adminSetForumHeader(show) {
 function renderAdminForum() {
     if (currentAdminForumFilter === 'replies') { renderAdminForumReplies(); return; }
     if (currentAdminForumFilter === 'groups') { renderAdminForumGroups(); return; }
+    if (currentAdminForumFilter === 'subforums') { renderAdminForumSubforums(); return; }
 
     const threads = Storage.getForumThreads();
     const replies = Storage.getForumReplies();
@@ -1810,6 +1811,260 @@ function renderAdminForumGroups() {
     });
     html += '</td></tr>';
     container.innerHTML = html;
+}
+
+// ==========================================
+// ADMIN SUBFORUM CRUD (multi-level groups)
+// ==========================================
+let adminSubforumEditingId = null;
+let adminSubforumFormOpen = false;
+
+const ADMIN_SUBFORUM_ICONS = ['fa-folder', 'fa-folder-open', 'fa-users', 'fa-gem', 'fa-fire', 'fa-martini-glass-citrus', 'fa-champagne-glasses', 'fa-mask', 'fa-heart', 'fa-music', 'fa-film', 'fa-gamepad', 'fa-scroll', 'fa-crown', 'fa-star', 'fa-shield-halved'];
+const ADMIN_SUBFORUM_COLORS = ['#8a7b55', '#3b82f6', '#ef4444', '#10b981', '#8b5cf6', '#ec4899', '#f59e0b', '#6366f1', '#0ea5e9', '#d97706'];
+
+function renderAdminForumSubforums() {
+    adminSetForumHeader(false);
+    const container = document.getElementById('adminForumTableBody');
+    if (!container) return;
+
+    const subs = Storage.getForumSubforums() || [];
+    const threads = Storage.getForumThreads();
+    const members = Storage.getForumSubMemberships() || [];
+
+    const threadCount = id => threads.filter(t => t.subforumId === id).length;
+    const memberCount = id => members.filter(m => m.subforumId === id).length;
+
+    const sections = {
+        public: { label: 'Public Subforums & Groups', desc: 'Open community subforums', color: '#3b82f6' },
+        premium: { label: 'Premium Subforums & Groups', desc: 'Exclusive / provider-run subforums', color: '#d946ef' }
+    };
+
+    const buildTree = (parentId, depth) => {
+        return subs.filter(s => s.parentId === parentId).map(sub => {
+            const sec = sub.ownerType === 'provider' ? 'premium' : (sub.section || 'public');
+            const ds = {
+                threads: threadCount(sub.id),
+                members: memberCount(sub.id),
+                owner: sub.ownerType === 'provider' ? sub.ownerName || 'Provider' : null,
+                active: !sub.status || sub.status === 'active'
+            };
+            const children = buildTree(sub.id, depth + 1);
+            return `
+                <div style="margin-left:${depth * 22}px;margin-bottom:8px">
+                    <div style="display:flex;align-items:center;gap:10px;border:1px solid var(--border, #e6dec8);border-radius:12px;padding:10px 12px;background:var(--card-bg, #fff)">
+                        <span style="width:34px;height:34px;min-width:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;background:${sub.color || '#8a7b55'}18;color:${sub.color || '#8a7b55'}"><i class="fas ${sub.icon || 'fa-folder'}"></i></span>
+                        <div style="flex:1;min-width:0">
+                            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+                                <strong style="font-size:0.92rem">${escapeHtml(sub.name)}</strong>
+                                ${sub.ownerType === 'provider' ? '<span class="admin-subforum-badge" style="background:#f3e8ff;color:#7c3aed"><i class="fas fa-store"></i> ' + escapeHtml(sub.ownerName || 'Provider') + '</span>' : '<span class="admin-subforum-badge" style="background:#e6f4ff;color:#0369a1"><i class="fas fa-crown"></i> Admin</span>'}
+                                ${ds.active ? '' : '<span class="admin-subforum-badge" style="background:#fee2e2;color:#b91c1c"><i class="fas fa-pause-circle"></i> Suspended</span>'}
+                                ${sec === 'premium' ? '<span class="admin-subforum-badge" style="background:#fdf3e4;color:#d97706"><i class="fas fa-crown"></i> Premium</span>' : ''}
+                            </div>
+                            <div style="font-size:0.78rem;color:var(--text-muted, #a99c7e)" title="${escapeHtml(sub.description || '')}">${escapeHtml((sub.description || 'No description').substring(0, 80))}${(sub.description || '').length > 80 ? '...' : ''}</div>
+                            <div style="display:flex;gap:14px;font-size:0.78rem;color:var(--text-muted, #a99c7e);margin-top:4px">
+                                <span><i class="fas fa-comment"></i> ${ds.threads} threads</span>
+                                <span><i class="fas fa-users"></i> ${ds.members} members</span>
+                                <span><i class="fas fa-tag"></i> ${sub.joinFee > 0 ? 'R' + sub.joinFee + ' to join' : 'Free to join'}</span>
+                            </div>
+                        </div>
+                        <div style="display:flex;gap:6px;flex-shrink:0">
+                            <button class="btn btn-secondary btn-xs" onclick="adminEditSubforum('${sub.id}')"><i class="fas fa-pen"></i> Edit</button>
+                            <button class="btn btn-secondary btn-xs" onclick="adminToggleSubforumStatus('${sub.id}')"><i class="fas ${ds.active ? 'fa-pause' : 'fa-play'}"></i></button>
+                            <button class="btn btn-danger btn-xs" onclick="adminDeleteSubforum('${sub.id}')"><i class="fas fa-trash"></i></button>
+                        </div>
+                    </div>
+                    ${children}
+                </div>`;
+        }).join('');
+    };
+
+    const form = adminSubforumFormOpen ? `
+        <div style="border:1px dashed #c9a227;border-radius:12px;padding:16px;margin-bottom:20px;background:#fdfbf4">
+            <div style="font-weight:700;margin-bottom:12px;color:var(--text-primary,#211a0d)"><i class="fas fa-layer-group"></i> ${adminSubforumEditingId ? 'Edit Subforum' : 'New Subforum'}</div>
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px">
+                <input type="text" id="adminSubforumName" placeholder="Name (e.g. Cape Town After Dark)" value="${adminSubforumEditingId ? (subs.find(s => s.id === adminSubforumEditingId) || {}).name || '' : ''}">
+                <input type="text" id="adminSubforumDesc" placeholder="Short description" value="${escapeHtml(((subs.find(s => s.id === adminSubforumEditingId) || {}).description || ''))}">
+                <select id="adminSubforumSection">
+                    <option value="">Section...</option>
+                    <option value="public" ${adminSubforumEditingId && (subs.find(s => s.id === adminSubforumEditingId) || {}).section === 'public' ? 'selected' : ''}>Public Forum</option>
+                    <option value="premium" ${adminSubforumEditingId && ((subs.find(s => s.id === adminSubforumEditingId) || {}).section === 'premium' || (subs.find(s => s.id === adminSubforumEditingId) || {}).ownerType === 'provider') ? 'selected' : ''}>Premium Forum</option>
+                </select>
+                <select id="adminSubforumParent">
+                    <option value="">Parent (top level)</option>
+                    ${subs.filter(s => (s.ownerType !== 'provider') && s.id !== adminSubforumEditingId).map(s => `<option value="${s.id}" ${adminSubforumEditingId && (subs.find(x => x.id === adminSubforumEditingId) || {}).parentId === s.id ? 'selected' : ''}>${escapeHtml(s.name)}</option>`).join('')}
+                </select>
+            </div>
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;margin-top:10px">
+                <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+                    <label style="font-size:0.75rem;color:var(--text-muted,#a99c7e)"><i class="fas fa-icons"></i> Icon</label>
+                    <div style="display:flex;gap:6px;flex-wrap:wrap" id="adminSubforumIconPick">
+                        ${ADMIN_SUBFORUM_ICONS.map(ic => `<button type="button" class="btn btn-xs ${(subs.find(s => s.id === adminSubforumEditingId) || {}).icon === ic ? 'btn-primary' : 'btn-secondary'}" data-icon="${ic}" onclick="pickAdminSubforumIcon('${ic}')"><i class="fas ${ic}"></i></button>`).join('')}
+                    </div>
+                    <input type="hidden" id="adminSubforumIcon" value="${(subs.find(s => s.id === adminSubforumEditingId) || {}).icon || 'fa-folder'}">
+                </div>
+                <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+                    <label style="font-size:0.75rem;color:var(--text-muted,#a99c7e)"><i class="fas fa-palette"></i> Color</label>
+                    <div style="display:flex;gap:6px;flex-wrap:wrap" id="adminSubforumColorPick">
+                        ${ADMIN_SUBFORUM_COLORS.map(c => `<button type="button" class="btn btn-xs" style="background:${c};width:26px;height:26px;padding:0" data-color="${c}" onclick="pickAdminSubforumColor('${c}')"></button>`).join('')}
+                    </div>
+                    <input type="hidden" id="adminSubforumColor" value="${escapeHtml((subs.find(s => s.id === adminSubforumEditingId) || {}).color || '#8a7b55')}">
+                </div>
+                <div style="display:flex;align-items:center;gap:8px">
+                    <label style="font-size:0.75rem;color:var(--text-muted,#a99c7e)"><i class="fas fa-tag"></i> Join Fee (R, 0 = free)</label>
+                    <input type="number" id="adminSubforumFee" min="0" step="10" value="${(subs.find(s => s.id === adminSubforumEditingId) || {}).joinFee || 0}" style="max-width:120px">
+                </div>
+            </div>
+            <div style="display:flex;gap:8px;margin-top:12px">
+                <button class="btn btn-primary btn-sm" onclick="adminSaveSubforum()"><i class="fas fa-check"></i> ${adminSubforumEditingId ? 'Save Changes' : 'Create Subforum'}</button>
+                <button class="btn btn-secondary btn-sm" onclick="adminCancelSubforumForm()"><i class="fas fa-times"></i> Cancel</button>
+            </div>
+        </div>` : '';
+
+    let html = '<tr><td colspan="8" style="padding:0">';
+    html += `<div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap">
+        <button class="btn btn-primary btn-sm" onclick="toggleAdminSubforumForm()"><i class="fas fa-plus"></i> ${adminSubforumFormOpen ? 'Collapse Form' : 'New Subforum'}</button>
+        ${!adminSubforumFormOpen && subs.length > 0 ? '<span style="align-self:center;font-size:0.8rem;color:var(--text-muted,#a99c7e)"><i class="fas fa-info-circle"></i> Provider-run subforums appear under Premium and can be suspended here.</span>' : ''}
+    </div>`;
+    html += form;
+
+    Object.keys(sections).forEach(secKey => {
+        const sec = sections[secKey];
+        const secSubs = subs.filter(s => (s.ownerType === 'provider' ? 'premium' : (s.section || 'public')) === secKey);
+        if (secSubs.length === 0) return;
+        html += `<div style="margin-bottom:24px">
+            <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
+                <span class="stat-icon" style="background:${sec.color}18;color:${sec.color};width:38px;height:38px;font-size:1rem"><i class="fas fa-folder-open"></i></span>
+                <div><div style="font-weight:700;color:var(--text-primary, #211a0d)">${sec.label}</div>
+                <div style="font-size:0.8rem;color:var(--text-muted, #a99c7e)">${sec.desc}</div></div>
+            </div>`;
+        html += buildTree(null, 0);
+        html += '</div>';
+    });
+
+    if (subs.length === 0) {
+        html += '<div class="empty-cell" style="padding:40px;text-align:center;color:var(--text-muted,#a99c7e)"><i class="fas fa-folder-open" style="font-size:2rem;display:block;margin-bottom:10px"></i>No subforums yet. Create the first one to organise the forum.</div>';
+    }
+
+    html += '</td></tr>';
+    container.innerHTML = html;
+}
+
+function pickAdminSubforumIcon(icon) {
+    const hid = document.getElementById('adminSubforumIcon');
+    if (hid) hid.value = icon;
+    document.querySelectorAll('#adminSubforumIconPick button').forEach(b => {
+        b.classList.toggle('btn-primary', b.getAttribute('data-icon') === icon);
+        b.classList.toggle('btn-secondary', b.getAttribute('data-icon') !== icon);
+    });
+}
+
+function pickAdminSubforumColor(color) {
+    const hid = document.getElementById('adminSubforumColor');
+    if (hid) hid.value = color;
+    document.querySelectorAll('#adminSubforumColorPick button').forEach(b => {
+        b.style.outline = b.getAttribute('data-color') === color ? '3px solid #c9a227' : 'none';
+        b.style.outlineOffset = '2px';
+    });
+}
+
+function toggleAdminSubforumForm() {
+    adminSubforumFormOpen = !adminSubforumFormOpen;
+    if (adminSubforumFormOpen) adminSubforumEditingId = null;
+    renderAdminForumSubforums();
+}
+
+function adminCancelSubforumForm() {
+    adminSubforumFormOpen = false;
+    adminSubforumEditingId = null;
+    renderAdminForumSubforums();
+}
+
+function adminEditSubforum(id) {
+    adminSubforumEditingId = id;
+    adminSubforumFormOpen = true;
+    renderAdminForumSubforums();
+}
+
+function adminSaveSubforum() {
+    const name = document.getElementById('adminSubforumName').value.trim();
+    const desc = document.getElementById('adminSubforumDesc').value.trim();
+    const section = document.getElementById('adminSubforumSection').value;
+    const parentId = document.getElementById('adminSubforumParent').value || null;
+    const icon = document.getElementById('adminSubforumIcon').value || 'fa-folder';
+    const color = document.getElementById('adminSubforumColor').value || '#8a7b55';
+    const joinFee = parseInt(document.getElementById('adminSubforumFee').value, 10) || 0;
+
+    if (!name || !section) { alert('Name and section are required.'); return; }
+
+    const subs = Storage.getForumSubforums() || [];
+    const parent = parentId ? subs.find(s => s.id === parentId) : null;
+    if (parent && parent.ownerType === 'provider') { alert('Subforums cannot be nested under a provider-run subforum.'); return; }
+
+    if (adminSubforumEditingId) {
+        const idx = subs.findIndex(s => s.id === adminSubforumEditingId);
+        if (idx !== -1) {
+            const isProviderRun = subs[idx].ownerType === 'provider';
+            subs[idx].name = name;
+            subs[idx].description = desc;
+            subs[idx].icon = icon;
+            subs[idx].color = color;
+            if (!isProviderRun) {
+                subs[idx].section = section;
+                subs[idx].parentId = parentId;
+            } else if (parentId !== (subs[idx].parentId || null)) {
+                alert('Provider-run subforums cannot be nested under another subforum.');
+            }
+            subs[idx].joinFee = joinFee;
+            subs[idx].updatedAt = new Date().toISOString();
+        }
+    } else {
+        subs.push({
+            id: generateId(),
+            name, description: desc, section,
+            parentId, icon, color, joinFee,
+            ownerType: null, ownerId: null, ownerName: null,
+            status: 'active',
+            createdAt: new Date().toISOString()
+        });
+    }
+    Storage.setForumSubforums(subs);
+    adminSubforumEditingId = null;
+    adminSubforumFormOpen = false;
+    renderAdminForumSubforums();
+}
+
+function adminToggleSubforumStatus(id) {
+    const subs = Storage.getForumSubforums() || [];
+    const sub = subs.find(s => s.id === id);
+    if (!sub) return;
+    sub.status = (sub.status === 'active' || !sub.status) ? 'suspended' : 'active';
+    sub.updatedAt = new Date().toISOString();
+    Storage.setForumSubforums(subs);
+    renderAdminForumSubforums();
+}
+
+function adminDeleteSubforum(id) {
+    const subs = Storage.getForumSubforums() || [];
+    const sub = subs.find(s => s.id === id);
+    if (!sub) return;
+    if (subs.some(s => s.parentId === id)) {
+        alert('This subforum has child subforums. Move or delete them first.');
+        return;
+    }
+    if (!confirm(`Delete subforum "${sub.name}"? Threads inside it will be moved to the main forum.`)) return;
+    const filtered = subs.filter(s => s.id !== id);
+    const threads = Storage.getForumThreads();
+    let changed = false;
+    const newThreads = threads.map(t => {
+        if (t.subforumId === id) { changed = true; t.subforumId = ''; }
+        return t;
+    });
+    const memberships = (Storage.getForumSubMemberships() || []).filter(m => m.subforumId !== id);
+    Storage.setForumSubforums(filtered);
+    Storage.setForumSubMemberships(memberships);
+    if (changed) Storage.setForumThreads(newThreads);
+    if (adminSubforumEditingId === id) { adminSubforumEditingId = null; adminSubforumFormOpen = false; }
+    renderAdminForumSubforums();
 }
 
 function filterAdminForumThreadsByGroup(category) {

@@ -548,10 +548,13 @@ function navigateTo(page) {
     if (page === 'provider-experiences') renderProviderExperiences();
     if (page === 'provider-experience-create') { populateExperienceDropdowns(); resetProviderExperienceForm(); }
     if (page === 'provider-fantasy-requests') { populateFantasyDropdowns(); renderProviderFantasyRequests(); }
-    if (page === 'products-directory') renderProductsBrowser();
+if (page === 'products-directory') renderProductsBrowser();
     if (page === 'provider-products') renderProviderProducts();
-    if (page === 'provider-product-create') { resetProductForm(); }
     if (page === 'provider-orders') renderProviderOrders();
+    if (page === 'forum-browse') { renderForumSubforums(); renderForumThreads(); }
+    if (page === 'forum-create') updateForumCategoryOptions();
+    if (page === 'user-forum-threads') renderUserForumThreads();
+    if (page === 'provider-subforums') renderProviderSubforums();
     if (['directory','venue-directory','services-directory','content-directory','events-directory','ads-browse','gigs-browse','forum-browse','products-directory'].includes(page)) renderSaveButtons();
     setActiveBottomNav(page);
 }
@@ -599,7 +602,10 @@ function rerenderCurrentPage() {
         'page-provider-fantasy-requests': () => renderProviderFantasyRequests(),
         'page-products-directory': () => renderProductsBrowser(),
         'page-provider-products': () => renderProviderProducts(),
-        'page-provider-orders': () => renderProviderOrders()
+        'page-provider-orders': () => renderProviderOrders(),
+        'page-forum-browse': () => { renderForumSubforums(); renderForumThreads(); },
+        'page-user-forum-threads': () => renderUserForumThreads(),
+        'page-provider-subforums': () => renderProviderSubforums()
     };
     const fn = r[id];
     if (fn) { try { fn(); } catch (e) {} }
@@ -5604,16 +5610,20 @@ let currentForumSection = 'public';
 let currentForumViewId = null;
 let currentEmojiTarget = null;
 let currentForumProvince = '';
+let currentForumSubforum = '';
+let currentForumEditingSubforumId = null;
 
 function switchForumSection(section) {
     currentForumSection = section;
     currentForumFilter = 'all';
     currentForumProvince = '';
+    currentForumSubforum = '';
     const provinceSelect = document.getElementById('forumProvinceFilter');
     if (provinceSelect) provinceSelect.value = '';
     document.querySelectorAll('.forum-main-tab').forEach(t => t.classList.remove('active'));
     if (event && event.target) event.target.closest('.forum-main-tab')?.classList.add('active');
     updateForumSubTabs();
+    renderForumSubforums();
     renderForumThreads();
 }
 
@@ -5640,6 +5650,421 @@ function updateForumCategoryOptions() {
             const cat = FORUM_CATEGORIES[key];
             return `<option value="${key}">${cat.label}</option>`;
         }).join('');
+    renderForumSubforumOptions();
+}
+
+// ==========================================
+// SUBFORUM SYSTEM
+// Admin-created (multi-level) subforums and provider-run
+// subforums (premium, optionally charge-to-join).
+// ==========================================
+function getForumSubforums() {
+    return Storage.getForumSubforums() || [];
+}
+
+function getForumSubMemberships() {
+    return Storage.getForumSubMemberships() || [];
+}
+
+function getForumSubforumById(id) {
+    if (!id) return null;
+    return getForumSubforums().find(s => s.id === id) || null;
+}
+
+function getActiveForumSubforums() {
+    return getForumSubforums().filter(s => !s.status || s.status === 'active');
+}
+
+function getResolvedSubforumSection(sub) {
+    if (!sub) return 'public';
+    if (sub.ownerType === 'provider') return 'premium';
+    return sub.section || 'public';
+}
+
+function subforumThreadCount(subId) {
+    return Storage.getForumThreads().filter(t => t.subforumId === subId).length;
+}
+
+function subforumMemberCount(subId) {
+    return getForumSubMemberships().filter(m => m.subforumId === subId).length;
+}
+
+function getForumSubMembers(s) {
+    const ident = currentFollowActor();
+    if (!ident) return false;
+    return getForumSubMemberships().some(m => m.subforumId === s.id && (m.memberKey === followKey(ident.type, ident.id) || m.memberName === ident.name));
+}
+
+function isForumSubOwner(sub) {
+    if (!sub) return false;
+    const providerId = findCurrentProviderId();
+    if (sub.ownerType === 'provider' && providerId && String(sub.ownerId) === String(providerId)) return true;
+    return false;
+}
+
+function subforumJoined(s, notify) {
+    return getForumSubMembers(s);
+}
+
+function subforumAccessOk(s) {
+    if (!s) return true;
+    if (!s.joinFee || s.joinFee <= 0) return true;
+    if (isForumSubOwner(s)) return true;
+    return getForumSubMembers(s);
+}
+
+function renderForumSubforumBadge(subId, size) {
+    if (!subId) return '';
+    const sub = getForumSubforumById(subId);
+    if (!sub) return '';
+    const cls = size ? ' forum-badge-sm' : '';
+    return `<span class="forum-subforum-badge${cls}" style="background:${sub.color}18;color:${sub.color}" onclick="event.stopPropagation(); filterForumSubforum('${sub.id}')"><i class="fas ${sub.icon || 'fa-folder'}"></i> ${escapeHtml(sub.name)}</span>`;
+}
+
+function forumSubforumDisplay(sub, depth) {
+    return {
+        name: sub.name,
+        desc: sub.description || 'A 2k2 community group.',
+        threads: subforumThreadCount(sub.id),
+        members: subforumMemberCount(sub.id),
+        isMember: getForumSubMembers(sub),
+        isOwner: isForumSubOwner(sub)
+    };
+}
+
+function forumSubforumTreeRoots() {
+    const subs = getActiveForumSubforums();
+    return subs.filter(s => !s.parentId);
+}
+
+function forumSubforumChildren(pid) {
+    return getActiveForumSubforums().filter(s => s.parentId === pid);
+}
+
+function renderForumSubforums() {
+    const container = document.getElementById('forumSubforumList');
+    if (!container) return;
+
+    const all = getActiveForumSubforums();
+    if (all.length === 0) {
+        container.innerHTML = '<p class="empty-text" style="padding:10px 0">No subforums created yet.</p>';
+        return;
+    }
+
+    const section = currentForumSection;
+    const visible = all.filter(s => getResolvedSubforumSection(s) === section);
+    if (visible.length === 0) {
+        container.innerHTML = '<p class="empty-text" style="padding:10px 0">No subforums in this section.</p>';
+        return;
+    }
+
+    const buildTree = (parentId, depth) => {
+        const kids = forumSubforumChildren(parentId);
+        return kids.map(sub => {
+            const ds = forumSubforumDisplay(sub, depth);
+            const pad = depth * 18;
+            const isActive = currentForumSubforum === sub.id;
+            const feeBadge = sub.joinFee > 0 ? `<span class="forum-subforum-fee"><i class="fas fa-tag"></i> R${sub.joinFee} to join</span>` : '';
+            const ownerBadge = sub.ownerType === 'provider' ? `<span class="forum-subforum-owner"><i class="fas fa-store"></i> ${escapeHtml(sub.ownerName || 'Provider')}</span>` : '';
+            const membershipBadge = ds.isMember ? '<span class="forum-subforum-member"><i class="fas fa-check"></i> Member</span>' : '';
+            const childHtml = buildTree(sub.id, depth + 1);
+            return `
+                <div class="forum-subforum-item ${isActive ? 'active' : ''}" style="margin-left:${pad}px">
+                    <div class="forum-subforum-card" onclick="filterForumSubforum('${sub.id}')">
+                        <div class="forum-subforum-icon" style="background:${sub.color}18;color:${sub.color}"><i class="fas ${sub.icon || 'fa-folder'}"></i></div>
+                        <div class="forum-subforum-info">
+                            <div class="forum-subforum-name">${escapeHtml(sub.name)}</div>
+                            <div class="forum-subforum-desc">${escapeHtml(ds.desc)}</div>
+                            <div class="forum-subforum-meta">
+                                <span><i class="fas fa-comment"></i> ${ds.threads}</span>
+                                <span><i class="fas fa-users"></i> ${ds.members}</span>
+                                ${feeBadge}
+                                ${ownerBadge}
+                                ${membershipBadge}
+                            </div>
+                        </div>
+                        <div class="forum-subforum-actions">
+                            ${sub.joinFee > 0 && !ds.isMember && !ds.isOwner ? `<button class="btn btn-secondary btn-xs" onclick="event.stopPropagation(); joinForumSubforum('${sub.id}')"><i class="fas fa-lock"></i> Join R${sub.joinFee}</button>` : ''}
+                            ${sub.joinFee > 0 && ds.isMember ? `<span class="forum-subforum-member"><i class="fas fa-key"></i> Joined</span>` : ''}
+                            ${!sub.joinFee || sub.joinFee <= 0 ? `<span class="forum-subforum-free"><i class="fas fa-unlock"></i> Free</span>` : ''}
+                        </div>
+                    </div>
+                    ${childHtml}
+                </div>`;
+        }).join('');
+    };
+
+    container.innerHTML = buildTree(null, 0) || '<p class="empty-text" style="padding:10px 0">No subforums in this section yet.</p>';
+}
+
+function filterForumSubforum(id) {
+    currentForumSubforum = id;
+    const sub = getForumSubforumById(id);
+    if (sub && getResolvedSubforumSection(sub) === 'premium' && currentForumSection !== 'premium') {
+        currentForumSection = 'premium';
+        document.querySelectorAll('.forum-main-tab').forEach(t => t.classList.remove('active'));
+        const premiumTab = document.querySelector('[onclick*="switchForumSection(\'premium\')"]');
+        if (premiumTab) premiumTab.classList.add('active');
+        updateForumSubTabs();
+    }
+    document.querySelectorAll('#forumSubTabs .filter-tab').forEach(t => t.classList.remove('active'));
+    renderForumSubforums();
+    renderForumThreads();
+    const scrollTo = document.getElementById('forumSubforumList');
+    if (scrollTo && id) scrollTo.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+function clearForumSubforumFilter() {
+    currentForumSubforum = '';
+    document.querySelectorAll('#forumSubTabs .filter-tab').forEach(t => t.classList.remove('active'));
+    const allTab = document.querySelector('#forumSubTabs .filter-tab[onclick*="filterForum(\'all\')"]');
+    if (allTab) allTab.classList.add('active');
+    renderForumSubforums();
+    renderForumThreads();
+}
+
+function joinForumSubforum(id) {
+    const sub = getForumSubforumById(id);
+    if (!sub) return;
+    if (!requireSignIn('Join this subforum to participate.')) return;
+
+    if (getForumSubMembers(sub)) { showToast('You are already a member of this subforum.', 'info'); return; }
+    if (isForumSubOwner(sub)) { showToast('You run this subforum.', 'info'); return; }
+
+    const fee = sub.joinFee || 0;
+    if (fee > 0) {
+        const balance = getWalletBalance('user', currentUserOwnerId());
+        if (balance < fee) { showToast('Insufficient wallet balance to join. Top up your wallet first.', 'error'); return; }
+        adjustWallet('user', currentUserOwnerId(), -fee, 'subforum-join', `Joined community "${sub.name}" (R${fee})`, { subforumId: sub.id });
+        adjustWallet('provider', sub.ownerId, fee, 'subforum-subscription', `Subscription to your subforum "${sub.name}"`, { subforumId: sub.id });
+        showToast(`Joined "${sub.name}" for R${fee}!`, 'success');
+    } else {
+        showToast(`Joined "${sub.name}"!`, 'success');
+    }
+
+    const members = getForumSubMemberships();
+    const actor = currentFollowActor();
+    members.push({
+        id: generateId(),
+        subforumId: sub.id,
+        memberKey: actor ? followKey(actor.type, actor.id) : '',
+        memberType: actor ? actor.type : 'guest',
+        memberId: actor ? String(actor.id) : '',
+        memberName: actor ? actor.name : 'Guest',
+        paid: fee > 0,
+        amountPaid: fee,
+        createdAt: new Date().toISOString()
+    });
+    Storage.setForumSubMemberships(members);
+    renderForumSubforums();
+    renderForumThreads();
+}
+
+function renderForumSubforumOptions() {
+    const select = document.getElementById('forumThreadSubforum');
+    if (!select) return;
+    const subs = getActiveForumSubforums();
+    const formSection = document.getElementById('forumThreadSectionSelect')?.value || '';
+    const section = formSection || currentForumSection;
+    const visible = subs.filter(s => getResolvedSubforumSection(s) === section);
+    const current = select.value;
+    const allowed = subs.filter(s => subforumAccessOk(s));
+    select.innerHTML = '<option value="">In main forum</option>';
+    visible.forEach(s => {
+        const fee = s.joinFee > 0 ? ` (R${s.joinFee})` : '';
+        select.innerHTML += `<option value="${s.id}">${escapeHtml(s.name)}${fee}</option>`;
+    });
+    if (current) select.value = current;
+}
+
+// ==========================================
+// PROVIDER-RUN SUBFORUMS (premium, paid)
+// ==========================================
+let providerSubforumEditingId = null;
+
+const PROVIDER_SUBFORUM_ICONS = ['fa-folder', 'fa-users', 'fa-gem', 'fa-fire', 'fa-martini-glass-citrus', 'fa-champagne-glasses', 'fa-mask', 'fa-heart', 'fa-music', 'fa-gamepad', 'fa-crown', 'fa-star'];
+
+function getCurrentProviderSubforums() {
+    const providerId = findCurrentProviderId();
+    if (!providerId) return [];
+    return getForumSubforums().filter(s => s.ownerType === 'provider' && String(s.ownerId) === String(providerId));
+}
+
+function renderProviderSubforums() {
+    const container = document.getElementById('providerSubforumList');
+    if (!container) return;
+    const subs = getCurrentProviderSubforums();
+    const threads = Storage.getForumThreads();
+    const members = getForumSubMemberships();
+
+    if (subs.length === 0) {
+        container.innerHTML = '<div class="forum-empty"><i class="fas fa-folder-open"></i><h3>No subforums yet</h3><p>Create your own paid community group in the premium forum to grow your audience.</p><button class="btn btn-primary provider-btn" onclick="openProviderSubforumForm()"><i class="fas fa-plus"></i> Create Subforum</button></div>';
+        return;
+    }
+
+    container.innerHTML = subs.map(sub => {
+        const feeding = threads.filter(t => t.subforumId === sub.id).length;
+        const joining = members.filter(m => m.subforumId === sub.id).length;
+        const active = !sub.status || sub.status === 'active';
+        const earned = members.filter(m => m.subforumId === sub.id && m.paid).reduce((s, m) => s + (m.amountPaid || 0), 0);
+        return `
+            <div class="profile-card" style="padding:16px;margin-bottom:14px">
+                <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap">
+                    <div class="forum-subforum-icon" style="width:46px;height:46px;border-radius:12px;background:${sub.color}18;color:${sub.color};display:flex;align-items:center;justify-content:center;font-size:1.2rem"><i class="fas ${sub.icon || 'fa-folder'}"></i></div>
+                    <div style="flex:1;min-width:200px">
+                        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+                            <strong style="font-size:1.05rem;color:var(--text-primary,#211a0d)">${escapeHtml(sub.name)}</strong>
+                            ${active ? '<span class="forum-subforum-badge" style="background:#d1fae5;color:#047857"><i class="fas fa-check-circle"></i> Active</span>' : '<span class="forum-subforum-badge" style="background:#fee2e2;color:#b91c1c"><i class="fas fa-pause-circle"></i> Suspended</span>'}
+                            <span class="forum-subforum-badge" style="background:#fdf3e4;color:#d97706"><i class="fas fa-crown"></i> Premium</span>
+                        </div>
+                        <div style="font-size:0.85rem;color:var(--text-secondary,#8a7b55);margin-top:4px">${escapeHtml(sub.description || 'No description')}</div>
+                        <div style="display:flex;gap:16px;margin-top:8px;font-size:0.8rem;color:var(--text-secondary,#8a7b55);flex-wrap:wrap">
+                            <span><i class="fas fa-comment"></i> ${feeding} threads</span>
+                            <span><i class="fas fa-users"></i> ${joining} members</span>
+                            <span><i class="fas fa-tag"></i> ${sub.joinFee > 0 ? '<strong style="color:#b45309">R' + sub.joinFee + '</strong> to join' : 'Free to join'}</span>
+                            ${sub.joinFee > 0 ? '<span><i class="fas fa-wallet"></i> <strong style="color:#047857">R' + earned + '</strong> earned</span>' : ''}
+                        </div>
+                    </div>
+                    <div style="display:flex;flex-direction:column;gap:8px">
+                        <button class="btn btn-secondary btn-sm" onclick="editProviderSubforum('${sub.id}')"><i class="fas fa-pen"></i> Edit</button>
+                        <button class="btn btn-secondary btn-sm" onclick="navigateTo('forum-browse'); setTimeout(()=>filterForumSubforum('${sub.id}'), 100)"><i class="fas fa-eye"></i> View</button>
+                        <button class="btn btn-secondary btn-sm" onclick="deleteProviderSubforum('${sub.id}')"><i class="fas fa-trash"></i> Delete</button>
+                    </div>
+                </div>
+            </div>`;
+    }).join('');
+}
+
+function openProviderSubforumForm() {
+    providerSubforumEditingId = null;
+    const wrap = document.getElementById('providerSubforumFormWrap');
+    if (!wrap) return;
+    wrap.innerHTML = providerSubforumFormHtml(null);
+    wrap.style.display = 'block';
+    wrap.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function editProviderSubforum(id) {
+    const sub = getForumSubforumById(id);
+    if (!sub) return;
+    providerSubforumEditingId = id;
+    const wrap = document.getElementById('providerSubforumFormWrap');
+    if (wrap) {
+        wrap.innerHTML = providerSubforumFormHtml(sub);
+        wrap.style.display = 'block';
+        wrap.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+}
+
+function providerSubforumFormHtml(sub) {
+    return `
+        <div class="profile-card" style="padding:20px;border:1px dashed #c9a227">
+            <div style="font-weight:700;margin-bottom:14px;color:var(--text-primary,#211a0d)"><i class="fas fa-folder-open"></i> ${sub ? 'Edit Subforum' : 'New Subforum'}</div>
+            <div class="form-grid" style="grid-template-columns:repeat(auto-fit,minmax(220px,1fr))">
+                <div class="form-group">
+                    <label>Name *</label>
+                    <input type="text" id="providerSubforumName" placeholder="e.g. The Secret Garden" value="${sub ? escapeHtml(sub.name) : ''}">
+                </div>
+                <div class="form-group">
+                    <label>Join Fee (R) <span style="color:var(--text-muted,#a99c7e)">(0 = free)</span></label>
+                    <input type="number" id="providerSubforumFee" min="0" step="10" value="${sub ? (sub.joinFee || 0) : 0}">
+                </div>
+                <div class="form-group">
+                    <label>Icon</label>
+                    <div style="display:flex;gap:6px;flex-wrap:wrap;padding-top:6px">
+                        ${PROVIDER_SUBFORUM_ICONS.map(ic => `<button type="button" class="btn btn-xs ${sub && sub.icon === ic ? 'btn-primary' : 'btn-secondary'}" data-picon="${ic}" onclick="pickProviderSubforumIcon('${ic}')"><i class="fas ${ic}"></i></button>`).join('')}
+                    </div>
+                    <input type="hidden" id="providerSubforumIcon" value="${sub ? (sub.icon || 'fa-folder') : 'fa-folder'}">
+                </div>
+            </div>
+            <div class="form-group" style="margin-top:12px">
+                <label>Description</label>
+                <textarea id="providerSubforumDesc" rows="3" placeholder="Tell members what this group is about...">${sub ? escapeHtml(sub.description || '') : ''}</textarea>
+            </div>
+            <div style="display:flex;gap:10px;margin-top:14px;flex-wrap:wrap">
+                <button class="btn btn-primary btn-sm" onclick="saveProviderSubforum()"><i class="fas fa-check"></i> ${sub ? 'Save Changes' : 'Create Subforum'}</button>
+                <button class="btn btn-secondary btn-sm" onclick="closeProviderSubforumForm()"><i class="fas fa-times"></i> Cancel</button>
+            </div>
+            <p style="font-size:0.78rem;color:var(--text-muted,#a99c7e);margin:12px 0 0 0"><i class="fas fa-circle-info"></i> Your subforum appears in the Premium forum section. Members pay the join fee from their wallet to your wallet.</p>
+        </div>`;
+}
+
+function pickProviderSubforumIcon(icon) {
+    const hid = document.getElementById('providerSubforumIcon');
+    if (hid) hid.value = icon;
+    document.querySelectorAll('[data-picon]').forEach(b => {
+        b.classList.toggle('btn-primary', b.getAttribute('data-picon') === icon);
+        b.classList.toggle('btn-secondary', b.getAttribute('data-picon') !== icon);
+    });
+}
+
+function closeProviderSubforumForm() {
+    const wrap = document.getElementById('providerSubforumFormWrap');
+    if (wrap) wrap.style.display = 'none';
+    providerSubforumEditingId = null;
+    renderProviderSubforums();
+}
+
+function saveProviderSubforum() {
+    const providerId = findCurrentProviderId();
+    if (!providerId) { showToast('Please sign in to a provider account first.', 'error'); return; }
+    const name = document.getElementById('providerSubforumName').value.trim();
+    const desc = document.getElementById('providerSubforumDesc').value.trim();
+    const fee = parseInt(document.getElementById('providerSubforumFee').value, 10) || 0;
+    if (!name) { showToast('Please enter a subforum name.', 'error'); return; }
+
+    const provider = (Storage.getProviders() || []).find(p => String(p.id) === String(providerId));
+    const ownerName = provider ? (provider.organisation || provider.businessName || provider.name || 'Provider') : 'Provider';
+
+    const subs = getForumSubforums();
+    const isEdit = !!providerSubforumEditingId;
+    if (providerSubforumEditingId) {
+        const idx = subs.findIndex(s => s.id === providerSubforumEditingId);
+        if (idx !== -1) {
+            subs[idx].name = name;
+            subs[idx].description = desc;
+            subs[idx].joinFee = fee;
+            subs[idx].updatedAt = new Date().toISOString();
+        }
+    } else {
+        subs.push({
+            id: generateId(), name, description: desc, joinFee: fee,
+            parentId: null, icon: document.getElementById('providerSubforumIcon').value || 'fa-folder',
+            color: '#d97706',
+            section: 'premium',
+            ownerType: 'provider', ownerId: String(providerId), ownerName,
+            status: 'active',
+            createdAt: new Date().toISOString()
+        });
+    }
+    Storage.setForumSubforums(subs);
+    providerSubforumEditingId = null;
+    showToast(isEdit ? 'Subforum updated!' : 'Subforum created!', 'success');
+    closeProviderSubforumForm();
+    renderProviderSubforums();
+}
+
+function deleteProviderSubforum(id) {
+    const sub = getForumSubforumById(id);
+    if (!sub) return;
+    if (!confirm(`Delete subforum "${sub.name}"?\n\nPaid members (R${sub.joinFee || 0} each) will be refunded to their wallets, threads will move to the main forum.`)) return;
+
+    const memberships = getForumSubMemberships().filter(m => m.subforumId === id && m.paid && m.amountPaid > 0);
+    memberships.forEach(m => {
+        adjustWallet(m.memberType === 'provider' ? 'provider' : 'user', m.memberId, m.amountPaid, 'subforum-refund', `Refund: subforum "${sub.name}" was closed by its owner`, { subforumId: id });
+    });
+
+    const subs = getForumSubforums().filter(s => s.id !== id);
+    const threads = Storage.getForumThreads();
+    const changed = threads.some(t => t.subforumId === id);
+    const newThreads = threads.map(t => { if (t.subforumId === id) t.subforumId = ''; return t; });
+    const remaining = getForumSubMemberships().filter(m => m.subforumId !== id);
+    Storage.setForumSubforums(subs);
+    Storage.setForumSubMemberships(remaining);
+    if (changed) Storage.setForumThreads(newThreads);
+    if (providerSubforumEditingId === id) { providerSubforumEditingId = null; }
+    closeProviderSubforumForm();
+    renderProviderSubforums();
 }
 
 function toggleEmojiPicker(targetId) {
@@ -5719,8 +6144,12 @@ function renderForumThreads() {
     const sort = document.getElementById('forumSort')?.value || 'newest';
 
     let filtered = threads.filter(t => {
+        if (currentForumSubforum) {
+            return t.subforumId === currentForumSubforum;
+        }
         const cat = FORUM_CATEGORIES[t.category];
         if (cat && cat.section !== currentForumSection) return false;
+        if (!cat && currentForumSection === 'premium' && !t.subforumId) return false;
         return true;
     });
 
@@ -5763,6 +6192,19 @@ function renderForumThreads() {
     const container = document.getElementById('forumThreadsList');
     if (!container) return;
 
+    if (currentForumSubforum) {
+        const activeSub = getForumSubforumById(currentForumSubforum);
+        if (activeSub && activeSub.joinFee > 0 && !subforumAccessOk(activeSub)) {
+            container.innerHTML = `<div class="forum-locked">
+                <i class="fas fa-lock"></i>
+                <h3>This subforum is private</h3>
+                <p>Join for <strong>R${activeSub.joinFee}</strong> to view and participate in discussions.</p>
+                <button class="btn btn-primary" onclick="joinForumSubforum('${activeSub.id}')"><i class="fas fa-unlock"></i> Join R${activeSub.joinFee}</button>
+            </div>`;
+            return;
+        }
+    }
+
     if (filtered.length === 0) {
         container.innerHTML = '<div class="forum-empty"><i class="fas fa-comments"></i><h3>No threads found</h3><p>Be the first to start a conversation in this forum!</p></div>';
         return;
@@ -5792,6 +6234,7 @@ function renderForumThreads() {
                     <div class="forum-thread-content">
                         <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:6px">
                             <span class="forum-thread-category-badge" style="background:${cat.color}18;color:${cat.color}"><i class="fas ${cat.icon}"></i> ${cat.label}</span>
+                            ${renderForumSubforumBadge(thread.subforumId, true)}
                             ${sectionBadge}
                             ${provinceBadge}
                             ${thread.pinned ? '<span class="forum-pin-badge"><i class="fas fa-thumbtack"></i> Pinned</span>' : ''}
@@ -5815,8 +6258,10 @@ function renderForumThreads() {
 
 function filterForum(category) {
     currentForumFilter = category;
+    currentForumSubforum = '';
     document.querySelectorAll('#forumSubTabs .filter-tab').forEach(tab => tab.classList.remove('active'));
     if (event && event.target) event.target.closest('.filter-tab')?.classList.add('active');
+    renderForumSubforums();
     renderForumThreads();
 }
 
@@ -5831,6 +6276,18 @@ function viewForumThread(id) {
     const threads = Storage.getForumThreads();
     const thread = threads.find(t => t.id === id);
     if (!thread) return;
+
+    if (thread.subforumId) {
+        const sub = getForumSubforumById(thread.subforumId);
+        if (sub && sub.joinFee > 0 && !subforumAccessOk(sub) && sub.status !== 'suspended') {
+            currentForumSubforum = sub.id;
+            renderForumSubforums();
+            renderForumThreads();
+            showToast(`Join "${sub.name}" to view this discussion.`, 'info');
+            navigateTo('forum-browse');
+            return;
+        }
+    }
 
     currentForumViewId = id;
 
@@ -5854,6 +6311,7 @@ function viewForumThread(id) {
         fullEl.innerHTML = `
             <div class="forum-thread-full-header">
                 <span class="forum-thread-full-category" style="background:${cat.color}18;color:${cat.color}"><i class="fas ${cat.icon}"></i> ${cat.label}</span>
+                ${renderForumSubforumBadge(thread.subforumId)}
                 ${sectionBadge}
                 ${provinceBadge}
                 ${thread.pinned ? '<span class="forum-pin-badge" style="margin-left:8px"><i class="fas fa-thumbtack"></i> Pinned</span>' : ''}
@@ -5931,6 +6389,7 @@ function handleForumThreadSubmit(e) {
     const title = document.getElementById('forumThreadTitle').value.trim();
     const section = document.getElementById('forumThreadSectionSelect')?.value || document.getElementById('forumThreadSection')?.value || 'public';
     const category = document.getElementById('forumThreadCategory').value;
+    const subforumId = document.getElementById('forumThreadSubforum')?.value || '';
     const province = document.getElementById('forumThreadProvince')?.value || '';
     const author = document.getElementById('forumThreadAuthor').value.trim();
     const body = document.getElementById('forumThreadBody').value.trim();
@@ -5939,6 +6398,14 @@ function handleForumThreadSubmit(e) {
 
     if (!title || !category || !author || !body) { showToast('Please fill in all required fields.', 'error'); return; }
 
+    if (subforumId) {
+        const targetSub = getForumSubforumById(subforumId);
+        if (targetSub && targetSub.joinFee > 0 && !subforumAccessOk(targetSub)) {
+            showToast('You must join this subforum before posting in it.', 'error');
+            return;
+        }
+    }
+
     const threads = Storage.getForumThreads();
     if (id) {
         const idx = threads.findIndex(t => t.id === id);
@@ -5946,6 +6413,7 @@ function handleForumThreadSubmit(e) {
             threads[idx].title = title;
             threads[idx].section = section;
             threads[idx].category = category;
+            threads[idx].subforumId = subforumId;
             threads[idx].province = province;
             threads[idx].author = author;
             threads[idx].body = body;
@@ -5956,7 +6424,7 @@ function handleForumThreadSubmit(e) {
     } else {
         const threadOwner = getCurrentProviderIdentity();
         threads.push({
-            id: generateId(), title, section, category, province, author, body, tags,
+            id: generateId(), title, section, category, subforumId, province, author, body, tags,
             ownerId: threadOwner.id, ownerName: threadOwner.name,
             views: 0, pinned: false, locked: false,
             createdAt: new Date().toISOString()
@@ -5979,6 +6447,13 @@ function submitForumReply() {
     const threads = Storage.getForumThreads();
     const thread = threads.find(t => t.id === currentForumViewId);
     if (thread && thread.locked) { showToast('This thread is locked.', 'error'); return; }
+    if (thread && thread.subforumId) {
+        const sub = getForumSubforumById(thread.subforumId);
+        if (sub && sub.joinFee > 0 && !subforumAccessOk(sub)) {
+            showToast('You must join this subforum to reply.', 'error');
+            return;
+        }
+    }
 
     const replies = Storage.getForumReplies();
     replies.push({
@@ -6058,6 +6533,7 @@ function renderUserForumThreads() {
                     <div class="forum-thread-content">
                         <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:6px">
                             <span class="forum-thread-category-badge" style="background:${cat.color}18;color:${cat.color}"><i class="fas ${cat.icon}"></i> ${cat.label}</span>
+                            ${renderForumSubforumBadge(thread.subforumId, true)}
                             ${isPremium ? '<span class="forum-premium-badge"><i class="fas fa-crown"></i> Premium</span>' : ''}
                             ${thread.pinned ? '<span class="forum-pin-badge"><i class="fas fa-thumbtack"></i> Pinned</span>' : ''}
                             ${thread.locked ? '<span class="forum-lock-badge"><i class="fas fa-lock"></i> Locked</span>' : ''}
@@ -6086,6 +6562,8 @@ function resetForumForm() {
     document.getElementById('forumThreadAuthor').value = '';
     document.getElementById('forumThreadBody').value = '';
     document.getElementById('forumThreadTags').value = '';
+    const subSel = document.getElementById('forumThreadSubforum');
+    if (subSel) subSel.value = '';
 }
 
 // ==========================================

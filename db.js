@@ -36,6 +36,8 @@
     { name: 'ForumThreads', col: 'forum_threads', key: 'k2_forum_threads' },
     { name: 'ForumReplies', col: 'forum_replies', key: 'k2_forum_replies' },
     { name: 'ForumLikes', col: 'forum_likes', key: 'k2_forum_likes' },
+    { name: 'ForumSubforums', col: 'forum_subforums', key: 'k2_forum_subforums' },
+    { name: 'ForumSubMemberships', col: 'forum_sub_memberships', key: 'k2_forum_sub_memberships' },
     { name: 'Gigs', col: 'gigs', key: 'k2_gigs' },
     { name: 'Conversations', col: 'conversations', key: 'k2_conversations' },
     { name: 'Messages', col: 'messages', key: 'k2_messages' },
