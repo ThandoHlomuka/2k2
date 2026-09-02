@@ -3274,7 +3274,7 @@
           var user = await window._2k2.Auth.currentUser();
           if (!user) { window.location.href = 'login.html?next=provider.html'; return; }
           var profile = await window._2k2.Auth.getProfile();
-          if (!profile || profile.role !== 'provider') { window.location.href = 'upgrade.html'; return; }
+          if (!profile || (profile.role !== 'provider' && profile.role !== 'admin')) { window.location.href = 'upgrade.html'; return; }
           try { await window._2k2.Auth.refreshSyncUser(); } catch (e) {}
           var veil = document.getElementById('k2-gate-veil'); if (veil) veil.remove();
         })();

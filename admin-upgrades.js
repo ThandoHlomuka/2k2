@@ -39,6 +39,7 @@
   window.renderAdminUpgrades = async function () {
     const tbody = document.querySelector('#adminUpgradesTable tbody');
     if (!tbody) return;
+    tbody.innerHTML = '';
     const reqs = await loadRequests();
     if (!reqs.length) {
       tbody.innerHTML = '<tr><td colspan="9"><div class="empty-state" style="padding:24px;text-align:center;color:#a99c7e">No upgrade requests yet.</div></td></tr>';
@@ -99,7 +100,18 @@
       .eq('id', id);
     if (e1) { console.error(e1); alert('Could not approve request: ' + e1.message); return; }
 
-    // 2) promote the applicant's profile to provider
+    // 2) promote the applicant's profile to provider.
+    // GUARD: never demote an existing admin - admins keep their role.
+    const { data: targetProfile } = await client
+      .from('profiles')
+      .select('role')
+      .eq('user_id', request.user_id)
+      .maybeSingle();
+    if (targetProfile && targetProfile.role === 'admin') {
+      alert('Approved. The applicant is an admin account, so their role was left unchanged.');
+      window.renderAdminUpgrades();
+      return;
+    }
     const { error: e2 } = await client
       .from('profiles')
       .update({ role: 'provider', updated_at: new Date().toISOString() })

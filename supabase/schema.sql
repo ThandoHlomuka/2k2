@@ -182,6 +182,31 @@ create trigger on_auth_user_created
 grant execute on function public.handle_new_user() to anon, authenticated;
 
 -- -------------------------------------------------------------
+-- Admin protection: an existing admin can NEVER be demoted or
+-- have their role changed by any app/anon path. This guards
+-- against accidental re-legation (e.g. approving an upgrade
+-- request that targets an admin account).
+-- -------------------------------------------------------------
+create or replace function public.prevent_admin_demotion()
+returns trigger
+language plpgsql
+as $$
+begin
+  if old.role = 'admin' and new.role is distinct from old.role then
+    raise exception 'Admin accounts cannot be demoted or have their role changed.';
+  end if;
+  return new;
+end;
+$$;
+
+drop trigger if exists prevent_admin_demotion on public.profiles;
+create trigger prevent_admin_demotion
+  before update on public.profiles
+  for each row execute function public.prevent_admin_demotion();
+
+grant execute on function public.prevent_admin_demotion() to anon, authenticated;
+
+-- -------------------------------------------------------------
 -- 4. presence  (real online/offline tracking via Realtime heartbeat)
 --    id = auth user id. Clients upsert last_seen on a heartbeat;
 --    others read it to decide online (last_seen < ~60s).
