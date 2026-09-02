@@ -786,6 +786,279 @@ function escapeHtml(str) {
         .replace(/'/g, '&#39;');
 }
 
+// ==========================================
+// MODERATION / APPROVAL SYSTEM
+// Every publicly-visible item starts or re-enters as status 'pending'
+// after a create/edit. Admins Approve or Reject (with a reason) from the
+// review queue. Only approved items appear in public directories.
+// 'active' is treated as approved (legacy data). 'suspended'/'deleted'
+// remain hidden. Rejected items carry the admin reason for the creator.
+// ==========================================
+const APPROVAL_TYPES = {
+    user:        { col: 'Users',            label: 'Profile',          get: 'getUsers',            set: 'setUsers' },
+    provider:    { col: 'Providers',        label: 'Provider Profile', get: 'getProviders',        set: 'setProviders' },
+    listing:     { col: 'Listings',         label: 'Listing',          get: 'getListings',         set: 'setListings' },
+    venue:       { col: 'Venues',           label: 'Venue',            get: 'getVenues',           set: 'setVenues' },
+    ad:          { col: 'Ads',              label: 'Ad',               get: 'getAds',              set: 'setAds' },
+    service:     { col: 'Services',         label: 'Service',          get: 'getServices',         set: 'setServices' },
+    content:     { col: 'Content',          label: 'Content',          get: 'getContent',          set: 'setContent' },
+    event:       { col: 'Events',           label: 'Event',            get: 'getEvents',           set: 'setEvents' },
+    gig:         { col: 'Gigs',             label: 'Gig',              get: 'getGigs',             set: 'setGigs' },
+    experience:  { col: 'Experiences',      label: 'Experience',       get: 'getExperiences',      set: 'setExperiences' },
+    product:     { col: 'Products',         label: 'Product',          get: 'getProducts',         set: 'setProducts' },
+    fantasy:     { col: 'FantasyRequests',  label: 'Fantasy Request',  get: 'getFantasyRequests',  set: 'setFantasyRequests' }
+};
+
+function approvalStatus(item) {
+    if (!item) return 'pending';
+    if (item.status === 'suspended' || item.status === 'deleted') return item.status;
+    if (item.approval && ['pending', 'approved', 'rejected'].indexOf(item.approval.status) !== -1) return item.approval.status;
+    if (item.status === 'pending') return 'pending';
+    if (item.status === 'rejected') return 'rejected';
+    if (item.status === 'approved' || item.status === 'active' || !item.status) return 'approved';
+    if (item.status === 'archived') return 'archived';
+    return item.status;
+}
+
+function isApprovedPublic(item) { return approvalStatus(item) === 'approved'; }
+function isUnderReview(item) { return approvalStatus(item) === 'pending'; }
+function isRejectedReview(item) { return approvalStatus(item) === 'rejected'; }
+
+function markPendingApproval(item) {
+    if (!item) return item;
+    item.status = 'pending';
+    item.approval = { status: 'pending', requestedAt: new Date().toISOString() };
+    return item;
+}
+
+function approvalBadgeHtml(item, size) {
+    const st = approvalStatus(item);
+    const cfg = {
+        'approved': { label: 'Approved', color: '#10b981' },
+        'pending': { label: 'Pending approval', color: '#f59e0b' },
+        'rejected': { label: 'Rejected', color: '#ef4444' },
+        'suspended': { label: 'Suspended', color: '#8a7b55' },
+        'deleted': { label: 'Deleted', color: '#8a7b55' },
+        'archived': { label: 'Archived', color: '#8a7b55' }
+    }[st] || { label: st, color: '#8a7b55' };
+    const sc = size ? 'style="font-size:0.68rem;padding:2px 8px"' : '';
+    return `<span class="approval-status-badge" ${sc} style="background:${cfg.color}18;color:${cfg.color}"><i class="fas ${st === 'approved' ? 'fa-check-circle' : st === 'pending' ? 'fa-clock' : st === 'rejected' ? 'fa-ban' : st === 'suspended' ? 'fa-pause-circle' : st === 'deleted' ? 'fa-trash' : 'fa-box' }"></i> ${cfg.label}</span>`;
+}
+
+function approvalReason(item) {
+    if (!item) return '';
+    const r = (item.approval && item.approval.reason) || '';
+    if (r) return r;
+    return (item.status === 'rejected' && typeof item.rejectionReason === 'string') ? item.rejectionReason : '';
+}
+
+// Banner shown at the top of a creator's edit form (and dashboard notes).
+function approvalFormBannerHtml(item, itemKind, editPage) {
+    const st = approvalStatus(item);
+    const reason = approvalReason(item);
+    if (st === 'approved') return '';
+    const editLink = editPage ? `<span class="approval-banner-link"><i class="fas fa-pen"></i> Review &amp; resubmit</span>` : '';
+    if (st === 'pending') {
+        return `<div class="approval-banner approval-banner-pending">
+            <i class="fas fa-clock"></i>
+            <div><strong>${escapeHtml(itemKind)} awaiting approval</strong><div class="approval-banner-sub">This ${itemKind.toLowerCase()} is under admin review and is not visible in public directories yet. Save your changes to re-submit.</div></div>
+        </div>`;
+    }
+    if (st === 'rejected') {
+        return `<div class="approval-banner approval-banner-rejected">
+            <i class="fas fa-ban"></i>
+            <div><strong>${escapeHtml(itemKind)} was not approved</strong><div class="approval-banner-sub">${reason ? 'Reason: ' + escapeHtml(reason) : 'Your submission did not meet the guidelines.'} ${editLink}</div></div>
+        </div>`;
+    }
+    if (st === 'suspended') {
+        return `<div class="approval-banner approval-banner-suspended">
+            <i class="fas fa-pause-circle"></i>
+            <div><strong>${escapeHtml(itemKind)} suspended</strong><div class="approval-banner-sub">This item is hidden from public directories. Contact support for details.</div></div>
+        </div>`;
+    }
+    return '';
+}
+
+// Inject (or refresh) the approval banner at the top of a page container.
+function renderApprovalBanner(pageId, item, itemKind, editPage) {
+    const page = document.getElementById(pageId);
+    if (!page) return;
+    let bannerRoot = page.querySelector('.appr-banner-root');
+    if (!bannerRoot) {
+        bannerRoot = document.createElement('div');
+        bannerRoot.className = 'appr-banner-root';
+        const container = page.querySelector('.container') || page;
+        const header = container.querySelector(':scope > .dashboard-header, :scope > .form-header');
+        if (header) container.insertBefore(bannerRoot, header.nextSibling);
+        else container.insertBefore(bannerRoot, container.firstChild);
+    }
+    bannerRoot.innerHTML = approvalFormBannerHtml(item, itemKind, editPage);
+}
+
+function itemDisplayTitle(item, type) {
+    if (!item) return '';
+    switch (type) {
+        case 'user': return item.username || item.name || item.email || 'User';
+        case 'provider': return item.organisation || item.businessName || item.name || item.ownerName || 'Provider';
+        case 'listing': return item.title || 'Listing';
+        case 'venue': return item.name || 'Venue';
+        case 'ad': return item.title || 'Ad';
+        case 'service': return item.name || item.title || 'Service';
+        case 'content': return item.title || 'Content';
+        case 'event': return item.name || item.title || 'Event';
+        case 'gig': return item.title || 'Gig';
+        case 'experience': return item.title || 'Experience';
+        case 'product': return item.name || 'Product';
+        case 'fantasy': return item.title || 'Fantasy Request';
+        default: return 'Item';
+    }
+}
+
+function itemOwnerName(item, type) {
+    if (!item) return 'Unknown';
+    const map = {
+        user: item.username || item.name || item.email || 'User',
+        provider: item.organisation || item.businessName || item.name || item.ownerName || 'Provider',
+        listing: item.ownerName || item.ownerId || item.author || 'Unknown',
+        venue: item.ownerName || item.ownerId || item.author || 'Unknown',
+        ad: item.author || item.ownerName || item.ownerId || 'Unknown',
+        service: item.providerName || item.ownerName || item.ownerId || 'Unknown',
+        content: item.author || item.ownerName || item.ownerId || 'Unknown',
+        event: item.hostName || item.author || item.ownerName || item.ownerId || 'Unknown',
+        gig: item.author || item.ownerName || item.ownerId || 'Unknown',
+        experience: item.author || item.ownerName || item.providerName || item.ownerId || 'Unknown',
+        product: item.authorName || item.ownerName || 'Unknown',
+        fantasy: item.author || item.authorName || item.ownerName || 'Unknown'
+    };
+    return map[type] || 'Unknown';
+}
+
+// Collect every item pending review across all collections.
+function getAllPendingReviews() {
+    const out = [];
+    Object.keys(APPROVAL_TYPES).forEach(type => {
+        const t = APPROVAL_TYPES[type];
+        const arr = (typeof Storage[t.get] === 'function') ? Storage[t.get]() : [];
+        (arr || []).forEach(item => {
+            if (isUnderReview(item)) out.push({ type, item });
+        });
+    });
+    out.sort((a, b) => {
+        const ad = (a.item.approval && a.item.approval.requestedAt) || a.item.createdAt || '';
+        const bd = (b.item.approval && b.item.approval.requestedAt) || b.item.createdAt || '';
+        return String(bd).localeCompare(String(ad));
+    });
+    return out;
+}
+
+// Approve or reject an item. Returns { ok, error }.
+function reviewItem(type, id, decision, reason) {
+    const t = APPROVAL_TYPES[type];
+    if (!t || !Storage[t.get] || !Storage[t.set]) return { ok: false, error: 'Unknown type' };
+    const arr = Storage[t.get]();
+    const idx = arr.findIndex(x => String(x.id) === String(id));
+    if (idx === -1) return { ok: false, error: 'Item not found' };
+    if (decision !== 'approved' && decision !== 'rejected') return { ok: false, error: 'Bad decision' };
+    arr[idx].status = decision;
+    arr[idx].approval = {
+        status: decision,
+        requestedAt: (arr[idx].approval && arr[idx].approval.requestedAt) || arr[idx].createdAt,
+        reason: decision === 'rejected' ? (reason || '').trim() : '',
+        reviewedAt: new Date().toISOString(),
+        reviewedBy: 'admin'
+    };
+    arr[idx].updatedAt = new Date().toISOString();
+    Storage[t.set](arr);
+    return { ok: true, type: t };
+}
+
+// ---- Creator dashboard feedback notes ----
+const APPROVAL_EDIT_ACTIONS = {
+    user: id => `editUserById('${id}')`,
+    provider: id => `editProviderById('${id}')`,
+    listing: id => `editListingById('${id}')`,
+    venue: id => `editVenueById('${id}')`,
+    ad: (id, source) => `editAdById('${id}','${source}')`,
+    service: id => `editService('${id}')`,
+    content: id => `editContent('${id}')`,
+    event: id => `editEvent('${id}')`,
+    gig: id => `editGig('${id}')`,
+    experience: id => `editProviderExperience('${id}')`,
+    product: id => `editProduct('${id}')`,
+    fantasy: id => `editFantasyRequest('${id}')`
+};
+
+function collectApprovalNotesForOwner() {
+    const notes = [];
+    const push = (type, list) => {
+        (list || []).forEach(item => {
+            const st = approvalStatus(item);
+            if (st === 'pending' || st === 'rejected') notes.push({ type, item, st });
+        });
+    };
+
+    let provId = '';
+    try { provId = findCurrentProviderId() || ''; } catch (e) {}
+
+    if (provId) {
+        push('provider', (Storage.getProviders() || []).filter(p => String(p.id) === String(provId)));
+        push('listing', (Storage.getListings() || []).filter(l => String(l.ownerId) === String(provId)));
+        push('venue', (Storage.getVenues() || []).filter(v => String(v.ownerId) === String(provId) || String(v.providerId) === String(provId)));
+        push('service', (Storage.getServices() || []).filter(s => String(s.ownerId) === String(provId)));
+        push('content', (Storage.getContent() || []).filter(c => String(c.ownerId) === String(provId) || String(c.providerId) === String(provId)));
+        push('event', (Storage.getEvents() || []).filter(e => String(e.ownerId) === String(provId) || String(e.providerId) === String(provId)));
+        push('gig', (Storage.getGigs() || []).filter(g => String(g.ownerId) === String(provId)));
+        push('experience', (Storage.getExperiences() || []).filter(x => String(x.ownerId) === String(provId) || String(x.providerId) === String(provId)));
+        push('product', (Storage.getProducts() || []).filter(p => String(p.authorId) === String(provId)));
+        push('ad', (Storage.getAds() || []).filter(a => a.source === 'provider'));
+    }
+
+    const userId = currentUserOwnerId();
+    push('user', getUserProfilesByAuth());
+    push('ad', (Storage.getAds() || []).filter(a => a.source !== 'provider'));
+    push('fantasy', (Storage.getFantasyRequests() || []).filter(r => String(r.authorId) === String(userId) || r.authorId === 'current'));
+
+    return notes;
+}
+
+function renderDashboardApprovalNotes() {
+    const root = document.getElementById('dashboardApprovalNotes');
+    if (!root) return;
+    const notes = collectApprovalNotesForOwner();
+    if (!notes.length) { root.innerHTML = ''; return; }
+
+    const pending = notes.filter(n => n.st === 'pending');
+    const rejected = notes.filter(n => n.st === 'rejected');
+
+    let html = '';
+    if (pending.length) {
+        html += `<div class="approval-banner approval-banner-pending" style="margin-bottom:10px">
+            <i class="fas fa-clock"></i>
+            <div style="flex:1"><strong>${pending.length} item${pending.length > 1 ? 's are' : ' is'} awaiting admin approval</strong>
+            <div class="approval-banner-sub">${pending.map(n => `<a href="#" onclick="event.preventDefault();${editActionFor(n.type, n.item)};return false" style="color:#92600a;text-decoration:underline;font-weight:600">${escapeHtml(itemDisplayTitle(n.item, n.type))}</a>`).join(' • ')}</div></div>
+        </div>`;
+    }
+    if (rejected.length) {
+        html += `<div class="approval-banner approval-banner-rejected">
+            <i class="fas fa-ban"></i>
+            <div style="flex:1"><strong>${rejected.length} item${rejected.length > 1 ? 's were' : ' was'} not approved</strong>
+            <div class="approval-banner-sub">${rejected.map(n => {
+                const reason = approvalReason(n.item) ? ` — <em>${escapeHtml(approvalReason(n.item))}</em>` : '';
+                return `<span style="display:block;margin-top:4px"><a href="#" onclick="event.preventDefault();${editActionFor(n.type, n.item)};return false" style="color:#a02828;text-decoration:underline;font-weight:600">${escapeHtml(itemDisplayTitle(n.item, n.type))}</a><i class="fas fa-pen" style="margin-left:5px;font-size:0.7rem"></i>${reason}</span>`;
+            }).join('')}</div></div>
+        </div>`;
+    }
+
+    root.innerHTML = html;
+}
+
+function editActionFor(type, item) {
+    const fn = APPROVAL_EDIT_ACTIONS[type];
+    if (!fn) return '';
+    if (type === 'ad') return fn(item.id, item.source === 'provider' ? 'provider' : 'user');
+    return fn.call(null, item.id);
+}
+
 // Neutralize dangerous schemes that can run code or exfiltrate data.
 function sanitizeUrl(url) {
     if (!url) return '';
@@ -1181,12 +1454,17 @@ function handleUserSubmit(e) {
     const users = Storage.getUsers();
     if (id) {
         const idx = users.findIndex(u => u.id === id);
-        if (idx !== -1) { profile.createdAt = users[idx].createdAt; users[idx] = profile; }
-        showToast('Profile updated successfully!');
+        if (idx !== -1) {
+            profile.createdAt = users[idx].createdAt;
+            markPendingApproval(profile);
+            users[idx] = profile;
+        }
+        showToast('Profile updated! It is pending admin approval.', 'success');
     } else {
         profile.createdAt = now;
+        markPendingApproval(profile);
         users.push(profile);
-        showToast('Profile created successfully!');
+        showToast('Profile created! It is now pending admin approval.', 'success');
     }
     Storage.setUsers(users);
     renderProfileSetupBanner();
@@ -1275,6 +1553,7 @@ function filterUserProfiles() { renderUserProfiles(document.getElementById('user
 
 async function renderUserDashboardStats() {
     const setNum = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+    renderDashboardApprovalNotes();
 
     // Explore counts (platform-wide menu items)
     const explore = {
@@ -1447,6 +1726,7 @@ function editUserById(id) {
     if (!u) return;
     navigateTo('user-create');
     populateUserForm(u);
+    renderApprovalBanner('page-user-create', u, 'Profile', 'user-create');
 }
 
 function editUserProfile() {
@@ -1651,12 +1931,13 @@ function handleProviderSubmit(e) {
     const providers = Storage.getProviders();
     if (id) {
         const idx = providers.findIndex(p => p.id === id);
-        if (idx !== -1) { profile.createdAt = providers[idx].createdAt; providers[idx] = profile; }
-        showToast('Business profile updated!');
+        if (idx !== -1) { profile.createdAt = providers[idx].createdAt; markPendingApproval(profile); providers[idx] = profile; }
+        showToast('Business profile updated! It is pending admin approval.', 'success');
     } else {
         profile.createdAt = now;
+        markPendingApproval(profile);
         providers.push(profile);
-        showToast('Business profile created!');
+        showToast('Business profile created! It is now pending admin approval.', 'success');
     }
     Storage.setProviders(providers);
     navigateTo('provider-dashboard');
@@ -1666,6 +1947,7 @@ function renderProviderProfiles(filter = 'all') {
     const providers = Storage.getProviders();
     const container = document.getElementById('providerProfilesList');
     const filtered = filter === 'all' ? providers : providers.filter(p => p.status === filter);
+    renderDashboardApprovalNotes();
 
     document.getElementById('providerCount').textContent = providers.length;
 
@@ -1756,6 +2038,7 @@ function editProviderById(id) {
     if (!p) return;
     navigateTo('provider-create');
     populateProviderForm(p);
+    renderApprovalBanner('page-provider-create', p, 'Provider Profile', 'provider-create');
 }
 
 function editProviderProfile() {
@@ -1901,7 +2184,7 @@ function renderDirectory() {
     const container = document.getElementById('directoryList');
     if (!container) return;
 
-    let filtered = listings.filter(l => !l.status || l.status === 'active');
+    let filtered = listings.filter(l => isApprovedPublic(l));
     
     if (currentDirectoryFilter !== 'all') {
         filtered = filtered.filter(l => l.category === currentDirectoryFilter);
@@ -2252,12 +2535,13 @@ function handleListingSubmit(e) {
     const listings = Storage.getListings();
     if (id) {
         const idx = listings.findIndex(l => l.id === id);
-        if (idx !== -1) { listing.createdAt = listings[idx].createdAt; listings[idx] = listing; }
-        showToast('Listing updated successfully!');
+        if (idx !== -1) { listing.createdAt = listings[idx].createdAt; markPendingApproval(listing); listings[idx] = listing; }
+        showToast('Listing updated! It is pending admin approval.', 'success');
     } else {
         listing.createdAt = now;
+        markPendingApproval(listing);
         listings.push(listing);
-        showToast('Listing published successfully!');
+        showToast('Listing submitted for admin approval!', 'success');
     }
     Storage.setListings(listings);
     navigateTo('provider-directory');
@@ -2306,6 +2590,7 @@ function editListingById(id) {
     if (!l) return;
     populateListingForm(l);
     navigateTo('provider-listing-create');
+    renderApprovalBanner('page-provider-listing-create', l, 'Listing', 'provider-listing-create');
 }
 
 function populateListingForm(l) {
@@ -2602,7 +2887,7 @@ function renderVenueDirectory() {
     const container = document.getElementById('venueDirectoryList');
     if (!container) return;
 
-    let filtered = venues.filter(v => !v.status || v.status === 'active');
+    let filtered = venues.filter(v => isApprovedPublic(v));
 
     if (currentVenueDirectoryFilter !== 'all') {
         filtered = filtered.filter(v => v.category === currentVenueDirectoryFilter);
@@ -2776,12 +3061,13 @@ function handleVenueSubmit(e) {
     const venues = Storage.getVenues();
     if (id) {
         const idx = venues.findIndex(v => v.id === id);
-        if (idx !== -1) { venue.createdAt = venues[idx].createdAt; venues[idx] = venue; }
-        showToast('Venue updated successfully!');
+        if (idx !== -1) { venue.createdAt = venues[idx].createdAt; markPendingApproval(venue); venues[idx] = venue; }
+        showToast('Venue updated! It is pending admin approval.', 'success');
     } else {
         venue.createdAt = now;
+        markPendingApproval(venue);
         venues.push(venue);
-        showToast('Venue published successfully!');
+        showToast('Venue submitted for admin approval!', 'success');
     }
     Storage.setVenues(venues);
     navigateTo('provider-venue-directory');
@@ -2830,6 +3116,7 @@ function editVenueById(id) {
     if (!v) return;
     populateVenueForm(v);
     navigateTo('provider-venue-create');
+    renderApprovalBanner('page-provider-venue-create', v, 'Venue', 'provider-venue-create');
 }
 
 function populateVenueForm(v) {
@@ -2942,7 +3229,7 @@ function renderAdsBrowse() {
     const container = document.getElementById('adsBrowseList');
     if (!container) return;
 
-    let filtered = ads.filter(a => !a.status || a.status === 'active');
+    let filtered = ads.filter(a => isApprovedPublic(a));
 
     if (currentAdsFilter !== 'all') {
         filtered = filtered.filter(a => a.category === currentAdsFilter);
@@ -3089,12 +3376,13 @@ function handleAdSubmit(e) {
     const ads = Storage.getAds();
     if (id) {
         const idx = ads.findIndex(a => a.id === id);
-        if (idx !== -1) { ad.createdAt = ads[idx].createdAt; ad.author = ads[idx].author; ads[idx] = ad; }
-        showToast('Ad updated successfully!');
+        if (idx !== -1) { ad.createdAt = ads[idx].createdAt; ad.author = ads[idx].author; markPendingApproval(ad); ads[idx] = ad; }
+        showToast('Ad updated! It is pending admin approval.', 'success');
     } else {
         ad.createdAt = now;
+        markPendingApproval(ad);
         ads.push(ad);
-        showToast('Ad published successfully!');
+        showToast('Ad submitted for admin approval!', 'success');
     }
     Storage.setAds(ads);
     navigateTo('user-ads');
@@ -3142,9 +3430,11 @@ function editAdById(id, source) {
     if (source === 'provider') {
         populateProviderAdForm(a);
         navigateTo('provider-ads-create');
+        renderApprovalBanner('page-provider-ads-create', a, 'Ad', 'provider-ads-create');
     } else {
         populateAdForm(a);
         navigateTo('ads-create');
+        renderApprovalBanner('page-ads-create', a, 'Ad', 'ads-create');
     }
 }
 
@@ -3275,12 +3565,13 @@ function handleProviderAdSubmit(e) {
     const ads = Storage.getAds();
     if (id) {
         const idx = ads.findIndex(a => a.id === id);
-        if (idx !== -1) { ad.createdAt = ads[idx].createdAt; ad.author = ads[idx].author; ads[idx] = ad; }
-        showToast('Ad updated successfully!');
+        if (idx !== -1) { ad.createdAt = ads[idx].createdAt; ad.author = ads[idx].author; markPendingApproval(ad); ads[idx] = ad; }
+        showToast('Ad updated! It is pending admin approval.', 'success');
     } else {
         ad.createdAt = now;
+        markPendingApproval(ad);
         ads.push(ad);
-        showToast('Ad published successfully!');
+        showToast('Ad submitted for admin approval!', 'success');
     }
     Storage.setAds(ads);
     navigateTo('provider-ads');
@@ -3451,6 +3742,7 @@ function renderServicesDirectory() {
     renderServicesOwnerBanner();
 
     let filtered = services.filter(s => {
+        if (!isApprovedPublic(s)) return false;
         if (currentServicesFilter !== 'all' && s.category !== currentServicesFilter) return false;
         if (currentServicesOwnerFilter && !providerItemMatches(s, currentServicesOwnerFilter)) return false;
         if (location && s.location !== location) return false;
@@ -3860,16 +4152,17 @@ function submitService(addAnother) {
     let createdNew = false;
     if (id) {
         const idx = services.findIndex(s => s.id === id);
-        if (idx !== -1) { services[idx] = { ...services[idx], ...serviceData, ownerId: getCurrentProviderIdentity().id, ownerName: getCurrentProviderIdentity().name, updatedAt: new Date().toISOString() }; }
-        showToast('Service updated!', 'success');
+        if (idx !== -1) { services[idx] = { ...services[idx], ...serviceData, ownerId: getCurrentProviderIdentity().id, ownerName: getCurrentProviderIdentity().name, updatedAt: new Date().toISOString() }; markPendingApproval(services[idx]); }
+        showToast('Service updated! It is pending admin approval.', 'success');
     } else {
         serviceData.id = generateId();
         serviceData.createdAt = new Date().toISOString();
         serviceData.ownerId = getCurrentProviderIdentity().id;
         serviceData.ownerName = getCurrentProviderIdentity().name;
+        markPendingApproval(serviceData);
         services.push(serviceData);
         createdNew = true;
-        showToast('Service published!', 'success');
+        showToast('Service submitted for admin approval!', 'success');
     }
     Storage.setServices(services);
     if (createdNew && addAnother) {
@@ -3888,6 +4181,7 @@ function editService(id) {
     document.getElementById('serviceId').value = s.id;
     document.getElementById('serviceFormTitle').textContent = 'Edit Service';
     document.getElementById('serviceSubmitBtn').textContent = 'Update Service';
+    renderApprovalBanner('page-provider-service-create', s, 'Service', 'provider-service-create');
     document.getElementById('serviceName').value = s.name || '';
     document.getElementById('serviceBio').value = s.bio || '';
     document.getElementById('serviceEmail').value = s.email || '';
@@ -4510,7 +4804,7 @@ function handleContentTagInput(e) {
 
 function renderContentDirectory() {
     const content = Storage.getContent();
-    let filtered = currentContentFilter === 'all' ? [...content] : content.filter(c => c.type === currentContentFilter);
+    let filtered = currentContentFilter === 'all' ? content.filter(c => isApprovedPublic(c)) : content.filter(c => c.type === currentContentFilter && isApprovedPublic(c));
 
     const search = document.getElementById('contentSearch')?.value?.toLowerCase() || '';
     if (search) filtered = filtered.filter(c => c.title.toLowerCase().includes(search) || c.description.toLowerCase().includes(search) || (c.tags || []).some(t => t.toLowerCase().includes(search)));
@@ -5040,11 +5334,12 @@ function handleContentSubmit(e) {
             if (fileData) { content[idx].fileData = fileData; content[idx].fileType = fileType; }
             content[idx].tags = [...contentTags];
             content[idx].updatedAt = new Date().toISOString();
+            markPendingApproval(content[idx]);
         }
-        showToast('Content updated!', 'success');
+        showToast('Content updated! It is pending admin approval.', 'success');
     } else {
         const owner = getCurrentProviderIdentity();
-        content.push({
+        const item = {
             id: generateId(),
             title, type, location, description,
             fileData: fileData || '',
@@ -5054,8 +5349,10 @@ function handleContentSubmit(e) {
             ownerId: owner.id,
             ownerName: owner.name,
             createdAt: new Date().toISOString()
-        });
-        showToast('Content published!', 'success');
+        };
+        markPendingApproval(item);
+        content.push(item);
+        showToast('Content submitted for admin approval!', 'success');
     }
     Storage.setContent(content);
     navigateTo('provider-content');
@@ -5095,6 +5392,7 @@ function editContent(id) {
 
     renderContentTags();
     navigateTo('provider-content-create');
+    renderApprovalBanner('page-provider-content-create', item, 'Content', 'provider-content-create');
 }
 
 function deleteContent(id) {
@@ -5333,7 +5631,7 @@ function addEventSuggestedTag(tag) {
 
 function renderEventsDirectory() {
     const events = Storage.getEvents();
-    let filtered = currentEventFilter === 'all' ? [...events] : events.filter(e => e.type === currentEventFilter);
+    let filtered = currentEventFilter === 'all' ? events.filter(e => isApprovedPublic(e)) : events.filter(e => e.type === currentEventFilter && isApprovedPublic(e));
 
     const search = document.getElementById('eventSearch')?.value?.toLowerCase() || '';
     if (search) filtered = filtered.filter(e => e.name.toLowerCase().includes(search) || e.description.toLowerCase().includes(search) || e.venue?.toLowerCase().includes(search) || (e.tags || []).some(t => t.toLowerCase().includes(search)));
@@ -5520,11 +5818,12 @@ function handleEventSubmit(e) {
             events[idx].description = description;
             events[idx].tags = [...eventTags];
             events[idx].updatedAt = new Date().toISOString();
+            markPendingApproval(events[idx]);
         }
-        showToast('Event updated!', 'success');
+        showToast('Event updated! It is pending admin approval.', 'success');
     } else {
         const owner = getCurrentProviderIdentity();
-        events.push({
+        const item = {
             id: generateId(),
             name, type, eventDate, eventTime, venue, province, fee, dressCode, description,
             tags: [...eventTags],
@@ -5532,8 +5831,10 @@ function handleEventSubmit(e) {
             ownerId: owner.id,
             ownerName: owner.name,
             createdAt: new Date().toISOString()
-        });
-        showToast('Event published!', 'success');
+        };
+        markPendingApproval(item);
+        events.push(item);
+        showToast('Event submitted for admin approval!', 'success');
     }
     Storage.setEvents(events);
     navigateTo('provider-events');
@@ -5559,6 +5860,7 @@ function editEvent(id) {
     eventTags = [...(ev.tags || [])];
     renderEventTags();
     navigateTo('provider-event-create');
+    renderApprovalBanner('page-provider-event-create', ev, 'Event', 'provider-event-create');
 }
 
 function deleteEvent(id) {
@@ -6578,7 +6880,7 @@ function renderGigsBrowse() {
     const locationFilter = document.getElementById('gigLocationFilter')?.value || '';
     const sort = document.getElementById('gigSort')?.value || 'newest';
 
-    let filtered = gigs.filter(g => g.status !== 'deleted');
+    let filtered = gigs.filter(g => isApprovedPublic(g));
 
     if (typeFilter !== 'all') filtered = filtered.filter(g => g.gigType === typeFilter);
     if (locationFilter) filtered = filtered.filter(g => g.location === locationFilter);
@@ -6718,18 +7020,20 @@ function handleGigSubmit(e) {
             gigs[idx].tags = tags;
             gigs[idx].urgent = urgent;
             gigs[idx].updatedAt = new Date().toISOString();
+            markPendingApproval(gigs[idx]);
         }
-        showToast('Gig updated!', 'success');
+        showToast('Gig updated! It is pending admin approval.', 'success');
     } else {
         const gigOwner = getCurrentProviderIdentity();
-        gigs.push({
+        const item = {
             id: generateId(), title, gigType, location, rate: rate ? parseFloat(rate) : null, rateType,
             contact, author, authorId: 'current', description, tags, urgent,
             ownerId: gigOwner.id, ownerName: gigOwner.name,
-            featured: false, status: 'active',
-            createdAt: new Date().toISOString()
-        });
-        showToast('Gig posted!', 'success');
+            featured: false
+        };
+        markPendingApproval(item);
+        gigs.push(item);
+        showToast('Gig submitted for admin approval!', 'success');
     }
     Storage.setGigs(gigs);
     navigateTo('gigs-browse');
@@ -6789,6 +7093,7 @@ function editGig(id) {
     const gig = Storage.getGigs().find(g => g.id === id);
     if (!gig) return;
     navigateTo('provider-gig-create');
+    renderApprovalBanner('page-provider-gig-create', gig, 'Gig', 'provider-gig-create');
     document.getElementById('gigId').value = gig.id;
     document.getElementById('gigTitle').value = gig.title;
     document.getElementById('gigType').value = gig.gigType;
@@ -7676,15 +7981,18 @@ function handleExperienceSubmit(e) {
         const idx = experiences.findIndex(x => x.id === id);
         if (idx !== -1) {
             experiences[idx] = { ...experiences[idx], title, type, location, price, description, rules, includes, capacity, duration, coverPhoto, updatedAt: new Date().toISOString() };
+            markPendingApproval(experiences[idx]);
         }
-        showToast('Experience updated!', 'success');
+        showToast('Experience updated! It is pending admin approval.', 'success');
     } else {
-        experiences.push({
+        const item = {
             id: generateId(), title, type, location, price, description, rules, includes, capacity,
-            duration, coverPhoto, author, providerId, authorId: 'current', ownerId: providerId, ownerName: author, status: 'active', tags: [],
+            duration, coverPhoto, author, providerId, authorId: 'current', ownerId: providerId, ownerName: author, tags: [],
             createdAt: new Date().toISOString(), updatedAt: new Date().toISOString()
-        });
-        showToast('Experience published!', 'success');
+        };
+        markPendingApproval(item);
+        experiences.push(item);
+        showToast('Experience submitted for admin approval!', 'success');
     }
     Storage.setExperiences(experiences);
     navigateTo('provider-experiences');
@@ -7694,6 +8002,7 @@ function editProviderExperience(id) {
     const e = Storage.getExperiences().find(x => x.id === id);
     if (!e) return;
     navigateTo('provider-experience-create');
+    renderApprovalBanner('page-provider-experience-create', e, 'Experience', 'provider-experience-create');
     setTimeout(() => {
         document.getElementById('experienceId').value = e.id;
         document.getElementById('experienceFormTitle').textContent = 'Edit Experience';
@@ -7794,7 +8103,7 @@ function filterProviderExperiences() {
 }
 
 function renderExperiencesBrowse() {
-    const experiences = Storage.getExperiences().filter(x => !x.status || x.status === 'active');
+    const experiences = Storage.getExperiences().filter(x => isApprovedPublic(x));
     const walletBalanceEl = document.getElementById('expWalletBalance');
     if (walletBalanceEl) walletBalanceEl.textContent = 'R' + getWalletBalance('user', currentUserOwnerId());
     let filtered = [...experiences];
@@ -8181,6 +8490,7 @@ function editFantasyRequest(id) {
     const r = Storage.getFantasyRequests().find(x => x.id === id);
     if (!r) return;
     navigateTo('fantasy-request-create');
+    renderApprovalBanner('page-fantasy-request-create', r, 'Fantasy Request', 'fantasy-request-create');
     setTimeout(() => {
         document.getElementById('fantasyRequestId').value = r.id;
         document.getElementById('fantasyTitle').value = r.title || '';

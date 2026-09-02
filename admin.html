@@ -13,7 +13,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🛡️</text></svg>">
-    <link rel="stylesheet" href="style.css?v=30">
+    <link rel="stylesheet" href="style.css?v=31">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <style>
         .admin-badge { background: linear-gradient(135deg, #ef4444, #dc2626); color: white; padding: 3px 10px; border-radius: 6px; font-size: 0.65rem; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; margin-left: 8px; }
@@ -83,6 +83,10 @@
             <a href="#" class="nav-item" data-page="admin-users">
                 <i class="fas fa-users"></i>
                 <span>Users</span>
+            </a>
+            <a href="#" class="nav-item" data-page="admin-approvals">
+                <i class="fas fa-clipboard-check"></i>
+                <span>Approvals <span class="nav-badge nav-badge-approvals" id="adminApprovalsBadge" style="display:none">0</span></span>
             </a>
             <a href="#" class="nav-item" data-page="admin-upgrades">
                 <i class="fas fa-rocket"></i>
@@ -338,9 +342,17 @@
                             <span class="stat-label">Help Queries</span>
                         </div>
                     </div>
+                    <div class="stat-card" id="adminApprovalsTile">
+                        <div class="stat-icon" style="background:#fef3c7;color:#f59e0b"><i class="fas fa-clipboard-check"></i></div>
+                        <div class="stat-info">
+                            <span class="stat-number" id="adminApprovalCount">0</span>
+                            <span class="stat-label">Pending Approvals</span>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="admin-quick-actions">
+                    <a class="admin-quick-btn" onclick="navigateTo('admin-approvals')"><i class="fas fa-clipboard-check"></i><span>Review Approvals</span></a>
                     <a class="admin-quick-btn" onclick="navigateTo('admin-users')"><i class="fas fa-users"></i><span>Manage Users</span></a>
                     <a class="admin-quick-btn" onclick="navigateTo('admin-providers')"><i class="fas fa-user-tie"></i><span>Manage Providers</span></a>
                     <a class="admin-quick-btn" onclick="navigateTo('admin-listings')"><i class="fas fa-address-book"></i><span>Manage Listings</span></a>
@@ -436,6 +448,17 @@
                         <tbody></tbody>
                     </table>
                 </div>
+            </div>
+        </div>
+
+        <!-- Content Approvals -->
+        <div class="page" id="page-admin-approvals">
+            <div class="container">
+                <div class="dashboard-header">
+                    <div><h1>Content Approvals</h1><p>Review and approve or reject new and edited public content</p></div>
+                    <button class="btn btn-secondary" onclick="renderAdminApprovals()"><i class="fas fa-sync-alt"></i> Refresh</button>
+                </div>
+                <div id="adminApprovalsPanels"></div>
             </div>
         </div>
 
@@ -1416,9 +1439,9 @@
       });
     })();
     </script>
-    <script src="script.js?v=41"></script>
-    <script src="admin.js?v=24"></script>
+    <script src="script.js?v=42"></script>
+    <script src="admin.js?v=25"></script>
     <script src="admin-upgrades.js?v=20"></script>
-    <script src="products.js?v=21"></script>
+    <script src="products.js?v=22"></script>
 </body>
 </html>

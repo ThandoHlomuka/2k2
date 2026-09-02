@@ -58,7 +58,7 @@
   // GENERAL USERS - browse products
   // ============================================
   window.renderProductsBrowser = function () {
-    var list = Storage.getProducts().slice().filter(function (p) { return p.status !== 'archived'; });
+    var list = Storage.getProducts().slice().filter(function (p) { return isApprovedPublic(p); });
     var q = (document.getElementById('productsSearch') ? document.getElementById('productsSearch').value : '').toLowerCase();
     var cat = document.getElementById('productsCategoryFilter') ? document.getElementById('productsCategoryFilter').value : 'all';
     var sort = document.getElementById('productsSort') ? document.getElementById('productsSort').value : 'newest';
@@ -265,12 +265,16 @@
         status: 'active',
         createdAt: Date.now()
       });
+      markPendingApproval(products[products.length - 1]);
       Storage.setProducts(products);
     } else {
       var list = Storage.getProducts().map(function (p) {
         if (p.id === id) return Object.assign({}, p, { name: name, category: category, price: price, stock: stock, description: description, photo: coverSrc || p.photo });
         return p;
       });
+      for (var i2 = 0; i2 < list.length; i2++) {
+        if (list[i2].id === id) markPendingApproval(list[i2]);
+      }
       Storage.setProducts(list);
     }
     navigateTo('provider-products');
@@ -283,6 +287,7 @@
     var uid = await myAuthorId();
     if ((p.authorId || '') !== uid) { alert('You can only manage your own products.'); return; }
     navigateTo('provider-product-create');
+    renderApprovalBanner('page-provider-product-create', p, 'Product', 'provider-product-create');
     document.getElementById('productId').value = p.id;
     document.getElementById('productName').value = p.name || '';
     document.getElementById('productCategory').value = p.category || 'other';

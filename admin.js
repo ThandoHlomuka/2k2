@@ -29,6 +29,7 @@ function navigateTo(page) {
 
     if (page === 'admin-dashboard') renderAdminDashboard();
     if (page === 'admin-users') renderAdminUsers();
+    if (page === 'admin-approvals') renderAdminApprovals();
     if (page === 'admin-upgrades') renderAdminUpgrades();
     if (page === 'admin-providers') renderAdminProviders();
     if (page === 'admin-listings') renderAdminListings();
@@ -334,6 +335,18 @@ function renderAdminDashboard() {
     setEl('adminTopUpCount', topUps.length);
     setEl('adminHelpCount', helpQueries.length);
 
+    // ---- Pending approval count ----
+    const pendingCount = getAllPendingReviews().length;
+    setEl('adminApprovalCount', pendingCount);
+    const badge = document.getElementById('adminApprovalsBadge');
+    if (badge) { badge.textContent = pendingCount; badge.style.display = pendingCount ? 'inline-block' : 'none'; }
+    const dashTile = document.getElementById('adminApprovalsTile');
+    if (dashTile) {
+        dashTile.style.display = '';
+        const numEl = dashTile.querySelector('.stat-card-number');
+        if (numEl) numEl.textContent = pendingCount;
+    }
+
     // ---- Account Distribution (donut) ----
     const pie = document.getElementById('adminPieChart');
     if (pie) {
@@ -446,6 +459,96 @@ function renderAdminDashboard() {
 function setEl(id, val) {
     const el = document.getElementById(id);
     if (el) el.textContent = val;
+}
+
+// ==========================================
+// CONTENT APPROVALS (review queue)
+// ==========================================
+function renderAdminApprovals() {
+    const container = document.getElementById('adminApprovalsPanels');
+    if (!container) return;
+
+    const pending = getAllPendingReviews();
+    const pendingCount = pending.length;
+
+    const badge = document.getElementById('adminApprovalsBadge');
+    if (badge) { badge.textContent = pendingCount; badge.style.display = pendingCount ? 'inline-block' : 'none'; }
+    setEl('adminApprovalCount', pendingCount);
+
+    if (!pending.length) {
+        container.innerHTML = '<div class="admin-approval-empty"><i class="fas fa-clipboard-check"></i><strong>All caught up!</strong><div>No content is waiting for approval right now.</div></div>';
+        return;
+    }
+
+    const grouped = {};
+    pending.forEach(r => { (grouped[r.type] = grouped[r.type] || []).push(r); });
+
+    const typeOrder = Object.keys(APPROVAL_TYPES);
+    let html = '';
+    typeOrder.forEach(type => {
+        const group = grouped[type];
+        if (!group || !group.length) return;
+        const t = APPROVAL_TYPES[type];
+        html += `<div class="admin-approval-group">
+            <h3><i class="fas fa-${iconForApprovalGroup(type)}"></i> ${escapeHtml(t.label)}s <span class="approval-group-count">${group.length}</span></h3>`;
+        group.forEach(r => {
+            const item = r.item;
+            const title = escapeHtml(itemDisplayTitle(item, type));
+            const owner = escapeHtml(itemOwnerName(item, type));
+            const when = fmtDate((item.approval && item.approval.requestedAt) || item.createdAt || '') || '-';
+            const desc = escapeHtml(truncate(extractApprovalExcerpt(item, type), 120));
+            html += `<div class="admin-approval-card">
+                <div class="admin-approval-card-info">
+                    <div class="admin-approval-card-title">${title}</div>
+                    <div class="admin-approval-card-meta"><i class="fas fa-user"></i> ${owner} &nbsp;•&nbsp; Requested ${when}</div>
+                    ${desc ? `<div class="admin-approval-card-meta">${desc}</div>` : ''}
+                </div>
+                <div class="admin-approval-card-actions">
+                    <input class="admin-approval-reason-input" id="rejReason_${type}_${item.id}" placeholder="Reject reason (required)" />
+                    <button class="btn btn-success btn-sm" onclick="adminApproveItem('${type}','${String(item.id).replace(/'/g, "\\'")}')"><i class="fas fa-check"></i> Approve</button>
+                    <button class="btn btn-danger btn-sm" onclick="adminRejectItem('${type}','${String(item.id).replace(/'/g, "\\'")}')"><i class="fas fa-ban"></i> Reject</button>
+                </div>
+            </div>`;
+        });
+        html += `</div>`;
+    });
+
+    container.innerHTML = html;
+}
+
+function iconForApprovalGroup(type) {
+    return {
+        user: 'user', provider: 'user-tie', listing: 'address-book', venue: 'store',
+        ad: 'bullhorn', service: 'concierge-bell', content: 'photo-film', event: 'calendar-days',
+        gig: 'briefcase', experience: 'star', product: 'cart-shopping', fantasy: 'wand-magic-sparkles'
+    }[type] || 'clipboard-check';
+}
+
+function extractApprovalExcerpt(item, type) {
+    const s = item.bio || item.description || item.body || item.details || '';
+    if (typeof s === 'string') return s.replace(/<[^>]*>/g, ' ');
+    return '';
+}
+
+function adminApproveItem(type, id) {
+    const res = reviewItem(type, id, 'approved', '');
+    if (res.ok) showAdminToast(`${res.type.label} approved`, 'success');
+    else showAdminToast(res.error || 'Could not approve item', 'error');
+    renderAdminApprovals();
+}
+
+function adminRejectItem(type, id) {
+    const reason = (document.getElementById('rejReason_' + type + '_' + id) || {}).value || '';
+    if (!reason.trim()) { showAdminToast('Please enter a reason for rejection.', 'error'); return; }
+    const res = reviewItem(type, id, 'rejected', reason);
+    if (res.ok) showAdminToast(`${res.type.label} rejected`, 'success');
+    else showAdminToast(res.error || 'Could not reject item', 'error');
+    renderAdminApprovals();
+}
+
+function showAdminToast(message, type = 'success') {
+    if (typeof showToast === 'function') { showToast(message, type); return; }
+    alert(message);
 }
 
 // ==========================================
