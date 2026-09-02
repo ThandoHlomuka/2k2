@@ -2264,6 +2264,7 @@ function renderDirectory() {
             </div>
         </div>`;
     }).join('');
+    restoreBrowseView('directoryList');
 }
 
 function filterDirectory(type) {
@@ -2964,6 +2965,8 @@ function renderVenueDirectory() {
             </div>
         </div>`;
     }).join('');
+
+    restoreBrowseView('venueDirectoryList');
 }
 
 function filterVenueDirectory(type) {
@@ -3305,6 +3308,8 @@ function renderAdsBrowse() {
             <div class="ad-card-tags">${(a.tags || []).slice(0, 3).map(t => `<span class="mini-tag">${t}</span>`).join('')}</div>
         </div>`;
     }).join('');
+
+    restoreBrowseView('adsBrowseList');
 }
 
 function filterAds(type) {
@@ -3818,6 +3823,8 @@ function renderServicesDirectory() {
             </div>
         `;
     }).join('');
+
+    restoreBrowseView('servicesDirectoryList');
 }
 
 function filterServicesDirectory(category) {
@@ -3828,6 +3835,49 @@ function filterServicesDirectory(category) {
 }
 
 function searchServicesDirectory() { renderServicesDirectory(); }
+
+// ==========================================
+// GRID / LIST VIEW TOGGLE (browse filters)
+// ==========================================
+function setBrowseView(containerId, mode, btn) {
+    var container = document.getElementById(containerId);
+    if (container) {
+        if (mode === 'list') container.classList.add('list-view');
+        else container.classList.remove('list-view');
+    }
+    try { localStorage.setItem('kbv:' + containerId, mode); } catch (e) {}
+    ['grid', 'list'].forEach(function (m) {
+        var label = btn ? btn.closest('.view-toggle').querySelector('[data-view="' + m + '"]') : null;
+        if (label) label.classList.toggle('active', m === mode);
+    });
+}
+
+function toggleBrowseView(containerId, mode, btn) {
+    setBrowseView(containerId, mode, btn);
+    var page = document.querySelector('.page.active');
+    if (!page) return;
+    var fn = page.getAttribute('data-render') || '';
+    if (fn && typeof window[fn] === 'function') window[fn]();
+}
+
+function restoreBrowseView(containerId) {
+    try {
+        var mode = localStorage.getItem('kbv:' + containerId) || 'grid';
+        var container = document.getElementById(containerId);
+        if (container) {
+            if (mode === 'list') container.classList.add('list-view');
+            else container.classList.remove('list-view');
+        }
+        var toggle = container && container.closest('.page') ? container.closest('.page').querySelector('.view-toggle') : null;
+        if (toggle) {
+            var g = toggle.querySelector('[data-view="grid"]');
+            var l = toggle.querySelector('[data-view="list"]');
+            if (g) g.classList.toggle('active', mode !== 'list');
+            if (l) l.classList.toggle('active', mode === 'list');
+        }
+        return mode;
+    } catch (e) { return 'grid'; }
+}
 
 function viewServiceDirectory(id) {
     const services = Storage.getServices();
@@ -8231,6 +8281,8 @@ function renderExperiencesBrowse() {
             </div>
         </div>`;
     }).join('');
+
+    restoreBrowseView('experiencesList');
 }
 
 function filterExperiences(type) {
@@ -8483,6 +8535,8 @@ function renderFantasyRequests() {
             </div>
         </div>`;
     }).join('');
+
+    restoreBrowseView('fantasyRequestsList');
 }
 
 function filterFantasyRequests(category) {

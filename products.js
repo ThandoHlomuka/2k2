@@ -103,6 +103,8 @@
         '</div>' +
       '</div>';
     }).join('');
+
+    if (typeof restoreBrowseView === 'function') restoreBrowseView('productsDirectoryList');
   };
 
   window.filterProductsCategory = function () { renderProductsBrowser(); };

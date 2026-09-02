@@ -2524,6 +2524,83 @@ h1, h2, h3, h4 {
     box-shadow: 0 4px 14px rgba(211, 173, 68, 0.35);
 }
 
+/* ---- Grid / List view toggle (applies to browse filters) ---- */
+.view-toggle {
+    display: inline-flex;
+    gap: 4px;
+    background: #f3eddd;
+    border: 2px solid #e6dec8;
+    border-radius: 10px;
+    padding: 3px;
+    flex-shrink: 0;
+}
+
+.view-toggle button {
+    border: none;
+    background: transparent;
+    color: #a99c7e;
+    font-size: 0.9rem;
+    padding: 6px 12px;
+    border-radius: 7px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-weight: 600;
+    transition: all 0.2s;
+}
+
+.view-toggle button.active {
+    background: white;
+    color: #a07d12;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* List view: horizontal, full-width cards */
+.list-view > .directory-card,
+.list-view > .profile-list-card,
+.list-view > .ad-card,
+.list-view > .forum-thread-card {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    width: 100%;
+    margin-bottom: 14px;
+}
+
+/* Grid mode: forum-thread-cards become grid cards */
+.directory-grid > .forum-thread-card {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+.directory-grid > .forum-thread-card .forum-thread-card-inner {
+    flex: 1;
+}
+.directory-grid > .forum-thread-card .forum-thread-content {
+    width: 100% !important;
+}
+
+.list-view > .directory-card .directory-card-photo,
+.list-view > .directory-card .dir-avatar,
+.list-view > .profile-list-card .list-card-avatar,
+.list-view > .ad-card .ad-card-photo {
+    flex-shrink: 0;
+}
+
+.list-view > .directory-card .directory-card-body,
+.list-view > .directory-card .dir-info,
+.list-view > .profile-list-card .list-card-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.list-view > .directory-card .directory-card-actions,
+.list-view > .profile-list-card .list-card-actions {
+    flex-shrink: 0;
+    margin-left: auto;
+}
+
 .filter-bar {
     display: flex;
     gap: 12px;
@@ -5152,6 +5229,33 @@ h1, h2, h3, h4 {
     display: flex;
     flex-direction: column;
     gap: 14px;
+}
+
+/* Grid mode for forum-threads containers that also carry directory-grid (experiences/fantasy too) */
+.forum-threads-list.directory-grid:not(.list-view) {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 20px;
+    align-items: stretch;
+}
+.forum-threads-list.directory-grid:not(.list-view) > .forum-thread-card {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+.forum-threads-list.directory-grid:not(.list-view) > .forum-thread-card .forum-thread-card-inner {
+    flex: 1;
+}
+.forum-threads-list.directory-grid:not(.list-view) > .forum-thread-card .forum-thread-content {
+    width: 100% !important;
+}
+/* List mode: full-width horizontal row cards */
+.forum-threads-list.directory-grid.list-view > .forum-thread-card {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    width: 100%;
+    margin-bottom: 14px;
 }
 
 .forum-thread-card {

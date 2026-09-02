@@ -53,7 +53,7 @@
     <!-- Favicon -->
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💎</text></svg>">
 
-    <link rel="stylesheet" href="style.css?v=34">
+    <link rel="stylesheet" href="style.css?v=35">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700;900&family=Inter:wght@300;400;500;600;700&family=Dancing+Script:wght@700&display=swap" rel="stylesheet">
 
@@ -2050,6 +2050,10 @@
                             <option value="name-asc">Name A-Z</option>
                             <option value="name-desc">Name Z-A</option>
                         </select>
+                        <div class="view-toggle" title="View mode">
+                            <button type="button" class="active" data-view="grid" onclick="setBrowseView('servicesDirectoryList','grid',this)"><i class="fas fa-th"></i> Grid</button>
+                            <button type="button" data-view="list" onclick="setBrowseView('servicesDirectoryList','list',this)"><i class="fas fa-list"></i> List</button>
+                        </div>
                     </div>
                 </div>
 
@@ -2092,6 +2096,10 @@
                             <option value="price-desc">Price: High to Low</option>
                             <option value="name-asc">Name: A-Z</option>
                         </select>
+                        <div class="view-toggle" title="View mode">
+                            <button type="button" class="active" data-view="grid" onclick="setBrowseView('productsDirectoryList','grid',this)"><i class="fas fa-th"></i> Grid</button>
+                            <button type="button" data-view="list" onclick="setBrowseView('productsDirectoryList','list',this)"><i class="fas fa-list"></i> List</button>
+                        </div>
                     </div>
                 </div>
 
@@ -2320,6 +2328,10 @@
                             <option value="title-asc">Title A-Z</option>
                             <option value="title-desc">Title Z-A</option>
                         </select>
+                        <div class="view-toggle" title="View mode">
+                            <button type="button" class="active" data-view="grid" onclick="setBrowseView('adsBrowseList','grid',this)"><i class="fas fa-th"></i> Grid</button>
+                            <button type="button" data-view="list" onclick="setBrowseView('adsBrowseList','list',this)"><i class="fas fa-list"></i> List</button>
+                        </div>
                     </div>
                 </div>
 
@@ -2766,6 +2778,10 @@
                             <option value="name-asc">Name A-Z</option>
                             <option value="name-desc">Name Z-A</option>
                         </select>
+                        <div class="view-toggle" title="View mode">
+                            <button type="button" class="active" data-view="grid" onclick="setBrowseView('venueDirectoryList','grid',this)"><i class="fas fa-th"></i> Grid</button>
+                            <button type="button" data-view="list" onclick="setBrowseView('venueDirectoryList','list',this)"><i class="fas fa-list"></i> List</button>
+                        </div>
                     </div>
                 </div>
 
@@ -3564,10 +3580,14 @@
                     </div>
                     <div class="filter-bar">
                         <input type="text" id="experienceSearch" placeholder="Search experiences..." oninput="searchExperiences()">
+                        <div class="view-toggle" title="View mode">
+                            <button type="button" class="active" data-view="grid" onclick="setBrowseView('experiencesList','grid',this)"><i class="fas fa-th"></i> Grid</button>
+                            <button type="button" data-view="list" onclick="setBrowseView('experiencesList','list',this)"><i class="fas fa-list"></i> List</button>
+                        </div>
                     </div>
                 </div>
                 <div class="directory-stats"><span><i class="fas fa-gamepad"></i> <strong id="experienceCount">0</strong> experiences</span></div>
-                <div class="forum-threads-list" id="experiencesList" style="margin-top:16px"></div>
+                <div class="forum-threads-list profiles-grid directory-grid" id="experiencesList" style="margin-top:16px"></div>
             </div>
         </div>
 
@@ -3614,10 +3634,14 @@
                     </div>
                     <div class="filter-bar">
                         <input type="text" id="fantasySearch" placeholder="Search fantasy requests..." oninput="searchFantasyRequests()">
+                        <div class="view-toggle" title="View mode">
+                            <button type="button" class="active" data-view="grid" onclick="setBrowseView('fantasyRequestsList','grid',this)"><i class="fas fa-th"></i> Grid</button>
+                            <button type="button" data-view="list" onclick="setBrowseView('fantasyRequestsList','list',this)"><i class="fas fa-list"></i> List</button>
+                        </div>
                     </div>
                 </div>
                 <div class="directory-stats"><span><i class="fas fa-scroll"></i> <strong id="fantasyCount">0</strong> requests</span></div>
-                <div id="fantasyRequestsList" style="margin-top:16px"></div>
+                <div class="profiles-grid directory-grid" id="fantasyRequestsList" style="margin-top:16px"></div>
             </div>
         </div>
 
