@@ -13,7 +13,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🛡️</text></svg>">
-    <link rel="stylesheet" href="style.css?v=32">
+    <link rel="stylesheet" href="style.css?v=33">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <style>
         .admin-badge { background: linear-gradient(135deg, #ef4444, #dc2626); color: white; padding: 3px 10px; border-radius: 6px; font-size: 0.65rem; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; margin-left: 8px; }
@@ -107,6 +107,18 @@
             <a href="#" class="nav-item" data-page="admin-ads">
                 <i class="fas fa-bullhorn"></i>
                 <span>Ads</span>
+            </a>
+            <a href="#" class="nav-item" data-page="admin-services">
+                <i class="fas fa-concierge-bell"></i>
+                <span>Services</span>
+            </a>
+            <a href="#" class="nav-item" data-page="admin-bookings">
+                <i class="fas fa-calendar-check"></i>
+                <span>Bookings</span>
+            </a>
+            <a href="#" class="nav-item" data-page="admin-gigs">
+                <i class="fas fa-briefcase"></i>
+                <span>Gigs</span>
             </a>
             <a href="#" class="nav-item" data-page="admin-content">
                 <i class="fas fa-photo-film"></i>
@@ -241,14 +253,14 @@
                             <span class="stat-label">Ads</span>
                         </div>
                     </div>
-                    <div class="stat-card">
+                    <div class="stat-card" onclick="navigateTo('admin-services')">
                         <div class="stat-icon" style="background:#f0fdf4;color:#10b981"><i class="fas fa-concierge-bell"></i></div>
                         <div class="stat-info">
                             <span class="stat-number" id="adminServiceCount">0</span>
                             <span class="stat-label">Services</span>
                         </div>
                     </div>
-                    <div class="stat-card">
+                    <div class="stat-card" onclick="navigateTo('admin-bookings')">
                         <div class="stat-icon" style="background:#f0e7c8;color:#a07d12"><i class="fas fa-calendar-check"></i></div>
                         <div class="stat-info">
                             <span class="stat-number" id="adminBookingCount">0</span>
@@ -293,7 +305,7 @@
                             <span class="stat-label">Reviews</span>
                         </div>
                     </div>
-                    <div class="stat-card">
+                    <div class="stat-card" onclick="navigateTo('admin-gigs')">
                         <div class="stat-icon" style="background:#f3e8ff;color:#a855f7"><i class="fas fa-briefcase"></i></div>
                         <div class="stat-info">
                             <span class="stat-number" id="adminGigCount">0</span>
@@ -533,6 +545,72 @@
                         <thead><tr><th>Title</th><th>Category</th><th>Contact</th><th>Location</th><th>Status</th><th>Created</th><th>Actions</th></tr></thead>
                         <tbody></tbody>
                     </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Services Management -->
+        <div class="page" id="page-admin-services">
+            <div class="container">
+                <div class="dashboard-header">
+                    <div><h1>Services Management</h1><p>View and manage all provider services</p></div>
+                </div>
+                <div class="admin-table-card profile-card">
+                    <div class="table-header">
+                        <h2><i class="fas fa-concierge-bell"></i> All Services (<span id="adminServicesCount">0</span>)</h2>
+                    </div>
+                    <div class="admin-table-wrap">
+                        <table class="admin-table" id="adminServicesTable">
+                            <thead>
+                                <tr><th>Name</th><th>Category</th><th>Location</th><th>Rate</th><th>Status</th><th>Created</th><th>Actions</th></tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bookings Management -->
+        <div class="page" id="page-admin-bookings">
+            <div class="container">
+                <div class="dashboard-header">
+                    <div><h1>Bookings Management</h1><p>View and manage all booking requests</p></div>
+                </div>
+                <div class="admin-table-card profile-card">
+                    <div class="table-header">
+                        <h2><i class="fas fa-calendar-check"></i> All Bookings (<span id="adminBookingsCount">0</span>)</h2>
+                    </div>
+                    <div class="admin-table-wrap">
+                        <table class="admin-table" id="adminBookingsTable">
+                            <thead>
+                                <tr><th>Client</th><th>Provider</th><th>Date / Time</th><th>Service Type</th><th>Fee</th><th>Status</th><th>Created</th><th>Actions</th></tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Gigs Management -->
+        <div class="page" id="page-admin-gigs">
+            <div class="container">
+                <div class="dashboard-header">
+                    <div><h1>Gigs Management</h1><p>View and manage all posted gigs</p></div>
+                </div>
+                <div class="admin-table-card profile-card">
+                    <div class="table-header">
+                        <h2><i class="fas fa-briefcase"></i> All Gigs (<span id="adminGigsCount">0</span>)</h2>
+                    </div>
+                    <div class="admin-table-wrap">
+                        <table class="admin-table" id="adminGigsTable">
+                            <thead>
+                                <tr><th>Title</th><th>Type</th><th>Rate</th><th>Author</th><th>Location</th><th>Status</th><th>Created</th><th>Actions</th></tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </div>

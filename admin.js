@@ -35,6 +35,9 @@ function navigateTo(page) {
     if (page === 'admin-listings') renderAdminListings();
     if (page === 'admin-venues') renderAdminVenues();
     if (page === 'admin-ads') renderAdminAds();
+    if (page === 'admin-services') renderAdminServices();
+    if (page === 'admin-bookings') renderAdminBookings();
+    if (page === 'admin-gigs') renderAdminGigs();
     if (page === 'admin-content') renderAdminContent();
     if (page === 'admin-events') renderAdminEvents();
     if (page === 'admin-reviews') renderAdminReviews();
@@ -179,6 +182,18 @@ function confirmDelete() {
         Storage.setFantasyRequests(Storage.getFantasyRequests().filter(r => r.id !== id));
         showToast('Fantasy request deleted.');
         renderAdminFantasy();
+    } else if (type === 'service') {
+        Storage.setServices(Storage.getServices().filter(x => x.id !== id));
+        showToast('Service deleted.');
+        renderAdminServices();
+    } else if (type === 'booking') {
+        Storage.setBookings(Storage.getBookings().filter(x => x.id !== id));
+        showToast('Booking deleted.');
+        renderAdminBookings();
+    } else if (type === 'gig') {
+        Storage.setGigs(Storage.getGigs().filter(x => x.id !== id));
+        showToast('Gig deleted.');
+        renderAdminGigs();
     }
     closeDeleteModal();
 }
@@ -965,6 +980,187 @@ function adminViewAd(id) {
 }
 
 function adminDeleteAd(id, name) { promptAdminDelete('ad', id, name); }
+
+// ==========================================
+// SERVICES MANAGEMENT
+// ==========================================
+function renderAdminServices() {
+    const services = Storage.getServices();
+    const tbody = document.querySelector('#adminServicesTable tbody');
+    if (!tbody) return;
+
+    setEl('adminServicesCount', services.length);
+
+    if (services.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:#a99c7e;padding:40px">No services yet</td></tr>';
+        return;
+    }
+
+    const types = typeof SERVICE_TYPES !== 'undefined' && SERVICE_TYPES ? SERVICE_TYPES : {};
+
+    tbody.innerHTML = services.map(s => {
+        const label = types[s.category] ? (types[s.category].label || s.category) : s.category;
+        const color = types[s.category] && types[s.category].color ? types[s.category].color : '#10b981';
+        return `
+        <tr>
+            <td><strong>${truncate(s.name, 20)}</strong></td>
+            <td><span class="directory-type-badge" style="background:${color}20;color:${color};padding:4px 10px;border-radius:12px;font-size:0.75rem;font-weight:600">${label}</span></td>
+            <td>${s.location || '-'}</td>
+            <td>${s.rate || (s.bookingFee != null ? 'R' + s.bookingFee : 'Contact')}</td>
+            <td><span class="status-badge status-${s.status || 'active'}">${s.status || 'active'}</span></td>
+            <td>${fmtDate(s.createdAt)}</td>
+            <td>
+                <div class="admin-actions">
+                    <button class="btn btn-secondary btn-xs" onclick="adminViewService('${s.id}')"><i class="fas fa-eye"></i></button>
+                    <button class="btn btn-danger btn-xs" onclick="adminDeleteService('${s.id}','${(s.name||'').replace(/'/g,"\\'")}')"><i class="fas fa-trash" style="color:#ef4444"></i></button>
+                </div>
+            </td>
+        </tr>`;
+    }).join('');
+}
+
+function adminViewService(id) {
+    const s = Storage.getServices().find(x => x.id === id);
+    if (!s) return;
+    showAdminView(`
+        <h2><i class="fas fa-concierge-bell" style="color:#10b981;margin-right:8px"></i> Service Details</h2>
+        <div class="admin-view-row"><span class="label">Name</span><span class="value">${escapeHtml(s.name || '-')}</span></div>
+        <div class="admin-view-row"><span class="label">Category</span><span class="value">${escapeHtml(s.category || '-')}</span></div>
+        <div class="admin-view-row"><span class="label">Provider</span><span class="value">${escapeHtml(s.ownerName || '-')}</span></div>
+        <div class="admin-view-row"><span class="label">Location</span><span class="value">${escapeHtml(s.location || '-')}</span></div>
+        <div class="admin-view-row"><span class="label">Booking Fee</span><span class="value">${s.bookingFee != null ? 'R' + s.bookingFee : '-'}</span></div>
+        <div class="admin-view-row"><span class="label">Rate</span><span class="value">${escapeHtml(s.rate || '-')}</span></div>
+        <div class="admin-view-row"><span class="label">Bio</span><span class="value">${escapeHtml(truncate(s.bio || '-', 180))}</span></div>
+        <div class="admin-view-row"><span class="label">Tags</span><span class="value">${(s.tags||[]).map(escapeHtml).join(', ') || '-'}</span></div>
+        <div class="admin-view-row"><span class="label">Status</span><span class="value">${s.status || 'active'}</span></div>
+        <div class="admin-view-row"><span class="label">Created</span><span class="value">${fmtDate(s.createdAt)}</span></div>
+    `);
+}
+
+function adminDeleteService(id, name) { promptAdminDelete('service', id, name); }
+
+// ==========================================
+// BOOKINGS MANAGEMENT
+// ==========================================
+function renderAdminBookings() {
+    const bookings = Storage.getBookings();
+    const tbody = document.querySelector('#adminBookingsTable tbody');
+    if (!tbody) return;
+
+    setEl('adminBookingsCount', bookings.length);
+
+    if (bookings.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:#a99c7e;padding:40px">No bookings yet</td></tr>';
+        return;
+    }
+
+    const listingTypeLabel = (b) => {
+        const provider = b.providerType === 'service' ? Storage.getServices().find(p => p.id === b.providerId) : Storage.getListings().find(p => p.id === b.providerId);
+        return provider ? (provider.name || provider.title || 'Unknown') : (b.serviceType || 'Unknown');
+    };
+
+    tbody.innerHTML = bookings.map(b => {
+        const status = (typeof BOOKING_STATUSES !== 'undefined' && BOOKING_STATUSES[b.status]) ? BOOKING_STATUSES[b.status] : { label: b.status || 'pending', color: '#f59e0b' };
+        const fee = b.fee != null ? 'R' + b.fee : '-';
+        return `
+        <tr>
+            <td><strong>${truncate(b.clientName || '-', 18)}</strong></td>
+            <td>${truncate(listingTypeLabel(b), 20)}</td>
+            <td>${b.date || '-'} ${b.time ? '&middot; ' + b.time : ''}</td>
+            <td>${b.serviceType || '-'}</td>
+            <td>${fee}</td>
+            <td><span class="status-badge" style="background:${status.color}22;color:${status.color};border:1px solid ${status.color}44">${status.label}</span></td>
+            <td>${fmtDate(b.createdAt)}</td>
+            <td>
+                <div class="admin-actions">
+                    <button class="btn btn-secondary btn-xs" onclick="adminViewBooking('${b.id}')"><i class="fas fa-eye"></i></button>
+                    <button class="btn btn-danger btn-xs" onclick="adminDeleteBooking('${b.id}')"><i class="fas fa-trash" style="color:#ef4444"></i></button>
+                </div>
+            </td>
+        </tr>`;
+    }).join('');
+}
+
+function adminViewBooking(id) {
+    const b = Storage.getBookings().find(x => x.id === id);
+    if (!b) return;
+    const status = (typeof BOOKING_STATUSES !== 'undefined' && BOOKING_STATUSES[b.status]) ? BOOKING_STATUSES[b.status] : { label: b.status || 'pending', color: '#f59e0b' };
+    showAdminView(`
+        <h2><i class="fas fa-calendar-check" style="color:#a07d12;margin-right:8px"></i> Booking Details</h2>
+        <div class="admin-view-row"><span class="label">Client</span><span class="value">${escapeHtml(b.clientName || '-')}</span></div>
+        <div class="admin-view-row"><span class="label">Client Email</span><span class="value">${escapeHtml(b.clientEmail || '-')}</span></div>
+        <div class="admin-view-row"><span class="label">Client Phone</span><span class="value">${escapeHtml(b.clientPhone || '-')}</span></div>
+        <div class="admin-view-row"><span class="label">Service Type</span><span class="value">${escapeHtml(b.serviceType || '-')}</span></div>
+        <div class="admin-view-row"><span class="label">Date</span><span class="value">${escapeHtml(b.date || '-')}</span></div>
+        <div class="admin-view-row"><span class="label">Time</span><span class="value">${escapeHtml(b.time || '-')}</span></div>
+        <div class="admin-view-row"><span class="label">Fee</span><span class="value">${b.fee != null ? 'R' + b.fee : '-'}</span></div>
+        <div class="admin-view-row"><span class="label">Status</span><span class="value" style="color:${status.color}">${status.label}</span></div>
+        <div class="admin-view-row"><span class="label">Notes</span><span class="value">${escapeHtml(b.notes || '-')}</span></div>
+        <div class="admin-view-row"><span class="label">Created</span><span class="value">${fmtDate(b.createdAt)}</span></div>
+    `);
+}
+
+function adminDeleteBooking(id) { promptAdminDelete('booking', id, 'this booking'); }
+
+// ==========================================
+// GIGS MANAGEMENT
+// ==========================================
+function renderAdminGigs() {
+    const gigs = Storage.getGigs();
+    const tbody = document.querySelector('#adminGigsTable tbody');
+    if (!tbody) return;
+
+    setEl('adminGigsCount', gigs.length);
+
+    if (gigs.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:#a99c7e;padding:40px">No gigs yet</td></tr>';
+        return;
+    }
+
+    const types = typeof GIG_TYPES !== 'undefined' ? GIG_TYPES : {};
+
+    tbody.innerHTML = gigs.map(g => {
+        const t = types[g.gigType] || {};
+        const rate = g.rate != null ? 'R' + g.rate + (g.rateType && g.rateType !== 'fixed' ? '/' + g.rateType : '') : 'Contact';
+        return `
+        <tr>
+            <td><strong>${truncate(g.title || '-', 20)}</strong></td>
+            <td><span class="directory-type-badge" style="background:${t.color||'#a855f7'}20;color:${t.color||'#a855f7'};padding:4px 10px;border-radius:12px;font-size:0.75rem;font-weight:600">${t.label || g.gigType || '-'}</span></td>
+            <td>${rate}</td>
+            <td>${g.author || g.authorName || '-'}</td>
+            <td>${g.location || '-'}</td>
+            <td><span class="status-badge status-${g.status || 'active'}">${g.status || 'active'}</span></td>
+            <td>${fmtDate(g.createdAt)}</td>
+            <td>
+                <div class="admin-actions">
+                    <button class="btn btn-secondary btn-xs" onclick="adminViewGig('${g.id}')"><i class="fas fa-eye"></i></button>
+                    <button class="btn btn-danger btn-xs" onclick="adminDeleteGig('${g.id}','${(g.title||'').replace(/'/g,"\\'")}')"><i class="fas fa-trash" style="color:#ef4444"></i></button>
+                </div>
+            </td>
+        </tr>`;
+    }).join('');
+}
+
+function adminViewGig(id) {
+    const g = Storage.getGigs().find(x => x.id === id);
+    if (!g) return;
+    const t = typeof GIG_TYPES !== 'undefined' ? (GIG_TYPES[g.gigType] || {}) : {};
+    showAdminView(`
+        <h2><i class="fas fa-briefcase" style="color:#a855f7;margin-right:8px"></i> Gig Details</h2>
+        <div class="admin-view-row"><span class="label">Title</span><span class="value">${escapeHtml(g.title || '-')}</span></div>
+        <div class="admin-view-row"><span class="label">Type</span><span class="value">${escapeHtml(t.label || g.gigType || '-')}</span></div>
+        <div class="admin-view-row"><span class="label">Author</span><span class="value">${escapeHtml(g.author || g.authorName || '-')}</span></div>
+        <div class="admin-view-row"><span class="label">Location</span><span class="value">${escapeHtml(g.location || '-')}</span></div>
+        <div class="admin-view-row"><span class="label">Rate</span><span class="value">${g.rate != null ? 'R' + g.rate + (g.rateType && g.rateType !== 'fixed' ? '/' + g.rateType : '') : 'Contact'}</span></div>
+        <div class="admin-view-row"><span class="label">Description</span><span class="value">${escapeHtml(truncate(g.description || '-', 180))}</span></div>
+        <div class="admin-view-row"><span class="label">Tags</span><span class="value">${(g.tags||[]).map(escapeHtml).join(', ') || '-'}</span></div>
+        <div class="admin-view-row"><span class="label">Urgent</span><span class="value">${g.urgent ? 'Yes' : 'No'}</span></div>
+        <div class="admin-view-row"><span class="label">Status</span><span class="value">${g.status || 'active'}</span></div>
+        <div class="admin-view-row"><span class="label">Created</span><span class="value">${fmtDate(g.createdAt)}</span></div>
+    `);
+}
+
+function adminDeleteGig(id, name) { promptAdminDelete('gig', id, name); }
 
 // ==========================================
 // LOGS

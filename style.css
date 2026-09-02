@@ -1259,6 +1259,25 @@ h1, h2, h3, h4 {
     font-weight: 500;
 }
 
+.tag-cloud {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.match-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 12px;
+    border-radius: 50px;
+    background: rgba(139, 92, 246, 0.12);
+    color: #8b5cf6;
+    font-size: 0.75rem;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
 .tags-input-container {
     background: var(--cream-white, #fdf9ef);
     border: 2px solid #e6dec8;
@@ -1956,6 +1975,17 @@ h1, h2, h3, h4 {
 }
 
 @keyframes cardSlideUp {
+    0% {
+        opacity: 0;
+        transform: translateY(24px);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes fadeInUp {
     0% {
         opacity: 0;
         transform: translateY(24px);

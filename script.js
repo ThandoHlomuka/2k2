@@ -519,6 +519,7 @@ function navigateTo(page) {
     if (page === 'provider-services') renderProviderServices();
     if (page === 'provider-service-create') resetServiceForm();
     if (page === 'user-bookings') renderUserBookings();
+    if (page === 'user-interests') renderUserInterests();
     if (page === 'provider-bookings') renderProviderBookings();
     if (page === 'provider-tips') renderProviderTips();
     if (page === 'user-wallet') renderUserWallet();
@@ -1581,7 +1582,7 @@ async function renderUserDashboardStats() {
     setNum('dashCountFantasy', explore['Fantasy Req.']);
     setNum('dashCountThreads', explore['Forum Threads']);
     setNum('userCount', Storage.getUsers().length);
-    setNum('userInterestsCount', Storage.getUsers().reduce((s, u) => s + (u.interests || []).length, 0));
+    setNum('userInterestsCount', getUserProfilesByAuth().reduce((s, u) => s + ((u.interests || []).length), 0));
     setNum('userActiveCount', Storage.getUsers().filter(u => u.status === 'active').length);
 
     try {
@@ -4413,6 +4414,68 @@ function cancelBooking(id) {
             if (typeof renderUserWallet === 'function') renderUserWallet();
         }
     }
+}
+
+// ==========================================
+// USER INTERESTS
+// ==========================================
+function renderUserInterests() {
+    const myProfiles = getUserProfilesByAuth();
+    const myIds = myProfiles.map(p => p.id);
+    const myTags = Array.from(new Set(myProfiles.reduce((acc, p) => acc.concat((p.interests || []).map(t => String(t).trim().toLowerCase())), []))).filter(Boolean);
+
+    const tagCloud = document.getElementById('myInterestsTags');
+    if (tagCloud) {
+        tagCloud.innerHTML = myTags.length
+            ? myTags.map(t => `<span class="tag">${escapeHtml(t)}</span>`).join('')
+            : '<p style="color:#a99c7e;font-size:0.9rem">You haven\'t added any interests yet.</p>';
+    }
+
+    const matchList = document.getElementById('interestsMatchList');
+    const matchCountEl = document.getElementById('interestsMatchCount');
+    if (!matchList) return;
+
+    if (myTags.length === 0) {
+        if (matchCountEl) matchCountEl.textContent = '0';
+        matchList.innerHTML = '<div class="empty-section"><i class="fas fa-heart"></i><p>No matching profiles yet</p><span>Add interests to see profiles who share them</span></div>';
+        if (document.querySelector('#page-user-interests .btn-primary')) {
+            matchList.innerHTML += '<div style="text-align:center;margin-top:8px"><button class="btn btn-primary" onclick="navigateTo(\'user-profile\')"><i class="fas fa-user-edit"></i> Edit My Profile</button></div>';
+        }
+        return;
+    }
+
+    const others = Storage.getUsers().filter(u => !myIds.includes(u.id));
+    const withMatch = others.map(u => {
+        const uTags = Array.from(new Set((u.interests || []).map(t => String(t).trim().toLowerCase()).filter(Boolean)));
+        const shared = uTags.filter(t => myTags.includes(t));
+        return { u, shared };
+    }).filter(x => x.shared.length > 0)
+      .sort((a, b) => b.shared.length - a.shared.length)
+      .slice(0, 24);
+
+    if (matchCountEl) matchCountEl.textContent = String(withMatch.reduce((s, x) => s + x.shared.length, 0));
+
+    if (withMatch.length === 0) {
+        matchList.innerHTML = '<div class="empty-section"><i class="fas fa-user-friends"></i><p>No profiles share your interests yet</p><span>Check back soon or explore the directory</span></div>';
+        return;
+    }
+
+    matchList.innerHTML = withMatch.map(x => {
+        const u = x.u;
+        return `
+        <div class="profile-list-card" onclick="viewUserProfile('${u.id}')">
+            <div class="list-card-avatar">${u.photo ? `<img src="${u.photo}" alt="">` : `<i class="fas fa-user"></i>`}</div>
+            <div class="list-card-info">
+                <h3>${escapeHtml(u.fullName || u.username || 'Member')}</h3>
+                <p>${escapeHtml(u.email || '')}</p>
+                <div class="list-card-tags">${x.shared.slice(0, 3).map(t => `<span class="mini-tag">${escapeHtml(t)}</span>`).join('')}</div>
+            </div>
+            <div class="list-card-actions">
+                <span class="match-chip">${x.shared.length} shared</span>
+                <button class="btn btn-secondary btn-sm" onclick="event.stopPropagation(); viewUserProfile('${u.id}')"><i class="fas fa-eye"></i> View</button>
+            </div>
+        </div>`;
+    }).join('');
 }
 
 // ==========================================

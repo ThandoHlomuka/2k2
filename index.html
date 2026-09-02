@@ -53,7 +53,7 @@
     <!-- Favicon -->
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💎</text></svg>">
 
-    <link rel="stylesheet" href="style.css?v=32">
+    <link rel="stylesheet" href="style.css?v=33">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700;900&family=Inter:wght@300;400;500;600;700&family=Dancing+Script:wght@700&display=swap" rel="stylesheet">
 
@@ -518,6 +518,10 @@
                 <i class="fas fa-calendar-check"></i>
                 <span>My Bookings</span>
             </a>
+            <a href="#" class="nav-item" data-page="user-interests">
+                <i class="fas fa-heart"></i>
+                <span>My Interests</span>
+            </a>
             <div class="nav-divider"></div>
             <span class="nav-section-title">Wallet</span>
             <a href="#" class="nav-item" data-page="user-wallet">
@@ -607,7 +611,7 @@
                             <span class="stat-label">Total Profiles</span>
                         </div>
                     </div>
-                    <div class="stat-card">
+                    <div class="stat-card" onclick="navigateTo('user-interests')">
                         <div class="stat-icon purple-bg"><i class="fas fa-heart"></i></div>
                         <div class="stat-info">
                             <span class="stat-number" id="userInterestsCount">0</span>
@@ -1535,6 +1539,34 @@
                         </div>
                     </div>
                     <div class="profiles-grid" id="userBookingsList"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- User Interests -->
+        <div class="page" id="page-user-interests">
+            <div class="container">
+                <div class="dashboard-header">
+                    <div>
+                        <h1>My Interests</h1>
+                        <p>Your interest tags and profiles who share them</p>
+                    </div>
+                </div>
+
+                <div class="profile-card" style="padding:20px">
+                    <div class="section-header">
+                        <h2><i class="fas fa-heart" style="color:#8b5cf6"></i> My Interest Tags</h2>
+                    </div>
+                    <div id="myInterestsTags" class="tag-cloud" style="margin-top:12px"></div>
+                    <p style="color:#8a7b55;font-size:0.85rem;margin-top:14px"><i class="fas fa-info-circle"></i> You can edit your interests on your <a href="#" onclick="navigateTo('user-profile')" style="color:#c9a227">profile</a>.</p>
+                </div>
+
+                <div class="profile-card" style="padding:20px;margin-top:20px">
+                    <div class="section-header">
+                        <h2><i class="fas fa-user-friends" style="color:#c9a227"></i> Matching Profiles</h2>
+                        <span class="directory-stats"><span><strong id="interestsMatchCount">0</strong> shared interests</span></span>
+                    </div>
+                    <div class="profiles-grid" id="interestsMatchList" style="margin-top:16px"></div>
                 </div>
             </div>
         </div>
