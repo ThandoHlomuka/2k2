@@ -34,72 +34,86 @@
     return local.trim() || String(email);
   }
 
-  // ---------------- signed-in user heartbeat ----------------
-  function startUserHeartbeat() {
+  // ---------------- single self-correcting heartbeat ----------------
+  // One loop decides on EVERY tick which table to write, so a device can
+  // never heartbeat as BOTH a guest and a signed-in user at the same time:
+  //   - signed in  -> upsert auth-keyed `presence` row
+  //   - signed out -> RPC-touch `guest_presence` row
+  // The decision is re-checked each beat (and on auth events), so a user who
+  // is already signed in when the page boots is NEVER written as a guest, and
+  // a sign-in/out in the same tab switches the write target immediately.
+  let mode = null;      // 'user' | 'guest'
+  let heartbeatTimer = null;
+  let running = false;
+
+  async function writeUserPresence() {
     const client = getClient();
     if (!client) return;
-    let running = false;
-
-    async function pump() {
-      if (running) return;
-      running = true;
-      try {
-        const sid = await _2k2.Auth.getSession();
-        if (!sid || !sid.user) { running = false; return; }
-        const profile = await _2k2.Auth.getProfile();
-        const displayName =
-          (profile && (profile.display_name || profile.full_name)) ||
-          sid.user.user_metadata?.full_name ||
-          sid.user.user_metadata?.name ||
-          usernameFromEmail(sid.user.email) ||
-          sid.user.email ||
-          'User';
-        await client.from('presence').upsert(
-          {
-            id: sid.user.id,
-            role: profile ? profile.role : 'user',
-            display_name: displayName,
-            email: sid.user.email || null,
-            last_seen: new Date().toISOString()
-          },
-          { onConflict: 'id' }
-        );
-      } catch (e) { /* transient; ignore */ }
-      finally { running = false; }
-    }
-
-    pump();
-    setInterval(pump, HEARTBEAT_MS);
+    const sid = await _2k2.Auth.getSession();
+    if (!sid || !sid.user) return;
+    const profile = await _2k2.Auth.getProfile();
+    const displayName =
+      (profile && (profile.display_name || profile.full_name)) ||
+      sid.user.user_metadata?.full_name ||
+      sid.user.user_metadata?.name ||
+      usernameFromEmail(sid.user.email) ||
+      sid.user.email ||
+      'User';
+    await client.from('presence').upsert(
+      {
+        id: sid.user.id,
+        role: profile ? profile.role : 'user',
+        display_name: displayName,
+        email: sid.user.email || null,
+        last_seen: new Date().toISOString()
+      },
+      { onConflict: 'id' }
+    );
   }
 
-  // ---------------- guest heartbeat ----------------
-  function startGuestHeartbeat() {
+  async function writeGuestPresence() {
     const client = getClient();
     if (!client) return;
     const guestId = getGuestId();
     // label: e.g. "Guest" + short id so admins can tell guests apart
     const label = 'Guest ' + guestId.slice(-6).toUpperCase();
-
-    async function pump() {
-      try {
-        await client.rpc('touch_guest_presence', { p_guest_id: guestId, p_label: label });
-      } catch (e) { /* transient; ignore */ }
-    }
-
-    pump();
-    setInterval(pump, HEARTBEAT_MS);
+    await client.rpc('touch_guest_presence', { p_guest_id: guestId, p_label: label });
   }
 
-  // Guys only start GUEST heartbeat when NOT signed in; signed-in
-  // users heartbeat the auth-keyed presence table instead.
+  async function pump() {
+    if (running) return;
+    running = true;
+    try {
+      let sid = null;
+      try { sid = await _2k2.Auth.getSession(); } catch (e) { sid = null; }
+      const isUser = !!(sid && sid.user);
+      mode = isUser ? 'user' : 'guest';
+      if (isUser) await writeUserPresence();
+      else await writeGuestPresence();
+    } catch (e) { /* transient; ignore */ }
+    finally { running = false; }
+  }
+
+  function start() {
+    if (heartbeatTimer) return;
+    pump();
+    heartbeatTimer = setInterval(pump, HEARTBEAT_MS);
+  }
+
   function init() {
-    _2k2.Auth.getSession().then(function (sid) {
-      if (sid && sid.user) {
-        startUserHeartbeat();
-      } else {
-        startGuestHeartbeat();
-      }
-    });
+    const client = getClient();
+    if (!client) return;
+    start();
+    // React to sign-in / sign-out in this tab immediately (not on the next
+    // heartbeat beat). Note: onAuthStateChange fires during normal token
+    // refreshes too; the pump itself is idempotent, so that is harmless.
+    if (typeof client.auth.onAuthStateChange === 'function') {
+      try {
+        client.auth.onAuthStateChange(function (event) {
+          if (event === 'INITIAL_SESSION' || event === 'SIGNED_IN' || event === 'SIGNED_OUT') pump();
+        });
+      } catch (e) { /* ignore */ }
+    }
   }
 
   // ---------------- fetching online dataset ----------------
