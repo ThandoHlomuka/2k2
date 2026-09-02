@@ -26,7 +26,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💰</text></svg>">
-    <link rel="stylesheet" href="style.css?v=31">
+    <link rel="stylesheet" href="style.css?v=32">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <script type="application/ld+json">
     {
@@ -279,14 +279,14 @@
                 <div id="dashboardApprovalNotes"></div>
 
                 <div class="stats-row">
-                    <div class="stat-card">
+                    <div class="stat-card" onclick="navigateTo('provider-directory')">
                         <div class="stat-icon green-bg"><i class="fas fa-briefcase"></i></div>
                         <div class="stat-info">
                             <span class="stat-number" id="providerCount">0</span>
                             <span class="stat-label">Total Profiles</span>
                         </div>
                     </div>
-                    <div class="stat-card">
+                    <div class="stat-card" onclick="navigateTo('provider-services')">
                         <div class="stat-icon orange-bg"><i class="fas fa-concierge-bell"></i></div>
                         <div class="stat-info">
                             <span class="stat-number">0</span>

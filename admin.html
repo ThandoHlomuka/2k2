@@ -13,7 +13,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🛡️</text></svg>">
-    <link rel="stylesheet" href="style.css?v=31">
+    <link rel="stylesheet" href="style.css?v=32">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <style>
         .admin-badge { background: linear-gradient(135deg, #ef4444, #dc2626); color: white; padding: 3px 10px; border-radius: 6px; font-size: 0.65rem; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; margin-left: 8px; }
@@ -206,35 +206,35 @@
                 </div>
 
                 <div class="stats-row" id="adminStatsRow">
-                    <div class="stat-card">
+                    <div class="stat-card" onclick="navigateTo('admin-users')">
                         <div class="stat-icon user-bg"><i class="fas fa-users"></i></div>
                         <div class="stat-info">
                             <span class="stat-number" id="adminUserCount">0</span>
                             <span class="stat-label">Users</span>
                         </div>
                     </div>
-                    <div class="stat-card">
+                    <div class="stat-card" onclick="navigateTo('admin-providers')">
                         <div class="stat-icon purple-bg"><i class="fas fa-user-tie"></i></div>
                         <div class="stat-info">
                             <span class="stat-number" id="adminProviderCount">0</span>
                             <span class="stat-label">Providers</span>
                         </div>
                     </div>
-                    <div class="stat-card">
+                    <div class="stat-card" onclick="navigateTo('admin-listings')">
                         <div class="stat-icon green-bg"><i class="fas fa-address-book"></i></div>
                         <div class="stat-info">
                             <span class="stat-number" id="adminListingCount">0</span>
                             <span class="stat-label">Listings</span>
                         </div>
                     </div>
-                    <div class="stat-card">
+                    <div class="stat-card" onclick="navigateTo('admin-venues')">
                         <div class="stat-icon blue-bg"><i class="fas fa-store"></i></div>
                         <div class="stat-info">
                             <span class="stat-number" id="adminVenueCount">0</span>
                             <span class="stat-label">Venues</span>
                         </div>
                     </div>
-                    <div class="stat-card">
+                    <div class="stat-card" onclick="navigateTo('admin-ads')">
                         <div class="stat-icon" style="background:#fef3c7;color:#f59e0b"><i class="fas fa-bullhorn"></i></div>
                         <div class="stat-info">
                             <span class="stat-number" id="adminAdCount">0</span>
@@ -255,14 +255,14 @@
                             <span class="stat-label">Bookings</span>
                         </div>
                     </div>
-                    <div class="stat-card">
+                    <div class="stat-card" onclick="navigateTo('admin-wallets')">
                         <div class="stat-icon" style="background:#fef2f2;color:#ef4444"><i class="fas fa-wallet"></i></div>
                         <div class="stat-info">
                             <span class="stat-number" id="adminWalletTotal">R0</span>
                             <span class="stat-label">In Wallets</span>
                         </div>
                     </div>
-                    <div class="stat-card">
+                    <div class="stat-card" onclick="navigateTo('admin-wallets')">
                         <div class="stat-icon" style="background:#fef9c3;color:#a07d12"><i class="fas fa-percent"></i></div>
                         <div class="stat-info">
                             <span class="stat-number" id="adminCommissionTotal">R0</span>
@@ -272,21 +272,21 @@
                 </div>
 
                 <div class="stats-row" id="adminStatsRow2" style="margin-top:14px">
-                    <div class="stat-card">
+                    <div class="stat-card" onclick="navigateTo('admin-content')">
                         <div class="stat-icon" style="background:#fee2e2;color:#ef4444"><i class="fas fa-file-alt"></i></div>
                         <div class="stat-info">
                             <span class="stat-number" id="adminContentCount">0</span>
                             <span class="stat-label">Content</span>
                         </div>
                     </div>
-                    <div class="stat-card">
+                    <div class="stat-card" onclick="navigateTo('admin-events')">
                         <div class="stat-icon" style="background:#ffedd5;color:#f97316"><i class="fas fa-calendar-day"></i></div>
                         <div class="stat-info">
                             <span class="stat-number" id="adminEventCount">0</span>
                             <span class="stat-label">Events</span>
                         </div>
                     </div>
-                    <div class="stat-card">
+                    <div class="stat-card" onclick="navigateTo('admin-reviews')">
                         <div class="stat-icon" style="background:#fefce8;color:#eab308"><i class="fas fa-star"></i></div>
                         <div class="stat-info">
                             <span class="stat-number" id="adminReviewCount">0</span>
@@ -300,49 +300,49 @@
                             <span class="stat-label">Gigs</span>
                         </div>
                     </div>
-                    <div class="stat-card">
+                    <div class="stat-card" onclick="navigateTo('admin-products')">
                         <div class="stat-icon" style="background:#dcfce7;color:#16a34a"><i class="fas fa-box"></i></div>
                         <div class="stat-info">
                             <span class="stat-number" id="adminProductCount">0</span>
                             <span class="stat-label">Products</span>
                         </div>
                     </div>
-                    <div class="stat-card">
+                    <div class="stat-card" onclick="navigateTo('admin-forum')">
                         <div class="stat-icon" style="background:#e0f2fe;color:#0284c7"><i class="fas fa-comments"></i></div>
                         <div class="stat-info">
                             <span class="stat-number" id="adminForumCount">0</span>
                             <span class="stat-label">Forum Threads</span>
                         </div>
                     </div>
-                    <div class="stat-card">
+                    <div class="stat-card" onclick="navigateTo('admin-experiences')">
                         <div class="stat-icon" style="background:#ede9fe;color:#7c3aed"><i class="fas fa-rocket"></i></div>
                         <div class="stat-info">
                             <span class="stat-number" id="adminExperienceCount">0</span>
                             <span class="stat-label">Experiences</span>
                         </div>
                     </div>
-                    <div class="stat-card">
+                    <div class="stat-card" onclick="navigateTo('admin-fantasy')">
                         <div class="stat-icon" style="background:#fae8ff;color:#c026d3"><i class="fas fa-wand-magic-sparkles"></i></div>
                         <div class="stat-info">
                             <span class="stat-number" id="adminFantasyCount">0</span>
                             <span class="stat-label">Fantasy Requests</span>
                         </div>
                     </div>
-                    <div class="stat-card">
+                    <div class="stat-card" onclick="navigateTo('admin-wallets')">
                         <div class="stat-icon" style="background:#fef9c3;color:#ca8a04"><i class="fas fa-arrow-up"></i></div>
                         <div class="stat-info">
                             <span class="stat-number" id="adminTopUpCount">0</span>
                             <span class="stat-label">Top-Up Requests</span>
                         </div>
                     </div>
-                    <div class="stat-card">
+                    <div class="stat-card" onclick="navigateTo('admin-help-queries')">
                         <div class="stat-icon" style="background:#fee2e2;color:#ef4444"><i class="fas fa-life-ring"></i></div>
                         <div class="stat-info">
                             <span class="stat-number" id="adminHelpCount">0</span>
                             <span class="stat-label">Help Queries</span>
                         </div>
                     </div>
-                    <div class="stat-card" id="adminApprovalsTile">
+                    <div class="stat-card" id="adminApprovalsTile" onclick="navigateTo('admin-approvals')">
                         <div class="stat-icon" style="background:#fef3c7;color:#f59e0b"><i class="fas fa-clipboard-check"></i></div>
                         <div class="stat-info">
                             <span class="stat-number" id="adminApprovalCount">0</span>
