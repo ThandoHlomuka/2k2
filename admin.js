@@ -707,8 +707,67 @@ function adminViewUser(id) {
         <div class="admin-view-row"><span class="label">Location</span><span class="value">${u.location || '-'}</span></div>
         <div class="admin-view-row"><span class="label">Bio</span><span class="value">${truncate(u.bio || '-', 100)}</span></div>
         <div class="admin-view-row"><span class="label">Tags</span><span class="value">${(u.tags||[]).join(', ') || '-'}</span></div>
+        <div class="admin-view-row"><span class="label">Status</span><span class="value">${u.status || 'active'}</span></div>
         <div class="admin-view-row"><span class="label">Created</span><span class="value">${fmtDate(u.createdAt)}</span></div>
+        <div style="display:flex;gap:8px;margin-top:16px">
+            <button class="btn btn-primary btn-sm" onclick="adminEditUser('${u.id}')"><i class="fas fa-pen"></i> Edit</button>
+            <button class="btn btn-secondary btn-sm" onclick="adminToggleUserStatus('${u.id}')"><i class="fas fa-${u.status === 'suspended' ? 'check-circle' : 'ban'}"></i> ${u.status === 'suspended' ? 'Reinstate' : 'Suspend'}</button>
+        </div>
     `);
+}
+
+function adminEditUser(id) {
+    const u = Storage.getUsers().find(x => x.id === id);
+    if (!u) return;
+    const statusOptions = ['active', 'suspended'].map(s =>
+        `<option value="${s}" ${(u.status || 'active') === s ? 'selected' : ''}>${s}</option>`
+    ).join('');
+    showAdminView(`
+        <h2><i class="fas fa-pen" style="color:var(--primary, #c9a227);margin-right:8px"></i> Edit User</h2>
+        <label class="admin-form-label">Name</label>
+        <input class="admin-form-input" id="adminEditUserName" value="${escapeHtml(u.name || u.fullName || u.username || '')}" />
+        <label class="admin-form-label" style="margin-top:12px">Email</label>
+        <input class="admin-form-input" id="adminEditUserEmail" type="email" value="${escapeHtml(u.email || '')}" />
+        <label class="admin-form-label" style="margin-top:12px">Phone</label>
+        <input class="admin-form-input" id="adminEditUserPhone" value="${escapeHtml(u.phone || '')}" />
+        <label class="admin-form-label" style="margin-top:12px">Location</label>
+        <input class="admin-form-input" id="adminEditUserLocation" value="${escapeHtml(u.location || '')}" />
+        <label class="admin-form-label" style="margin-top:12px">Bio</label>
+        <textarea class="admin-form-input" id="adminEditUserBio" style="min-height:80px">${escapeHtml(u.bio || '')}</textarea>
+        <label class="admin-form-label" style="margin-top:12px">Role</label>
+        <select class="admin-form-input" id="adminEditUserRole">
+            ${['user', 'provider', 'admin'].map(r => `<option value="${r}" ${(u.role || u.accountType || 'user') === r ? 'selected' : ''}>${r}</option>`).join('')}
+        </select>
+        <label class="admin-form-label" style="margin-top:12px">Status</label>
+        <select class="admin-form-input" id="adminEditUserStatus">${statusOptions}</select>
+        <div style="display:flex;gap:8px;margin-top:18px">
+            <button class="btn btn-primary btn-sm" onclick="adminSaveUserEdit('${u.id}')"><i class="fas fa-save"></i> Save Changes</button>
+            <button class="btn btn-secondary btn-sm" onclick="adminViewUser('${u.id}')"><i class="fas fa-arrow-left"></i> Cancel</button>
+        </div>
+    `);
+}
+
+function adminSaveUserEdit(id) {
+    const users = Storage.getUsers();
+    const u = users.find(x => x.id === id);
+    if (!u) return;
+    const name = document.getElementById('adminEditUserName').value.trim();
+    if (!name) { showToast('Name is required.', 'error'); return; }
+    u.name = name;
+    u.fullName = name;
+    u.username = name;
+    u.email = document.getElementById('adminEditUserEmail').value.trim() || u.email;
+    u.phone = document.getElementById('adminEditUserPhone').value.trim();
+    u.location = document.getElementById('adminEditUserLocation').value.trim();
+    u.bio = document.getElementById('adminEditUserBio').value.trim();
+    u.role = document.getElementById('adminEditUserRole').value;
+    u.accountType = u.role;
+    u.status = document.getElementById('adminEditUserStatus').value;
+    u.editedByAdmin = true;
+    Storage.setUsers(users);
+    showToast('User updated.');
+    renderAdminUsers();
+    adminViewUser(id);
 }
 
 function adminDeleteUser(id, name) { promptAdminDelete('user', id, name); }
@@ -768,8 +827,76 @@ function adminViewProvider(id) {
         <div class="admin-view-row"><span class="label">Location</span><span class="value">${p.location || '-'}</span></div>
         <div class="admin-view-row"><span class="label">Bio</span><span class="value">${truncate(p.bio || '-', 100)}</span></div>
         <div class="admin-view-row"><span class="label">Tags</span><span class="value">${(p.tags||[]).join(', ') || '-'}</span></div>
+        <div class="admin-view-row"><span class="label">Status</span><span class="value">${p.status || 'active'}</span></div>
         <div class="admin-view-row"><span class="label">Created</span><span class="value">${fmtDate(p.createdAt)}</span></div>
+        <div style="display:flex;gap:8px;margin-top:16px">
+            <button class="btn btn-primary btn-sm" onclick="adminEditProvider('${p.id}')"><i class="fas fa-pen"></i> Edit</button>
+            <button class="btn btn-secondary btn-sm" onclick="adminToggleProviderStatus('${p.id}')"><i class="fas fa-${p.status === 'suspended' ? 'check-circle' : 'ban'}"></i> ${p.status === 'suspended' ? 'Reinstate' : 'Suspend'}</button>
+        </div>
     `);
+}
+
+function adminEditProvider(id) {
+    const p = Storage.getProviders().find(x => x.id === id);
+    if (!p) return;
+    const statusOptions = ['active', 'suspended'].map(s =>
+        `<option value="${s}" ${(p.status || 'active') === s ? 'selected' : ''}>${s}</option>`
+    ).join('');
+    const name = p.name || p.businessName || '';
+    const bio = p.bio || p.description || '';
+    showAdminView(`
+        <h2><i class="fas fa-pen" style="color:var(--primary, #c9a227);margin-right:8px"></i> Edit Provider</h2>
+        <label class="admin-form-label">Business Name</label>
+        <input class="admin-form-input" id="adminEditProviderName" value="${escapeHtml(name)}" />
+        <label class="admin-form-label" style="margin-top:12px">Business Type</label>
+        <input class="admin-form-input" id="adminEditProviderType" value="${escapeHtml(p.businessType || '')}" />
+        <label class="admin-form-label" style="margin-top:12px">Contact Person</label>
+        <input class="admin-form-input" id="adminEditProviderContact" value="${escapeHtml(p.contactPerson || '')}" />
+        <label class="admin-form-label" style="margin-top:12px">Email</label>
+        <input class="admin-form-input" id="adminEditProviderEmail" type="email" value="${escapeHtml(p.email || '')}" />
+        <label class="admin-form-label" style="margin-top:12px">Phone</label>
+        <input class="admin-form-input" id="adminEditProviderPhone" value="${escapeHtml(p.phone || '')}" />
+        <label class="admin-form-label" style="margin-top:12px">Location</label>
+        <input class="admin-form-input" id="adminEditProviderLocation" value="${escapeHtml(p.location || '')}" />
+        <label class="admin-form-label" style="margin-top:12px">Address</label>
+        <input class="admin-form-input" id="adminEditProviderAddress" value="${escapeHtml(p.address || '')}" />
+        <label class="admin-form-label" style="margin-top:12px">Website</label>
+        <input class="admin-form-input" id="adminEditProviderWebsite" value="${escapeHtml(p.website || '')}" />
+        <label class="admin-form-label" style="margin-top:12px">Description</label>
+        <textarea class="admin-form-input" id="adminEditProviderDesc" style="min-height:90px">${escapeHtml(bio)}</textarea>
+        <label class="admin-form-label" style="margin-top:12px">Status</label>
+        <select class="admin-form-input" id="adminEditProviderStatus">${statusOptions}</select>
+        <div style="display:flex;gap:8px;margin-top:18px">
+            <button class="btn btn-primary btn-sm" onclick="adminSaveProviderEdit('${p.id}')"><i class="fas fa-save"></i> Save Changes</button>
+            <button class="btn btn-secondary btn-sm" onclick="adminViewProvider('${p.id}')"><i class="fas fa-arrow-left"></i> Cancel</button>
+        </div>
+    `);
+}
+
+function adminSaveProviderEdit(id) {
+    const providers = Storage.getProviders();
+    const p = providers.find(x => x.id === id);
+    if (!p) return;
+    const name = document.getElementById('adminEditProviderName').value.trim();
+    if (!name) { showToast('Business name is required.', 'error'); return; }
+    p.name = name;
+    p.businessName = name;
+    p.businessType = document.getElementById('adminEditProviderType').value.trim();
+    p.contactPerson = document.getElementById('adminEditProviderContact').value.trim();
+    p.email = document.getElementById('adminEditProviderEmail').value.trim() || p.email;
+    p.phone = document.getElementById('adminEditProviderPhone').value.trim();
+    p.location = document.getElementById('adminEditProviderLocation').value.trim();
+    p.address = document.getElementById('adminEditProviderAddress').value.trim();
+    p.website = document.getElementById('adminEditProviderWebsite').value.trim();
+    const bio = document.getElementById('adminEditProviderDesc').value.trim();
+    p.bio = bio;
+    p.description = bio;
+    p.status = document.getElementById('adminEditProviderStatus').value;
+    p.editedByAdmin = true;
+    Storage.setProviders(providers);
+    showToast('Provider updated.');
+    renderAdminProviders();
+    adminViewProvider(id);
 }
 
 function adminDeleteProvider(id, name) { promptAdminDelete('provider', id, name); }
@@ -837,7 +964,74 @@ function adminViewListing(id) {
         <div class="admin-view-row"><span class="label">Tags</span><span class="value">${(l.tags||[]).join(', ') || '-'}</span></div>
         <div class="admin-view-row"><span class="label">Gallery</span><span class="value">${(l.gallery||[]).length} photos</span></div>
         <div class="admin-view-row"><span class="label">Created</span><span class="value">${fmtDate(l.createdAt)}</span></div>
+        <div style="display:flex;gap:8px;margin-top:16px">
+            <button class="btn btn-primary btn-sm" onclick="adminEditListing('${l.id}')"><i class="fas fa-pen"></i> Edit</button>
+            <button class="btn btn-secondary btn-sm" onclick="adminToggleListingStatus('${l.id}')"><i class="fas fa-${l.status === 'suspended' ? 'check-circle' : 'ban'}"></i> ${l.status === 'suspended' ? 'Reinstate' : 'Suspend'}</button>
+        </div>
     `);
+}
+
+function adminEditListing(id) {
+    const l = Storage.getListings().find(x => x.id === id);
+    if (!l) return;
+    const types = typeof DIRECTORY_TYPES !== 'undefined' ? DIRECTORY_TYPES : {};
+    const catOptions = Object.keys(types).map(k =>
+        `<option value="${k}" ${l.category === k ? 'selected' : ''}>${types[k].label || k}</option>`
+    ).join('');
+    const statusOptions = ['active', 'suspended', 'pending'].map(s =>
+        `<option value="${s}" ${(l.status || 'active') === s ? 'selected' : ''}>${s}</option>`
+    ).join('');
+    showAdminView(`
+        <h2><i class="fas fa-pen" style="color:var(--primary, #c9a227);margin-right:8px"></i> Edit Listing</h2>
+        <label class="admin-form-label">Name</label>
+        <input class="admin-form-input" id="adminEditListingName" value="${escapeHtml(l.name || '')}" />
+        <label class="admin-form-label" style="margin-top:12px">Category</label>
+        <select class="admin-form-input" id="adminEditListingCategory">${catOptions}</select>
+        <label class="admin-form-label" style="margin-top:12px">Email</label>
+        <input class="admin-form-input" id="adminEditListingEmail" type="email" value="${escapeHtml(l.email || '')}" />
+        <label class="admin-form-label" style="margin-top:12px">Phone</label>
+        <input class="admin-form-input" id="adminEditListingPhone" value="${escapeHtml(l.phone || '')}" />
+        <label class="admin-form-label" style="margin-top:12px">Location</label>
+        <input class="admin-form-input" id="adminEditListingLocation" value="${escapeHtml(l.location || '')}" />
+        <label class="admin-form-label" style="margin-top:12px">Rate</label>
+        <input class="admin-form-input" id="adminEditListingRate" value="${escapeHtml(l.rate || '')}" />
+        <label class="admin-form-label" style="margin-top:12px">Booking Fee (R, optional)</label>
+        <input class="admin-form-input" id="adminEditListingFee" value="${l.bookingFee != null ? l.bookingFee : ''}" type="number" min="0" step="0.01" />
+        <label class="admin-form-label" style="margin-top:12px">Bio / Description</label>
+        <textarea class="admin-form-input" id="adminEditListingBio" style="min-height:90px">${escapeHtml(l.bio || l.description || '')}</textarea>
+        <label class="admin-form-label" style="margin-top:12px">Status</label>
+        <select class="admin-form-input" id="adminEditListingStatus">${statusOptions}</select>
+        <div style="display:flex;gap:8px;margin-top:18px">
+            <button class="btn btn-primary btn-sm" onclick="adminSaveListingEdit('${l.id}')"><i class="fas fa-save"></i> Save Changes</button>
+            <button class="btn btn-secondary btn-sm" onclick="adminViewListing('${l.id}')"><i class="fas fa-arrow-left"></i> Cancel</button>
+        </div>
+    `);
+}
+
+function adminSaveListingEdit(id) {
+    const listings = Storage.getListings();
+    const l = listings.find(x => x.id === id);
+    if (!l) return;
+    const name = document.getElementById('adminEditListingName').value.trim();
+    if (!name) { showToast('Name is required.', 'error'); return; }
+    l.name = name;
+    l.title = name;
+    l.category = document.getElementById('adminEditListingCategory').value;
+    l.email = document.getElementById('adminEditListingEmail').value.trim() || l.email;
+    l.phone = document.getElementById('adminEditListingPhone').value.trim();
+    l.location = document.getElementById('adminEditListingLocation').value.trim();
+    l.rate = document.getElementById('adminEditListingRate').value.trim();
+    const fee = document.getElementById('adminEditListingFee').value;
+    l.bookingFee = fee !== '' && !isNaN(parseFloat(fee)) ? parseFloat(fee) : null;
+    const bio = document.getElementById('adminEditListingBio').value.trim();
+    l.bio = bio;
+    l.description = bio;
+    l.status = document.getElementById('adminEditListingStatus').value;
+    l.editedByAdmin = true;
+    Storage.setListings(listings);
+    showToast('Listing updated.');
+    renderAdminListings();
+    adminViewListing(id);
 }
 
 function adminDeleteListing(id, name) { promptAdminDelete('listing', id, name); }
@@ -907,7 +1101,76 @@ function adminViewVenue(id) {
         <div class="admin-view-row"><span class="label">Features</span><span class="value">${(v.tags||[]).join(', ') || '-'}</span></div>
         <div class="admin-view-row"><span class="label">Gallery</span><span class="value">${(v.gallery||[]).length} photos</span></div>
         <div class="admin-view-row"><span class="label">Created</span><span class="value">${fmtDate(v.createdAt)}</span></div>
+        <div style="display:flex;gap:8px;margin-top:16px">
+            <button class="btn btn-primary btn-sm" onclick="adminEditVenue('${v.id}')"><i class="fas fa-pen"></i> Edit</button>
+            <button class="btn btn-secondary btn-sm" onclick="adminToggleVenueStatus('${v.id}')"><i class="fas fa-${v.status === 'suspended' ? 'check-circle' : 'ban'}"></i> ${v.status === 'suspended' ? 'Reinstate' : 'Suspend'}</button>
+        </div>
     `);
+}
+
+function adminEditVenue(id) {
+    const v = Storage.getVenues().find(x => x.id === id);
+    if (!v) return;
+    const types = typeof VENUE_TYPES !== 'undefined' ? VENUE_TYPES : {};
+    const catOptions = Object.keys(types).map(k =>
+        `<option value="${k}" ${v.category === k ? 'selected' : ''}>${types[k].label || k}</option>`
+    ).join('');
+    const statusOptions = ['active', 'suspended', 'pending'].map(s =>
+        `<option value="${s}" ${(v.status || 'active') === s ? 'selected' : ''}>${s}</option>`
+    ).join('');
+    showAdminView(`
+        <h2><i class="fas fa-pen" style="color:var(--primary, #c9a227);margin-right:8px"></i> Edit Venue</h2>
+        <label class="admin-form-label">Name</label>
+        <input class="admin-form-input" id="adminEditVenueName" value="${escapeHtml(v.name || '')}" />
+        <label class="admin-form-label" style="margin-top:12px">Category</label>
+        <select class="admin-form-input" id="adminEditVenueCategory">${catOptions}</select>
+        <label class="admin-form-label" style="margin-top:12px">Email</label>
+        <input class="admin-form-input" id="adminEditVenueEmail" type="email" value="${escapeHtml(v.email || '')}" />
+        <label class="admin-form-label" style="margin-top:12px">Phone</label>
+        <input class="admin-form-input" id="adminEditVenuePhone" value="${escapeHtml(v.phone || '')}" />
+        <label class="admin-form-label" style="margin-top:12px">Location</label>
+        <input class="admin-form-input" id="adminEditVenueLocation" value="${escapeHtml(v.location || '')}" />
+        <label class="admin-form-label" style="margin-top:12px">Address (private)</label>
+        <input class="admin-form-input" id="adminEditVenueAddress" value="${escapeHtml(v.address || '')}" />
+        <label class="admin-form-label" style="margin-top:12px">Cover Charge</label>
+        <input class="admin-form-input" id="adminEditVenueRate" value="${escapeHtml(v.rate || '')}" />
+        <label class="admin-form-label" style="margin-top:12px">Capacity</label>
+        <input class="admin-form-input" id="adminEditVenueCapacity" value="${escapeHtml(v.capacity || '')}" />
+        <label class="admin-form-label" style="margin-top:12px">Website</label>
+        <input class="admin-form-input" id="adminEditVenueWebsite" value="${escapeHtml(v.website || '')}" />
+        <label class="admin-form-label" style="margin-top:12px">Description / Bio</label>
+        <textarea class="admin-form-input" id="adminEditVenueBio" style="min-height:90px">${escapeHtml(v.bio || '')}</textarea>
+        <label class="admin-form-label" style="margin-top:12px">Status</label>
+        <select class="admin-form-input" id="adminEditVenueStatus">${statusOptions}</select>
+        <div style="display:flex;gap:8px;margin-top:18px">
+            <button class="btn btn-primary btn-sm" onclick="adminSaveVenueEdit('${v.id}')"><i class="fas fa-save"></i> Save Changes</button>
+            <button class="btn btn-secondary btn-sm" onclick="adminViewVenue('${v.id}')"><i class="fas fa-arrow-left"></i> Cancel</button>
+        </div>
+    `);
+}
+
+function adminSaveVenueEdit(id) {
+    const venues = Storage.getVenues();
+    const v = venues.find(x => x.id === id);
+    if (!v) return;
+    const name = document.getElementById('adminEditVenueName').value.trim();
+    if (!name) { showToast('Name is required.', 'error'); return; }
+    v.name = name;
+    v.category = document.getElementById('adminEditVenueCategory').value;
+    v.email = document.getElementById('adminEditVenueEmail').value.trim() || v.email;
+    v.phone = document.getElementById('adminEditVenuePhone').value.trim();
+    v.location = document.getElementById('adminEditVenueLocation').value.trim();
+    v.address = document.getElementById('adminEditVenueAddress').value.trim();
+    v.rate = document.getElementById('adminEditVenueRate').value.trim();
+    v.capacity = document.getElementById('adminEditVenueCapacity').value.trim();
+    v.website = document.getElementById('adminEditVenueWebsite').value.trim();
+    v.bio = document.getElementById('adminEditVenueBio').value.trim();
+    v.status = document.getElementById('adminEditVenueStatus').value;
+    v.editedByAdmin = true;
+    Storage.setVenues(venues);
+    showToast('Venue updated.');
+    renderAdminVenues();
+    adminViewVenue(id);
 }
 
 function adminDeleteVenue(id, name) { promptAdminDelete('venue', id, name); }
@@ -976,7 +1239,64 @@ function adminViewAd(id) {
         <div class="admin-view-row"><span class="label">Author</span><span class="value">${a.author || '-'}</span></div>
         <div class="admin-view-row"><span class="label">Status</span><span class="value">${a.status || '-'}</span></div>
         <div class="admin-view-row"><span class="label">Created</span><span class="value">${fmtDate(a.createdAt)}</span></div>
+        <div style="display:flex;gap:8px;margin-top:16px">
+            <button class="btn btn-primary btn-sm" onclick="adminEditAd('${a.id}')"><i class="fas fa-pen"></i> Edit</button>
+            <button class="btn btn-secondary btn-sm" onclick="adminToggleAdStatus('${a.id}')"><i class="fas fa-${a.status === 'suspended' ? 'check-circle' : 'ban'}"></i> ${a.status === 'suspended' ? 'Reinstate' : 'Suspend'}</button>
+        </div>
     `);
+}
+
+function adminEditAd(id) {
+    const a = Storage.getAds().find(x => x.id === id);
+    if (!a) return;
+    const cats = typeof AD_CATEGORIES !== 'undefined' ? AD_CATEGORIES : {};
+    const catOptions = Object.keys(cats).map(k =>
+        `<option value="${k}" ${a.category === k ? 'selected' : ''}>${cats[k].label || k}</option>`
+    ).join('');
+    const statusOptions = ['active', 'suspended', 'pending'].map(s =>
+        `<option value="${s}" ${(a.status || 'active') === s ? 'selected' : ''}>${s}</option>`
+    ).join('');
+    showAdminView(`
+        <h2><i class="fas fa-pen" style="color:var(--primary, #c9a227);margin-right:8px"></i> Edit Ad</h2>
+        <label class="admin-form-label">Title</label>
+        <input class="admin-form-input" id="adminEditAdTitle" value="${escapeHtml(a.title || '')}" />
+        <label class="admin-form-label" style="margin-top:12px">Category</label>
+        <select class="admin-form-input" id="adminEditAdCategory">${catOptions}</select>
+        <label class="admin-form-label" style="margin-top:12px">Contact Name</label>
+        <input class="admin-form-input" id="adminEditAdContact" value="${escapeHtml(a.contactName || '')}" />
+        <label class="admin-form-label" style="margin-top:12px">Phone</label>
+        <input class="admin-form-input" id="adminEditAdPhone" value="${escapeHtml(a.phone || '')}" />
+        <label class="admin-form-label" style="margin-top:12px">Location</label>
+        <input class="admin-form-input" id="adminEditAdLocation" value="${escapeHtml(a.location || '')}" />
+        <label class="admin-form-label" style="margin-top:12px">Description</label>
+        <textarea class="admin-form-input" id="adminEditAdBody" style="min-height:90px">${escapeHtml(a.body || '')}</textarea>
+        <label class="admin-form-label" style="margin-top:12px">Status</label>
+        <select class="admin-form-input" id="adminEditAdStatus">${statusOptions}</select>
+        <div style="display:flex;gap:8px;margin-top:18px">
+            <button class="btn btn-primary btn-sm" onclick="adminSaveAdEdit('${a.id}')"><i class="fas fa-save"></i> Save Changes</button>
+            <button class="btn btn-secondary btn-sm" onclick="adminViewAd('${a.id}')"><i class="fas fa-arrow-left"></i> Cancel</button>
+        </div>
+    `);
+}
+
+function adminSaveAdEdit(id) {
+    const ads = Storage.getAds();
+    const a = ads.find(x => x.id === id);
+    if (!a) return;
+    const title = document.getElementById('adminEditAdTitle').value.trim();
+    if (!title) { showToast('Title is required.', 'error'); return; }
+    a.title = title;
+    a.category = document.getElementById('adminEditAdCategory').value;
+    a.contactName = document.getElementById('adminEditAdContact').value.trim();
+    a.phone = document.getElementById('adminEditAdPhone').value.trim();
+    a.location = document.getElementById('adminEditAdLocation').value.trim();
+    a.body = document.getElementById('adminEditAdBody').value.trim();
+    a.status = document.getElementById('adminEditAdStatus').value;
+    a.editedByAdmin = true;
+    Storage.setAds(ads);
+    showToast('Ad updated.');
+    renderAdminAds();
+    adminViewAd(id);
 }
 
 function adminDeleteAd(id, name) { promptAdminDelete('ad', id, name); }
@@ -1034,10 +1354,87 @@ function adminViewService(id) {
         <div class="admin-view-row"><span class="label">Tags</span><span class="value">${(s.tags||[]).map(escapeHtml).join(', ') || '-'}</span></div>
         <div class="admin-view-row"><span class="label">Status</span><span class="value">${s.status || 'active'}</span></div>
         <div class="admin-view-row"><span class="label">Created</span><span class="value">${fmtDate(s.createdAt)}</span></div>
+        <div style="display:flex;gap:8px;margin-top:16px">
+            <button class="btn btn-primary btn-sm" onclick="adminEditService('${s.id}')"><i class="fas fa-pen"></i> Edit</button>
+            <button class="btn btn-secondary btn-sm" onclick="adminToggleServiceStatus('${s.id}')"><i class="fas fa-${(s.status) === 'suspended' ? 'check-circle' : 'ban'}"></i> ${(s.status) === 'suspended' ? 'Reinstate' : 'Suspend'}</button>
+        </div>
     `);
 }
 
+function adminEditService(id) {
+    const s = Storage.getServices().find(x => x.id === id);
+    if (!s) return;
+    const statusOptions = ['active', 'suspended', 'pending'].map(st =>
+        `<option value="${st}" ${(s.status || 'active') === st ? 'selected' : ''}>${st}</option>`
+    ).join('');
+    const catSelect = (typeof window.getServiceTypeSelectHTML === 'function')
+        ? window.getServiceTypeSelectHTML()
+        : '';
+    const categoryField = catSelect
+        ? catSelect.replace('<select', `<select value="${s.category || ''}" data-allow-custom`)
+        : `<input class="admin-form-input" id="adminEditServiceCategory" value="${escapeHtml(s.category || '')}" />`;
+    showAdminView(`
+        <h2><i class="fas fa-pen" style="color:var(--primary, #c9a227);margin-right:8px"></i> Edit Service</h2>
+        <label class="admin-form-label">Name</label>
+        <input class="admin-form-input" id="adminEditServiceName" value="${escapeHtml(s.name || '')}" />
+        <label class="admin-form-label" style="margin-top:12px">Category</label>
+        ${categoryField}
+        <label class="admin-form-label" style="margin-top:12px">Location</label>
+        <input class="admin-form-input" id="adminEditServiceLocation" value="${escapeHtml(s.location || '')}" />
+        <label class="admin-form-label" style="margin-top:12px">Booking Fee (R, optional)</label>
+        <input class="admin-form-input" id="adminEditServiceFee" value="${s.bookingFee != null ? s.bookingFee : ''}" type="number" min="0" step="0.01" />
+        <label class="admin-form-label" style="margin-top:12px">Rate</label>
+        <input class="admin-form-input" id="adminEditServiceRate" value="${escapeHtml(s.rate || '')}" />
+        <label class="admin-form-label" style="margin-top:12px">Description / Bio</label>
+        <textarea class="admin-form-input" id="adminEditServiceBio" style="min-height:90px">${escapeHtml(s.bio || '')}</textarea>
+        <label class="admin-form-label" style="margin-top:12px">Status</label>
+        <select class="admin-form-input" id="adminEditServiceStatus">${statusOptions}</select>
+        <div style="display:flex;gap:8px;margin-top:18px">
+            <button class="btn btn-primary btn-sm" onclick="adminSaveServiceEdit('${s.id}')"><i class="fas fa-save"></i> Save Changes</button>
+            <button class="btn btn-secondary btn-sm" onclick="adminViewService('${s.id}')"><i class="fas fa-arrow-left"></i> Cancel</button>
+        </div>
+    `);
+    if (catSelect) {
+        // select the current category in the custom-type select
+        const sel = document.getElementById('adminEditServiceCategory');
+        if (sel) sel.value = s.category || '';
+    }
+}
+
+function adminSaveServiceEdit(id) {
+    const services = Storage.getServices();
+    const s = services.find(x => x.id === id);
+    if (!s) return;
+    const name = document.getElementById('adminEditServiceName').value.trim();
+    if (!name) { showToast('Name is required.', 'error'); return; }
+    s.name = name;
+    const catEl = document.getElementById('adminEditServiceCategory');
+    s.category = catEl ? catEl.value.trim() : s.category;
+    s.location = document.getElementById('adminEditServiceLocation').value.trim();
+    const fee = document.getElementById('adminEditServiceFee').value;
+    s.bookingFee = fee !== '' && !isNaN(parseFloat(fee)) ? parseFloat(fee) : null;
+    s.rate = document.getElementById('adminEditServiceRate').value.trim();
+    s.bio = document.getElementById('adminEditServiceBio').value.trim();
+    s.status = document.getElementById('adminEditServiceStatus').value;
+    s.editedByAdmin = true;
+    Storage.setServices(services);
+    showToast('Service updated.');
+    renderAdminServices();
+    adminViewService(id);
+}
+
 function adminDeleteService(id, name) { promptAdminDelete('service', id, name); }
+
+function adminToggleServiceStatus(id) {
+    const services = Storage.getServices();
+    const s = services.find(x => x.id === id);
+    if (!s) return;
+    s.status = s.status === 'suspended' ? 'active' : 'suspended';
+    Storage.setServices(services);
+    showToast(s.status === 'suspended' ? 'Service suspended.' : 'Service reinstated.');
+    renderAdminServices();
+    adminViewService(id);
+}
 
 // ==========================================
 // BOOKINGS MANAGEMENT
@@ -1157,7 +1554,82 @@ function adminViewGig(id) {
         <div class="admin-view-row"><span class="label">Urgent</span><span class="value">${g.urgent ? 'Yes' : 'No'}</span></div>
         <div class="admin-view-row"><span class="label">Status</span><span class="value">${g.status || 'active'}</span></div>
         <div class="admin-view-row"><span class="label">Created</span><span class="value">${fmtDate(g.createdAt)}</span></div>
+        <div style="display:flex;gap:8px;margin-top:16px">
+            <button class="btn btn-primary btn-sm" onclick="adminEditGig('${g.id}')"><i class="fas fa-pen"></i> Edit</button>
+            <button class="btn btn-secondary btn-sm" onclick="adminToggleGigStatus('${g.id}')"><i class="fas fa-${(g.status) === 'suspended' ? 'check-circle' : 'ban'}"></i> ${(g.status) === 'suspended' ? 'Reinstate' : 'Suspend'}</button>
+        </div>
     `);
+}
+
+function adminEditGig(id) {
+    const g = Storage.getGigs().find(x => x.id === id);
+    if (!g) return;
+    const types = typeof GIG_TYPES !== 'undefined' ? GIG_TYPES : {};
+    const typeOptions = Object.keys(types).map(k =>
+        `<option value="${k}" ${g.gigType === k ? 'selected' : ''}>${types[k].label || k}</option>`
+    ).join('');
+    const statusOptions = ['active', 'suspended', 'pending', 'approved'].map(st =>
+        `<option value="${st}" ${(g.status || 'active') === st ? 'selected' : ''}>${st}</option>`
+    ).join('');
+    showAdminView(`
+        <h2><i class="fas fa-pen" style="color:var(--primary, #c9a227);margin-right:8px"></i> Edit Gig</h2>
+        <label class="admin-form-label">Title</label>
+        <input class="admin-form-input" id="adminEditGigTitle" value="${escapeHtml(g.title || '')}" />
+        <label class="admin-form-label" style="margin-top:12px">Type</label>
+        <select class="admin-form-input" id="adminEditGigType">${typeOptions}</select>
+        <label class="admin-form-label" style="margin-top:12px">Location</label>
+        <input class="admin-form-input" id="adminEditGigLocation" value="${escapeHtml(g.location || '')}" />
+        <label class="admin-form-label" style="margin-top:12px">Rate (R, blank = contact)</label>
+        <input class="admin-form-input" id="adminEditGigRate" value="${g.rate != null ? g.rate : ''}" type="number" min="0" step="0.01" />
+        <label class="admin-form-label" style="margin-top:12px">Rate Type</label>
+        <input class="admin-form-input" id="adminEditGigRateType" value="${escapeHtml(g.rateType || '')}" placeholder="hr / day / fixed" />
+        <label class="admin-form-label" style="margin-top:12px">Contact</label>
+        <input class="admin-form-input" id="adminEditGigContact" value="${escapeHtml(g.contact || '')}" />
+        <label class="admin-form-label" style="margin-top:12px">Description</label>
+        <textarea class="admin-form-input" id="adminEditGigDesc" style="min-height:90px">${escapeHtml(g.description || '')}</textarea>
+        <label class="admin-form-label" style="margin-top:12px">Urgent</label>
+        <input type="checkbox" id="adminEditGigUrgent" ${g.urgent ? 'checked' : ''} style="width:auto;height:16px" />
+        <label class="admin-form-label" style="margin-top:12px">Status</label>
+        <select class="admin-form-input" id="adminEditGigStatus">${statusOptions}</select>
+        <div style="display:flex;gap:8px;margin-top:18px">
+            <button class="btn btn-primary btn-sm" onclick="adminSaveGigEdit('${g.id}')"><i class="fas fa-save"></i> Save Changes</button>
+            <button class="btn btn-secondary btn-sm" onclick="adminViewGig('${g.id}')"><i class="fas fa-arrow-left"></i> Cancel</button>
+        </div>
+    `);
+}
+
+function adminSaveGigEdit(id) {
+    const gigs = Storage.getGigs();
+    const g = gigs.find(x => x.id === id);
+    if (!g) return;
+    const title = document.getElementById('adminEditGigTitle').value.trim();
+    if (!title) { showToast('Title is required.', 'error'); return; }
+    g.title = title;
+    g.gigType = document.getElementById('adminEditGigType').value;
+    g.location = document.getElementById('adminEditGigLocation').value.trim();
+    const rate = document.getElementById('adminEditGigRate').value;
+    g.rate = rate !== '' && !isNaN(parseFloat(rate)) ? parseFloat(rate) : null;
+    g.rateType = document.getElementById('adminEditGigRateType').value.trim();
+    g.contact = document.getElementById('adminEditGigContact').value.trim();
+    g.description = document.getElementById('adminEditGigDesc').value.trim();
+    g.urgent = document.getElementById('adminEditGigUrgent').checked;
+    g.status = document.getElementById('adminEditGigStatus').value;
+    g.editedByAdmin = true;
+    Storage.setGigs(gigs);
+    showToast('Gig updated.');
+    renderAdminGigs();
+    adminViewGig(id);
+}
+
+function adminToggleGigStatus(id) {
+    const gigs = Storage.getGigs();
+    const g = gigs.find(x => x.id === id);
+    if (!g) return;
+    g.status = g.status === 'suspended' ? 'active' : 'suspended';
+    Storage.setGigs(gigs);
+    showToast(g.status === 'suspended' ? 'Gig suspended.' : 'Gig reinstated.');
+    renderAdminGigs();
+    adminViewGig(id);
 }
 
 function adminDeleteGig(id, name) { promptAdminDelete('gig', id, name); }
