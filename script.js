@@ -146,6 +146,67 @@ const FANTASY_STATUSES = {
 };
 
 // ==========================================
+// CUSTOM EXPERIENCE TYPES & FANTASY CATEGORIES
+// Providers can create their own categories alongside the built-in ones.
+// ==========================================
+const EXPERIENCE_CUSTOM_ICONS = ['fa-ghost','fa-hat-wizard','fa-crown','fa-chess-king','fa-dungeon','fa-dragon','fa-skull-crossbones','fa-wand-sparkles','fa-gamepad','fa-dice-d6','fa-cards','fa-clapperboard','fa-music','fa-chart-line','fa-users-viewfinder','fa-user-astronaut','fa-robot','fa-chess-board','fa-puzzle-piece','fa-star'];
+const EXPERIENCE_CUSTOM_COLORS = ['#ec4899','#8b5cf6','#f59e0b','#6366f1','#10b981','#3b82f6','#f472b6','#ef4444','#06b6d4','#84cc16','#f97316','#e11d48','#7c3aed','#0891b2','#059669','#d97706','#2563eb','#be185d','#c026d3','#0d9488'];
+
+function getAllExperienceTypes() {
+    const merged = Object.assign({}, EXPERIENCE_TYPES);
+    (Storage.getCustomExperienceTypes() || []).forEach(t => { if (t && t.slug) merged[t.slug] = { label: t.label, icon: t.icon, color: t.color }; });
+    return merged;
+}
+function resolveExperienceType(slug, fallbackLabel) {
+    return getAllExperienceTypes()[slug] || { label: fallbackLabel || slug || 'Experience', icon: 'fa-gamepad', color: '#8a7b55' };
+}
+function addCustomExperienceType(name) {
+    const types = Storage.getCustomExperienceTypes();
+    const slug = typeof slugify === 'function' ? slugify(name) : String(name).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+    if (types.find(t => t.slug === slug)) return types.find(t => t.slug === slug);
+    const icon = EXPERIENCE_CUSTOM_ICONS[types.length % EXPERIENCE_CUSTOM_ICONS.length];
+    const color = EXPERIENCE_CUSTOM_COLORS[types.length % EXPERIENCE_CUSTOM_COLORS.length];
+    const newType = { slug, label: String(name).trim(), icon, color, createdAt: new Date().toISOString() };
+    types.push(newType);
+    Storage.setCustomExperienceTypes(types);
+    return newType;
+}
+function getExperienceTypeSelectHTML(selectedValue) {
+    const types = getAllExperienceTypes();
+    let html = '<option value="">Select type</option>';
+    Object.entries(types).forEach(([key, val]) => { html += `<option value="${key}" ${key === selectedValue ? 'selected' : ''}>${val.label}</option>`; });
+    html += '<option value="__custom__">+ Add New Type</option>';
+    return html;
+}
+
+function getAllFantasyCategories() {
+    const merged = Object.assign({}, FANTASY_CATEGORIES);
+    (Storage.getCustomFantasyCategories() || []).forEach(t => { if (t && t.slug) merged[t.slug] = { label: t.label, icon: t.icon, color: t.color }; });
+    return merged;
+}
+function resolveFantasyCategory(slug, fallbackLabel) {
+    return getAllFantasyCategories()[slug] || { label: fallbackLabel || slug || 'Fantasy', icon: 'fa-scroll', color: '#8a7b55' };
+}
+function addCustomFantasyCategory(name) {
+    const cats = Storage.getCustomFantasyCategories();
+    const slug = typeof slugify === 'function' ? slugify(name) : String(name).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+    if (cats.find(t => t.slug === slug)) return cats.find(t => t.slug === slug);
+    const icon = EXPERIENCE_CUSTOM_ICONS[cats.length % EXPERIENCE_CUSTOM_ICONS.length];
+    const color = EXPERIENCE_CUSTOM_COLORS[cats.length % EXPERIENCE_CUSTOM_COLORS.length];
+    const newCat = { slug, label: String(name).trim(), icon, color, createdAt: new Date().toISOString() };
+    cats.push(newCat);
+    Storage.setCustomFantasyCategories(cats);
+    return newCat;
+}
+function getFantasyCategorySelectHTML(selectedValue) {
+    const cats = getAllFantasyCategories();
+    let html = '<option value="">Select category</option>';
+    Object.entries(cats).forEach(([key, val]) => { html += `<option value="${key}" ${key === selectedValue ? 'selected' : ''}>${val.label}</option>`; });
+    html += '<option value="__custom__">+ Add New Category</option>';
+    return html;
+}
+
+// ==========================================
 // CUSTOM SERVICE TYPES
 // ==========================================
 const SERVICE_TYPE_ICONS = ['fa-camera','fa-video','fa-palette','fa-headphones','fa-utensils','fa-calendar-check','fa-spa','fa-dumbbell','fa-hands','fa-broom','fa-car','fa-music','fa-microphone','fa-paint-brush','fa-cut','fa-bolt','fa-leaf','fa-gem','fa-star','fa-heart','fa-fire','fa-moon','fa-sun','fa-cloud','fa-mountain','fa-umbrella-beach','fa-city','fa-house-chimney','fa-shield-halved','fa-graduation-cap','fa-laptop-code','fa-chart-line'];
@@ -8367,11 +8428,26 @@ let currentProviderId = null;
 function populateExperienceDropdowns() {
     document.querySelectorAll('#expType').forEach(sel => {
         if (sel.options.length > 1) return;
-        Object.entries(EXPERIENCE_TYPES).forEach(([key, val]) => {
+        Object.entries(getAllExperienceTypes()).forEach(([key, val]) => {
             const opt = document.createElement('option');
             opt.value = key; opt.textContent = val.label;
             sel.appendChild(opt);
         });
+        const cust = document.createElement('option');
+        cust.value = '__custom__'; cust.textContent = '+ Add New Type';
+        sel.appendChild(cust);
+        sel.onchange = function() {
+            if (this.value === '__custom__') {
+                const name = prompt('Enter new experience type name:');
+                if (name && name.trim()) {
+                    const newType = addCustomExperienceType(name.trim());
+                    populateExperienceDropdowns();
+                    this.value = newType.slug;
+                } else {
+                    this.value = '';
+                }
+            }
+        };
     });
     document.querySelectorAll('#expLocation').forEach(sel => {
         if (sel.options.length > 1) return;
@@ -8475,11 +8551,14 @@ function editProviderExperience(id) {
         }
         const typeSel = document.getElementById('expType');
         if (typeSel && typeSel.options.length <= 1) {
-            Object.entries(EXPERIENCE_TYPES).forEach(([key, val]) => {
+            Object.entries(getAllExperienceTypes()).forEach(([key, val]) => {
                 const opt = document.createElement('option');
                 opt.value = key; opt.textContent = val.label;
                 typeSel.appendChild(opt);
             });
+            const cust = document.createElement('option');
+            cust.value = '__custom__'; cust.textContent = '+ Add New Type';
+            typeSel.appendChild(cust);
             typeSel.value = e.type || '';
         }
         const locSel = document.getElementById('expLocation');
@@ -8526,7 +8605,7 @@ function renderProviderExperiences() {
     }
 
     container.innerHTML = filtered.map(x => {
-        const type = EXPERIENCE_TYPES[x.type] || { label: x.type, icon: 'fa-gamepad', color: '#8a7b55' };
+        const type = resolveExperienceType(x.type, x.type);
         const sold = purchases.filter(p => p.experienceId === x.id).length;
         const revenue = purchases.filter(p => p.experienceId === x.id).reduce((s, p) => s + p.amount, 0);
         return `
@@ -8556,6 +8635,7 @@ function filterProviderExperiences() {
 }
 
 function renderExperiencesBrowse() {
+    appendCustomExperienceFilterTabs();
     const experiences = Storage.getExperiences().filter(x => isApprovedPublic(x));
     const walletBalanceEl = document.getElementById('expWalletBalance');
     if (walletBalanceEl) walletBalanceEl.textContent = 'R' + getWalletBalance('user', currentUserOwnerId());
@@ -8564,7 +8644,7 @@ function renderExperiencesBrowse() {
     if (currentExperienceFilter !== 'all') filtered = filtered.filter(x => x.type === currentExperienceFilter);
     const searchVal = (document.getElementById('experienceSearch')?.value || '').toLowerCase();
     if (searchVal) {
-        filtered = filtered.filter(x => x.title.toLowerCase().includes(searchVal) || (EXPERIENCE_TYPES[x.type]?.label || '').toLowerCase().includes(searchVal) || (x.location || '').toLowerCase().includes(searchVal));
+        filtered = filtered.filter(x => x.title.toLowerCase().includes(searchVal) || (resolveExperienceType(x.type, x.type).label || '').toLowerCase().includes(searchVal) || (x.location || '').toLowerCase().includes(searchVal));
     }
 
     filtered.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
@@ -8580,7 +8660,7 @@ function renderExperiencesBrowse() {
     }
 
     container.innerHTML = filtered.map(x => {
-        const type = EXPERIENCE_TYPES[x.type] || { label: x.type, icon: 'fa-gamepad', color: '#8a7b55' };
+        const type = resolveExperienceType(x.type, x.type);
         const purchases = Storage.getExperiencePurchases();
         const soldCount = purchases.filter(p => p.experienceId === x.id).length;
         return `
@@ -8616,11 +8696,27 @@ function filterExperiences(type) {
 
 function searchExperiences() { renderExperiencesBrowse(); }
 
+function appendCustomExperienceFilterTabs() {
+    const tabs = document.getElementById('experienceFilterTabs');
+    if (!tabs) return;
+    const customs = Storage.getCustomExperienceTypes() || [];
+    if (customs.length === 0) return;
+    tabs.querySelectorAll('.filter-tab[data-custom-exp]').forEach(el => el.remove());
+    customs.forEach(t => {
+        const btn = document.createElement('button');
+        btn.className = 'filter-tab' + (currentExperienceFilter === t.slug ? ' active' : '');
+        btn.setAttribute('data-custom-exp', '1');
+        btn.setAttribute('onclick', "filterExperiences('" + t.slug + "')");
+        btn.innerHTML = '<i class="fas ' + (t.icon || 'fa-gamepad') + '"></i> ' + t.label;
+        tabs.appendChild(btn);
+    });
+}
+
 function viewExperience(id) {
     const item = Storage.getExperiences().find(x => x.id === id);
     if (!item) return;
     currentExperienceViewId = id;
-    const type = EXPERIENCE_TYPES[item.type] || { label: item.type, icon: 'fa-gamepad', color: '#8a7b55' };
+    const type = resolveExperienceType(item.type, item.type);
     const provider = getExperienceProvider(item.providerId);
     const alreadyBought = Storage.getExperiencePurchases().some(p => p.experienceId === id);
 
@@ -8712,7 +8808,7 @@ function renderMyGames() {
         html += `<h3 style="margin:0 0 12px;color:var(--text-primary)"><i class="fas fa-gamepad"></i> My Experiences</h3>`;
         html += purchases.map(p => {
             const exp = Storage.getExperiences().find(x => x.id === p.experienceId);
-            const type = EXPERIENCE_TYPES[exp?.type] || { label: 'Experience', icon: 'fa-gamepad', color: '#8a7b55' };
+            const type = resolveExperienceType(exp ? exp.type : '', exp ? exp.type : 'Experience');
             return `
             <div class="forum-thread-card" style="cursor:pointer" onclick="viewExperience('${p.experienceId}')">
                 <div class="forum-thread-card-inner">
@@ -8738,7 +8834,7 @@ function renderMyGames() {
     if (myRequests.length > 0) {
         html += `<h3 style="margin:0 0 12px;color:var(--text-primary)"><i class="fas fa-scroll"></i> My Fantasy Requests</h3>`;
         html += myRequests.map(r => {
-            const cat = FANTASY_CATEGORIES[r.category] || { label: r.category, icon: 'fa-scroll', color: '#8a7b55' };
+            const cat = resolveFantasyCategory(r.category, r.category);
             const status = FANTASY_STATUSES[r.status] || { label: r.status, color: '#8a7b55', icon: 'fa-circle' };
             const responseCount = (r.responses || []).length;
             return `
@@ -8773,10 +8869,25 @@ function populateFantasyDropdowns() {
         if (sel.options.length > 1) return;
         const placeholder = sel.id.includes('Filter') ? '<option value="all">All Categories</option>' : '<option value="">Select category</option>';
         let opts = placeholder;
-        Object.entries(FANTASY_CATEGORIES).forEach(([key, val]) => {
+        Object.entries(getAllFantasyCategories()).forEach(([key, val]) => {
             opts += `<option value="${key}">${val.label}</option>`;
         });
+        if (!sel.id.includes('Filter')) opts += '<option value="__custom__">+ Add New Category</option>';
         sel.innerHTML = opts;
+    });
+    document.querySelectorAll('#fantasyCategory').forEach(sel => {
+        sel.onchange = function() {
+            if (this.value === '__custom__') {
+                const name = prompt('Enter new fantasy category name:');
+                if (name && name.trim()) {
+                    const newCat = addCustomFantasyCategory(name.trim());
+                    populateFantasyDropdowns();
+                    this.value = newCat.slug;
+                } else {
+                    this.value = '';
+                }
+            }
+        };
     });
     document.querySelectorAll('#fantasyLocation').forEach(sel => {
         if (sel.options.length > 1) return;
@@ -8827,7 +8938,7 @@ function renderFantasyRequests() {
 
     if (currentFantasyFilter !== 'all') filtered = filtered.filter(r => r.category === currentFantasyFilter);
     const searchVal = (document.getElementById('fantasySearch')?.value || '').toLowerCase();
-    if (searchVal) filtered = filtered.filter(r => r.title.toLowerCase().includes(searchVal) || (r.description || '').toLowerCase().includes(searchVal));
+    if (searchVal) filtered = filtered.filter(r => r.title.toLowerCase().includes(searchVal) || (r.description || '').toLowerCase().includes(searchVal) || (resolveFantasyCategory(r.category, r.category).label || '').toLowerCase().includes(searchVal));
 
     filtered.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
@@ -8842,7 +8953,7 @@ function renderFantasyRequests() {
     }
 
     container.innerHTML = filtered.map(r => {
-        const cat = FANTASY_CATEGORIES[r.category] || { label: r.category, icon: 'fa-scroll', color: '#8a7b55' };
+        const cat = resolveFantasyCategory(r.category, r.category);
         const status = FANTASY_STATUSES[r.status] || { label: r.status, color: '#8a7b55', icon: 'fa-circle' };
         const responseCount = (r.responses || []).length;
         const isMine = r.authorId === 'current';
@@ -8884,7 +8995,7 @@ function viewFantasyRequest(id) {
     if (!r) return;
     currentFantasyViewId = id;
     currentProviderFantasyViewId = id;
-    const cat = FANTASY_CATEGORIES[r.category] || { label: r.category, icon: 'fa-scroll', color: '#8a7b55' };
+    const cat = resolveFantasyCategory(r.category, r.category);
     const status = FANTASY_STATUSES[r.status] || { label: r.status, color: '#8a7b55', icon: 'fa-circle' };
     const canRespond = r.status === 'approved' && currentProviderFantasyViewId === id && document.getElementById('page-provider-fantasy-requests');
 
@@ -8967,7 +9078,8 @@ function editFantasyRequest(id) {
         const catSel = document.getElementById('fantasyCategory');
         if (catSel && catSel.options.length <= 1) {
             let opts = '<option value="">Select category</option>';
-            Object.entries(FANTASY_CATEGORIES).forEach(([key, val]) => { opts += `<option value="${key}">${val.label}</option>`; });
+            Object.entries(getAllFantasyCategories()).forEach(([key, val]) => { opts += `<option value="${key}">${val.label}</option>`; });
+            opts += '<option value="__custom__">+ Add New Category</option>';
             catSel.innerHTML = opts;
             catSel.value = r.category || '';
         }
@@ -9032,7 +9144,7 @@ function renderProviderFantasyRequests() {
     }
 
     container.innerHTML = filtered.map(r => {
-        const cat = FANTASY_CATEGORIES[r.category] || { label: r.category, icon: 'fa-scroll', color: '#8a7b55' };
+        const cat = resolveFantasyCategory(r.category, r.category);
         const responseCount = (r.responses || []).length;
         const me = getCurrentProviderIdentity();
         const alreadyResponded = (r.responses || []).some(res => res.providerId === me.id);

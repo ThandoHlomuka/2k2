@@ -3668,7 +3668,7 @@ function renderAdminExperiences() {
     }
 
     tbody.innerHTML = experiences.map(x => {
-        const type = EXPERIENCE_TYPES[x.type] || { label: x.type || '-', icon: 'fa-gamepad', color: '#8a7b55' };
+const type = resolveExperienceType(x.type, x.type || '-');
         const sales = purchases.filter(p => p.experienceId === x.id);
         const sold = sales.length;
         const revenue = sales.reduce((s, p) => s + p.amount, 0);
@@ -3694,7 +3694,7 @@ function renderAdminExperiences() {
 function adminViewExperience(id) {
     const x = Storage.getExperiences().find(item => item.id === id);
     if (!x) return;
-    const type = EXPERIENCE_TYPES[x.type] || { label: x.type || '-', icon: 'fa-gamepad', color: '#8a7b55' };
+    const type = resolveExperienceType(x.type, x.type || '-');
     const sales = Storage.getExperiencePurchases().filter(p => p.experienceId === id);
     let body = `<p class="admin-view-row"><span class="label">Title</span><span class="value">${escapeHtml(x.title)}</span></p>`;
     body += `<p class="admin-view-row"><span class="label">Type</span><span class="value"><i class="fas ${type.icon}" style="color:${type.color}"></i> ${escapeHtml(type.label)}</span></p>`;
@@ -3730,7 +3730,7 @@ function renderAdminFantasy() {
     }
 
     tbody.innerHTML = requests.map(r => {
-        const cat = FANTASY_CATEGORIES[r.category] || { label: r.category || '-', icon: 'fa-scroll', color: '#8a7b55' };
+const cat = resolveFantasyCategory(r.category, r.category || '-');
         const status = FANTASY_STATUSES[r.status] || { label: r.status || '-', color: '#8a7b55', icon: 'fa-circle' };
         const responseCount = (r.responses || []).length;
         return `
@@ -3759,7 +3759,7 @@ function renderAdminFantasy() {
 function adminViewFantasy(id) {
     const r = Storage.getFantasyRequests().find(item => item.id === id);
     if (!r) return;
-    const cat = FANTASY_CATEGORIES[r.category] || { label: r.category || '-', icon: 'fa-scroll', color: '#8a7b55' };
+    const cat = resolveFantasyCategory(r.category, r.category || '-');
     const status = FANTASY_STATUSES[r.status] || { label: r.status || '-', color: '#8a7b55', icon: 'fa-circle' };
     let body = `<p class="admin-view-row"><span class="label">Title</span><span class="value">${escapeHtml(r.title)}</span></p>`;
     body += `<p class="admin-view-row"><span class="label">Category</span><span class="value"><i class="fas ${cat.icon}" style="color:${cat.color}"></i> ${escapeHtml(cat.label)}</span></p>`;

@@ -24,6 +24,8 @@
     { name: 'Bookings', col: 'bookings', key: 'k2_bookings' },
     { name: 'Tips', col: 'tips', key: 'k2_tips' },
     { name: 'CustomServiceTypes', col: 'service_types', key: 'k2_service_types' },
+    { name: 'CustomExperienceTypes', col: 'custom_experience_types', key: 'k2_custom_experience_types' },
+    { name: 'CustomFantasyCategories', col: 'custom_fantasy_categories', key: 'k2_custom_fantasy_categories' },
     { name: 'Wallets', col: 'wallets', key: 'k2_wallets' },
     { name: 'Transactions', col: 'transactions', key: 'k2_transactions' },
     { name: 'TopUpRequests', col: 'topup_requests', key: 'k2_topup_requests' },
