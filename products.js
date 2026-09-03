@@ -449,7 +449,7 @@
         cancelled: ['Cancelled', '#ef4444']
       }[o.status] || [o.status || 'Pending', '#a99c7e'];
       var escrow = Storage.getEscrowFunds().find(function (e) { return e.productOrderId === o.id; });
-      var esc = escrow ? {
+      var escInfo = escrow ? {
         held: ['Held in escrow', '#f59e0b'],
         released: ['Released to provider', '#10b981'],
         refunded: ['Refunded', '#ef4444']
@@ -482,7 +482,7 @@
             (shipInfo ? ' <span class="mini-tag" style="background:' + shipInfo[1] + '18;color:' + shipInfo[1] + '"><i class="fas fa-truck"></i> ' + shipInfo[0] + '</span>' : '') +
             '</h4>' +
             '<div class="profile-meta">From ' + esc(o.authorName || 'Provider') + ' &middot; Qty ' + Number(o.quantity || 1) + '</div>' +
-            '<div class="profile-meta" style="margin-top:4px"><span class="mini-tag" style="background:' + esc[1] + '18;color:' + esc[1] + '">' + esc[0] + '</span></div>' +
+            '<div class="profile-meta" style="margin-top:4px"><span class="mini-tag" style="background:' + escInfo[1] + '18;color:' + escInfo[1] + '">' + escInfo[0] + '</span></div>' +
           '</div>' +
           '<div class="profile-actions" style="flex-direction:column;align-items:flex-end;gap:6px">' +
             '<div class="profile-meta" style="color:#c9a227;font-weight:800">R' + esc(Number(o.total || 0).toFixed(2)) + '</div>' +
