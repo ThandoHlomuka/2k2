@@ -4814,15 +4814,20 @@ function renderUserWallet() {
             escrowList.innerHTML = '<div class="empty-section"><i class="fas fa-lock"></i><p>No funds held in escrow</p><span>Booking fees are securely held until providers confirm.</span></div>';
         } else {
             escrowList.innerHTML = '<div class="profile-card pend-requests-card escrow-card"><h2><i class="fas fa-lock"></i> Escrowed Funds</h2>' +
-                escrows.map(es => `
+                escrows.map(es => {
+                    const heldFor = es.productOrderId
+                        ? ('held for your product order #' + String(es.productOrderId).slice(-8).toUpperCase())
+                        : ('held for your booking');
+                    return `
                     <div class="pending-request-row">
                         <div class="pending-request-info">
                             <span class="badge" style="background:#8b5cf622;color:#8b5cf6;border:1px solid #8b5cf644"><i class="fas fa-lock"></i> In Escrow</span>
-                            <span><strong>R${es.amount.toFixed(2)}</strong> held for your booking</span>
+                            <span><strong>R${es.amount.toFixed(2)}</strong> ${heldFor}</span>
                         </div>
                         <span class="pending-request-date">Held ${formatDate(es.createdAt)}</span>
                     </div>
-                `).join('') + '</div>';
+                `;
+                }).join('') + '</div>';
         }
     }
     const activeHeld = getActiveEscrowTotal('user', meId);
@@ -4868,8 +4873,8 @@ function renderUserWallet() {
     }
 
     container.innerHTML = txns.map(t => {
-        const typeColors = { 'top-up': '#10b981', 'tip-sent': '#f59e0b', 'tip-received': '#10b981', 'booking-fee': '#ef4444', 'booking-confirmed': '#3b82f6', 'booking-escrow': '#8b5cf6', 'booking-escrow-released': '#8b5cf6', 'booking-refund': '#06b6d4', 'withdrawal': '#8b5cf6', 'admin-adjust': '#8a7b55', 'refund': '#06b6d4', 'commission': '#f59e0b' };
-        const typeLabels = { 'top-up': 'Top Up', 'tip-sent': 'Tip Sent', 'tip-received': 'Tip Received', 'booking-fee': 'Booking Fee', 'booking-confirmed': 'Booking Confirmed', 'booking-escrow': 'In Escrow', 'booking-escrow-released': 'Escrow Released', 'booking-refund': 'Booking Refund', 'withdrawal': 'Withdrawal', 'admin-adjust': 'Admin Adjust', 'refund': 'Refund', 'commission': 'Platform Commission' };
+        const typeColors = { 'top-up': '#10b981', 'tip-sent': '#f59e0b', 'tip-received': '#10b981', 'booking-fee': '#ef4444', 'booking-confirmed': '#3b82f6', 'booking-escrow': '#8b5cf6', 'booking-escrow-released': '#8b5cf6', 'booking-refund': '#06b6d4', 'withdrawal': '#8b5cf6', 'admin-adjust': '#8a7b55', 'refund': '#06b6d4', 'commission': '#f59e0b', 'product-sale': '#10b981', 'product-purchase': '#ef4444', 'product-escrow': '#8b5cf6', 'product-escrow-released': '#8b5cf6', 'product-refund': '#06b6d4' };
+        const typeLabels = { 'top-up': 'Top Up', 'tip-sent': 'Tip Sent', 'tip-received': 'Tip Received', 'booking-fee': 'Booking Fee', 'booking-confirmed': 'Booking Confirmed', 'booking-escrow': 'In Escrow', 'booking-escrow-released': 'Escrow Released', 'booking-refund': 'Booking Refund', 'withdrawal': 'Withdrawal', 'admin-adjust': 'Admin Adjust', 'refund': 'Refund', 'commission': 'Platform Commission', 'product-sale': 'Product Sale', 'product-purchase': 'Product Purchase', 'product-escrow': 'In Escrow', 'product-escrow-released': 'Escrow Released', 'product-refund': 'Product Refund' };
         const color = typeColors[t.type] || '#8a7b55';
         const label = typeLabels[t.type] || t.type;
         return `
@@ -4923,7 +4928,9 @@ function renderProviderWallet() {
     let totalWithdrawn = 0;
     let totalTxns = 0;
     let allProviderTxns = [];
+    let totalHeld = 0;
 
+    const escrowFunds = Storage.getEscrowFunds();
     providers.forEach(pid => {
         const wallet = getOrCreateWallet('provider', pid);
         totalBalance += wallet.balance;
@@ -4933,6 +4940,12 @@ function renderProviderWallet() {
             if (t.amount > 0) totalIncome += t.amount;
             else totalWithdrawn += Math.abs(t.amount);
         });
+        // Funds held for this provider (e.g. product order escrow awaiting completion)
+        escrowFunds.forEach(e => {
+            if (e.status === 'held' && e.payeeType === 'provider' && String(e.payeeId) === String(pid)) {
+                totalHeld += e.amount || 0;
+            }
+        });
     });
     totalTxns = allProviderTxns.length;
 
@@ -4941,6 +4954,8 @@ function renderProviderWallet() {
     document.getElementById('providerWalletIncome').textContent = `R${totalIncome.toFixed(2)}`;
     document.getElementById('providerWalletWithdrawn').textContent = `R${totalWithdrawn.toFixed(2)}`;
     document.getElementById('providerWalletTxns').textContent = totalTxns;
+    const heldEl = document.getElementById('providerWalletHeld');
+    if (heldEl) heldEl.textContent = `R${totalHeld.toFixed(2)}`;
 
     renderProviderAnalytics();
 
@@ -4975,8 +4990,8 @@ function renderProviderWallet() {
     }
 
     container.innerHTML = allProviderTxns.slice(0, 30).map(t => {
-        const typeColors = { 'top-up': '#10b981', 'tip-sent': '#f59e0b', 'tip-received': '#10b981', 'booking-fee': '#ef4444', 'booking-confirmed': '#3b82f6', 'booking-escrow': '#8b5cf6', 'booking-escrow-released': '#8b5cf6', 'booking-refund': '#06b6d4', 'withdrawal': '#8b5cf6', 'admin-adjust': '#8a7b55', 'refund': '#06b6d4', 'commission': '#f59e0b' };
-        const typeLabels = { 'top-up': 'Top Up', 'tip-sent': 'Tip Sent', 'tip-received': 'Tip Received', 'booking-fee': 'Booking Fee', 'booking-confirmed': 'Booking Confirmed', 'booking-escrow': 'In Escrow', 'booking-escrow-released': 'Escrow Released', 'booking-refund': 'Booking Refund', 'withdrawal': 'Withdrawal', 'admin-adjust': 'Admin Adjust', 'refund': 'Refund', 'commission': 'Platform Commission' };
+        const typeColors = { 'top-up': '#10b981', 'tip-sent': '#f59e0b', 'tip-received': '#10b981', 'booking-fee': '#ef4444', 'booking-confirmed': '#3b82f6', 'booking-escrow': '#8b5cf6', 'booking-escrow-released': '#8b5cf6', 'booking-refund': '#06b6d4', 'withdrawal': '#8b5cf6', 'admin-adjust': '#8a7b55', 'refund': '#06b6d4', 'commission': '#f59e0b', 'product-sale': '#10b981', 'product-purchase': '#ef4444', 'product-escrow': '#8b5cf6', 'product-escrow-released': '#8b5cf6', 'product-refund': '#06b6d4' };
+        const typeLabels = { 'top-up': 'Top Up', 'tip-sent': 'Tip Sent', 'tip-received': 'Tip Received', 'booking-fee': 'Booking Fee', 'booking-confirmed': 'Booking Confirmed', 'booking-escrow': 'In Escrow', 'booking-escrow-released': 'Escrow Released', 'booking-refund': 'Booking Refund', 'withdrawal': 'Withdrawal', 'admin-adjust': 'Admin Adjust', 'refund': 'Refund', 'commission': 'Platform Commission', 'product-sale': 'Product Sale', 'product-purchase': 'Product Purchase', 'product-escrow': 'In Escrow', 'product-escrow-released': 'Escrow Released', 'product-refund': 'Product Refund' };
         const color = typeColors[t.type] || '#8a7b55';
         const label = typeLabels[t.type] || t.type;
         return `

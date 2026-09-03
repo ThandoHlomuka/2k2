@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -25,7 +25,7 @@
     <meta name="twitter:image" content="https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=1200&q=80">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💰</text></svg>">
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>ðŸ’°</text></svg>">
     <link rel="stylesheet" href="style.css?v=36">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <script type="application/ld+json">
@@ -2219,6 +2219,13 @@
                         </div>
                     </div>
                     <div class="wallet-stat-card">
+                        <div class="wallet-stat-icon" style="background:rgba(139,92,246,.15);color:#a78bfa"><i class="fas fa-shield-halved"></i></div>
+                        <div class="wallet-stat-info">
+                            <span class="wallet-stat-value" id="providerWalletHeld">R0.00</span>
+                            <span class="wallet-stat-label">Held in Escrow</span>
+                        </div>
+                    </div>
+                    <div class="wallet-stat-card">
                         <div class="wallet-stat-icon blue"><i class="fas fa-receipt"></i></div>
                         <div class="wallet-stat-info">
                             <span class="wallet-stat-value" id="providerWalletTxns">0</span>
@@ -3014,7 +3021,7 @@
                                     <button type="button" class="gist-btn" onclick="toggleMsgEmojiPicker('msgBody')" title="Emoji"><i class="fas fa-face-smile"></i></button>
                                     <button type="button" class="gist-btn" onclick="toggleMsgGifPicker('msgBody')" title="GIF"><i class="fas fa-images"></i></button>
                                 </div>
-                                <textarea id="msgBody" rows="5" placeholder="Write your message... Add emojis and GIFs 🎉" required></textarea>
+                                <textarea id="msgBody" rows="5" placeholder="Write your message... Add emojis and GIFs ðŸŽ‰" required></textarea>
                             </div>
                         </div>
                     </div>
@@ -3258,7 +3265,7 @@
             </div>
             <div id="authProviderPending" style="display:none">
                 <div style="padding:10px 0 6px"><i class="fas fa-hourglass-half" style="font-size:1.7rem;color:#d4a853"></i></div>
-                <p style="color:#8a7b55;font-size:0.92rem;line-height:1.55;margin:0 0 16px">You've already submitted your Service Provider request. Our team is reviewing it — you'll get provider access here once it's approved.</p>
+                <p style="color:#8a7b55;font-size:0.92rem;line-height:1.55;margin:0 0 16px">You've already submitted your Service Provider request. Our team is reviewing it â€” you'll get provider access here once it's approved.</p>
                 <button class="btn btn-secondary" onclick="closeAuthPrompt()" style="background:transparent;box-shadow:none">Ok, Got It</button>
             </div>
         </div>
@@ -3296,8 +3303,8 @@
       });
     })();
     </script>
-    <script src="script.js?v=44"></script>
+    <script src="script.js?v=45"></script>
     <script src="media-player.js?v=2"></script>
-    <script src="products.js?v=22"></script>
+    <script src="products.js?v=23"></script>
 </body>
 </html>

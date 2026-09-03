@@ -2183,8 +2183,8 @@ function renderAdminWallets() {
             tTbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:#a99c7e;padding:40px">No transactions yet</td></tr>';
         } else {
             tTbody.innerHTML = txns.slice(0, 50).map(t => {
-                const typeColors = { 'top-up': '#10b981', 'tip-sent': '#f59e0b', 'tip-received': '#10b981', 'booking-fee': '#ef4444', 'booking-confirmed': '#3b82f6', 'withdrawal': '#8b5cf6', 'admin-adjust': '#8a7b55', 'refund': '#06b6d4', 'credit': '#10b981', 'deduct': '#ef4444', 'experience-sale': '#7c3aed', 'experience-purchase': '#db2777', 'commission': '#f59e0b' };
-                const typeLabels = { 'top-up': 'Top Up', 'tip-sent': 'Tip Sent', 'tip-received': 'Tip Received', 'booking-fee': 'Booking Fee', 'booking-confirmed': 'Booking Confirmed', 'withdrawal': 'Withdrawal', 'admin-adjust': 'Admin Adjust', 'refund': 'Refund', 'credit': 'Credit', 'deduct': 'Deduct', 'experience-sale': 'Experience Sale', 'experience-purchase': 'Experience Purchase', 'commission': 'Platform Commission' };
+                const typeColors = { 'top-up': '#10b981', 'tip-sent': '#f59e0b', 'tip-received': '#10b981', 'booking-fee': '#ef4444', 'booking-confirmed': '#3b82f6', 'withdrawal': '#8b5cf6', 'admin-adjust': '#8a7b55', 'refund': '#06b6d4', 'credit': '#10b981', 'deduct': '#ef4444', 'experience-sale': '#7c3aed', 'experience-purchase': '#db2777', 'commission': '#f59e0b', 'product-sale': '#10b981', 'product-purchase': '#ef4444', 'product-escrow': '#8b5cf6', 'product-escrow-released': '#8b5cf6', 'product-refund': '#06b6d4' };
+                const typeLabels = { 'top-up': 'Top Up', 'tip-sent': 'Tip Sent', 'tip-received': 'Tip Received', 'booking-fee': 'Booking Fee', 'booking-confirmed': 'Booking Confirmed', 'withdrawal': 'Withdrawal', 'admin-adjust': 'Admin Adjust', 'refund': 'Refund', 'credit': 'Credit', 'deduct': 'Deduct', 'experience-sale': 'Experience Sale', 'experience-purchase': 'Experience Purchase', 'commission': 'Platform Commission', 'product-sale': 'Product Sale', 'product-purchase': 'Product Purchase', 'product-escrow': 'In Escrow', 'product-escrow-released': 'Escrow Released', 'product-refund': 'Product Refund' };
                 const color = typeColors[t.type] || '#8a7b55';
                 const label = typeLabels[t.type] || t.type;
                 return `
@@ -2205,6 +2205,76 @@ function renderAdminWallets() {
             }).join('');
         }
     }
+
+    // Escrow overview
+    const escrowList = document.getElementById('adminEscrowList');
+    if (escrowList) {
+        const escrows = getAllEscrow();
+        const held = escrows.filter(e => e.status === 'held');
+        const totalHeld = held.reduce((s, e) => s + (e.amount || 0), 0);
+        if (held.length === 0) {
+            escrowList.innerHTML = '<p style="color:#a99c7e;font-size:0.88rem;padding:8px 0">No funds currently held in escrow.</p>';
+        } else {
+            const ownerName = (type, id) => {
+                if (type === 'user') {
+                    const u = Storage.getUsers().find(x => x.userId === id || x.id === id);
+                    if (u) return u.username || u.fullName || u.name || u.email || id;
+                    return id === 'general' ? 'General User' : id;
+                }
+                const p = Storage.getProviders().find(x => x.id === id);
+                return p ? p.name : id;
+            };
+            escrowList.innerHTML = '<div class="admin-table-wrap"><table class="admin-table"><thead><tr>' +
+                '<th>Payer</th><th>Payee</th><th>Amount</th><th>For</th><th>Held Since</th><th class="admin-actions">Actions</th>' +
+                '</tr></thead><tbody>' +
+                held.map(e => {
+                    const ref = e.productOrderId ? ('Product Order #' + String(e.productOrderId).slice(-8).toUpperCase()) : (e.bookingId ? ('Booking #' + String(e.bookingId).slice(-8).toUpperCase()) : 'Escrow');
+                    return '<tr>' +
+                        '<td>' + escapeHtml(ownerName(e.fromType, e.fromId)) + '</td>' +
+                        '<td>' + escapeHtml(ownerName(e.payeeType, e.payeeId)) + '</td>' +
+                        '<td style="color:#d4a853;font-weight:700">R' + Number(e.amount || 0).toFixed(2) + '</td>' +
+                        '<td>' + escapeHtml(ref) + '</td>' +
+                        '<td>' + fmtDate(e.createdAt) + '</td>' +
+                        '<td class="admin-actions">' +
+                            '<button class="btn btn-primary btn-xs" style="background:#10b981;border:none" onclick="adminReleaseEscrow(\'' + e.id + '\')"><i class="fas fa-check"></i> Release</button>' +
+                            '<button class="btn btn-danger btn-xs" onclick="adminRefundEscrow(\'' + e.id + '\')"><i class="fas fa-undo"></i> Refund</button>' +
+                        '</td>' +
+                    '</tr>';
+                }).join('') +
+                '</tbody></table>' +
+                '<p style="color:#a99c7e;font-size:0.8rem;margin-top:8px">Total held: <strong style="color:#d4a853">R' + totalHeld.toFixed(2) + '</strong></p></div>';
+        }
+    }
+}
+
+function adminReleaseEscrow(id) {
+    const escrows = Storage.getEscrowFunds();
+    const e = escrows.find(x => x.id === id);
+    if (!e || e.status !== 'held') { showToast('Escrow is not currently held.', 'error'); return; }
+    if (!confirm('Release this escrow to the payee? This cannot be undone.')) return;
+    e.status = 'released';
+    e.releasedAt = new Date().toISOString();
+    e.releasedByAdmin = true;
+    Storage.setEscrowFunds(escrows);
+    adjustWalletHeld(e.fromType, e.fromId, -(e.amount || 0), 'escrow-released-admin', 'Escrow released by admin', { escrowId: e.id, productOrderId: e.productOrderId, bookingId: e.bookingId });
+    adjustWallet(e.payeeType, e.payeeId, e.amount || 0, 'escrow-release', 'Escrow release', { escrowId: e.id, productOrderId: e.productOrderId, bookingId: e.bookingId });
+    showToast('Escrow released.');
+    renderAdminWallets();
+}
+
+function adminRefundEscrow(id) {
+    const escrows = Storage.getEscrowFunds();
+    const e = escrows.find(x => x.id === id);
+    if (!e || e.status !== 'held') { showToast('Escrow is not currently held.', 'error'); return; }
+    if (!confirm('Refund this escrow back to the payer? This cannot be undone.')) return;
+    e.status = 'refunded';
+    e.refundedAt = new Date().toISOString();
+    e.refundedByAdmin = true;
+    Storage.setEscrowFunds(escrows);
+    adjustWalletHeld(e.fromType, e.fromId, -(e.amount || 0), 'escrow-refunded-admin', 'Escrow refunded by admin', { escrowId: e.id, productOrderId: e.productOrderId, bookingId: e.bookingId });
+    adjustWallet(e.fromType, e.fromId, e.amount || 0, 'escrow-refund', 'Escrow refund', { escrowId: e.id, productOrderId: e.productOrderId, bookingId: e.bookingId });
+    showToast('Escrow refunded.');
+    renderAdminWallets();
 }
 
 function adminViewWalletTxns(ownerType, ownerId) {

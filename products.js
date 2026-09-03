@@ -148,10 +148,20 @@
     var user = await currentUser();
     if (!user) { window.location.href = 'login.html?next=index.html'; return; }
 
+    if (typeof getWalletBalance !== 'function') { alert('Wallet services are unavailable right now.'); return; }
+    var total = Number(p.price || 0);
+    var balance = getWalletBalance('user', user.id);
+    if (total <= 0) { alert('This product has no price set.'); return; }
+    if (balance < total) {
+      alert('Insufficient wallet balance. You need R' + total.toFixed(2) + ' for this order. Please top up your wallet first.');
+      return;
+    }
+
     var quantity = 1;
+    var orderId = 'po_' + Date.now().toString(36) + '_' + Math.random().toString(36).substr(2, 8);
     var orders = Storage.getProductOrders();
     orders.push({
-      id: 'po_' + Date.now().toString(36) + '_' + Math.random().toString(36).substr(2, 8),
+      id: orderId,
       productId: p.id,
       productName: p.name,
       productPrice: Number(p.price || 0),
@@ -161,11 +171,17 @@
       buyerName: (user.email || 'Buyer'),
       buyerEmail: user.email || '',
       quantity: quantity,
-      total: Number(p.price || 0) * quantity,
+      total: total,
       status: 'pending',
+      paymentStatus: 'held',
+      paymentMethod: 'wallet',
       createdAt: Date.now()
     });
     Storage.setProductOrders(orders);
+
+    // Deduct the buyer's wallet and hold the funds in escrow until the order is completed.
+    adjustWallet('user', user.id, -total, 'product-purchase', 'Payment for "' + (p.name || 'product') + '" held in escrow', { productOrderId: orderId, productId: p.id });
+    holdProductOrderEscrow(orderId, user.id, p.authorId, total);
 
     var list = Storage.getProducts().map(function (x) {
       if (x.id === p.id && x.stock != null) { var s = Math.max(0, Number(x.stock) - quantity); return Object.assign({}, x, { stock: s }); }
@@ -173,9 +189,79 @@
     });
     Storage.setProducts(list);
 
-    alert('Order placed! The provider has been notified. Track it under your orders.');
+    alert('Payment of R' + total.toFixed(2) + ' received. The funds are held in escrow and will be released to the provider once the order is completed. Track it under your orders.');
     navigateTo('products-directory');
   };
+
+  // ============================================
+  // PRODUCT ORDER ESCROW
+  // Funds are held from the buyer's wallet on order placement and only
+  // released to the provider once the order is marked completed.
+  // ============================================
+  function escrowRecordForOrder(orderId) {
+    return Storage.getEscrowFunds().find(function (e) { return e.productOrderId === orderId; });
+  }
+
+  function holdProductOrderEscrow(orderId, buyerId, providerId, amount) {
+    var escrows = Storage.getEscrowFunds();
+    escrows.push({
+      id: generateId(),
+      productOrderId: orderId,
+      fromType: 'user',
+      fromId: buyerId,
+      payeeType: 'provider',
+      payeeId: providerId,
+      amount: amount,
+      status: 'held',
+      createdAt: new Date().toISOString()
+    });
+    Storage.setEscrowFunds(escrows);
+    adjustWalletHeld('user', buyerId, amount, 'product-escrow', 'Payment of R' + Number(amount).toFixed(2) + ' held in escrow for product order', { productOrderId: orderId });
+  }
+
+  function releaseProductOrderEscrow(order, amount) {
+    var escrows = Storage.getEscrowFunds();
+    var escrow = escrows.find(function (e) { return e.productOrderId === order.id; });
+    if (!escrow) {
+      escrow = { id: generateId(), productOrderId: order.id, fromType: 'user', fromId: order.buyerId, payeeType: 'provider', payeeId: order.authorId, amount: amount, status: 'held', createdAt: new Date().toISOString() };
+      escrows.push(escrow);
+    }
+    if (escrow.status !== 'released') {
+      escrow.status = 'released';
+      escrow.releasedAt = new Date().toISOString();
+      Storage.setEscrowFunds(escrows);
+      adjustWalletHeld('user', escrow.fromId, -amount, 'product-escrow-released', 'Escrow released for product order', { productOrderId: order.id });
+      adjustWallet('provider', order.authorId, amount, 'product-sale', 'Sale of "' + (order.productName || 'product') + '" released from escrow', { productOrderId: order.id });
+    }
+  }
+
+  function refundProductOrderEscrow(order, amount) {
+    var escrows = Storage.getEscrowFunds();
+    var escrow = escrows.find(function (e) { return e.productOrderId === order.id; });
+    if (escrow && escrow.status === 'held') {
+      escrow.status = 'refunded';
+      escrow.refundedAt = new Date().toISOString();
+      Storage.setEscrowFunds(escrows);
+      adjustWalletHeld('user', escrow.fromId, -amount, 'product-escrow-released', 'Escrow returned for cancelled product order', { productOrderId: order.id });
+      adjustWallet('user', order.buyerId, amount, 'product-refund', 'Refund for order of "' + (order.productName || 'product') + '"', { productOrderId: order.id });
+      return true;
+    }
+    return false;
+  }
+
+  // Called whenever an order transitions status. Releases or refunds escrow.
+  function settleProductOrderEscrow(order) {
+    if (!order) return;
+    // Only settle orders that were paid via the wallet escrow system.
+    if (order.paymentMethod !== 'wallet' && order.paymentStatus !== 'held') return;
+    var total = Number(order.total || 0);
+    if (total <= 0) return;
+    if (order.status === 'completed') {
+      releaseProductOrderEscrow(order, total);
+    } else if (order.status === 'cancelled') {
+      refundProductOrderEscrow(order, total);
+    }
+  }
 
   // ============================================
   // PROVIDER - products CRUD
@@ -360,6 +446,8 @@
   window.providerSetOrderStatus = async function (id, status) {
     var orders = Storage.getProductOrders().map(function (o) { return o.id === id ? Object.assign({}, o, { status: status }) : o; });
     Storage.setProductOrders(orders);
+    var changed = orders.find(function (o) { return o.id === id; });
+    if (changed) settleProductOrderEscrow(changed);
     renderProviderOrders();
   };
 
@@ -454,7 +542,10 @@
   };
 
   window.adminSetOrderStatus = function (id, status) {
-    Storage.setProductOrders(Storage.getProductOrders().map(function (o) { return o.id === id ? Object.assign({}, o, { status: status }) : o; }));
+    var orders = Storage.getProductOrders().map(function (o) { return o.id === id ? Object.assign({}, o, { status: status }) : o; });
+    Storage.setProductOrders(orders);
+    var changed = orders.find(function (o) { return o.id === id; });
+    if (changed) settleProductOrderEscrow(changed);
     renderAdminProductOrders();
   };
 
