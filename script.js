@@ -222,7 +222,7 @@ const ADMIN_WALLET_TYPE = 'admin';
 const ADMIN_WALLET_ID = 'platform';
 // Types that represent gross earnings from sales (commissionable). Refunds,
 // top-ups, admin-adjusts and other flows are intentionally NOT commissioned.
-const COMMISSIONABLE_TYPES = { 'booking-confirmed': 1, 'tip-received': 1, 'experience-sale': 1 };
+const COMMISSIONABLE_TYPES = { 'booking-confirmed': 1, 'tip-received': 1, 'experience-sale': 1, 'product-sale': 1, 'subforum-subscription': 1 };
 
 function adminWalletOwner() { return { ownerType: ADMIN_WALLET_TYPE, ownerId: ADMIN_WALLET_ID }; }
 
@@ -525,6 +525,7 @@ function navigateTo(page) {
     if (page === 'provider-tips') renderProviderTips();
     if (page === 'user-wallet') renderUserWallet();
     if (page === 'provider-wallet') renderProviderWallet();
+    if (page === 'provider-monetization') renderProviderMonetization();
     if (page === 'content-directory') { populateLocationDropdowns(); renderContentDirectory(); }
     if (page === 'provider-content') renderProviderContent();
     if (page === 'provider-content-create') { populateLocationDropdowns(); resetContentForm(); }
@@ -590,6 +591,7 @@ function rerenderCurrentPage() {
         'page-provider-tips': () => renderProviderTips(),
         'page-user-wallet': () => renderUserWallet(),
         'page-provider-wallet': () => renderProviderWallet(),
+        'page-provider-monetization': () => renderProviderMonetization(),
         'page-content-directory': () => renderContentDirectory(),
         'page-provider-content': () => renderProviderContent(),
         'page-events-directory': () => renderEventsDirectory(),
@@ -1999,6 +2001,7 @@ function renderProviderProfiles(filter = 'all') {
             </div>
         </div>
     `).join('');
+    if (typeof renderProviderHomeEarnings === 'function') { try { renderProviderHomeEarnings(); } catch (e) {} }
 }
 
 function filterProviderProfiles() { renderProviderProfiles(document.getElementById('providerFilter').value); }

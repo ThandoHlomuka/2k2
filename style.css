@@ -8071,3 +8071,96 @@ h1, h2, h3, h4 {
     color: #c9a227;
 }
 
+/* ============ Monetization Hub ============ */
+.mon-src-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 16px;
+}
+.mon-src-head {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 10px;
+}
+.mon-bar {
+    height: 8px;
+    background: #f0e7c8;
+    border-radius: 999px;
+    overflow: hidden;
+    margin: 6px 0 10px;
+}
+.mon-bar > div {
+    height: 100%;
+    border-radius: 999px;
+}
+.mon-src-actions {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-top: 4px;
+}
+.mon-guide-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.05rem;
+    margin: 0 auto 10px;
+}
+.monetization-guide-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+    gap: 16px;
+}
+.monetization-guide-grid .how-step {
+    text-align: center;
+}
+.monetization-guide-grid .how-step p {
+    font-size: 0.82rem;
+    color: #8a7b55;
+    line-height: 1.45;
+    min-height: 3.6em;
+}
+.monetization-guide-grid .how-step .btn {
+    margin-top: 8px;
+}
+.earn-teaser {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 12px;
+    margin-top: 16px;
+}
+.earn-teaser-card {
+    background: #fdf9ef;
+    border: 1px solid #e6dec8;
+    border-radius: 14px;
+    padding: 14px;
+    text-align: center;
+    cursor: pointer;
+    transition: transform .15s ease, box-shadow .15s ease;
+}
+.earn-teaser-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 18px rgba(0,0,0,.06);
+}
+.earn-teaser-card i {
+    font-size: 1.4rem;
+    display: block;
+    margin-bottom: 8px;
+}
+.earn-teaser-card .et-title {
+    font-weight: 800;
+    color: #211a0d;
+    font-size: 0.95rem;
+}
+.earn-teaser-card .et-sub {
+    font-size: 0.78rem;
+    color: #8a7b55;
+    margin-top: 2px;
+}
+
