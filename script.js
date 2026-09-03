@@ -2464,7 +2464,21 @@ function viewDirectoryListing(id) {
     const videoContainer = document.getElementById('dirViewVideo');
     if (videoContainer) {
         if (l.video) {
-            videoContainer.innerHTML = `<video controls preload="metadata" style="width:100%;max-height:400px;border-radius:12px;background:#000"><source src="${l.video}"></video>`;
+            videoContainer.innerHTML = '';
+            const holder = document.createElement('div');
+            videoContainer.appendChild(holder);
+            if (window._2k2Media && holder.dataset) {
+                // Build the in-app player directly.
+                try {
+                    const p = window._2k2Media.buildPlayer({ kind: 'video', src: l.video, title: l.name });
+                    holder.appendChild(p.el);
+                    if (typeof window._2k2Media.upgrade === 'function') window._2k2Media.upgrade(holder);
+                } catch (e) {
+                    holder.innerHTML = `<video controls preload="metadata" style="width:100%;max-height:400px;border-radius:12px;background:#000"><source src="${l.video}"></video>`;
+                }
+            } else {
+                holder.innerHTML = `<video controls preload="metadata" style="width:100%;max-height:400px;border-radius:12px;background:#000"><source src="${l.video}"></video>`;
+            }
         } else {
             videoContainer.innerHTML = '<p class="empty-text">No video uploaded</p>';
         }
@@ -3028,7 +3042,7 @@ function viewVenueDirectory(id) {
         const vids = v.videos || [];
         if (vids.length > 0) {
             videosCard.style.display = '';
-            videosContainer.innerHTML = vids.map(u => '<div class="directory-video"><a href="' + u + '" target="_blank" rel="noopener" class="video-link"><i class="fas fa-play"></i> ' + escapeHtml(videoThumbLabel(u)) + '</a></div>').join('');
+            videosContainer.innerHTML = vids.map((u, vi) => '<button type="button" class="video-link" onclick="playVenueVideo(' + vi + ')"><i class="fas fa-play"></i> ' + escapeHtml(videoThumbLabel(u)) + '</button>').join('');
         } else {
             videosCard.style.display = 'none';
         }
@@ -3297,6 +3311,24 @@ function videoThumbLabel(url) {
         return u.hostname + ' video';
     } catch (e) {
         return 'Video link';
+    }
+}
+
+function isPlayableVideo(url) {
+    return /\.(mp4|webm|ogg|ogv|mov)(\?|#|$)/i.test(url);
+}
+
+function playVenueVideo(index) {
+    const venues = Storage.getVenues();
+    const v = venues.find(x => x.id === currentViewVenueId);
+    if (!v) return;
+    const vids = v.videos || [];
+    const u = vids[index];
+    if (!u) return;
+    if (isPlayableVideo(u) && window._2k2Media) {
+        window._2k2Media.openVideoPlayer(u, v.name);
+    } else {
+        window.open(u, '_blank', 'noopener');
     }
 }
 
@@ -5092,9 +5124,36 @@ function viewContent(id) {
     const mediaContainer = document.getElementById('contentDetailMedia');
     if (item.fileData && item.fileData.length > 100) {
         if (item.type === 'video') {
-            mediaContainer.innerHTML = `<div class="content-media-player"><video controls preload="metadata" class="content-video-player"><source src="${item.fileData}" type="${item.fileType || 'video/mp4'}"></video></div>`;
+            mediaContainer.innerHTML = '';
+            const holder = document.createElement('div');
+            holder.className = 'content-media-player';
+            mediaContainer.appendChild(holder);
+            try {
+                if (window._2k2Media) {
+                    const p = window._2k2Media.buildPlayer({ kind: 'video', src: item.fileData, title: item.title });
+                    holder.appendChild(p.el);
+                    if (typeof window._2k2Media.upgrade === 'function') window._2k2Media.upgrade(holder);
+                } else {
+                    holder.innerHTML = `<video controls preload="metadata" class="content-video-player"><source src="${item.fileData}" type="${item.fileType || 'video/mp4'}"></video>`;
+                }
+            } catch (e) {
+                holder.innerHTML = `<video controls preload="metadata" class="content-video-player"><source src="${item.fileData}" type="${item.fileType || 'video/mp4'}"></video>`;
+            }
         } else if (item.type === 'audio' || item.type === 'podcast') {
-            mediaContainer.innerHTML = `<div class="content-media-player audio-player"><div class="audio-icon-wrap"><i class="fas fa-headphones"></i></div><audio controls preload="metadata" class="content-audio-player"><source src="${item.fileData}" type="${item.fileType || 'audio/mpeg'}"></audio></div>`;
+            mediaContainer.innerHTML = '';
+            const holder = document.createElement('div');
+            holder.className = 'content-media-player audio-player';
+            mediaContainer.appendChild(holder);
+            try {
+                if (window._2k2Media) {
+                    const p = window._2k2Media.buildPlayer({ kind: 'audio', src: item.fileData, title: item.title, sub: 'Podcast' });
+                    holder.appendChild(p.el);
+                } else {
+                    holder.innerHTML = `<div class="audio-icon-wrap"><i class="fas fa-headphones"></i></div><audio controls preload="metadata" class="content-audio-player"><source src="${item.fileData}" type="${item.fileType || 'audio/mpeg'}"></audio>`;
+                }
+            } catch (e) {
+                holder.innerHTML = `<div class="audio-icon-wrap"><i class="fas fa-headphones"></i></div><audio controls preload="metadata" class="content-audio-player"><source src="${item.fileData}" type="${item.fileType || 'audio/mpeg'}"></audio>`;
+            }
         } else if (item.type === 'image') {
             mediaContainer.innerHTML = `<div class="content-media-player"><img src="${item.fileData}" alt="${item.title}" class="content-image-player"></div>`;
         } else if (item.type === 'gif') {

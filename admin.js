@@ -1263,7 +1263,7 @@ function adminViewContent(id) {
     const authorName = resolveProviderAuthorName(c, 'Unknown');
     let mediaHtml = '';
     if (c.type === 'audio' || c.type === 'podcast') {
-        mediaHtml = c.fileUrl ? `<div style="margin:14px 0"><audio controls style="width:100%" src="${escapeHtml(c.fileUrl)}"></audio></div>` : '';
+        mediaHtml = c.fileUrl ? `<div style="margin:14px 0"><button type="button" class="btn btn-primary btn-sm" onclick="adminPlayContentAudio('${c.id}')"><i class="fas fa-headphones"></i> Listen / Play</button></div>` : '';
     } else if (c.img || (c.gallery && c.gallery.length)) {
         mediaHtml = `<div style="margin:14px 0;display:grid;gap:8px">${((c.type === 'book') ? [] : (c.gallery && c.gallery.length ? c.gallery : c.img ? [c.img] : [])).slice(0, 6).map(u => `<img src="${escapeHtml(u)}" style="max-width:100%;max-height:200px;border-radius:10px;object-fit:cover" onerror="this.style.display='none'">`).join('')}</div>`;
     }
@@ -1285,6 +1285,16 @@ function adminViewContent(id) {
             <button class="btn btn-secondary btn-sm" onclick="adminToggleContentStatus('${c.id}')"><i class="fas fa-${c.status === 'suspended' ? 'check-circle' : 'ban'}"></i> ${c.status === 'suspended' ? 'Reinstate' : 'Suspend'}</button>
         </div>
     `);
+}
+
+function adminPlayContentAudio(id) {
+    const c = Storage.getContent().find(x => x.id === id);
+    if (!c || !c.fileUrl) return;
+    if (window._2k2Media) {
+        window._2k2Media.openPodcastPlayer({ src: c.fileUrl, title: c.title || 'Podcast', sub: 'Podcast / Audio' });
+    } else if (window.openPodcastPlayer) {
+        window.openPodcastPlayer({ src: c.fileUrl, title: c.title || 'Podcast' });
+    }
 }
 
 function adminEditContent(id) {
