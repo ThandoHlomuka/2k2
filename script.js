@@ -454,6 +454,7 @@ let listingLinks = [];
 let currentDirectoryFilter = 'all';
 let venueTags = [];
 let venueGallery = [];
+let venueVideos = [];
 let currentVenueDirectoryFilter = 'all';
 let adTags = [];
 let adGallery = [];
@@ -3021,6 +3022,31 @@ function viewVenueDirectory(id) {
         galleryContainer.innerHTML = '<p class="empty-text">No gallery images</p>';
     }
 
+    const videosContainer = document.getElementById('venViewVideos');
+    const videosCard = document.getElementById('venViewVideosCard');
+    if (videosCard) {
+        const vids = v.videos || [];
+        if (vids.length > 0) {
+            videosCard.style.display = '';
+            videosContainer.innerHTML = vids.map(u => '<div class="directory-video"><a href="' + u + '" target="_blank" rel="noopener" class="video-link"><i class="fas fa-play"></i> ' + escapeHtml(videoThumbLabel(u)) + '</a></div>').join('');
+        } else {
+            videosCard.style.display = 'none';
+        }
+    }
+
+    const addressRow = document.getElementById('venViewAddressRow');
+    const addressEl = document.getElementById('venViewAddress');
+    if (addressRow && addressEl) {
+        const snap = (_2k2.Auth && _2k2.Auth.syncUser) ? _2k2.Auth.syncUser() : null;
+        const isPrivileged = snap && (snap.role === 'provider' || snap.role === 'admin');
+        if (isPrivileged && v.address) {
+            addressEl.textContent = v.address;
+            addressRow.style.display = '';
+        } else {
+            addressRow.style.display = 'none';
+        }
+    }
+
     const days = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
     const dayLabels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
     const availContainer = document.getElementById('venViewHours');
@@ -3043,8 +3069,10 @@ function resetVenueForm() {
     document.getElementById('venueSubmitBtn').textContent = 'Publish Venue';
     venueTags = [];
     venueGallery = [];
+    venueVideos = [];
     renderVenueTags();
     renderVenueGalleryUpload();
+    renderVenueVideosUpload();
     document.getElementById('venuePhotoPreview').innerHTML = '<i class="fas fa-camera"></i><span>Click to upload</span>';
 }
 
@@ -3060,12 +3088,14 @@ function handleVenueSubmit(e) {
         email: document.getElementById('venueEmail').value,
         phone: document.getElementById('venuePhone').value,
         location: document.getElementById('venueLocation').value,
+        address: document.getElementById('venueAddress').value.trim(),
         rate: document.getElementById('venueRate').value,
         capacity: document.getElementById('venueCapacity').value,
         website: document.getElementById('venueWebsite').value,
         bio: document.getElementById('venueBio').value,
         tags: [...venueTags],
         gallery: [...venueGallery],
+        videos: [...venueVideos],
         photo: document.getElementById('venuePhotoPreview').querySelector('img')?.src || '',
         hours: {
             mon: document.getElementById('venMon').checked,
@@ -3118,8 +3148,8 @@ function renderVenueListings(filter = 'all') {
             </div>
             <div class="list-card-info">
                 <h3>${v.name}</h3>
-                <p>${type.label || v.category} &middot; ${v.location}</p>
-                <div class="list-card-tags">${(v.tags || []).slice(0, 3).map(t => `<span class="mini-tag">${t}</span>`).join('')}</div>
+                <p>${type.label || v.category} &middot; ${v.location}${v.address ? ' &middot; ' + escapeHtml(v.address) : ''}</p>
+                <div class="list-card-tags">${(v.tags || []).slice(0, 3).map(t => `<span class="mini-tag">${t}</span>`).join('')}${(v.videos && v.videos.length) ? `<span class="mini-tag"><i class="fas fa-video"></i> ${v.videos.length}</span>` : ''}</div>
             </div>
             <div class="list-card-actions">
                 <span class="status-badge status-${v.status}">${v.status}</span>
@@ -3148,6 +3178,7 @@ function populateVenueForm(v) {
     document.getElementById('venueEmail').value = v.email || '';
     document.getElementById('venuePhone').value = v.phone || '';
     document.getElementById('venueLocation').value = v.location || '';
+    document.getElementById('venueAddress').value = v.address || '';
     document.getElementById('venueRate').value = v.rate || '';
     document.getElementById('venueCapacity').value = v.capacity || '';
     document.getElementById('venueWebsite').value = v.website || '';
@@ -3157,8 +3188,10 @@ function populateVenueForm(v) {
 
     venueTags = [...(v.tags || [])];
     venueGallery = [...(v.gallery || [])];
+    venueVideos = [...(v.videos || [])];
     renderVenueTags();
     renderVenueGalleryUpload();
+    renderVenueVideosUpload();
 
     if (v.hours) {
         document.getElementById('venMon').checked = v.hours.mon || false;
@@ -3240,6 +3273,52 @@ function renderVenueGalleryUpload() {
         html += `<div class="gallery-upload-item" onclick="document.getElementById('venueGalleryInput').click()"><i class="fas fa-plus"></i><span>Add Photo</span></div>`;
     }
 
+    container.innerHTML = html;
+}
+
+function venueVideosAdd() {
+    const url = window.prompt('Paste a video link (e.g. a YouTube URL):');
+    if (!url || !url.trim()) return;
+    const trimmed = url.trim();
+    if (!/^https?:\/\//i.test(trimmed)) { showToast('Please enter a valid http(s) video link.', 'error'); return; }
+    venueVideos.push(trimmed);
+    renderVenueVideosUpload();
+}
+
+function videoThumbLabel(url) {
+    try {
+        const u = new URL(url);
+        if (u.hostname.includes('youtube') || u.hostname.includes('youtu.be')) {
+            const yt = u.searchParams.get('v') || (u.pathname.split('/').filter(Boolean).pop() || '');
+            return yt ? 'YouTube \u00b7 ' + yt : 'Video';
+        }
+        if (u.hostname.includes('vimeo')) return 'Vimeo video';
+        if (u.hostname.includes('tiktok')) return 'TikTok video';
+        return u.hostname + ' video';
+    } catch (e) {
+        return 'Video link';
+    }
+}
+
+function removeVenueVideo(index) {
+    venueVideos.splice(index, 1);
+    renderVenueVideosUpload();
+}
+
+function renderVenueVideosUpload() {
+    const container = document.getElementById('venueVideosGrid');
+    if (!container) return;
+    const displayUrl = (u) => u.length > 46 ? u.slice(0, 46) + '...' : u;
+    let html = venueVideos.map((u, i) => `
+        <div class="gallery-upload-item has-image video-preview">
+            <i class="fas fa-video"></i>
+            <div class="video-preview-url">${escapeHtml(displayUrl(u))}</div>
+            <button class="gallery-remove" onclick="event.stopPropagation(); removeVenueVideo(${i})"><i class="fas fa-times"></i></button>
+        </div>
+    `).join('');
+    if (venueVideos.length < 4) {
+        html += `<div class="gallery-upload-item" onclick="venueVideosAdd()"><i class="fas fa-plus"></i><span>Add Video</span></div>`;
+    }
     container.innerHTML = html;
 }
 

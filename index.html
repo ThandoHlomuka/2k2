@@ -53,7 +53,7 @@
     <!-- Favicon -->
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💎</text></svg>">
 
-    <link rel="stylesheet" href="style.css?v=35">
+    <link rel="stylesheet" href="style.css?v=36">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700;900&family=Inter:wght@300;400;500;600;700&family=Dancing+Script:wght@700&display=swap" rel="stylesheet">
 
@@ -2822,6 +2822,7 @@
                             <div class="detail-row"><span class="detail-label">Category</span><span class="detail-value" id="venViewCategory">-</span></div>
                             <div class="detail-row"><span class="detail-label">Email</span><span class="detail-value" id="venViewEmail">-</span></div>
                             <div class="detail-row"><span class="detail-label">Phone</span><span class="detail-value" id="venViewPhone">-</span></div>
+                            <div class="detail-row" id="venViewAddressRow" style="display:none"><span class="detail-label">Address</span><span class="detail-value" id="venViewAddress">-</span></div>
                             <div class="detail-row"><span class="detail-label">Cover Charge</span><span class="detail-value" id="venViewRate">-</span></div>
                             <div class="detail-row"><span class="detail-label">Capacity</span><span class="detail-value" id="venViewCapacity">-</span></div>
                         </div>
@@ -2843,6 +2844,11 @@
                     <div class="profile-card">
                         <h2><i class="fas fa-images"></i> Gallery</h2>
                         <div class="directory-gallery" id="venViewGallery"></div>
+                    </div>
+
+                    <div class="profile-card" id="venViewVideosCard" style="display:none">
+                        <h2><i class="fas fa-video"></i> Videos</h2>
+                        <div class="directory-videos" id="venViewVideos"></div>
                     </div>
 
                     <div class="profile-card">
@@ -3758,7 +3764,7 @@
       });
     })();
     </script>
-    <script src="script.js?v=42"></script>
+    <script src="script.js?v=43"></script>
     <script src="products.js?v=22"></script>
     <script>
         let onbSlide = 0;

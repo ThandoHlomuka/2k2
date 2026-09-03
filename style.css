@@ -2929,6 +2929,52 @@ h1, h2, h3, h4 {
 }
 
 /* ============================================
+   VENUE - Videos (view + provider form)
+   ============================================ */
+.directory-videos {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 12px;
+}
+
+.directory-video .video-link {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 14px;
+    background: #f6f1e3;
+    border: 1px solid #e6dec8;
+    border-radius: 10px;
+    color: #211a0d;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 0.85rem;
+    transition: all 0.2s;
+    word-break: break-all;
+}
+
+.directory-video .video-link i {
+    color: #d4a853;
+    flex-shrink: 0;
+}
+
+.directory-video .video-link:hover {
+    background: #efe7d2;
+    border-color: #d4a853;
+    color: #b8862b;
+}
+
+.video-preview-url {
+    font-size: 0.72rem;
+    color: #6b5d3e;
+    font-weight: 600;
+    text-align: center;
+    padding: 0 6px;
+    word-break: break-all;
+}
+
+
+/* ============================================
    DIRECTORY - Listings Manager (Provider Page)
    ============================================ */
 .profiles-section {

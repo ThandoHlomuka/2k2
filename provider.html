@@ -26,7 +26,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💰</text></svg>">
-    <link rel="stylesheet" href="style.css?v=35">
+    <link rel="stylesheet" href="style.css?v=36">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <script type="application/ld+json">
     {
@@ -2031,6 +2031,10 @@
                                     </optgroup>
                                 </select>
                             </div>
+                            <div class="form-group full-width">
+                                <label>Street Address</label>
+                                <input type="text" id="venueAddress" placeholder="Street, building, area (private - not shown to members)">
+                            </div>
                             <div class="form-group">
                                 <label>Cover Charge</label>
                                 <input type="text" id="venueRate" placeholder="e.g. R100 entry / Free">
@@ -2110,6 +2114,17 @@
                                 <span>Click to upload</span>
                             </label>
                             <input type="file" id="venuePhotoInput" accept="image/*" onchange="previewPhoto(this, 'venuePhotoPreview')">
+                        </div>
+                    </div>
+
+                    <div class="profile-card">
+                        <h2><i class="fas fa-video"></i> Videos</h2>
+                        <p class="empty-text" style="margin-bottom:16px">Add video links (e.g. YouTube) to showcase the venue</p>
+                        <div class="gallery-upload-grid" id="venueVideosGrid">
+                            <div class="gallery-upload-item" onclick="venueVideosAdd()">
+                                <i class="fas fa-plus"></i>
+                                <span>Add Video</span>
+                            </div>
                         </div>
                     </div>
 
@@ -3281,7 +3296,7 @@
       });
     })();
     </script>
-    <script src="script.js?v=42"></script>
+    <script src="script.js?v=43"></script>
     <script src="products.js?v=22"></script>
 </body>
 </html>
