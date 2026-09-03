@@ -99,6 +99,7 @@
           '<div class="directory-card-bio">' + esc((p.description || '').substring(0, 90)) + '</div>' +
         '</div>' +
         '<div class="directory-card-actions">' +
+          '<button class="btn btn-secondary btn-sm" onclick="addToCart(\'' + esc(p.id) + '\')" ' + ((p.stock != null && p.stock <= 0) ? 'disabled' : '') + '><i class="fas fa-cart-plus"></i> Cart</button>' +
           '<button class="btn btn-primary btn-sm" onclick="viewProduct(\'' + esc(p.id) + '\')"><i class="fas fa-eye"></i> View</button>' +
         '</div>' +
       '</div>';
@@ -135,7 +136,8 @@
         '<h3 style="color:#c9a227;margin:0 0 8px">Description</h3>' +
         '<p style="color:#fdf9ef;line-height:1.6;white-space:pre-wrap">' + esc(p.description || 'No description provided.') + '</p>' +
         '<div style="margin-top:18px;text-align:right">' +
-          '<button class="btn btn-primary" onclick="placeProductOrder(\'' + esc(p.id) + '\')" ' + ((p.stock != null && p.stock <= 0) ? 'disabled' : '') + '><i class="fas fa-cart-plus"></i> Buy Now</button>' +
+          '<button class="btn btn-secondary" onclick="addToCart(\'' + esc(p.id) + '\')" ' + ((p.stock != null && p.stock <= 0) ? 'disabled' : '') + '><i class="fas fa-cart-plus"></i> Add to Cart</button> ' +
+          '<button class="btn btn-primary" onclick="placeProductOrder(\'' + esc(p.id) + '\')" ' + ((p.stock != null && p.stock <= 0) ? 'disabled' : '') + '><i class="fas fa-zap"></i> Buy Now</button>' +
         '</div>' +
       '</div>';
     navigateTo('product-view');
@@ -190,14 +192,315 @@
     Storage.setProducts(list);
 
     alert('Payment of R' + total.toFixed(2) + ' received. The funds are held in escrow and will be released to the provider once the order is completed. Track it under your orders.');
-    navigateTo('products-directory');
+    // Generate invoice
+    if (typeof generateInvoice === 'function') {
+      generateInvoice({
+        type: 'product', sourceId: orderId,
+        buyerId: user.id, buyerName: user.email || 'Buyer', buyerEmail: user.email || '',
+        sellerId: p.authorId, sellerName: p.authorName || 'Provider',
+        items: [{ description: p.name || 'Product', quantity: quantity, unitPrice: total, total: total }],
+        shippingCost: 0, status: 'paid'
+      });
+    }
+    navigateTo('my-purchases');
   };
 
   // ============================================
-  // PRODUCT ORDER ESCROW
-  // Funds are held from the buyer's wallet on order placement and only
-  // released to the provider once the order is marked completed.
+  // CART
+  // Per-user shopping cart. Each cart item is
+  // scoped by the current auth user's id.
   // ============================================
+  window.addToCart = async function (id) {
+    var p = Storage.getProducts().find(function (x) { return x.id === id; });
+    if (!p) { alert('Product not found.'); return; }
+    if (p.stock != null && p.stock <= 0) { alert('This product is currently out of stock.'); return; }
+    var user = await currentUser();
+    if (!user) { window.location.href = 'login.html?next=index.html'; return; }
+    var uid = user.id;
+    var items = Storage.getCartItems();
+    var existing = items.find(function (c) { return c.userId === uid && c.productId === p.id; });
+    if (existing) {
+      existing.quantity = Number(existing.quantity || 1) + 1;
+      existing.addedAt = Date.now();
+      Storage.setCartItems(items);
+    } else {
+      items.push({
+        id: 'cart_' + Date.now().toString(36) + '_' + Math.random().toString(36).substr(2, 8),
+        userId: uid,
+        productId: p.id,
+        productName: p.name || 'Untitled',
+        price: Number(p.price || 0),
+        stock: (p.stock == null ? 0 : p.stock),
+        authorId: p.authorId,
+        authorName: p.authorName || 'Provider',
+        quantity: 1,
+        addedAt: Date.now()
+      });
+      Storage.setCartItems(items);
+    }
+    showToast('Added to cart');
+    if (typeof refreshCartBadge === 'function') refreshCartBadge();
+  };
+
+  window.refreshCartBadge = async function () {
+    try {
+      var user = await currentUser();
+      var badge = document.getElementById('cartBadge');
+      if (!badge) return;
+      if (!user) { badge.textContent = '0'; badge.style.display = 'none'; return; }
+      var uid = user.id;
+      var count = Storage.getCartItems().filter(function (c) { return c.userId === uid; }).reduce(function (s, c) { return s + Number(c.quantity || 1); }, 0);
+      badge.textContent = count;
+      badge.style.display = count > 0 ? 'flex' : 'none';
+    } catch (e) {}
+  };
+
+  window.renderCart = async function () {
+    var user = await currentUser();
+    var container = document.getElementById('cartList');
+    var totalEl = document.getElementById('cartTotal');
+    var countEl = document.getElementById('cartCount');
+    if (!container) return;
+
+    var uid = user ? user.id : null;
+    var items = uid ? Storage.getCartItems().filter(function (c) { return c.userId === uid; }).sort(function (a, b) { return (b.addedAt || 0) - (a.addedAt || 0); }) : [];
+
+    if (countEl) countEl.textContent = items.length;
+    if (!items.length) {
+      if (totalEl) totalEl.textContent = 'R0.00';
+      container.innerHTML = '<div class="forum-empty"><i class="fas fa-cart-arrow-down"></i><h3>Your cart is empty</h3><p>Browse products and tap "Add to Cart" to start shopping</p></div>';
+      return;
+    }
+
+    container.innerHTML = items.map(function (c) {
+      var sub = (Number(c.price || 0) * Number(c.quantity || 1));
+      return '<div class="online-user-card">' +
+        '<div class="online-user-avatar-wrap"><div class="online-user-avatar initials" style="background:rgba(201,162,39,.2);color:#d4a853"><i class="fas fa-box"></i></div></div>' +
+        '<div class="online-user-info">' +
+          '<div class="online-user-name">' + esc(c.productName) + '</div>' +
+          '<div class="online-user-loc">By ' + esc(c.authorName || 'Provider') + ' &middot; R' + esc(Number(c.price || 0).toFixed(2)) + ' each</div>' +
+          '<div class="cart-qty">' +
+            '<button class="btn btn-secondary btn-sm" onclick="changeCartQty(\'' + esc(c.id) + '\',-1)"><i class="fas fa-minus"></i></button>' +
+            '<span style="margin:0 12px;font-weight:800">' + esc(c.quantity) + '</span>' +
+            '<button class="btn btn-secondary btn-sm" onclick="changeCartQty(\'' + esc(c.id) + '\',1)"><i class="fas fa-plus"></i></button>' +
+            '<span style="margin-left:16px;color:#d4a853;font-weight:800">R' + Number(sub).toFixed(2) + '</span>' +
+          '</div>' +
+        '</div>' +
+        '<div class="online-user-actions">' +
+          '<button class="btn btn-danger btn-sm" onclick="removeCartItem(\'' + esc(c.id) + '\')"><i class="fas fa-trash"></i> Remove</button>' +
+        '</div>' +
+      '</div>';
+    }).join('');
+
+    var total = items.reduce(function (s, c) { return s + Number(c.price || 0) * Number(c.quantity || 1); }, 0);
+    if (totalEl) totalEl.textContent = 'R' + total.toFixed(2);
+
+    var walletNote = document.getElementById('cartWalletNote');
+    if (walletNote && user) {
+      var bal = (typeof getWalletBalance === 'function') ? getWalletBalance('user', user.id) : 0;
+      walletNote.innerHTML = bal >= total
+        ? '<span style="color:#10b981"><i class="fas fa-check-circle"></i> Wallet balance R' + bal.toFixed(2) + ' - enough to checkout</span>'
+        : '<span style="color:#ef4444"><i class="fas fa-exclamation-circle"></i> Wallet balance R' + bal.toFixed(2) + ' - short R' + (total - bal).toFixed(2) + '. Please top up your wallet before checkout.</span>';
+    }
+  };
+
+  window.changeCartQty = async function (id, delta) {
+    var user = await currentUser();
+    if (!user) return;
+    var items = Storage.getCartItems();
+    var item = items.find(function (c) { return c.id === id && c.userId === user.id; });
+    if (!item) return;
+    var p = Storage.getProducts().find(function (x) { return x.id === item.productId; });
+    var maxStock = (p && p.stock != null) ? p.stock : Infinity;
+    var newQty = Number(item.quantity || 1) + delta;
+    if (newQty < 1) newQty = 1;
+    if (delta > 0 && maxStock !== Infinity && newQty > maxStock) { showToast('Only ' + maxStock + ' available in stock', 'error'); return; }
+    item.quantity = newQty;
+    Storage.setCartItems(items);
+    renderCart();
+    refreshCartBadge();
+  };
+
+  window.removeCartItem = async function (id) {
+    var user = await currentUser();
+    if (!user) return;
+    Storage.setCartItems(Storage.getCartItems().filter(function (c) { return c.id !== id; }));
+    renderCart();
+    refreshCartBadge();
+  };
+
+  window.clearCart = async function () {
+    var user = await currentUser();
+    if (!user) return;
+    Storage.setCartItems(Storage.getCartItems().filter(function (c) { return c.userId !== user.id; }));
+    renderCart();
+    refreshCartBadge();
+  };
+
+  // ============================================
+  // CHECKOUT - place orders for all cart items
+  // ============================================
+  window.checkoutCart = async function () {
+    var user = await currentUser();
+    if (!user) { window.location.href = 'login.html?next=index.html'; return; }
+    var uid = user.id;
+    var items = Storage.getCartItems().filter(function (c) { return c.userId === uid; });
+    if (!items.length) { alert('Your cart is empty.'); return; }
+
+    if (typeof getWalletBalance !== 'function' || typeof adjustWallet !== 'function' || typeof holdProductOrderEscrow !== 'function') { alert('Wallet services are unavailable right now.'); return; }
+
+    // Refresh each cart item against current product stock/price.
+    var lines = [];
+    for (var i = 0; i < items.length; i++) {
+      var c = items[i];
+      var p = Storage.getProducts().find(function (x) { return x.id === c.productId; });
+      if (!p) { alert('"' + (c.productName || 'product') + '" is no longer available.'); return; }
+      if (p.stock != null && p.stock <= 0) { alert('"' + p.name + '" is out of stock.'); return; }
+      if (p.stock != null && Number(c.quantity) > Number(p.stock)) { alert('Only ' + p.stock + ' of "' + p.name + '" available in stock.'); return; }
+      var price = Number(p.price || 0);
+      if (price <= 0) { alert('"' + p.name + '" has no price set.'); return; }
+      lines.push({ item: c, product: p, price: price, sub: price * Number(c.quantity) });
+    }
+
+    var total = lines.reduce(function (s, l) { return s + l.sub; }, 0);
+    var balance = getWalletBalance('user', uid);
+    if (balance < total) {
+      alert('Insufficient wallet balance. You need R' + total.toFixed(2) + ' for this checkout. Please top up your wallet first.');
+      return;
+    }
+
+    if (!confirm('Checkout ' + lines.reduce(function (s, l) { return s + Number(l.item.quantity); }, 0) + ' item(s) for R' + total.toFixed(2) + '? Payment will be held in escrow until each order is completed.')) return;
+
+    // Deduct wallet once for the whole cart.
+    adjustWallet('user', uid, -total, 'product-purchase', 'Cart checkout payment held in escrow');
+
+    var orders = Storage.getProductOrders();
+    var stockList = Storage.getProducts();
+    var created = [];
+    for (var j = 0; j < lines.length; j++) {
+      var l = lines[j];
+      var orderId = 'po_' + Date.now().toString(36) + '_' + Math.random().toString(36).substr(2, 8);
+      orders.push({
+        id: orderId,
+        productId: l.product.id,
+        productName: l.product.name,
+        productPrice: l.price,
+        authorId: l.product.authorId,
+        authorName: l.product.authorName,
+        buyerId: uid,
+        buyerName: (user.email || 'Buyer'),
+        buyerEmail: user.email || '',
+        quantity: Number(l.item.quantity),
+        total: l.sub,
+        status: 'pending',
+        paymentStatus: 'held',
+        paymentMethod: 'wallet',
+        createdAt: Date.now()
+      });
+      holdProductOrderEscrow(orderId, uid, l.product.authorId, l.sub);
+      // Generate invoice for this order
+      if (typeof generateInvoice === 'function') {
+        generateInvoice({
+          type: 'product', sourceId: orderId,
+          buyerId: uid, buyerName: user.email || 'Buyer', buyerEmail: user.email || '',
+          sellerId: l.product.authorId, sellerName: l.product.authorName || 'Provider',
+          items: [{ description: l.product.name || 'Product', quantity: Number(l.item.quantity), unitPrice: l.price, total: l.sub }],
+          shippingCost: 0, status: 'paid'
+        });
+      }
+      stockList = stockList.map(function (x) {
+        if (x.id === l.product.id && x.stock != null) { var ns = Math.max(0, Number(x.stock) - Number(l.item.quantity)); return Object.assign({}, x, { stock: ns }); }
+        return x;
+      });
+      created.push({ name: l.product.name, total: l.sub });
+    }
+    Storage.setProductOrders(orders);
+    Storage.setProducts(stockList);
+    // Clear the cart now that checkout succeeded.
+    Storage.setCartItems(Storage.getCartItems().filter(function (c) { return c.userId !== uid; }));
+
+    refreshCartBadge();
+    var msg = 'Payment of R' + total.toFixed(2) + ' received for ' + created.length + ' order(s). Funds are held in escrow and released to providers once each order is completed.';
+    alert(msg);
+    navigateTo('my-purchases');
+    renderMyPurchases();
+  };
+
+  // ============================================
+  // MY PURCHASES - buyer's own product orders
+  // ============================================
+  window.renderMyPurchases = async function () {
+    var user = await currentUser();
+    var container = document.getElementById('myPurchasesList');
+    var countEl = document.getElementById('myPurchasesCount');
+    if (!container) return;
+    var uid = user ? user.id : null;
+    var list = uid ? Storage.getProductOrders().filter(function (o) { return (o.buyerId || '') === uid; }).sort(function (a, b) { return (b.createdAt || 0) - (a.createdAt || 0); }) : [];
+    if (countEl) countEl.textContent = list.length;
+    if (!list.length) {
+      container.innerHTML = '<div class="forum-empty"><i class="fas fa-box-open"></i><h3>No purchases yet</h3><p>Products you order, and their escrow status, will show up here</p></div>';
+      return;
+    }
+    container.innerHTML = list.map(function (o) {
+      var st = {
+        pending: ['Processing', '#f59e0b'],
+        shipped: ['Shipped', '#3b82f6'],
+        completed: ['Completed', '#10b981'],
+        cancelled: ['Cancelled', '#ef4444']
+      }[o.status] || [o.status || 'Pending', '#a99c7e'];
+      var escrow = Storage.getEscrowFunds().find(function (e) { return e.productOrderId === o.id; });
+      var esc = escrow ? {
+        held: ['Held in escrow', '#f59e0b'],
+        released: ['Released to provider', '#10b981'],
+        refunded: ['Refunded', '#ef4444']
+      }[escrow.status] || [escrow.status, '#a99c7e'] : ['-', '#a99c7e'];
+      // Shipping status
+      var ship = Storage.getShipping().find(function (s) { return s.productOrderId === o.id; });
+      var shipInfo = ship ? ({
+        pending: ['Awaiting shipping payment', '#f59e0b'],
+        paid: ['Paid - awaiting dispatch', '#3b82f6'],
+        shipped: ['In transit', '#8b5cf6'],
+        delivered: ['Delivered', '#10b981']
+      }[ship.shippingStatus] || [ship.shippingStatus, '#a99c7e']) : null;
+      var actions = '';
+      if (ship && ship.shippingStatus === 'pending') {
+        actions += '<button class="btn btn-primary btn-sm" onclick="payShipping(\'' + esc(o.id) + '\')"><i class="fas fa-truck"></i> Pay Shipping' + (ship.cost > 0 ? ' R' + Number(ship.cost).toFixed(2) : '') + '</button>';
+      } else if (ship && ship.shippingStatus === 'shipped') {
+        actions += '<button class="btn btn-primary btn-sm" onclick="confirmReceipt(\'' + esc(o.id) + '\')"><i class="fas fa-check"></i> Confirm Receipt</button>';
+      }
+      if (typeof generateInvoice === 'function') {
+        var myInv = Storage.getInvoices().find(function (i) { return i.sourceId === o.id && i.type === 'product'; });
+        if (myInv) {
+          actions += '<button class="btn btn-secondary btn-sm" onclick="viewInvoice(\'' + esc(myInv.id) + '\')"><i class="fas fa-file-invoice"></i> Invoice</button>';
+        }
+      }
+      return '<div class="profile-card">' +
+        '<div class="profile-header">' +
+          '<div class="profile-avatar" style="background:rgba(201,162,39,.2)"><i class="fas fa-box"></i></div>' +
+          '<div class="profile-info">' +
+            '<h4>' + esc(o.productName || 'Product') + ' <span class="mini-tag" style="background:' + st[1] + '18;color:' + st[1] + '"><i class="fas fa-circle"></i> ' + st[0] + '</span>' +
+            (shipInfo ? ' <span class="mini-tag" style="background:' + shipInfo[1] + '18;color:' + shipInfo[1] + '"><i class="fas fa-truck"></i> ' + shipInfo[0] + '</span>' : '') +
+            '</h4>' +
+            '<div class="profile-meta">From ' + esc(o.authorName || 'Provider') + ' &middot; Qty ' + Number(o.quantity || 1) + '</div>' +
+            '<div class="profile-meta" style="margin-top:4px"><span class="mini-tag" style="background:' + esc[1] + '18;color:' + esc[1] + '">' + esc[0] + '</span></div>' +
+          '</div>' +
+          '<div class="profile-actions" style="flex-direction:column;align-items:flex-end;gap:6px">' +
+            '<div class="profile-meta" style="color:#c9a227;font-weight:800">R' + esc(Number(o.total || 0).toFixed(2)) + '</div>' +
+            (actions ? '<div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end">' + actions + '</div>' : '') +
+          '</div>' +
+        '</div>' +
+        (ship ? '<div id="shippingDetails_' + esc(o.id) + '"></div>' : '') +
+      '</div>';
+    }).join('');
+    // Render shipping detail panels
+    list.forEach(function (o) {
+      if (typeof renderShippingDetails === 'function') {
+        renderShippingDetails(o.id);
+      }
+    });
+  };
+
+
   function escrowRecordForOrder(orderId) {
     return Storage.getEscrowFunds().find(function (e) { return e.productOrderId === orderId; });
   }
@@ -423,10 +726,28 @@
       '</div>' +
       list.map(function (o) {
         var bg = badges[o.status] || badges.pending;
+        var ship = Storage.getShipping().find(function (s) { return s.productOrderId === o.id; });
+        var shipInfo = ship ? ({
+          pending: ['Awaiting shipping payment', '#f59e0b'],
+          paid: ['Paid - awaiting dispatch', '#3b82f6'],
+          shipped: ['In transit', '#8b5cf6'],
+          delivered: ['Delivered', '#10b981']
+        }[ship.shippingStatus] || [ship.shippingStatus, '#a99c7e']) : null;
+        var shipAction = '';
+        if (ship && ship.shippingStatus === 'paid' && o.status !== 'shipped' && o.status !== 'completed') {
+          shipAction = '<button class="btn btn-primary btn-sm" onclick="markAsShipped(\'' + esc(o.id) + '\')"><i class="fas fa-paper-plane"></i> Mark Shipped</button>';
+        }
+        var invBtn = '';
+        if (typeof generateInvoice === 'function') {
+          var myInv = Storage.getInvoices().find(function (i) { return i.sourceId === o.id && i.type === 'product'; });
+          if (myInv) invBtn = '<button class="btn btn-secondary btn-sm" onclick="viewInvoice(\'' + esc(myInv.id) + '\')"><i class="fas fa-file-invoice"></i> Invoice</button>';
+        }
         return '<div class="profile-card">' +
           '<div class="profile-header">' +
             '<div class="profile-avatar"><i class="fas fa-box"></i></div>' +
-            '<div class="profile-info"><h4>' + esc(o.productName || 'Product') + '</h4>' +
+            '<div class="profile-info"><h4>' + esc(o.productName || 'Product') +
+              (shipInfo ? ' <span class="mini-tag" style="background:' + shipInfo[1] + '18;color:' + shipInfo[1] + '"><i class="fas fa-truck"></i> ' + shipInfo[0] + '</span>' : '') +
+              '</h4>' +
               '<div class="profile-meta">Buyer: ' + esc(o.buyerName || o.buyerEmail || 'Buyer') + '</div>' +
               '<div class="profile-meta">Qty: ' + esc(o.quantity) + ' &middot; ' + new Date(o.createdAt).toLocaleString() + '</div>' +
             '</div>' +
@@ -436,8 +757,10 @@
             '</div>' +
           '</div>' +
           '<div class="profile-actions"><span style="color:#a99c7e;font-size:12px">Order #' + esc(o.id.slice(-8).toUpperCase()) + '</span>' +
+            '<button class="btn btn-secondary btn-sm" onclick="openShippingModal(\'' + esc(o.id) + '\')"><i class="fas fa-truck"></i> Shipping</button>' +
             '<button class="btn btn-secondary btn-sm" onclick="providerSetOrderStatus(\'' + esc(o.id) + '\',\'processing\')">Mark Processing</button>' +
             '<button class="btn btn-primary btn-sm" onclick="providerSetOrderStatus(\'' + esc(o.id) + '\',\'completed\')">Mark Completed</button>' +
+            shipAction + invBtn +
           '</div>' +
         '</div>';
       }).join('');

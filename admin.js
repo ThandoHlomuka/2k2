@@ -53,6 +53,7 @@ function navigateTo(page) {
     if (page === 'admin-products') renderAdminProducts();
     if (page === 'admin-product-orders') renderAdminProductOrders();
     if (page === 'admin-help-queries') renderAdminHelpQueries();
+    if (page === 'admin-invoices') renderAdminInvoices();
 
     const sidebar = document.getElementById('sidebar');
     if (sidebar && window.innerWidth <= 768) sidebar.classList.add('hidden');

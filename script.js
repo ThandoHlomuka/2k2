@@ -551,8 +551,12 @@ function navigateTo(page) {
     if (page === 'provider-experience-create') { populateExperienceDropdowns(); resetProviderExperienceForm(); }
     if (page === 'provider-fantasy-requests') { populateFantasyDropdowns(); renderProviderFantasyRequests(); }
 if (page === 'products-directory') renderProductsBrowser();
+    if (page === 'cart') { renderCart(); refreshCartBadge(); }
+    if (page === 'my-purchases') renderMyPurchases();
+    if (page === 'my-invoices') renderMyInvoices();
     if (page === 'provider-products') renderProviderProducts();
     if (page === 'provider-orders') renderProviderOrders();
+    if (page === 'provider-invoices') renderProviderInvoices();
     if (page === 'forum-browse') { renderForumSubforums(); renderForumThreads(); }
     if (page === 'forum-create') updateForumCategoryOptions();
     if (page === 'user-forum-threads') renderUserForumThreads();
@@ -603,8 +607,12 @@ function rerenderCurrentPage() {
         'page-provider-experiences': () => renderProviderExperiences(),
         'page-provider-fantasy-requests': () => renderProviderFantasyRequests(),
         'page-products-directory': () => renderProductsBrowser(),
+        'page-cart': () => { renderCart(); refreshCartBadge(); },
+        'page-my-purchases': () => renderMyPurchases(),
+        'page-my-invoices': () => renderMyInvoices(),
         'page-provider-products': () => renderProviderProducts(),
         'page-provider-orders': () => renderProviderOrders(),
+        'page-provider-invoices': () => renderProviderInvoices(),
         'page-forum-browse': () => { renderForumSubforums(); renderForumThreads(); },
         'page-user-forum-threads': () => renderUserForumThreads(),
         'page-provider-subforums': () => renderProviderSubforums()
@@ -4469,6 +4477,16 @@ function handleBookingSubmit(e) {
     adjustWallet('user', currentUserOwnerId(), -fee, 'booking-fee', `Booking request sent to provider`, { bookingId: booking.id, providerId: booking.providerId });
     holdBookingFee(booking, fee);
 
+    if (typeof generateInvoice === 'function') {
+        generateInvoice({
+            type: 'booking', sourceId: booking.id,
+            buyerId: currentUserOwnerId(), buyerName: booking.clientName || 'Client', buyerEmail: booking.clientEmail || '',
+            sellerId: booking.providerId, sellerName: booking.providerType || 'Provider',
+            items: [{ description: 'Booking fee - ' + (booking.serviceType || 'Service'), quantity: 1, unitPrice: fee, total: fee }],
+            shippingCost: 0, status: 'paid'
+        });
+    }
+
     const bookings = Storage.getBookings();
     bookings.push(booking);
     Storage.setBookings(bookings);
@@ -4517,6 +4535,16 @@ function handleTipSubmit(e) {
     // Deduct from user wallet, credit provider wallet
     adjustWallet('user', currentUserOwnerId(), -tip.amount, 'tip-sent', `Tip sent to provider`, { tipId: tip.id, providerId: tip.providerId });
     adjustWallet('provider', tip.providerId, tip.amount, 'tip-received', `Tip received from ${tip.tipperName}`, { tipId: tip.id, tipperName: tip.tipperName });
+
+    if (typeof generateInvoice === 'function') {
+        generateInvoice({
+            type: 'tip', sourceId: tip.id,
+            buyerId: currentUserOwnerId(), buyerName: tip.tipperName || 'Tipper', buyerEmail: tip.tipperEmail || '',
+            sellerId: tip.providerId, sellerName: 'Provider',
+            items: [{ description: 'Tip', quantity: 1, unitPrice: tip.amount, total: tip.amount }],
+            shippingCost: 0, status: 'paid'
+        });
+    }
 
     const tips = Storage.getTips();
     tips.push(tip);
@@ -8518,6 +8546,15 @@ function purchaseExperience(id) {
         id: generateId(), experienceId: id, buyerId: 'current', amount: price, title: item.title, providerId: item.providerId,
         status: 'active', createdAt: new Date().toISOString()
     }]);
+    if (typeof generateInvoice === 'function') {
+        generateInvoice({
+            type: 'experience', sourceId: id,
+            buyerId: currentUserOwnerId(), buyerName: 'Buyer', buyerEmail: '',
+            sellerId: item.providerId, sellerName: item.providerName || 'Provider',
+            items: [{ description: item.title || 'Experience', quantity: 1, unitPrice: price, total: price }],
+            shippingCost: 0, status: 'paid'
+        });
+    }
     showToast('Experience joined! Payment complete.');
     viewExperience(id);
 }

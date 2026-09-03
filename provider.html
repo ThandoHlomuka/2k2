@@ -116,6 +116,10 @@
                 <i class="fas fa-inbox"></i>
                 <span>Product Orders</span>
             </a>
+            <a href="#" class="nav-item" data-page="provider-invoices">
+                <i class="fas fa-file-invoice"></i>
+                <span>My Sales Invoices</span>
+            </a>
             <div class="nav-divider"></div>
             <span class="nav-section-title">Content</span>
             <a href="#" class="nav-item" data-page="provider-content">
@@ -1566,6 +1570,24 @@
             </div>
         </div>
 
+        <!-- My Sales Invoices (Provider) -->
+        <div class="page" id="page-provider-invoices">
+            <div class="container">
+                <div class="dashboard-header">
+                    <div>
+                        <h1>My Sales Invoices</h1>
+                        <p>Invoices generated from your sales</p>
+                    </div>
+                </div>
+                <div class="profiles-section">
+                    <div class="section-header">
+                        <h2>Invoices (<span id="providerInvoicesCount">0</span>)</h2>
+                    </div>
+                    <div id="providerInvoicesList"></div>
+                </div>
+            </div>
+        </div>
+
         <!-- My Ads (Provider) -->
         <div class="page" id="page-provider-ads">
             <div class="container">
@@ -2281,6 +2303,52 @@
                 <div class="modal-actions">
                     <button class="btn btn-secondary" onclick="closeWithdrawModal()">Cancel</button>
                     <button class="btn btn-primary" onclick="processWithdraw()"><i class="fas fa-check"></i> Confirm Withdrawal</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Shipping Details Modal (provider) -->
+        <div class="modal-overlay" id="shippingModal">
+            <div class="modal">
+                <div class="modal-icon" style="background: linear-gradient(135deg, #3b82f6, #2563eb);"><i class="fas fa-truck"></i></div>
+                <h2>Shipping Details</h2>
+                <form id="shippingForm" onsubmit="saveShippingDetails(event)">
+                    <input type="hidden" id="shippingOrderId">
+                    <div class="form-group" style="margin:12px 0;">
+                        <label>Delivery Address *</label>
+                        <input type="text" id="shippingAddress" placeholder="e.g. 12 Long Street, Cape Town, 8001" required>
+                    </div>
+                    <div class="form-group" style="margin-bottom:12px;">
+                        <label>Shipping Cost (ZAR)</label>
+                        <input type="number" id="shippingCost" placeholder="0.00" min="0" step="0.01">
+                        <span class="form-hint">Buyer pays this after purchase</span>
+                    </div>
+                    <div class="form-group" style="margin-bottom:12px;">
+                        <label>Carrier (optional)</label>
+                        <input type="text" id="shippingCarrier" placeholder="e.g. The Courier Guy, DHL">
+                    </div>
+                    <div class="form-group" style="margin-bottom:12px;">
+                        <label>Tracking Number</label>
+                        <input type="text" id="shippingTracking" placeholder="Tracking / waybill number">
+                    </div>
+                    <div class="form-group" style="margin-bottom:16px;">
+                        <label>Notes (optional)</label>
+                        <textarea id="shippingNotes" placeholder="Additional delivery notes..." rows="2"></textarea>
+                    </div>
+                    <div class="modal-actions">
+                        <button type="button" class="btn btn-secondary" onclick="closeShippingModal()">Cancel</button>
+                        <button type="submit" class="btn btn-primary" style="background: linear-gradient(135deg, #3b82f6, #2563eb);"><i class="fas fa-save"></i> Save Shipping</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Invoice Detail Modal -->
+        <div class="modal-overlay" id="invoiceDetailModal" onclick="if(event.target===this)closeInvoiceModal()">
+            <div class="modal modal-lg">
+                <div class="invoice-detail-content"></div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeInvoiceModal()">Close</button>
                 </div>
             </div>
         </div>
@@ -3303,8 +3371,10 @@
       });
     })();
     </script>
-    <script src="script.js?v=45"></script>
+    <script src="script.js?v=46"></script>
     <script src="media-player.js?v=2"></script>
-    <script src="products.js?v=23"></script>
+    <script src="products.js?v=24"></script>
+    <script src="shipping.js?v=1"></script>
+    <script src="invoices.js?v=1"></script>
 </body>
 </html>

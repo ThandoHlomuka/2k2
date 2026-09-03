@@ -48,9 +48,12 @@
     { name: 'FantasyRequests', col: 'fantasy_requests', key: 'k2_fantasy_requests' },
     { name: 'Products', col: 'products', key: 'k2_products' },
     { name: 'ProductOrders', col: 'product_orders', key: 'k2_product_orders' },
+    { name: 'CartItems', col: 'cart_items', key: 'k2_cart_items' },
     { name: 'HelpQueries', col: 'help_queries', key: 'k2_help_queries' },
     { name: 'Follows', col: 'follows', key: 'k2_follows' },
-    { name: 'EscrowFunds', col: 'escrow_funds', key: 'k2_escrow_funds' }
+    { name: 'EscrowFunds', col: 'escrow_funds', key: 'k2_escrow_funds' },
+    { name: 'Shipping', col: 'shipping', key: 'k2_shipping' },
+    { name: 'Invoices', col: 'invoices', key: 'k2_invoices' }
   ];
 
   const cache = {};      // col -> array

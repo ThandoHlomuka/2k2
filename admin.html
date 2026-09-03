@@ -136,6 +136,10 @@
                 <i class="fas fa-inbox"></i>
                 <span>Product Orders</span>
             </a>
+            <a href="#" class="nav-item" data-page="admin-invoices">
+                <i class="fas fa-file-invoice"></i>
+                <span>Invoices</span>
+            </a>
             <a href="#" class="nav-item" data-page="admin-reviews">
                 <i class="fas fa-star"></i>
                 <span>Reviews</span>
@@ -708,6 +712,21 @@
                         <h2><i class="fas fa-inbox"></i> All Orders (<span id="adminProductOrdersCount">0</span>) &middot; Pending (<span id="adminPendingOrdersCount">0</span>)</h2>
                     </div>
                     <div id="adminProductOrdersList"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Invoices Management -->
+        <div class="page" id="page-admin-invoices">
+            <div class="container">
+                <div class="dashboard-header">
+                    <div><h1>Invoices</h1><p>View all invoices generated on the platform</p></div>
+                </div>
+                <div class="admin-table-card profile-card">
+                    <div class="table-header">
+                        <h2><i class="fas fa-file-invoice"></i> All Invoices (<span id="adminInvoicesCount">0</span>)</h2>
+                    </div>
+                    <div id="adminInvoicesList"></div>
                 </div>
             </div>
         </div>
@@ -1459,6 +1478,16 @@
             </div>
         </div>
 
+        <!-- Invoice Detail Modal -->
+        <div class="modal-overlay" id="invoiceDetailModal" onclick="if(event.target===this)closeInvoiceModal()">
+            <div class="modal modal-lg">
+                <div class="invoice-detail-content"></div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeInvoiceModal()">Close</button>
+                </div>
+            </div>
+        </div>
+
         <div class="toast-container" id="toastContainer"></div>
     </div>
 
@@ -1521,10 +1550,12 @@
       });
     })();
     </script>
-    <script src="script.js?v=45"></script>
+    <script src="script.js?v=46"></script>
     <script src="media-player.js?v=2"></script>
-    <script src="admin.js?v=29"></script>
+    <script src="admin.js?v=30"></script>
     <script src="admin-upgrades.js?v=21"></script>
-    <script src="products.js?v=23"></script>
+    <script src="products.js?v=24"></script>
+    <script src="shipping.js?v=1"></script>
+    <script src="invoices.js?v=1"></script>
 </body>
 </html>

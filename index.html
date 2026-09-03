@@ -460,6 +460,18 @@
                 <i class="fas fa-cart-shopping"></i>
                 <span>Products</span>
             </a>
+            <a href="#" class="nav-item" data-page="cart">
+                <i class="fas fa-cart-arrow-down"></i>
+                <span>Cart <span class="nav-badge" id="cartBadge" style="display:none">0</span></span>
+            </a>
+            <a href="#" class="nav-item" data-page="my-purchases">
+                <i class="fas fa-truck"></i>
+                <span>My Purchases</span>
+            </a>
+            <a href="#" class="nav-item" data-page="my-invoices">
+                <i class="fas fa-file-invoice"></i>
+                <span>My Invoices</span>
+            </a>
             <div class="nav-divider"></div>
             <span class="nav-section-title">Fun &amp; Games</span>
             <a href="#" class="nav-item" data-page="experiences-browse">
@@ -1516,6 +1528,53 @@
             </div>
         </div>
 
+        <!-- Shipping Details Modal (provider/buyer) -->
+        <div class="modal-overlay" id="shippingModal">
+            <div class="modal">
+                <div class="modal-icon" style="background: linear-gradient(135deg, #3b82f6, #2563eb);"><i class="fas fa-truck"></i></div>
+                <h2>Shipping Details</h2>
+                <form id="shippingForm" onsubmit="saveShippingDetails(event)">
+                    <input type="hidden" id="shippingOrderId">
+                    <div class="form-group" style="margin:12px 0;">
+                        <label>Delivery Address *</label>
+                        <input type="text" id="shippingAddress" placeholder="e.g. 12 Long Street, Cape Town, 8001" required>
+                    </div>
+                    <div class="form-group" style="margin-bottom:12px;">
+                        <label>Shipping Cost (ZAR)</label>
+                        <input type="number" id="shippingCost" placeholder="0.00" min="0" step="0.01">
+                        <span class="form-hint">Buyer pays this after purchase</span>
+                    </div>
+                    <div class="form-group" style="margin-bottom:12px;">
+                        <label>Carrier (optional)</label>
+                        <input type="text" id="shippingCarrier" placeholder="e.g. The Courier Guy, DHL">
+                    </div>
+                    <div class="form-group" style="margin-bottom:12px;">
+                        <label>Tracking Number</label>
+                        <input type="text" id="shippingTracking" placeholder="Tracking / waybill number">
+                    </div>
+                    <div class="form-group" style="margin-bottom:16px;">
+                        <label>Notes (optional)</label>
+                        <textarea id="shippingNotes" placeholder="Additional delivery notes..." rows="2"></textarea>
+                    </div>
+                    <div class="modal-actions">
+                        <button type="button" class="btn btn-secondary" onclick="closeShippingModal()">Cancel</button>
+                        <button type="submit" class="btn btn-primary" style="background: linear-gradient(135deg, #3b82f6, #2563eb);"><i class="fas fa-save"></i> Save Shipping</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Invoice Detail Modal -->
+        <div class="modal-overlay" id="invoiceDetailModal" onclick="if(event.target===this)closeInvoiceModal()">
+            <div class="modal modal-lg">
+                <div class="invoice-detail-content"></div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeInvoiceModal()">Close</button>
+                </div>
+            </div>
+        </div>
+
+
         <!-- My Bookings (User) -->
         <div class="page" id="page-user-bookings">
             <div class="container">
@@ -2121,6 +2180,59 @@
                     <h1>Product</h1>
                 </div>
                 <div id="productViewContent"></div>
+            </div>
+        </div>
+
+        <!-- Cart -->
+        <div class="page" id="page-cart">
+            <div class="container">
+                <div class="form-header">
+                    <button class="btn-back" onclick="navigateTo('products-directory')">
+                        <i class="fas fa-arrow-left"></i> Back to Products
+                    </button>
+                    <h1>Cart</h1>
+                </div>
+                <div class="directory-stats">
+                    <span id="cartCount">0</span> items in cart &middot; Total: <span id="cartTotal" style="color:#c9a227;font-weight:800">R0.00</span>
+                </div>
+                <div id="cartWalletNote" style="margin:8px 0;font-size:13px"></div>
+                <div id="cartList"></div>
+                <div style="margin-top:16px;text-align:right">
+                    <button class="btn btn-secondary" onclick="clearCart()"><i class="fas fa-trash"></i> Clear Cart</button>
+                    <button class="btn btn-primary" onclick="checkoutCart()"><i class="fas fa-lock"></i> Checkout</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- My Purchases -->
+        <div class="page" id="page-my-purchases">
+            <div class="container">
+                <div class="form-header">
+                    <button class="btn-back" onclick="navigateTo('products-directory')">
+                        <i class="fas fa-arrow-left"></i> Back to Products
+                    </button>
+                    <h1>My Purchases</h1>
+                </div>
+                <div class="directory-stats">
+                    <span id="myPurchasesCount">0</span> orders
+                </div>
+                <div id="myPurchasesList"></div>
+            </div>
+        </div>
+
+        <!-- My Invoices -->
+        <div class="page" id="page-my-invoices">
+            <div class="container">
+                <div class="form-header">
+                    <button class="btn-back" onclick="navigateTo('products-directory')">
+                        <i class="fas fa-arrow-left"></i> Back to Products
+                    </button>
+                    <h1>My Invoices</h1>
+                </div>
+                <div class="directory-stats">
+                    <span id="myInvoicesCount">0</span> invoices
+                </div>
+                <div id="myInvoicesList"></div>
             </div>
         </div>
 
@@ -3764,9 +3876,11 @@
       });
     })();
     </script>
-    <script src="script.js?v=45"></script>
+    <script src="script.js?v=46"></script>
     <script src="media-player.js?v=2"></script>
-    <script src="products.js?v=23"></script>
+    <script src="products.js?v=24"></script>
+    <script src="shipping.js?v=1"></script>
+    <script src="invoices.js?v=1"></script>
     <script>
         let onbSlide = 0;
         const slides = document.querySelectorAll('.onb-slide');
