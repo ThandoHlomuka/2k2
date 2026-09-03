@@ -5482,6 +5482,7 @@ function loadProviderSettings() {
     if (document.getElementById('providerSettingTipAlerts')) document.getElementById('providerSettingTipAlerts').checked = s.tipAlerts !== false;
     if (document.getElementById('providerSettingReviewAlerts')) document.getElementById('providerSettingReviewAlerts').checked = s.reviewAlerts !== false;
     if (document.getElementById('providerSettingWalletAlerts')) document.getElementById('providerSettingWalletAlerts').checked = s.walletAlerts !== false;
+    if (document.getElementById('providerSettingMsgLock')) document.getElementById('providerSettingMsgLock').checked = s.msgLock === true;
 }
 
 function saveProviderSettings() {
@@ -5497,9 +5498,17 @@ function saveProviderSettings() {
         bookingAlerts: document.getElementById('providerSettingBookingAlerts')?.checked !== false,
         tipAlerts: document.getElementById('providerSettingTipAlerts')?.checked !== false,
         reviewAlerts: document.getElementById('providerSettingReviewAlerts')?.checked !== false,
-        walletAlerts: document.getElementById('providerSettingWalletAlerts')?.checked !== false
+        walletAlerts: document.getElementById('providerSettingWalletAlerts')?.checked !== false,
+        msgLock: document.getElementById('providerSettingMsgLock')?.checked === true
     };
     setProviderSettings(s);
+    try {
+        const idn = typeof getCurrentProviderIdentity === 'function' ? getCurrentProviderIdentity() : null;
+        if (idn && idn.id) {
+            const provs = Storage.getProviders().map(p => p.id === idn.id ? Object.assign({}, p, { msgLock: s.msgLock }) : p);
+            Storage.setProviders(provs);
+        }
+    } catch (e) {}
     showToast('Settings saved!');
 }
 
@@ -7467,7 +7476,23 @@ function saveMsgIdentity(name, email) {
 function getMsgRecipients() {
     const users = Storage.getUsers().map(u => ({ id: u.id, name: u.fullName || 'User', role: 'user' }));
     const providers = Storage.getProviders().map(p => ({ id: p.id, name: p.businessName || 'Provider', role: 'provider' }));
-    return [...users, ...providers];
+    const admin = [{ id: 'admin', name: '2k2 Support Team', role: 'admin' }];
+    return [...users, ...providers, ...admin];
+}
+
+function getMsgSenderInfo() {
+    let name = getMsgIdentity().name, email = getMsgIdentity().email, role = 'user', roleLabel = 'Member';
+    const snap = window._2k2 && _2k2.Auth && _2k2.Auth.syncUser ? _2k2.Auth.syncUser() : null;
+    const roleNow = snap && snap.role ? snap.role : null;
+    if (roleNow === 'admin') { role = 'admin'; roleLabel = 'Admin'; name = '2k2 Admin'; }
+    else if (roleNow === 'provider') { role = 'provider'; roleLabel = 'Service Provider'; }
+    else { role = 'user'; roleLabel = 'Member'; }
+    return { name, email, role, roleLabel };
+}
+
+function msgSenderAccountId() {
+    const snap = window._2k2 && _2k2.Auth && _2k2.Auth.syncUser ? _2k2.Auth.syncUser() : null;
+    return (snap && snap.user_id) ? snap.user_id : ((window._2k2_lastAuthId) || '');
 }
 
 function conversationUnread(conv) {
@@ -7522,7 +7547,7 @@ function renderInbox() {
             <div class="conv-avatar">${escapeHtml(initials)}</div>
             <div class="conv-body">
                 <div class="conv-top">
-                    <span class="conv-name">${escapeHtml(conv.participantName)}</span>
+                    <span class="conv-name">${escapeHtml(conv.participantName)}${conv.participantRole && conv.participantRole !== 'user' ? `<span class="conv-role-chip ${conv.participantRole}">${conv.participantRole === 'provider' ? 'Provider' : (conv.participantRole === 'admin' ? 'Support' : escapeHtml(conv.participantRole))}</span>` : ''}</span>
                     <span class="conv-time">${getTimeAgo(conv.updatedAt)}</span>
                 </div>
                 <div class="conv-subject">${escapeHtml(conv.subject)}</div>
@@ -7557,7 +7582,7 @@ function renderMessageThread() {
                 <div class="conv-avatar lg">${escapeHtml(conv.participantName.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase())}</div>
                 <div>
                     <h3>${escapeHtml(conv.participantName)}</h3>
-                    <p style="color:var(--text-muted, #a99c7e);font-size:0.85rem">${conv.participantRole === 'provider' ? 'Service Provider' : 'Member'}</p>
+                    <p style="color:var(--text-muted, #a99c7e);font-size:0.85rem">${conv.participantRole === 'provider' ? '<i class="fas fa-store" style="color:#10b981"></i> Service Provider' : (conv.participantRole === 'admin' ? '<i class="fas fa-shield-halved" style="color:#ef4444"></i> 2k2 Support Team' : '<i class="fas fa-user" style="color:#d4a853"></i> Member')}</p>
                 </div>
                 <div style="margin-left:auto;display:flex;gap:8px">
                     <button class="btn btn-secondary btn-sm" onclick="archiveConversation('${conv.id}')"><i class="fas ${conv.status === 'archived' ? 'fa-box-open' : 'fa-box-archive'}"></i> ${conv.status === 'archived' ? 'Unarchive' : 'Archive'}</button>
@@ -7598,17 +7623,110 @@ function renderMessageThread() {
     if (elThread) elThread.scrollTop = elThread.scrollHeight;
 }
 
+function detectContactInfo(text) {
+    if (!text) return [];
+    const found = [];
+    const emailRe = /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g;
+    if (emailRe.test(text)) found.push('email address');
+    const phoneRe = /(?:\+?\d{1,3}[\s.-]*)?(?:\(?\d{2,4}\)?[\s.-]*)?\d{3}[\s.-]*\d{3,4}(?:\s*ext\.?\s*\d{1,5})?/g;
+    const cleaned = text.replace(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g, '');
+    if (phoneRe.test(cleaned) && /\d{9,}/.test(cleaned.replace(/[^\d]/g, ''))) found.push('phone number');
+    return found;
+}
+
+function renderMsgBlockWarning(message) {
+    const thread = document.getElementById('messageThreadContent');
+    if (!thread) return;
+    let box = thread.querySelector('.msg-block-warning');
+    if (!box) {
+        box = document.createElement('div');
+        box.className = 'msg-block-warning';
+        thread.appendChild(box);
+    }
+    box.innerHTML = '<i class="fas fa-shield-halved"></i> <strong>Contact details blocked:</strong> ' + message;
+    box.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    setTimeout(() => { if (box.parentNode) box.parentNode.removeChild(box); }, 6000);
+}
+
+// --------------------------------------------------
+// PROVIDER MESSAGING PROTECTION (lock against time-wasters)
+// --------------------------------------------------
+const PROVIDER_MSG_UNLOCK_FEE = 25;
+const PROVIDER_UNLOCK_KEY = 'k2_provider_msg_unlocks';
+
+function providerMsgUnlocks() {
+    return JSON.parse(localStorage.getItem(PROVIDER_UNLOCK_KEY) || '[]');
+}
+function recordProviderMsgUnlock(providerId) {
+    const u = providerMsgUnlocks();
+    if (!u.includes(providerId)) { u.push(providerId); localStorage.setItem(PROVIDER_UNLOCK_KEY, JSON.stringify(u)); }
+}
+function isProviderMsgUnlocked(providerId) {
+    return providerMsgUnlocks().includes(providerId);
+}
+
+function providerMsgLocked(providerId) {
+    const p = (Storage.getProviders() || []).find(x => x.id === providerId);
+    return !!(p && p.msgLock === true);
+}
+
+// A general user who hasn't paid cannot message a locked provider.
+function providerMsgGateAllowed(recipientId, recipientRole) {
+    if (recipientRole !== 'provider') return true;
+    const sender = getMsgSenderInfo();
+    if (sender.role === 'provider' || sender.role === 'admin') return true;
+    if (!providerMsgLocked(recipientId)) return true;
+    return isProviderMsgUnlocked(recipientId);
+}
+
+function renderProviderMsgGate(providerId, providerName) {
+    const container = document.getElementById('messageThreadContent');
+    if (!container) return;
+    container.innerHTML = `
+        <div class="provider-gate-card">
+            <div class="gate-icon"><i class="fas fa-shield-halved"></i></div>
+            <h2>${escapeHtml(providerName)} protects their time</h2>
+            <p style="color:#a99c7e;max-width:480px;margin:10px auto">This service provider has enabled <strong>Require Paid Contact</strong> to filter out time-wasters. Pay a small unlock fee of <strong>R${PROVIDER_MSG_UNLOCK_FEE}</strong> to get in touch and start a conversation.</p>
+            <button class="btn btn-primary" onclick="payProviderUnlock('${providerId}','${escapeHtml(providerName)}')" style="margin-top:12px"><i class="fas fa-lock-open"></i> Unlock for R${PROVIDER_MSG_UNLOCK_FEE}</button>
+        </div>`;
+}
+
+function payProviderUnlock(providerId, providerName) {
+    const uid = currentAuthId();
+    const bal = getWalletBalance ? getWalletBalance('user', uid) : 0;
+    if (bal < PROVIDER_MSG_UNLOCK_FEE) {
+        showToast('Insufficient wallet balance to unlock. Please top up your wallet first.', 'error');
+        return;
+    }
+    if (adjustWallet) {
+        adjustWallet('user', uid, -PROVIDER_MSG_UNLOCK_FEE, 'provider-unlock', 'Unlock paid contact - ' + providerName, { providerId });
+        getOrCreateWallet('provider', providerId);
+        adjustWallet('provider', providerId, PROVIDER_MSG_UNLOCK_FEE, 'provider-unlock', 'Paid contact unlock - ' + providerName, { userId: uid });
+    }
+    recordProviderMsgUnlock(providerId);
+    showToast('Unlocked! You can now message ' + providerName + '.');
+    openComposeTo(providerId, providerName, 'provider');
+}
+
 function sendMessageReply() {
     const body = document.getElementById('messageReplyBody').value.trim();
     const name = document.getElementById('messageReplyName').value.trim();
     if (!body || !name) { showToast('Please enter your name and a reply.', 'error'); return; }
     if (!currentMessageViewId) { showToast('No conversation selected.', 'error'); return; }
 
+    const blocked = detectContactInfo(body);
+    if (blocked.length) {
+        renderMsgBlockWarning('Sending phone numbers or email addresses is not allowed in chat to keep your contact details private (detected: ' + blocked.join(', ') + ').');
+        showToast('Contact details are blocked in chat.', 'error');
+        return;
+    }
+
     const convs = Storage.getConversations();
     const conv = convs.find(c => c.id === currentMessageViewId);
     if (!conv) { showToast('Conversation not found.', 'error'); return; }
 
     const messages = Storage.getMessages();
+    const sender = getMsgSenderInfo();
     messages.push({
         id: generateId(),
         conversationId: conv.id,
@@ -7616,6 +7734,9 @@ function sendMessageReply() {
         senderName: name,
         body,
         read: true,
+        senderRole: sender.role,
+        senderRoleLabel: sender.roleLabel,
+        senderAccountId: msgSenderAccountId(),
         createdAt: new Date().toISOString()
     });
     Storage.setMessages(messages);
@@ -7707,6 +7828,20 @@ function handleMessageSubmit(e) {
     if (!subject || !body || !senderName) { showToast('Please fill in subject, message and your name.', 'error'); return; }
     if (recipientId === 'custom') { recipientId = 'contact-' + generateId(); recipientSel.value = recipientId; }
 
+    const blocked = detectContactInfo(body);
+    if (blocked.length) {
+        renderMsgBlockWarning('Sending phone numbers or email addresses is not allowed in chat to keep your contact details private (detected: ' + blocked.join(', ') + ').');
+        showToast('Contact details are blocked in chat.', 'error');
+        return;
+    }
+
+    if (!providerMsgGateAllowed(recipientId, recipientRole)) {
+        renderProviderMsgGate(recipientId, recipientName);
+        showToast('This provider requires paid contact to message them.', 'error');
+        return;
+    }
+
+    const sender = getMsgSenderInfo();
     const convs = Storage.getConversations();
     const existing = convs.find(c => c.participantId === recipientId && c.status !== 'deleted');
     let convId;
@@ -7738,9 +7873,12 @@ function handleMessageSubmit(e) {
         id: generateId(),
         conversationId: convId,
         senderId: 'me',
-        senderName,
+        senderName: senderName || sender.name,
         body,
         read: true,
+        senderRole: sender.role,
+        senderRoleLabel: sender.roleLabel,
+        senderAccountId: msgSenderAccountId(),
         createdAt: now
     });
     Storage.setMessages(messages);

@@ -44,6 +44,7 @@ function navigateTo(page) {
     if (page === 'admin-wallets') renderAdminWallets();
     if (page === 'admin-forum') renderAdminForum();
     if (page === 'admin-messages') renderAdminMessages();
+    if (page === 'admin-compose') renderAdminCompose();
     if (page === 'admin-message-logs') renderAdminMessageLogs();
     if (page === 'admin-saved-items') renderAdminSavedItems();
     if (page === 'admin-downloads') renderAdminDownloads();
@@ -3326,6 +3327,92 @@ function adminToggleArchive(id) {
 function adminDeleteConversation(id) {
     const conv = Storage.getConversations().find(c => c.id === id);
     promptAdminDelete('conversation', id, conv ? conv.subject : 'Conversation');
+}
+
+// ==========================================
+// ADMIN - compose & send new messages
+// ==========================================
+function adminMsgRecipients() {
+    const users = (Storage.getUsers() || []).map(u => ({ id: u.id, name: u.fullName || 'User', role: 'user' }));
+    const providers = (Storage.getProviders() || []).map(p => ({ id: p.id, name: p.businessName || 'Provider', role: 'provider' }));
+    return [...users, ...providers];
+}
+
+function renderAdminCompose() {
+    const select = document.getElementById('adminMsgRecipient');
+    if (!select) return;
+    const current = select.value;
+    const recipients = adminMsgRecipients();
+    select.innerHTML = '<option value="">Select recipient</option>' + recipients.map(r =>
+        `<option value="${r.id}" data-role="${r.role}">${escapeHtml(r.name)} (${r.role === 'provider' ? 'Service Provider' : 'User'})</option>`
+    ).join('');
+    if (current) select.value = current;
+
+    const sender = document.getElementById('adminMsgSenderName');
+    const snap = window._2k2 && _2k2.Auth && _2k2.Auth.syncUser ? _2k2.Auth.syncUser() : null;
+    if (sender && !sender.value) sender.value = '2k2 Admin';
+    const subj = document.getElementById('adminMsgSubject');
+    if (subj) subj.value = '';
+    const body = document.getElementById('adminMsgBody');
+    if (body) body.value = '';
+}
+
+function handleAdminMessageSubmit(e) {
+    e.preventDefault();
+    const sel = document.getElementById('adminMsgRecipient');
+    const recipientId = sel ? sel.value : '';
+    if (!recipientId) { showToast('Please select a recipient.', 'error'); return; }
+    const recipientRole = sel.options[sel.selectedIndex]?.dataset?.role || 'user';
+    const recipientName = (sel.options[sel.selectedIndex]?.text || '').replace(/\s*\((Service Provider|User)\)$/, '').trim();
+
+    const subject = document.getElementById('adminMsgSubject').value.trim();
+    const body = document.getElementById('adminMsgBody').value.trim();
+    const senderName = document.getElementById('adminMsgSenderName').value.trim() || '2k2 Admin';
+    if (!subject || !body) { showToast('Please fill in subject and message.', 'error'); return; }
+
+    const convs = Storage.getConversations();
+    const existing = convs.find(c => c.participantId === recipientId && c.status !== 'deleted');
+    let convId;
+    const now = new Date().toISOString();
+
+    if (existing) {
+        convId = existing.id;
+        existing.lastMessage = body;
+        existing.updatedAt = now;
+        existing.subject = subject;
+    } else {
+        convId = generateId();
+        convs.push({
+            id: convId,
+            subject,
+            participantId: recipientId,
+            participantName: recipientName,
+            participantRole: recipientRole,
+            createdAt: now,
+            updatedAt: now,
+            lastMessage: body,
+            status: 'active'
+        });
+    }
+    Storage.setConversations(convs);
+
+    const messages = Storage.getMessages();
+    messages.push({
+        id: generateId(),
+        conversationId: convId,
+        senderId: 'admin',
+        senderName,
+        body,
+        read: true,
+        senderRole: 'admin',
+        senderRoleLabel: 'Admin',
+        senderAccountId: msgSenderAccountId ? msgSenderAccountId() : '',
+        createdAt: now
+    });
+    Storage.setMessages(messages);
+
+    showToast('Message sent to ' + recipientName + '.');
+    navigateTo('admin-messages');
 }
 
 // ==========================================
