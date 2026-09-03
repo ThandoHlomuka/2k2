@@ -2142,11 +2142,11 @@
 
                 <div class="directory-filters">
                     <div class="filter-tabs" id="productsFilterTabs">
-                        <button class="filter-tab active" onclick="filterProductsCategory()">All Products</button>
+                        <button class="filter-tab active" data-cat="all" onclick="filterProductsCategory()"><i class="fas fa-globe"></i> All Products</button>
                     </div>
                     <div class="filter-bar">
                         <input type="text" id="productsSearch" placeholder="Search products, categories, or providers..." oninput="renderProductsBrowser()">
-                        <select id="productsCategoryFilter" onchange="renderProductsBrowser()">
+                        <select id="productsCategoryFilter" onchange="filterProductsCategory()">
                             <option value="all">All Categories</option>
                         </select>
                         <select id="productsSort" onchange="renderProductsBrowser()">
@@ -3878,7 +3878,7 @@
     </script>
     <script src="script.js?v=47"></script>
     <script src="media-player.js?v=2"></script>
-    <script src="products.js?v=25"></script>
+    <script src="products.js?v=26"></script>
     <script src="shipping.js?v=1"></script>
     <script src="invoices.js?v=1"></script>
     <script>

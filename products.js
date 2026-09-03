@@ -10,15 +10,19 @@
   'use strict';
 
   var PRODUCT_CATEGORIES = {
-    fashion: { label: 'Fashion & Apparel', icon: 'fa-shirt' },
-    electronics: { label: 'Electronics & Gadgets', icon: 'fa-plug' },
-    home: { label: 'Home & Living', icon: 'fa-house' },
-    beauty: { label: 'Beauty & Care', icon: 'fa-spa' },
-    food: { label: 'Food & Drink', icon: 'fa-utensils' },
-    health: { label: 'Wellness & Health', icon: 'fa-heart-pulse' },
-    collectibles: { label: 'Art & Collectibles', icon: 'fa-gem' },
-    services_goods: { label: 'Services & Handmade', icon: 'fa-hand-holding-heart' },
-    other: { label: 'Other', icon: 'fa-box' }
+    fashion: { label: 'Fashion & Apparel', icon: 'fa-shirt', color: '#ec4899' },
+    electronics: { label: 'Electronics & Gadgets', icon: 'fa-plug', color: '#3b82f6' },
+    home: { label: 'Home & Living', icon: 'fa-house', color: '#f59e0b' },
+    beauty: { label: 'Beauty & Care', icon: 'fa-spa', color: '#a855f7' },
+    food: { label: 'Food & Drink', icon: 'fa-utensils', color: '#ef4444' },
+    health: { label: 'Wellness & Health', icon: 'fa-heart-pulse', color: '#10b981' },
+    collectibles: { label: 'Art & Collectibles', icon: 'fa-gem', color: '#a07d12' },
+    services_goods: { label: 'Services & Handmade', icon: 'fa-hand-holding-heart', color: '#06b6d4' },
+    toys: { label: 'Toys & Kids', icon: 'fa-baby-carriage', color: '#14b8a6' },
+    sports: { label: 'Sports & Outdoors', icon: 'fa-futbol', color: '#6366f1' },
+    automotive: { label: 'Automotive', icon: 'fa-car', color: '#64748b' },
+    digital: { label: 'Digital & Vouchers', icon: 'fa-ticket', color: '#8b5cf6' },
+    other: { label: 'Other', icon: 'fa-box', color: '#a99c7e' }
   };
 
   function catInfo(key) {
@@ -57,11 +61,21 @@
   // ============================================
   // GENERAL USERS - browse products
   // ============================================
+  var currentProductsFilter = 'all';
+  function setProductsFilterTabs() {
+    document.querySelectorAll('#productsFilterTabs .filter-tab').forEach(function (tab) {
+      var key = tab.getAttribute('data-cat') || 'all';
+      tab.classList.toggle('active', key === currentProductsFilter);
+    });
+    var dropdown = document.getElementById('productsCategoryFilter');
+    if (dropdown && !dropdown._syncing) dropdown.value = currentProductsFilter;
+  }
+
   window.renderProductsBrowser = function () {
     var list = Storage.getProducts().slice().filter(function (p) { return isApprovedPublic(p); });
     var q = (document.getElementById('productsSearch') ? document.getElementById('productsSearch').value : '').toLowerCase();
-    var cat = document.getElementById('productsCategoryFilter') ? document.getElementById('productsCategoryFilter').value : 'all';
     var sort = document.getElementById('productsSort') ? document.getElementById('productsSort').value : 'newest';
+    var cat = currentProductsFilter;
 
     if (cat !== 'all') list = list.filter(function (p) { return p.category === cat; });
     if (q) list = list.filter(function (p) { return (p.name || '').toLowerCase().indexOf(q) > -1 || (p.description || '').toLowerCase().indexOf(q) > -1 || (p.authorName || '').toLowerCase().indexOf(q) > -1; });
@@ -93,7 +107,7 @@
         : '<div class="directory-card-photo"><div class="directory-card-icon"><i class="fas ' + ci.icon + '"></i></div></div>') +
         '<div class="directory-card-body">' +
           '<h3>' + esc(p.name || 'Untitled') + '</h3>' +
-          '<div class="directory-card-meta"><i class="fas ' + ci.icon + '"></i> ' + esc(ci.label) + '</div>' +
+          '<div class="directory-card-meta"><i class="fas ' + ci.icon + '" style="color:' + esc(ci.color) + '"></i> <span style="color:' + esc(ci.color) + ';font-weight:600">' + esc(ci.label) + '</span></div>' +
           '<div class="directory-card-meta"><i class="fas fa-user"></i> ' + esc(p.authorName || 'Provider') + '</div>' +
           '<div class="directory-card-price" style="margin:8px 0;font-weight:800;color:#c9a227">R' + esc(Number(p.price || 0).toFixed(2)) + '</div>' +
           '<div class="directory-card-bio">' + esc((p.description || '').substring(0, 90)) + '</div>' +
@@ -108,7 +122,16 @@
     if (typeof restoreBrowseView === 'function') restoreBrowseView('productsDirectoryList');
   };
 
-  window.filterProductsCategory = function () { renderProductsBrowser(); };
+  window.filterProductsCategory = function (key) {
+    var dropdown = document.getElementById('productsCategoryFilter');
+    if (key === undefined && dropdown) {
+      currentProductsFilter = dropdown.value || 'all';
+    } else {
+      currentProductsFilter = (key === undefined || key === null) ? 'all' : key;
+    }
+    setProductsFilterTabs();
+    renderProductsBrowser();
+  };
 
   // ============================================
   // GENERAL USERS - product detail + order
@@ -779,6 +802,9 @@
   // ============================================
   window.renderAdminProducts = function () {
     var list = Storage.getProducts().slice().sort(function (a, b) { return (b.createdAt || 0) - (a.createdAt || 0); });
+    var afSel = document.getElementById('adminProductsCategoryFilter');
+    var af = afSel ? afSel.value : 'all';
+    if (af && af !== 'all') list = list.filter(function (p) { return p.category === af; });
     var container = document.getElementById('adminProductsList');
     if (!container) return;
     var count = document.getElementById('adminProductsCount');
@@ -872,9 +898,9 @@
     renderAdminProductOrders();
   };
 
-  // populate category dropdowns on load
+  // populate category dropdowns and filter tabs on load
   function populateCategorySelects() {
-    ['#productCategory', '#productsCategoryFilter'].forEach(function (sel) {
+    ['#productCategory', '#productsCategoryFilter', '#adminProductsCategoryFilter'].forEach(function (sel) {
       var el = document.querySelector(sel);
       if (!el || el.querySelectorAll('option').length > 1) return;
       Object.keys(PRODUCT_CATEGORIES).forEach(function (k) {
@@ -883,6 +909,19 @@
         el.appendChild(opt);
       });
     });
+    var tabs = document.getElementById('productsFilterTabs');
+    if (tabs && tabs.querySelectorAll('.filter-tab[data-cat]').length === 0) {
+      var allBtn = tabs.querySelector('.filter-tab.active');
+      if (allBtn) allBtn.setAttribute('data-cat', 'all');
+      Object.keys(PRODUCT_CATEGORIES).forEach(function (k) {
+        var btn = document.createElement('button');
+        btn.className = 'filter-tab';
+        btn.setAttribute('data-cat', k);
+        btn.setAttribute('onclick', 'filterProductsCategory(\'' + k + '\')');
+        btn.innerHTML = '<i class="fas ' + PRODUCT_CATEGORIES[k].icon + '"></i> ' + esc(PRODUCT_CATEGORIES[k].label);
+        tabs.appendChild(btn);
+      });
+    }
   }
 
   if (document.readyState === 'loading') {

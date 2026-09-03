@@ -695,6 +695,9 @@
                 <div class="admin-table-card profile-card">
                     <div class="table-header">
                         <h2><i class="fas fa-cart-shopping"></i> All Products (<span id="adminProductsCount">0</span>)</h2>
+                        <select id="adminProductsCategoryFilter" class="admin-status-select" style="background:#0f0d09;color:#fdf9ef;border:1px solid #3a3527;border-radius:6px;padding:6px 10px" onchange="renderAdminProducts()">
+                            <option value="all">All Categories</option>
+                        </select>
                     </div>
                     <div id="adminProductsList"></div>
                 </div>
@@ -1554,7 +1557,7 @@
     <script src="media-player.js?v=2"></script>
     <script src="admin.js?v=30"></script>
     <script src="admin-upgrades.js?v=21"></script>
-    <script src="products.js?v=25"></script>
+    <script src="products.js?v=26"></script>
     <script src="shipping.js?v=1"></script>
     <script src="invoices.js?v=1"></script>
 </body>
