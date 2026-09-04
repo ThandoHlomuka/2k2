@@ -1737,7 +1737,7 @@ function adminViewContent(id) {
     const type = CONTENT_TYPES[c.type] || { label: c.type, icon: 'fa-file', color: '#8a7b55' };
     const authorName = resolveProviderAuthorName(c, 'Unknown');
     let mediaHtml = '';
-    if (c.type === 'audio' || c.type === 'podcast') {
+    if (c.type === 'audio' || c.type === 'podcast' || c.type === 'video-podcast') {
         mediaHtml = c.fileUrl ? `<div style="margin:14px 0"><button type="button" class="btn btn-primary btn-sm" onclick="adminPlayContentAudio('${c.id}')"><i class="fas fa-headphones"></i> Listen / Play</button></div>` : '';
     } else if (c.img || (c.gallery && c.gallery.length)) {
         mediaHtml = `<div style="margin:14px 0;display:grid;gap:8px">${((c.type === 'book') ? [] : (c.gallery && c.gallery.length ? c.gallery : c.img ? [c.img] : [])).slice(0, 6).map(u => `<img src="${escapeHtml(u)}" style="max-width:100%;max-height:200px;border-radius:10px;object-fit:cover" onerror="this.style.display='none'">`).join('')}</div>`;

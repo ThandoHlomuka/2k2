@@ -93,15 +93,16 @@ const BOOKING_STATUSES = {
     'cancelled': { label: 'Cancelled', color: '#ef4444', icon: 'fa-ban' }
 };
 
-const CONTENT_TYPES = {
-    'video': { label: 'Videos', icon: 'fa-video', color: '#ef4444', accept: 'video/*' },
-    'image': { label: 'Images', icon: 'fa-image', color: '#ec4899', accept: 'image/*' },
-    'gif': { label: 'GIFs', icon: 'fa-icons', color: '#f59e0b', accept: 'image/gif' },
-    'audio': { label: 'Audio (ASMR)', icon: 'fa-headphones', color: '#8b5cf6', accept: 'audio/*' },
-    'podcast': { label: 'Podcasts', icon: 'fa-podcast', color: '#3b82f6', accept: 'audio/*' },
-    'story': { label: 'Stories', icon: 'fa-book-open', color: '#10b981', accept: '' },
-    'book': { label: 'Books', icon: 'fa-book', color: '#06b6d4', accept: '' }
-};
+ const CONTENT_TYPES = {
+     'video': { label: 'Videos', icon: 'fa-video', color: '#ef4444', accept: 'video/*' },
+     'image': { label: 'Images', icon: 'fa-image', color: '#ec4899', accept: 'image/*' },
+     'gif': { label: 'GIFs', icon: 'fa-icons', color: '#f59e0b', accept: 'image/gif' },
+     'audio': { label: 'Audio (ASMR)', icon: 'fa-headphones', color: '#8b5cf6', accept: 'audio/*' },
+     'podcast': { label: 'Audio Podcast', icon: 'fa-podcast', color: '#3b82f6', accept: 'audio/*' },
+     'video-podcast': { label: 'Video Podcast', icon: 'fa-video', color: '#8b5cf6', accept: 'video/*' },
+     'story': { label: 'Stories', icon: 'fa-book-open', color: '#10b981', accept: '' },
+     'book': { label: 'Books', icon: 'fa-book', color: '#06b6d4', accept: '' }
+ };
 
 const EVENT_TYPES = {
     'party': { label: 'Parties', icon: 'fa-champagne-glasses', color: '#ec4899' },
@@ -5187,9 +5188,11 @@ function renderContentDirectory() {
         const type = CONTENT_TYPES[c.type] || { label: c.type, icon: 'fa-file', color: '#8a7b55' };
         const authorName = resolveProviderAuthorName(c, 'Unknown Creator');
         const hasMedia = c.fileData && c.fileData.length > 100;
+        const isPaid = c.price && c.price > 0;
         return `
-            <div class="content-card profile-card" onclick="viewContent('${c.id}')">
+            <div class="content-card profile-card ${isPaid ? 'content-paid-card' : ''}" onclick="viewContent('${c.id}')">
                 <button class="save-item-btn ${isItemSaved('content', c.id) ? 'saved' : ''}" data-kind="content" data-id="${c.id}" onclick="event.stopPropagation(); toggleSaveItem('content','${c.id}')"><i class="fas ${isItemSaved('content', c.id) ? 'fa-bookmark' : 'fa-bookmark-o'}"></i></button>
+                ${isPaid ? '<span class="content-price-badge"><i class="fas fa-tag"></i> R' + c.price.toFixed(2) + '</span>' : '<span class="content-free-badge"><i class="fas fa-gift"></i> Free</span>'}
                 ${hasMedia ? `<div class="content-card-thumb"><div class="content-thumb-icon" style="background:${type.color}22;color:${type.color}"><i class="fas ${type.icon}"></i></div></div>` : `<div class="content-card-icon" style="background:${type.color}22;color:${type.color}"><i class="fas ${type.icon}"></i></div>`}
                 <h3 class="content-card-title">${c.title}</h3>
                 <p class="content-card-desc">${(c.description || '').substring(0, 80)}${(c.description || '').length > 80 ? '...' : ''}</p>
@@ -5217,6 +5220,10 @@ function viewContent(id) {
     currentContentViewId = id;
     const type = CONTENT_TYPES[item.type] || { label: item.type, icon: 'fa-file', color: '#8a7b55' };
     const authorName = resolveProviderAuthorName(item, 'Unknown Creator');
+    const isPaid = item.price && item.price > 0;
+    const userId = currentAuthId();
+    const hasPurchased = isPaid && item.purchasedBy && item.purchasedBy.includes(userId);
+    const isOwner = userId && (item.providerId === userId || item.ownerId === userId);
 
     document.getElementById('contentDetailViewType').innerHTML = `<i class="fas ${type.icon}"></i> ${type.label}`;
     document.getElementById('contentDetailViewType').style.background = `${type.color}22`;
@@ -5225,12 +5232,27 @@ function viewContent(id) {
     document.getElementById('contentDetailViewTitle').textContent = item.title;
     document.getElementById('contentDetailViewDate').textContent = formatDate(item.createdAt);
     document.getElementById('contentDetailViewAuthor').textContent = `By ${authorName}`;
-    document.getElementById('contentDetailViewBody').innerHTML = item.description ? `<p>${escapeHtml(item.description).replace(/\n/g, '<br>')}</p>` : '<p class="empty-text">No description</p>';
+
+    let priceHtml = '';
+    if (isPaid) {
+        if (hasPurchased || isOwner) {
+            priceHtml = `<div class="content-purchase-bar content-purchase-owned"><i class="fas fa-check-circle"></i> Purchased — R${item.price.toFixed(2)}</div>`;
+        } else {
+            priceHtml = `<div class="content-purchase-bar content-purchase-locked"><i class="fas fa-lock"></i> Premium Content — R${item.price.toFixed(2)} <button class="btn btn-primary btn-sm" onclick="purchaseContent('${item.id}')"><i class="fas fa-shopping-cart"></i> Purchase Now</button></div>`;
+        }
+    } else {
+        priceHtml = '<div class="content-purchase-bar content-purchase-free"><i class="fas fa-gift"></i> Free Content</div>';
+    }
+    document.getElementById('contentDetailViewBody').innerHTML = priceHtml + (item.description ? `<p>${escapeHtml(item.description).replace(/\n/g, '<br>')}</p>` : '<p class="empty-text">No description</p>');
 
     // Media player
     const mediaContainer = document.getElementById('contentDetailMedia');
+    const isVideoType = item.type === 'video' || item.type === 'video-podcast';
+    const isAudioType = item.type === 'audio' || item.type === 'podcast';
+    const showFullMedia = !isPaid || hasPurchased || isOwner;
+
     if (item.fileData && item.fileData.length > 100) {
-        if (item.type === 'video') {
+        if (isVideoType) {
             mediaContainer.innerHTML = '';
             const holder = document.createElement('div');
             holder.className = 'content-media-player';
@@ -5240,21 +5262,56 @@ function viewContent(id) {
                     const p = window._2k2Media.buildPlayer({ kind: 'video', src: item.fileData, title: item.title });
                     holder.appendChild(p.el);
                     if (typeof window._2k2Media.upgrade === 'function') window._2k2Media.upgrade(holder);
+                    if (!showFullMedia && p.media) {
+                        const overlay = document.createElement('div');
+                        overlay.className = 'content-preview-overlay';
+                        overlay.innerHTML = '<div class="preview-paywall"><div class="preview-lock-icon"><i class="fas fa-lock"></i></div><h3>Preview Ended</h3><p>This content costs <strong>R' + item.price.toFixed(2) + '</strong></p><p class="preview-sub">Purchase to continue watching the full video</p><button class="btn btn-primary" onclick="purchaseContent(\'' + item.id + '\')"><i class="fas fa-shopping-cart"></i> Purchase for R' + item.price.toFixed(2) + '</button></div>';
+                        holder.style.position = 'relative';
+                        holder.appendChild(overlay);
+                        let previewTriggered = false;
+                        const previewHandler = function() {
+                            if (!previewTriggered && p.media.currentTime >= 10) {
+                                previewTriggered = true;
+                                p.media.pause();
+                                p.media.removeEventListener('timeupdate', previewHandler);
+                                overlay.classList.add('active');
+                            }
+                        };
+                        p.media.addEventListener('timeupdate', previewHandler);
+                    }
                 } else {
                     holder.innerHTML = `<video controls preload="metadata" class="content-video-player"><source src="${item.fileData}" type="${item.fileType || 'video/mp4'}"></video>`;
                 }
             } catch (e) {
                 holder.innerHTML = `<video controls preload="metadata" class="content-video-player"><source src="${item.fileData}" type="${item.fileType || 'video/mp4'}"></video>`;
             }
-        } else if (item.type === 'audio' || item.type === 'podcast') {
+        } else if (isAudioType) {
             mediaContainer.innerHTML = '';
             const holder = document.createElement('div');
             holder.className = 'content-media-player audio-player';
             mediaContainer.appendChild(holder);
             try {
                 if (window._2k2Media) {
-                    const p = window._2k2Media.buildPlayer({ kind: 'audio', src: item.fileData, title: item.title, sub: 'Podcast' });
+                    const sub = item.type === 'video-podcast' ? 'Video Podcast' : 'Podcast';
+                    const p = window._2k2Media.buildPlayer({ kind: 'audio', src: item.fileData, title: item.title, sub: sub });
                     holder.appendChild(p.el);
+                    if (!showFullMedia && p.media) {
+                        const overlay = document.createElement('div');
+                        overlay.className = 'content-preview-overlay';
+                        overlay.innerHTML = '<div class="preview-paywall"><div class="preview-lock-icon"><i class="fas fa-lock"></i></div><h3>Preview Ended</h3><p>This content costs <strong>R' + item.price.toFixed(2) + '</strong></p><p class="preview-sub">Purchase to continue listening to the full audio</p><button class="btn btn-primary" onclick="purchaseContent(\'' + item.id + '\')"><i class="fas fa-shopping-cart"></i> Purchase for R' + item.price.toFixed(2) + '</button></div>';
+                        holder.style.position = 'relative';
+                        holder.appendChild(overlay);
+                        let previewTriggered = false;
+                        const previewHandler = function() {
+                            if (!previewTriggered && p.media.currentTime >= 10) {
+                                previewTriggered = true;
+                                p.media.pause();
+                                p.media.removeEventListener('timeupdate', previewHandler);
+                                overlay.classList.add('active');
+                            }
+                        };
+                        p.media.addEventListener('timeupdate', previewHandler);
+                    }
                 } else {
                     holder.innerHTML = `<div class="audio-icon-wrap"><i class="fas fa-headphones"></i></div><audio controls preload="metadata" class="content-audio-player"><source src="${item.fileData}" type="${item.fileType || 'audio/mpeg'}"></audio>`;
                 }
@@ -5262,11 +5319,16 @@ function viewContent(id) {
                 holder.innerHTML = `<div class="audio-icon-wrap"><i class="fas fa-headphones"></i></div><audio controls preload="metadata" class="content-audio-player"><source src="${item.fileData}" type="${item.fileType || 'audio/mpeg'}"></audio>`;
             }
         } else if (item.type === 'image') {
-            mediaContainer.innerHTML = `<div class="content-media-player"><img src="${item.fileData}" alt="${item.title}" class="content-image-player"></div>`;
+            if (showFullMedia) {
+                mediaContainer.innerHTML = `<div class="content-media-player"><img src="${item.fileData}" alt="${item.title}" class="content-image-player"></div>`;
+            } else {
+                const thumbLen = Math.min(item.fileData.length, Math.floor(item.fileData.length * 0.15));
+                mediaContainer.innerHTML = `<div class="content-media-player content-preview-image-wrap"><img src="${item.fileData}" alt="${item.title}" class="content-image-player content-preview-blur"><div class="content-preview-overlay active"><div class="preview-paywall"><div class="preview-lock-icon"><i class="fas fa-lock"></i></div><h3>Preview Ended</h3><p>This content costs <strong>R' + item.price.toFixed(2) + '</strong></p><p class="preview-sub">Purchase to view the full image</p><button class="btn btn-primary" onclick="purchaseContent(\'' + item.id + '\')"><i class="fas fa-shopping-cart"></i> Purchase for R' + item.price.toFixed(2) + '</button></div></div></div>`;
+            }
         } else if (item.type === 'gif') {
             mediaContainer.innerHTML = `<div class="content-media-player"><img src="${item.fileData}" alt="${item.title}" class="content-gif-player"></div>`;
         } else {
-            mediaContainer.innerHTML = `<div class="content-media-player"><div class="content-file-download"><i class="fas fa-file"></i><span>Attached file</span><a href="${item.fileData}" download="${item.title}" class="btn btn-primary btn-sm"><i class="fas fa-download"></i> Download</a></div></div>`;
+            mediaContainer.innerHTML = `<div class="content-media-player"><div class="content-file-download"><i class="fas fa-file"></i><span>Attached file</span>${showFullMedia ? `<a href="${item.fileData}" download="${item.title}" class="btn btn-primary btn-sm"><i class="fas fa-download"></i> Download</a>` : `<button class="btn btn-primary btn-sm" onclick="purchaseContent('${item.id}')"><i class="fas fa-lock"></i> Purchase to Download</button>`}</div></div>`;
         }
     } else {
         mediaContainer.innerHTML = '';
@@ -5299,6 +5361,14 @@ function downloadContentView() {
     if (!item) { showToast('Content not found.', 'error'); return; }
     if (!item.fileData || item.fileData.length <= 100) {
         showToast('This content has no downloadable file.', 'error');
+        return;
+    }
+    const userId = currentAuthId();
+    const isPaid = item.price && item.price > 0;
+    const hasPurchased = isPaid && item.purchasedBy && item.purchasedBy.includes(userId);
+    const isOwner = userId && (item.providerId === userId || item.ownerId === userId);
+    if (isPaid && !hasPurchased && !isOwner) {
+        showToast('Please purchase this content (R' + item.price.toFixed(2) + ') before downloading.', 'error');
         return;
     }
     logDownload({
@@ -5663,7 +5733,7 @@ function handleContentFileSelect(input) {
         placeholder.style.display = 'none';
         preview.style.display = '';
         const type = document.getElementById('contentType').value;
-        if (type === 'video') {
+        if (type === 'video' || type === 'video-podcast') {
             preview.innerHTML = `<video controls preload="metadata" class="content-upload-preview-media"><source src="${e.target.result}" type="${file.type}"></video><button class="btn btn-danger btn-sm" onclick="clearContentFile()" style="margin-top:8px"><i class="fas fa-times"></i> Remove</button>`;
         } else if (type === 'audio' || type === 'podcast') {
             preview.innerHTML = `<div class="content-upload-audio-preview"><i class="fas fa-headphones"></i><audio controls preload="metadata" class="content-upload-preview-media"><source src="${e.target.result}" type="${file.type}"></audio></div><button class="btn btn-danger btn-sm" onclick="clearContentFile()" style="margin-top:8px"><i class="fas fa-times"></i> Remove</button>`;
@@ -5696,6 +5766,60 @@ function addContentSuggestedTag(tag) {
     if (!contentTags.includes(tag)) { contentTags.push(tag); renderContentTags(); }
 }
 
+function toggleContentPricing() {
+    const type = document.getElementById('contentType').value;
+    const section = document.getElementById('contentPricingSection');
+    if (section) section.style.display = '';
+}
+
+function setContentPriceMode(mode) {
+    document.querySelectorAll('.content-price-opt').forEach(b => {
+        b.classList.toggle('active', b.dataset.val === mode);
+    });
+    const wrap = document.getElementById('contentPriceInputWrap');
+    if (wrap) wrap.style.display = mode === 'paid' ? '' : 'none';
+    if (mode === 'free') {
+        const priceInput = document.getElementById('contentPrice');
+        if (priceInput) priceInput.value = '';
+    }
+}
+
+function purchaseContent(contentId) {
+    if (!requireSignIn('Purchase content.')) return;
+    const content = Storage.getContent();
+    const item = content.find(c => c.id === contentId);
+    if (!item) { showToast('Content not found.', 'error'); return; }
+    if (!item.price || item.price <= 0) { showToast('This content is free.', 'info'); return; }
+    const userId = currentAuthId();
+    if (!userId) { showToast('Please sign in to purchase.', 'error'); return; }
+    if (item.purchasedBy && item.purchasedBy.includes(userId)) { showToast('You have already purchased this content.', 'info'); return; }
+    if (item.providerId === userId || item.ownerId === userId) { showToast('You own this content.', 'info'); return; }
+
+    const wallets = Storage.getWallets();
+    const userWallet = wallets.find(w => w.id === userId);
+    if (!userWallet || (userWallet.balance || 0) < item.price) {
+        showToast('Insufficient wallet balance. Please top up your wallet first.', 'error');
+        return;
+    }
+
+    userWallet.balance = (userWallet.balance || 0) - item.price;
+    Storage.setWallets(wallets);
+
+    const providerWallet = wallets.find(w => w.id === item.providerId);
+    if (providerWallet) {
+        providerWallet.balance = (providerWallet.balance || 0) + item.price;
+        Storage.setWallets(wallets);
+    }
+
+    if (!item.purchasedBy) item.purchasedBy = [];
+    item.purchasedBy.push(userId);
+    const idx = content.findIndex(c => c.id === contentId);
+    if (idx !== -1) { content[idx] = item; Storage.setContent(content); }
+
+    showToast('Content purchased successfully! R' + item.price.toFixed(2) + ' deducted from your wallet.', 'success');
+    viewContent(contentId);
+}
+
 function handleContentSubmit(e) {
     e.preventDefault();
     const id = document.getElementById('contentId').value;
@@ -5705,8 +5829,11 @@ function handleContentSubmit(e) {
     const description = document.getElementById('contentDescription').value.trim();
     const fileData = document.getElementById('contentFileData').value;
     const fileType = document.getElementById('contentFileType').value;
+    const priceMode = document.querySelector('.content-price-opt.active')?.dataset?.val || 'free';
+    const price = priceMode === 'paid' ? (parseFloat(document.getElementById('contentPrice')?.value) || 0) : null;
 
     if (!title || !type || !description) { showToast('Please fill in all required fields.', 'error'); return; }
+    if (priceMode === 'paid' && (!price || price <= 0)) { showToast('Please set a price greater than R0.', 'error'); return; }
 
     const content = Storage.getContent();
     if (id) {
@@ -5718,6 +5845,7 @@ function handleContentSubmit(e) {
             content[idx].description = description;
             if (fileData) { content[idx].fileData = fileData; content[idx].fileType = fileType; }
             content[idx].tags = [...contentTags];
+            content[idx].price = price;
             content[idx].updatedAt = new Date().toISOString();
             markPendingApproval(content[idx]);
         }
@@ -5730,6 +5858,8 @@ function handleContentSubmit(e) {
             fileData: fileData || '',
             fileType: fileType || '',
             tags: [...contentTags],
+            price: price,
+            purchasedBy: [],
             providerId: owner.id,
             ownerId: owner.id,
             ownerName: owner.name,
@@ -5757,6 +5887,13 @@ function editContent(id) {
     document.getElementById('contentDescription').value = item.description || '';
     contentTags = [...(item.tags || [])];
 
+    if (item.price && item.price > 0) {
+        setContentPriceMode('paid');
+        document.getElementById('contentPrice').value = item.price;
+    } else {
+        setContentPriceMode('free');
+    }
+
     if (item.fileData && item.fileData.length > 100) {
         document.getElementById('contentFileData').value = item.fileData;
         document.getElementById('contentFileType').value = item.fileType || '';
@@ -5764,7 +5901,7 @@ function editContent(id) {
         const placeholder = document.getElementById('contentUploadArea').querySelector('.content-upload-placeholder');
         placeholder.style.display = 'none';
         preview.style.display = '';
-        if (item.type === 'video') {
+        if (item.type === 'video' || item.type === 'video-podcast') {
             preview.innerHTML = `<video controls preload="metadata" class="content-upload-preview-media"><source src="${item.fileData}" type="${item.fileType}"></video><button class="btn btn-danger btn-sm" onclick="clearContentFile()" style="margin-top:8px"><i class="fas fa-times"></i> Remove</button>`;
         } else if (item.type === 'audio' || item.type === 'podcast') {
             preview.innerHTML = `<div class="content-upload-audio-preview"><i class="fas fa-headphones"></i><audio controls preload="metadata" class="content-upload-preview-media"><source src="${item.fileData}" type="${item.fileType}"></audio></div><button class="btn btn-danger btn-sm" onclick="clearContentFile()" style="margin-top:8px"><i class="fas fa-times"></i> Remove</button>`;

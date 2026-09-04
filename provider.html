@@ -26,7 +26,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💰</text></svg>">
-    <link rel="stylesheet" href="style.css?v=37">
+    <link rel="stylesheet" href="style.css?v=38">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <script type="application/ld+json">
     {
@@ -1079,7 +1079,8 @@
                                 <option value="image">Images</option>
                                 <option value="gif">GIFs</option>
                                 <option value="audio">Audio (ASMR)</option>
-                                <option value="podcast">Podcasts</option>
+                                <option value="podcast">Audio Podcasts</option>
+                                <option value="video-podcast">Video Podcasts</option>
                                 <option value="story">Stories</option>
                                 <option value="book">Books</option>
                             </select>
@@ -1108,16 +1109,31 @@
                             </div>
                             <div class="form-group">
                                 <label>Type *</label>
-                                <select id="contentType" required>
+                                <select id="contentType" required onchange="toggleContentPricing()">
                                     <option value="">Select type</option>
                                     <option value="video">Video</option>
                                     <option value="image">Image</option>
                                     <option value="gif">GIF</option>
                                     <option value="audio">Audio (ASMR)</option>
-                                    <option value="podcast">Podcast</option>
+                                    <option value="podcast">Audio Podcast</option>
+                                    <option value="video-podcast">Video Podcast</option>
                                     <option value="story">Story</option>
                                     <option value="book">Book</option>
                                 </select>
+                            </div>
+                            <div class="form-group full-width" id="contentPricingSection">
+                                <label>Pricing</label>
+                                <div class="content-pricing-toggle">
+                                    <button type="button" class="btn btn-sm content-price-opt active" data-val="free" onclick="setContentPriceMode('free')"><i class="fas fa-gift"></i> Free</button>
+                                    <button type="button" class="btn btn-sm content-price-opt" data-val="paid" onclick="setContentPriceMode('paid')"><i class="fas fa-tag"></i> For Sale</button>
+                                </div>
+                                <div id="contentPriceInputWrap" style="display:none;margin-top:8px">
+                                    <div class="input-group">
+                                        <span class="input-group-text">R</span>
+                                        <input type="number" id="contentPrice" class="form-control" min="0" step="0.01" placeholder="0.00">
+                                    </div>
+                                    <small class="form-text text-muted">Set the price in Rands (R). Users will need to purchase this content to view it fully.</small>
+                                </div>
                             </div>
                             <div class="form-group">
                                 <label>Location</label>
@@ -4217,7 +4233,8 @@
                         <button class="filter-tab" onclick="filterContentDirectory('image')"><i class="fas fa-image"></i> Images</button>
                         <button class="filter-tab" onclick="filterContentDirectory('gif')"><i class="fas fa-icons"></i> GIFs</button>
                         <button class="filter-tab" onclick="filterContentDirectory('audio')"><i class="fas fa-headphones"></i> Audio</button>
-                        <button class="filter-tab" onclick="filterContentDirectory('podcast')"><i class="fas fa-podcast"></i> Podcasts</button>
+                        <button class="filter-tab" onclick="filterContentDirectory('podcast')"><i class="fas fa-podcast"></i> Audio Podcasts</button>
+                        <button class="filter-tab" onclick="filterContentDirectory('video-podcast')"><i class="fas fa-video"></i> Video Podcasts</button>
                         <button class="filter-tab" onclick="filterContentDirectory('story')"><i class="fas fa-book-open"></i> Stories</button>
                         <button class="filter-tab" onclick="filterContentDirectory('book')"><i class="fas fa-book"></i> Books</button>
                     </div>
@@ -4898,7 +4915,7 @@
       });
     })();
     </script>
-    <script src="script.js?v=49"></script>
+    <script src="script.js?v=50"></script>
     <script src="media-player.js?v=2"></script>
     <script src="products.js?v=26"></script>
     <script src="shipping.js?v=1"></script>
