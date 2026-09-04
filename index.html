@@ -557,15 +557,13 @@
                 <span>Settings</span>
             </a>
             <div class="nav-divider"></div>
-            <span class="nav-section-title">Switch Portal</span>
-            <a href="provider.html" class="nav-item">
-                <i class="fas fa-briefcase"></i>
-                <span>Service Provider</span>
-            </a>
-            <a href="admin.html" class="nav-item">
-                <i class="fas fa-user-shield"></i>
-                <span>Admin Portal</span>
-            </a>
+            <div id="switchPortalSection">
+                <span class="nav-section-title">Switch Portal</span>
+                <a href="admin.html" class="nav-item">
+                    <i class="fas fa-user-shield"></i>
+                    <span>Admin Portal</span>
+                </a>
+            </div>
             <a href="#" class="nav-item" data-page="how-it-works">
                 <i class="fas fa-circle-question"></i>
                 <span>How It Works</span>
@@ -3871,7 +3869,10 @@
             if (!user) { render(null); return; }
             await window._2k2.Auth.refreshSyncUser();
             var profile = await window._2k2.Auth.getProfile();
-            render(user, profile ? profile.role : null);
+            var role = profile ? profile.role : null;
+            if (role === 'provider') { window.location.href = 'provider.html'; return; }
+            if (role !== 'admin') { var sp = document.getElementById('switchPortalSection'); if (sp) sp.style.display = 'none'; }
+            render(user, role);
           } catch (e) { render(null); }
         })();
       });

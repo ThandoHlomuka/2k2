@@ -277,15 +277,13 @@
                 <span>Downloads</span>
             </a>
             <div class="nav-divider"></div>
-            <span class="nav-section-title">Switch Portal</span>
-            <a href="index.html" class="nav-item">
-                <i class="fas fa-user"></i>
-                <span>General User</span>
-            </a>
-            <a href="admin.html" class="nav-item">
-                <i class="fas fa-user-shield"></i>
-                <span>Admin Portal</span>
-            </a>
+            <div id="switchPortalSection">
+                <span class="nav-section-title">Switch Portal</span>
+                <a href="admin.html" class="nav-item">
+                    <i class="fas fa-user-shield"></i>
+                    <span>Admin Portal</span>
+                </a>
+            </div>
             <div class="nav-divider"></div>
             <a href="#" class="nav-item" data-page="provider-settings">
                 <i class="fas fa-cog"></i>
@@ -4910,6 +4908,7 @@
           var profile = await window._2k2.Auth.getProfile();
           if (!profile || (profile.role !== 'provider' && profile.role !== 'admin')) { window.location.href = 'upgrade.html'; return; }
           try { await window._2k2.Auth.refreshSyncUser(); } catch (e) {}
+          if (profile.role !== 'admin') { var sp = document.getElementById('switchPortalSection'); if (sp) sp.style.display = 'none'; }
           var veil = document.getElementById('k2-gate-veil'); if (veil) veil.remove();
         })();
       });
