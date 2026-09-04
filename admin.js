@@ -64,6 +64,7 @@ function navigateTo(page) {
     const main = document.getElementById('mainContent');
     if (main) main.classList.remove('shifted');
     setAdminBottomNav(page);
+    if (window._k2Nav) window._k2Nav.onNavigate(page);
 }
 
 function setAdminBottomNav(page) {

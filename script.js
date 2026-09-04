@@ -644,6 +644,7 @@ if (page === 'products-directory') renderProductsBrowser();
     if (page === 'provider-subforums') renderProviderSubforums();
     if (['directory','venue-directory','services-directory','content-directory','events-directory','ads-browse','gigs-browse','forum-browse','products-directory'].includes(page)) renderSaveButtons();
     setActiveBottomNav(page);
+    if (window._k2Nav) window._k2Nav.onNavigate(page);
 }
 
 // Re-render the page that is currently visible (called after Supabase
