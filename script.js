@@ -568,6 +568,15 @@ function navigateTo(page) {
         targetPage.style.animation = 'pageFadeIn 0.5s ease';
     }
 
+    // Always reset scroll on page switch so the new page is visible from the
+    // top (especially important on mobile: tapping Edit from a scrolled-down
+    // profile would otherwise leave the user staring at the previous page).
+    try {
+        window.scrollTo(0, 0);
+        const sc = document.scrollingElement || document.documentElement;
+        if (sc) sc.scrollTop = 0;
+    } catch (e) {}
+
     const navItem = document.querySelector(`.nav-item[data-page="${page}"]`);
     if (navItem) navItem.classList.add('active');
 
