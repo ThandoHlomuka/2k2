@@ -551,7 +551,7 @@ function navigateTo(page) {
     // Persist the currently-viewed page so a refresh returns the user to the
     // same page instead of the dashboard. Never persist dashboard itself.
     if (page && document.getElementById('page-' + page)) {
-        const scope = window.location.pathname.includes('provider.html') ? '_2k2_last_page_provider' : '_2k2_last_page_user';
+        const scope = /provider(\.html)?$/.test(window.location.pathname) ? '_2k2_last_page_provider' : '_2k2_last_page_user';
         try {
             localStorage.setItem(scope, page === 'user-dashboard' || page === 'provider-dashboard' ? '' : page);
         } catch (e) {}
@@ -821,7 +821,7 @@ document.addEventListener('DOMContentLoaded', function() {
     updateUserNavLabels();
 
     // On refresh, restore the last-viewed page instead of the dashboard.
-    const isProv = window.location.pathname.includes('provider.html');
+    const isProv = /provider(\.html)?$/.test(window.location.pathname);
     const scope = isProv ? '_2k2_last_page_provider' : '_2k2_last_page_user';
     let restore = '';
     try { restore = localStorage.getItem(scope) || ''; } catch (e) {}
