@@ -548,6 +548,15 @@ let currentEventViewId = null;
 function navigateTo(page) {
     const sidebar = document.getElementById('sidebar');
     
+    // Persist the currently-viewed page so a refresh returns the user to the
+    // same page instead of the dashboard. Never persist dashboard itself.
+    if (page && document.getElementById('page-' + page)) {
+        const scope = window.location.pathname.includes('provider.html') ? '_2k2_last_page_provider' : '_2k2_last_page_user';
+        try {
+            localStorage.setItem(scope, page === 'user-dashboard' || page === 'provider-dashboard' ? '' : page);
+        } catch (e) {}
+    }
+
     document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
     document.querySelectorAll('.nav-item[data-page]').forEach(n => n.classList.remove('active'));
 
@@ -810,6 +819,15 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     maybeShowProfileSetup();
     updateUserNavLabels();
+
+    // On refresh, restore the last-viewed page instead of the dashboard.
+    const isProv = window.location.pathname.includes('provider.html');
+    const scope = isProv ? '_2k2_last_page_provider' : '_2k2_last_page_user';
+    let restore = '';
+    try { restore = localStorage.getItem(scope) || ''; } catch (e) {}
+    if (restore && document.getElementById('page-' + restore)) {
+        navigateTo(restore);
+    }
 });
 
 function closeSidebar() {
