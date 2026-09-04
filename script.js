@@ -602,6 +602,7 @@ function navigateTo(page) {
     if (page === 'user-bookings') renderUserBookings();
     if (page === 'user-interests') renderUserInterests();
     if (page === 'provider-bookings') renderProviderBookings();
+    if (page === 'provider-schedule') renderProviderSchedule();
     if (page === 'provider-tips') renderProviderTips();
     if (page === 'user-wallet') renderUserWallet();
     if (page === 'provider-wallet') renderProviderWallet();
@@ -4724,8 +4725,9 @@ function renderUserBookings() {
                 <div class="booking-card-body">
                     <div class="booking-detail"><i class="fas fa-calendar"></i> ${b.date || '-'}</div>
                     <div class="booking-detail"><i class="fas fa-clock"></i> ${b.time || '-'}</div>
-                    <div class="booking-detail"><i class="fas fa-tag"></i> ${b.serviceType || '-'}</div>
-                    <div class="booking-detail"><i class="fas fa-wallet"></i> Booking Fee: R${b.fee != null ? b.fee : getBookingFeeFor(b.providerId, b.providerType)}</div>
+                    <div class="booking-detail"><i class="fas fa-tag"></i> ${b.serviceType || b.rateLabel || '-'}</div>
+                    ${b.rateLabel ? `<div class="booking-detail"><i class="fas fa-layer-group"></i> ${b.rateLabel}: R${parseFloat(b.rateAmount) || 0}</div>` : ''}
+                    ${b.totalAmount != null ? `<div class="booking-detail"><i class="fas fa-wallet"></i> Total (escrow): R${parseFloat(b.totalAmount) || 0}</div>` : `<div class="booking-detail"><i class="fas fa-wallet"></i> Booking Fee: R${b.fee != null ? b.fee : getBookingFeeFor(b.providerId, b.providerType)}</div>`}
                     ${b.notes ? `<div class="booking-detail booking-notes"><i class="fas fa-comment"></i> ${b.notes}</div>` : ''}
                 </div>
                 <div class="booking-card-footer">
@@ -4743,11 +4745,11 @@ function cancelBooking(id) {
     const bookings = Storage.getBookings();
     const booking = bookings.find(b => b.id === id);
     if (booking) {
-        const fee = (booking.fee != null) ? booking.fee : getBookingFeeFor(booking.providerId, booking.providerType);
+        const amount = (booking.totalAmount != null) ? booking.totalAmount : ((booking.fee != null) ? booking.fee : getBookingFeeFor(booking.providerId, booking.providerType));
         booking.status = 'cancelled';
         Storage.setBookings(bookings);
-        refundBookingEscrow(booking, fee, 'Refund for booking cancelled by client');
-        showToast('Booking cancelled. Escrowed fee refunded to your wallet.', 'info');
+        refundBookingEscrow(booking, amount, 'Refund for booking cancelled by client');
+        showToast('Booking cancelled. Escrowed amount refunded to your wallet.', 'info');
         if (window.location.pathname.includes('provider.html')) {
             renderProviderBookings();
         } else {
@@ -4864,8 +4866,9 @@ function renderProviderBookings() {
                     <div class="booking-detail"><i class="fas fa-phone"></i> ${b.clientPhone || '-'}</div>
                     <div class="booking-detail"><i class="fas fa-calendar"></i> ${b.date || '-'}</div>
                     <div class="booking-detail"><i class="fas fa-clock"></i> ${b.time || '-'}</div>
-                    <div class="booking-detail"><i class="fas fa-tag"></i> ${b.serviceType || '-'}</div>
-                    <div class="booking-detail"><i class="fas fa-wallet"></i> Your Fee: R${b.fee != null ? b.fee : getBookingFeeFor(b.providerId, b.providerType)}</div>
+                    <div class="booking-detail"><i class="fas fa-tag"></i> ${b.serviceType || b.rateLabel || '-'}</div>
+                    ${b.rateLabel ? `<div class="booking-detail"><i class="fas fa-layer-group"></i> ${b.rateLabel}: R${parseFloat(b.rateAmount) || 0}</div>` : ''}
+                    ${b.totalAmount != null ? `<div class="booking-detail"><i class="fas fa-wallet"></i> Total Escrow: R${parseFloat(b.totalAmount) || 0}</div>` : `<div class="booking-detail"><i class="fas fa-wallet"></i> Your Fee: R${b.fee != null ? b.fee : getBookingFeeFor(b.providerId, b.providerType)}</div>`}
                     ${b.notes ? `<div class="booking-detail booking-notes"><i class="fas fa-comment"></i> ${b.notes}</div>` : ''}
                 </div>
                 <div class="booking-card-footer">
@@ -4895,14 +4898,15 @@ function updateBookingStatus(id, status) {
         booking.status = status;
         Storage.setBookings(bookings);
 
-        // Release the escrowed booking fee to the provider on confirmation.
+        // Release the escrowed booking total to the provider on confirmation.
         if (status === 'confirmed') {
-            const providerFee = (booking.fee != null) ? booking.fee : getBookingFeeFor(booking.providerId, booking.providerType);
-            booking.fee = providerFee;
+            const providerAmount = (booking.totalAmount != null) ? booking.totalAmount : ((booking.fee != null) ? booking.fee : getBookingFeeFor(booking.providerId, booking.providerType));
+            booking.fee = booking.fee != null ? booking.fee : getBookingFeeFor(booking.providerId, booking.providerType);
             Storage.setBookings(bookings);
-            releaseBookingEscrow(booking, providerFee);
+            releaseBookingEscrow(booking, providerAmount);
         } else if (status === 'cancelled') {
-            refundBookingEscrow(booking, booking.fee != null ? booking.fee : 0, `Refund for cancelled booking`);
+            const amount = (booking.totalAmount != null) ? booking.totalAmount : (booking.fee != null ? booking.fee : 0);
+            refundBookingEscrow(booking, amount, `Refund for cancelled booking`);
         }
 
         showToast(`Booking ${status}.`, 'success');

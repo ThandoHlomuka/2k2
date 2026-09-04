@@ -1464,13 +1464,13 @@ function renderAdminBookings() {
 
     tbody.innerHTML = bookings.map(b => {
         const status = (typeof BOOKING_STATUSES !== 'undefined' && BOOKING_STATUSES[b.status]) ? BOOKING_STATUSES[b.status] : { label: b.status || 'pending', color: '#f59e0b' };
-        const fee = b.fee != null ? 'R' + b.fee : '-';
+        const fee = b.totalAmount != null ? 'R' + b.totalAmount : (b.fee != null ? 'R' + b.fee : '-');
         return `
         <tr>
             <td><strong>${truncate(b.clientName || '-', 18)}</strong></td>
             <td>${truncate(listingTypeLabel(b), 20)}</td>
             <td>${b.date || '-'} ${b.time ? '&middot; ' + b.time : ''}</td>
-            <td>${b.serviceType || '-'}</td>
+            <td>${b.serviceType || b.rateLabel || '-'}${b.rateLabel && b.serviceType && b.serviceType !== b.rateLabel ? ' / ' + b.rateLabel : ''}</td>
             <td>${fee}</td>
             <td><span class="status-badge" style="background:${status.color}22;color:${status.color};border:1px solid ${status.color}44">${status.label}</span></td>
             <td>${fmtDate(b.createdAt)}</td>
@@ -1493,10 +1493,11 @@ function adminViewBooking(id) {
         <div class="admin-view-row"><span class="label">Client</span><span class="value">${escapeHtml(b.clientName || '-')}</span></div>
         <div class="admin-view-row"><span class="label">Client Email</span><span class="value">${escapeHtml(b.clientEmail || '-')}</span></div>
         <div class="admin-view-row"><span class="label">Client Phone</span><span class="value">${escapeHtml(b.clientPhone || '-')}</span></div>
-        <div class="admin-view-row"><span class="label">Service Type</span><span class="value">${escapeHtml(b.serviceType || '-')}</span></div>
+        <div class="admin-view-row"><span class="label">Service Type</span><span class="value">${escapeHtml(b.serviceType || b.rateLabel || '-')}</span></div>
         <div class="admin-view-row"><span class="label">Date</span><span class="value">${escapeHtml(b.date || '-')}</span></div>
         <div class="admin-view-row"><span class="label">Time</span><span class="value">${escapeHtml(b.time || '-')}</span></div>
-        <div class="admin-view-row"><span class="label">Fee</span><span class="value">${b.fee != null ? 'R' + b.fee : '-'}</span></div>
+        ${b.rateLabel ? `<div class="admin-view-row"><span class="label">Service Rate</span><span class="value">${escapeHtml(b.rateLabel)}: R${b.rateAmount != null ? b.rateAmount : '-'}</span></div>` : ''}
+        <div class="admin-view-row"><span class="label">Total Escrow</span><span class="value" style="color:#c9a227">${b.totalAmount != null ? 'R' + b.totalAmount : (b.fee != null ? 'R' + b.fee + ' (fee only)' : '-')}</span></div>
         <div class="admin-view-row"><span class="label">Status</span><span class="value" style="color:${status.color}">${status.label}</span></div>
         <div class="admin-view-row"><span class="label">Notes</span><span class="value">${escapeHtml(b.notes || '-')}</span></div>
         <div class="admin-view-row"><span class="label">Created</span><span class="value">${fmtDate(b.createdAt)}</span></div>

@@ -1467,25 +1467,24 @@
                             <input type="tel" id="bookingClientPhone" placeholder="Phone number">
                         </div>
                         <div class="form-group">
-                            <label>Service Type *</label>
-                            <select id="bookingServiceType" required>
-                                <option value="">Select service</option>
-                                <option value="Consultation">Consultation</option>
-                                <option value="Full Service">Full Service</option>
-                                <option value="Half Day">Half Day</option>
-                                <option value="Full Day">Full Day</option>
-                                <option value="Hourly">Hourly</option>
-                                <option value="Custom">Custom (discuss later)</option>
+                            <label>Service / Rate *</label>
+                            <select id="bookingRateSelect" onchange="onBookingRateChange()" required>
+                                <option value="">Select a service or rate</option>
                             </select>
                         </div>
-                        <div class="form-group">
-                            <label>Preferred Date *</label>
-                            <input type="date" id="bookingDate" required>
+                        <div class="form-group full-width">
+                            <label>Pick a date</label>
+                            <div id="bookingCalendar"></div>
+                            <div id="bookingNoSlots" style="display:none;margin-top:8px;color:#f87171;font-size:.85rem;">No bookable slots on this date.</div>
+                            <div id="bookingSlotGrid" style="margin-top:10px;"></div>
                         </div>
-                        <div class="form-group">
-                            <label>Preferred Time *</label>
-                            <input type="time" id="bookingTime" required>
-                        </div>
+                        <input type="hidden" id="bookingServiceType">
+                        <input type="hidden" id="bookingDate">
+                        <input type="hidden" id="bookingTime">
+                        <input type="hidden" id="bookingSelectedDate">
+                        <input type="hidden" id="bookingSelectedTime">
+                        <input type="hidden" id="bookingSelectedRateAmount">
+                        <input type="hidden" id="bookingSelectedRateLabel">
                         <div class="form-group full-width">
                             <label>Notes</label>
                             <textarea id="bookingNotes" placeholder="Any details or special requests..." rows="3"></textarea>
@@ -1493,8 +1492,18 @@
                     </div>
                     <div style="display:flex;align-items:center;gap:10px;background:linear-gradient(135deg,#c9a2271a,#c9a2270d);border:1px solid #c9a22744;border-radius:12px;padding:12px 14px;margin-bottom:16px;">
                         <i class="fas fa-wallet" style="color:#c9a227"></i>
-                        <span style="font-size:0.9rem;color:#8a7b55">This provider's booking fee:</span>
-                        <strong id="bookingFeeDisplay" style="margin-left:auto;color:#c9a227;font-size:1.1rem">R50</strong>
+                        <div style="font-size:0.85rem;color:#8a7b55;line-height:1.5;">
+                            <div>Service rate: <strong id="bookingRateAmountDisplay" style="color:#c9a227">R0</strong></div>
+                            <div>Booking fee: <strong id="bookingFeeDisplay" style="color:#c9a227">R50</strong></div>
+                        </div>
+                        <div style="margin-left:auto;text-align:right;">
+                            <div style="font-size:0.75rem;color:#8a7b55;">Total (escrow)</div>
+                            <strong id="bookingTotalDisplay" style="color:#c9a227;font-size:1.25rem">R0</strong>
+                        </div>
+                    </div>
+                    <div id="bookingPayRow" style="display:none;align-items:center;gap:10px;background:linear-gradient(135deg,#1d8a4e22,#1d8a4e11);border:1px solid #1d8a4e55;border-radius:12px;padding:12px 14px;margin-bottom:16px;">
+                        <i class="fas fa-lock" style="color:#5ce6a0"></i>
+                        <span style="font-size:0.85rem;color:#5ce6a0">Payment held securely in escrow until the provider confirms.</span>
                     </div>
                     <div class="modal-actions">
                         <button type="button" class="btn btn-secondary" onclick="closeBookingModal()">Cancel</button>
@@ -3902,6 +3911,7 @@
     <script src="products.js?v=26"></script>
     <script src="shipping.js?v=1"></script>
     <script src="invoices.js?v=1"></script>
+    <script src="bookings-advance.js?v=1"></script>
     <script>
         let onbSlide = 0;
         const slides = document.querySelectorAll('.onb-slide');
