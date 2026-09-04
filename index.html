@@ -3847,15 +3847,19 @@
         var signIn = document.getElementById('signInLink');
         var logout = document.getElementById('logoutLink');
         var done = false;
-        function render(user, role) {
+        function render(user, role, username) {
           if (!info || !signIn || !logout) return;
           if (user) {
             signIn.style.display = 'none';
             logout.style.display = '';
-            info.style.display = info.style.display === 'none' ? 'block' : 'block';
-            info.innerHTML = '<i class="fas fa-user-circle" style="margin-right:6px"></i>' +
-              '<span>' + escapeHtml(user.email || 'Account') + '</span>' +
-              (role ? ' <span style="color:#d4a853;text-transform:uppercase;font-size:10px;margin-left:4px">(' + role + ')</span>' : '');
+            info.style.display = 'block';
+            var name = username || user.email || (user.user_metadata && user.user_metadata.full_name) || 'Account';
+            var rl = role === 'admin' ? 'Admin' : (role === 'provider' ? 'Service Provider' : 'General User');
+            var rc = role === 'admin' ? '#8b5cf6' : (role === 'provider' ? '#34d399' : '#c9a227');
+            info.innerHTML = '<div style="display:flex;flex-direction:column;gap:3px">' +
+              '<span style="font-weight:700;color:#fdf9ef;font-size:13px"><i class="fas fa-user-circle" style="margin-right:6px"></i>' + escapeHtml(name) + '</span>' +
+              '<span style="align-self:flex-start;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:#0a0a0a;background:' + rc + ';padding:2px 8px;border-radius:50px">' + escapeHtml(rl) + '</span>' +
+              '</div>';
           } else {
             signIn.style.display = '';
             logout.style.display = 'none';
@@ -3880,7 +3884,7 @@
             var role = profile ? profile.role : null;
             if (role === 'provider') { window.location.href = 'provider.html'; return; }
             if (role !== 'admin') { var adl = document.getElementById('adminPortalLink'); if (adl) adl.style.display = 'none'; }
-            render(user, role);
+            render(user, role, profile ? (profile.username || '') : '');
           } catch (e) { render(null); }
         })();
       });
