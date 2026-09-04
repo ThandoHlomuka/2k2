@@ -88,7 +88,7 @@
   };
 
   window.approveUpgrade = async function (id) {
-    if (!confirm('Approve this provider upgrade? The applicant will gain provider access.')) return;
+    if (!confirm('Approve this provider payment? The applicant will still need identity verification before gaining provider access.')) return;
     const client = getClient();
     const request = (await loadRequests()).find(function (r) { return r.id === id; });
     if (!request) { alert('Request not found.'); return; }
@@ -100,24 +100,10 @@
       .eq('id', id);
     if (e1) { console.error(e1); alert('Could not approve request: ' + e1.message); return; }
 
-    // 2) promote the applicant's profile to provider.
-    // GUARD: never demote an existing admin - admins keep their role.
-    const { data: targetProfile } = await client
-      .from('profiles')
-      .select('role')
-      .eq('user_id', request.user_id)
-      .maybeSingle();
-    if (targetProfile && targetProfile.role === 'admin') {
-      alert('Approved. The applicant is an admin account, so their role was left unchanged.');
-      window.renderAdminUpgrades();
-      return;
-    }
-    const { error: e2 } = await client
-      .from('profiles')
-      .update({ role: 'provider', updated_at: new Date().toISOString() })
-      .eq('user_id', request.user_id);
-    if (e2) { console.error(e2); alert('Request approved, but could not update role: ' + e2.message); }
-
+    // 2) Provider access is granted once identity verification is also approved
+    //    (see the "Provider Applications" / identity page). This page only
+    //    confirms the payment. No role change here.
+    alert('Payment approved. Provider access is granted once the applicant\u2019s identity verification is also approved.');
     window.renderAdminUpgrades();
   };
 

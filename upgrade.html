@@ -34,6 +34,34 @@
     color: #a99c7e; padding: 7px 0; border-bottom: 1px dashed #3a2f16;
   }
   .meta-line span:last-child { color: #fdf9ef; font-weight: 600; }
+
+  .vr-strip { width:100%; height:1px; background:#3a2f16; margin:20px 0; position:relative; }
+  .vr-strip span { position:absolute; left:0; top:-8px; background:#0a0a0a; padding-right:10px;
+    font-size:11px; letter-spacing:.6px; text-transform:uppercase; color:#c9a227; font-weight:700; }
+  .vr-head { text-align:center; margin-bottom:14px; }
+  .vr-head .fa-user-shield { font-size:34px; color:#d4a853; margin-bottom:8px; }
+  .vr-head h3 { color:#fdf9ef; margin:0 0 6px; }
+  .vr-head p { color:#a99c7e; font-size:12.5px; line-height:1.55; margin:0; }
+  .vr-slots { display:flex; flex-direction:column; gap:14px; margin:16px 0; }
+  .vr-slot { background:#0f0f0f; border:1px dashed #4a3d1c; border-radius:12px; padding:12px; }
+  .vr-slot.ready { border-color:#34d399; background:rgba(52,211,153,.05); }
+  .vr-slot.sel { border-color:#c9a227; }
+  .vr-slot-label { display:flex; align-items:center; gap:8px; font-size:12px; color:#fdf9ef; font-weight:600; margin-bottom:8px; }
+  .vr-slot-label .step { flex:0 0 auto; width:20px; height:20px; border-radius:50%; background:#c9a227; color:#0a0a0a;
+    font-size:11px; font-weight:800; display:flex; align-items:center; justify-content:center; }
+  .vr-slot-hint { font-size:11px; color:#8a7b55; line-height:1.5; }
+  .vr-upload { display:flex; gap:12px; align-items:center; margin-top:6px; }
+  .vr-preview { width:78px; height:78px; border-radius:10px; overflow:hidden; flex:0 0 auto;
+    border:1px solid #3a2f16; background:#0a0a0a; display:flex; align-items:center; justify-content:center; color:#5a4f38; }
+  .vr-preview img { width:100%; height:100%; object-fit:cover; }
+  .vr-file-btn { flex:1; text-align:left; }
+  .vr-file-btn .pbtn { display:inline-block; background:rgba(201,162,39,.14); color:#e8c868; border:1px solid rgba(201,162,39,.4);
+    padding:9px 14px; border-radius:9px; font-size:12px; font-weight:600; cursor:pointer; }
+  .vr-file-btn .pbtn:hover { background:rgba(201,162,39,.24); }
+  .vr-file-btn input[type=file] { display:none; }
+  .vr-file-btn .fmeta { font-size:11px; color:#8a7b55; margin-top:6px; }
+  .vr-note { font-size:11.5px; color:#c9a87a; line-height:1.55; background:rgba(201,162,39,.07);
+    border-left:3px solid #c9a227; padding:8px 10px; border-radius:6px; margin:4px 0 14px; }
 </style>
 </head>
 <body class="auth-body">
@@ -78,8 +106,8 @@
     </div>
 
     <!-- Upgrade form -->
-    <form id="upgradeForm">
-      <div style="text-align:center"><span class="auth-role-chip">Step 1 of 2 · Choose a plan</span></div>
+    <form id="upgradeForm" style="display:none">
+      <div style="text-align:center"><span class="auth-role-chip">Step 2 of 2 · Choose a plan &amp; pay</span></div>
       <h2 class="auth-title">Become a Service Provider</h2>
       <p class="auth-sub">Choose a plan, pay, and we'll approve your provider access</p>
 
@@ -116,12 +144,83 @@
       <div class="auth-link">Not ready? <a href="index.html">Continue as General User</a></div>
     </form>
 
+    <!-- Identity verification panel -->
+    <div id="verifyPanel" style="display:none">
+      <div style="text-align:center"><span class="auth-role-chip" style="margin-bottom:12px">Step 1 of 2 · Verify your identity</span></div>
+      <div class="vr-head">
+        <i class="fa-solid fa-user-shield"></i>
+        <h3>Identity Verification</h3>
+        <p>To keep members safe, we verify every Service Provider's identity. Please upload <b>3 clear photos</b> below. Blurry or unclear images will be rejected.</p>
+      </div>
+
+      <div id="verifyMsg" style="display:none" class="auth-msg"></div>
+
+      <div class="vr-slots">
+        <div class="vr-slot sel" id="slotF">
+          <div class="vr-slot-label"><span class="step">1</span> Hold your ID next to your face</div>
+          <div class="vr-slot-hint">A clear selfie of you holding your government ID beside your face. The ID must be clearly visible and readable.</div>
+          <div class="vr-upload">
+            <div class="vr-preview" id="prevF"><i class="fa-solid fa-image" style="font-size:20px"></i></div>
+            <div class="vr-file-btn">
+              <label class="pbtn" for="vrFileF"><i class="fa-solid fa-camera"></i>&nbsp; Choose photo</label>
+              <input type="file" id="vrFileF" accept="image/*" capture="user">
+              <div class="fmeta" id="fmetaF">JPG / PNG</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="vr-slot sel" id="slotC">
+          <div class="vr-slot-label"><span class="step">2</span> Clean facial photo</div>
+          <div class="vr-slot-hint">A clear close-up of your face only — no ID, good lighting, looking at the camera.</div>
+          <div class="vr-upload">
+            <div class="vr-preview" id="prevC"><i class="fa-solid fa-user" style="font-size:22px"></i></div>
+            <div class="vr-file-btn">
+              <label class="pbtn" for="vrFileC"><i class="fa-solid fa-camera"></i>&nbsp; Choose photo</label>
+              <input type="file" id="vrFileC" accept="image/*" capture="user">
+              <div class="fmeta" id="fmetaC">JPG / PNG</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="vr-slot sel" id="slotB">
+          <div class="vr-slot-label"><span class="step">3</span> Full body holding your ID</div>
+          <div class="vr-slot-hint">A full-body photo of you, holding your ID clearly visible in the picture.</div>
+          <div class="vr-upload">
+            <div class="vr-preview" id="prevB"><i class="fa-solid fa-person" style="font-size:22px"></i></div>
+            <div class="vr-file-btn">
+              <label class="pbtn" for="vrFileB"><i class="fa-solid fa-camera"></i>&nbsp; Choose photo</label>
+              <input type="file" id="vrFileB" accept="image/*" capture="user">
+              <div class="fmeta" id="fmetaB">JPG / PNG</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="vr-note"><i class="fa-solid fa-shield-halved" style="margin-right:6px"></i> Your photos are stored only while your application is under review and are automatically deleted once it's been decided. Approved accounts can't be used until identity is verified.</div>
+
+      <button type="button" class="auth-btn" id="vrSubmitBtn"><i class="fa-solid fa-check"></i>&nbsp; Submit for Verification</button>
+      <button type="button" class="auth-btn auth-btn--ghost" style="margin-top:8px" onclick="window.location.href='index.html'">I'll do this later</button>
+    </div>
+
+    <!-- Verification pending / rejected state -->
+    <div id="verifyStateBox" style="display:none">
+      <div class="upg-status">
+        <i class="fa-solid fa-hourglass-half"></i>
+        <h3 id="verifyStateTitle">Verification in progress</h3>
+        <p id="verifyStateText">We're reviewing your identity photos. You'll get provider access once it's verified.</p>
+        <div class="auth-row">
+          <button class="auth-btn auth-btn--ghost" onclick="window.location.href='index.html'">Continue as General User</button>
+        </div>
+      </div>
+    </div>
+
     <div class="auth-back"><a href="onboarding.html">&larr; Back</a></div>
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
   <script src="config.js?v=20"></script>
   <script src="auth.js?v=20"></script>
+  <script src="db.js?v=27"></script>
   <script>
     (function () {
       var form = document.getElementById('upgradeForm');
@@ -129,9 +228,12 @@
       var msgEl = document.getElementById('authMsg');
       var chosen = 'standard';
       var chosenAmount = 200;
+      var photos = { f: null, c: null, b: null };
+      var MAX = 10 * 1024 * 1024; // 10MB raw cap
 
       function showErr(msg) { errEl.textContent = msg; errEl.classList.add('show'); msgEl.classList.remove('show'); }
       function showMsg(msg) { msgEl.textContent = msg; msgEl.classList.add('show'); errEl.classList.remove('show'); }
+
       window.selectPlan = function (el) {
         document.querySelectorAll('.upg-plan').forEach(function (p) { p.classList.remove('selected'); });
         el.classList.add('selected');
@@ -142,10 +244,130 @@
       };
       window.revealPayment = function () {
         if (!chosen) { showErr('Please select a plan first.'); return; }
-        showMsg(''); errEl.classList.add('show'); errEl.classList.remove('show');
-        msgEl.classList.remove('show');
+        showMsg(''); errEl.classList.remove('show'); msgEl.classList.remove('show');
         document.getElementById('paySection').style.display = 'block';
         document.getElementById('chooseBtn').style.display = 'none';
+      };
+
+      function hideAll() {
+        ['noAuthBox', 'pendingBox', 'providerBox', 'verifyPanel', 'verifyStateBox'].forEach(function (id) {
+          var el = document.getElementById(id); if (el) el.style.display = 'none';
+        });
+        form.style.display = 'none';
+      }
+      function openVerify() {
+        hideAll();
+        document.getElementById('verifyPanel').style.display = 'block';
+      }
+      function showPay() {
+        hideAll();
+        form.style.display = 'block';
+        document.getElementById('selAccount').textContent =
+          (window.__upgUser && window.__upgUser.email) || 'Signed in';
+      }
+
+      // Client-side downscale to keep stored photos small (limits exposure + app_data row size).
+      function downscaleImage(file, cb) {
+        if (!file || !file.type) { cb(null); return; }
+        if (!/^image\/(jpeg|png|webp|heic|heif|gif)$/i.test(file.type) && !file.type.startsWith('image/')) { cb('type'); return; }
+        if (file.size > MAX) { cb('size'); return; }
+        var reader = new FileReader();
+        reader.onload = function (e) {
+          var img = new Image();
+          img.onload = function () {
+            var MAXD = 1000;
+            var w = img.width, h = img.height;
+            if (w > MAXD || h > MAXD) {
+              var r = MAXD / Math.max(w, h);
+              w = Math.round(w * r); h = Math.round(h * r);
+            }
+            var canvas = document.createElement('canvas');
+            canvas.width = w; canvas.height = h;
+            canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+            var out = canvas.toDataURL('image/jpeg', 0.8);
+            cb(null, out);
+          };
+          img.onerror = function () { cb('read'); };
+          img.src = e.target.result;
+        };
+        reader.onerror = function () { cb('read'); };
+        reader.readAsDataURL(file);
+      }
+
+      function wirePhoto(key, fileId, prevId, metaId) {
+        var inp = document.getElementById(fileId);
+        var prev = document.getElementById(prevId);
+        var meta = document.getElementById(metaId);
+        var slotEl = inp.closest('.vr-slot');
+        inp.addEventListener('change', function () {
+          var file = inp.files && inp.files[0];
+          if (!file) return;
+          downscaleImage(file, function (err, dataUrl) {
+            if (err === 'type') { meta.textContent = 'Please choose an image file.'; return; }
+            if (err === 'size') { meta.textContent = 'Image too large (max 10MB).'; return; }
+            if (err || !dataUrl) { meta.textContent = 'Could not read that image.'; return; }
+            photos[key] = dataUrl;
+            prev.innerHTML = '<img src="' + dataUrl + '" alt="">';
+            meta.textContent = file.name + ' · ' + Math.round(dataUrl.length * 0.75 / 1024) + ' KB';
+            if (slotEl) slotEl.classList.add('ready');
+          });
+        });
+      }
+      wirePhoto('f', 'vrFileF', 'prevF', 'fmetaF');
+      wirePhoto('c', 'vrFileC', 'prevC', 'fmetaC');
+      wirePhoto('b', 'vrFileB', 'prevB', 'fmetaB');
+
+      function getMyVerification(userId) {
+        try {
+          var arr = window.Storage.getProviderVerifications() || [];
+          return arr.filter(function (v) { return String(v.user_id) === String(userId); })
+            .sort(function (a, b) { return new Date(b.submitted_at || 0) - new Date(a.submitted_at || 0); })[0] || null;
+        } catch (e) { return null; }
+      }
+
+      window.verifySubmit = async function () {
+        showMsg(''); errEl.classList.remove('show'); msgEl.classList.remove('show');
+        if (!photos.f || !photos.c || !photos.b) {
+          showErr('Please upload all 3 photos (ID with face, clean face, full body holding ID).');
+          return;
+        }
+        var client = window._2k2.getSupabase();
+        var user = await window._2k2.Auth.currentUser();
+        if (!client || !user) { showErr('You must be signed in.'); return; }
+
+        var btn = document.getElementById('vrSubmitBtn');
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>&nbsp; Submitting...';
+
+        try {
+          var arr = window.Storage.getProviderVerifications() || [];
+          // If a verification for this user exists, update it instead of adding dupes.
+          var existing = arr.filter(function (v) { return String(v.user_id) === String(user.id); });
+          var rec = {
+            id: existing.length ? existing[0].id : 'vrf_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8),
+            user_id: user.id,
+            email: user.email || '',
+            displayName: ((await window._2k2.Auth.getProfile().catch(function(){return null;})) || {}).full_name || '',
+            idFacePhoto: photos.f,
+            facePhoto: photos.c,
+            fullBodyPhoto: photos.b,
+            status: 'pending',
+            adminNote: null,
+            submitted_at: new Date().toISOString(),
+            decided_at: null,
+            decided_by: null,
+            linkedPaymentId: null
+          };
+          var rest = arr.filter(function (v) { return String(v.user_id) !== String(user.id); });
+          window.Storage.setProviderVerifications(rest.concat([rec]));
+          localStorage.setItem('k2_verify_pending', '1');
+          showPay();
+          if (window.scrollTo) window.scrollTo(0, 0);
+        } catch (ex) {
+          showErr('Could not save your photos. Please try again.');
+          btn.disabled = false;
+          btn.innerHTML = '<i class="fa-solid fa-check"></i>&nbsp; Submit for Verification';
+        }
       };
 
       form.addEventListener('submit', async function (e) {
@@ -154,9 +376,6 @@
         var client = window._2k2.getSupabase();
         var user = await window._2k2.Auth.currentUser();
         if (!client || !user) { showErr('You must be signed in to upgrade.'); window.location.href = 'login.html?next=upgrade.html'; return; }
-
-        var selAcct = document.getElementById('selAccount');
-        selAcct.textContent = (user.email || 'Signed in');
 
         var payBtn = document.getElementById('payBtn');
         payBtn.disabled = true;
@@ -173,8 +392,21 @@
           });
           if (error) { showErr(error.message || 'Could not submit your request.'); payBtn.disabled = false; payBtn.innerHTML = '<i class="fa-solid fa-lock"></i>&nbsp; Submit Payment & Request Approval'; return; }
           localStorage.setItem('k2_provider_requested', '1');
-          form.style.display = 'none';
-          document.getElementById('pendingBox').style.display = 'block';
+          // Mark the applicant's verification record as having a payment submitted.
+          try {
+            var varr = window.Storage.getProviderVerifications() || [];
+            var mine = varr.filter(function (v) { return String(v.user_id) === String(user.id); });
+            if (mine.length) {
+              mine[0].paymentSubmitted = true;
+              window.Storage.setProviderVerifications(varr);
+            }
+          } catch (e2) {}
+          hideAll();
+          var st = document.getElementById('verifyStateBox');
+          st.style.display = 'block';
+          document.getElementById('verifyStateTitle').textContent = 'Application submitted';
+          document.getElementById('verifyStateText').innerHTML = 'Your payment and identity photos are now under review. Once accepted your account will automatically become a Service Provider and you\u2019ll be taken to your provider portal.';
+          if (window.scrollTo) window.scrollTo(0, 0);
         } catch (ex) {
           showErr('Something went wrong. Please try again.');
           payBtn.disabled = false;
@@ -187,19 +419,37 @@
         if (!client) { document.getElementById('noAuthBox').style.display = 'block'; return; }
         var user = await window._2k2.Auth.currentUser();
         if (!user) { document.getElementById('noAuthBox').style.display = 'block'; return; }
+        window.__upgUser = user;
         var profile = await window._2k2.Auth.getProfile();
         if (profile && profile.role === 'provider') {
           document.getElementById('providerBox').style.display = 'block';
           return;
         }
-        // check for an existing pending request
-        var { data } = await client.from('provider_upgrade_requests').select('*').eq('user_id', user.id).eq('status', 'pending').order('created_at', { ascending: false }).limit(1);
-        if (data && data.length) {
-          document.getElementById('pendingBox').style.display = 'block';
+        var params = new URLSearchParams(window.location.search);
+        // If an existing provider_upgrade_requests row exists (any status except rejected) -> app under review / show state.
+        var { data } = await client.from('provider_upgrade_requests').select('*').eq('user_id', user.id).order('created_at', { ascending: false }).limit(1);
+        var myV = getMyVerification(user.id);
+
+        if (params.get('verify') === '1' || (!data || !data.length)) {
+          // New application: start with identity verification (step 1), then payment (step 2).
+          openVerify();
           return;
         }
-        // otherwise show the form
-        form.style.display = 'block';
+        var last = data[0];
+        if (last.status === 'rejected') {
+          // Rejected: show reason + allow resubmission.
+          document.getElementById('verifyStateBox').style.display = 'block';
+          document.getElementById('verifyStateTitle').textContent = 'Application not accepted';
+          var reasonTxt = (myV && myV.adminNote) ? myV.adminNote : 'Please review and resubmit your details.';
+          document.getElementById('verifyStateText').innerHTML = 'Your application was not accepted.' +
+            (reasonTxt ? ('<br><br><b>Reason:</b> ' + reasonTxt) : '') +
+            '<br><br>You can update your information and re-apply.';
+          return;
+        }
+        // Approved payment request but still waiting on identity? show state.
+        document.getElementById('verifyStateBox').style.display = 'block';
+        document.getElementById('verifyStateTitle').textContent = 'Application under review';
+        document.getElementById('verifyStateText').innerHTML = 'Your payment and identity photos are being reviewed. Once accepted your account will automatically become a Service Provider and you\u2019ll be taken to your provider portal.';
       })();
     })();
   </script>

@@ -596,6 +596,10 @@
     </div>
 
     <div class="main-content" id="mainContent">
+        <!-- Provider application status banner (general user portal notice) -->
+        <div id="providerAppBanner" style="display:none;background:linear-gradient(90deg,#c9a227,#a07d12);color:#0a0a0a;padding:10px 18px;font-size:13px;font-weight:600;cursor:pointer;z-index:20" onclick="window.location.href='upgrade.html'">
+            <i class="fas fa-user-shield" style="margin-right:8px"></i><span id="providerAppBannerText">Your Service Provider application is under review.</span>
+        </div>
         
         <!-- User Dashboard -->
         <div class="page active" id="page-user-dashboard">
@@ -3837,7 +3841,7 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
     <script src="config.js?v=20"></script>
     <script src="auth.js?v=20"></script>
-    <script src="db.js?v=26"></script>
+    <script src="db.js?v=27"></script>
     <script src="presence.js?v=22"></script>
     <script>
     // Session-aware sidebar (Sign In / Logout / account chip).

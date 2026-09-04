@@ -827,6 +827,7 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('eventsDirectoryList') && renderEventsDirectory();
     }
     maybeShowProfileSetup();
+    renderProviderAppBanner();
     updateUserNavLabels();
 
     // On refresh, restore the last-viewed page instead of the dashboard.
@@ -1501,6 +1502,39 @@ async function hasPendingProviderRequest() {
             .select('id').eq('user_id', id).eq('status', 'pending').limit(1);
         return !!(data && data.length);
     } catch (e) { return false; }
+}
+
+async function renderProviderAppBanner() {
+    const banner = document.getElementById('providerAppBanner');
+    const text = document.getElementById('providerAppBannerText');
+    if (!banner) return;
+    banner.style.display = 'none';
+    const id = currentAuthId();
+    if (!id) return;
+    // Only show on the general user portal while a provider application is in
+    // progress (payment + identity). Once approved the account auto-routes to
+    // provider.html, so nothing more is needed here.
+    const prof = await window._2k2.Auth.getProfile().catch(function () { return null; });
+    if (prof && prof.role === 'provider') return;
+
+    const client = window._2k2.getSupabase();
+    let status = null;
+    if (client) {
+        try {
+            const { data } = await client.from('provider_upgrade_requests')
+                .select('status').eq('user_id', id).order('created_at', { ascending: false }).limit(1);
+            if (data && data.length) status = data[0].status;
+        } catch (e) {}
+    }
+    if (status === 'rejected') {
+        if (text) text.innerHTML = 'Your Service Provider application was not accepted. Tap to see why &amp; reapply. <i class="fas fa-arrow-right"></i>';
+        banner.style.display = 'block';
+        return;
+    }
+    if (status === 'pending' || status === 'approved' || localStorage.getItem('k2_verify_pending') === '1') {
+        if (text) text.innerHTML = 'Your Service Provider application is under review — you\u2019ll be switched to your provider portal once accepted. <i class="fas fa-arrow-right"></i>';
+        banner.style.display = 'block';
+    }
 }
 
 async function updateAuthPrompt() {

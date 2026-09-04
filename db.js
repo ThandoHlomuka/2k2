@@ -60,7 +60,8 @@
     { name: 'AdPackages', col: 'ad_packages', key: 'k2_ad_packages' },
     { name: 'AdCampaigns', col: 'ad_campaigns', key: 'k2_ad_campaigns' },
     { name: 'AdStats', col: 'ad_stats', key: 'k2_ad_stats' },
-    { name: 'AdvertiserQueries', col: 'advertiser_queries', key: 'k2_advertiser_queries' }
+    { name: 'AdvertiserQueries',   col: 'advertiser_queries',        key: 'k2_advertiser_queries' },
+    { name: 'ProviderVerifications', col: 'provider_verifications', key: 'k2_provider_verifications' }
   ];
 
   const cache = {};      // col -> array

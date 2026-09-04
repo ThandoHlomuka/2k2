@@ -92,6 +92,10 @@
                 <i class="fas fa-rocket"></i>
                 <span>Provider Upgrades</span>
             </a>
+            <a href="#" class="nav-item" data-page="admin-verifications">
+                <i class="fas fa-user-shield"></i>
+                <span>Provider Applications</span>
+            </a>
             <a href="#" class="nav-item" data-page="admin-providers">
                 <i class="fas fa-user-tie"></i>
                 <span>Providers</span>
@@ -495,6 +499,21 @@
                 <div class="admin-table-wrap">
                     <table class="admin-table" id="adminUpgradesTable">
                         <thead><tr><th>Applicant</th><th>Email</th><th>Plan</th><th>Amount</th><th>Payment Ref</th><th>Notes</th><th>Submitted</th><th>Status</th><th>Actions</th></tr></thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Manage Provider Applications (payment + identity verification) -->
+        <div class="page" id="page-admin-verifications">
+            <div class="container">
+                <div class="dashboard-header">
+                    <div><h1><i class="fas fa-user-shield"></i> Provider Applications</h1><p>Review service provider applications — payment and identity verification grouped together. Approve or reject with a side note.</p></div>
+                </div>
+                <div class="admin-table-wrap">
+                    <table class="admin-table" id="adminVerificationsTable">
+                        <thead><tr><th>Applicant</th><th>Email</th><th>Plan / Payment</th><th>Identity · Payment</th><th>Submitted</th><th>Status</th><th>Actions</th></tr></thead>
                         <tbody></tbody>
                     </table>
                 </div>
@@ -1923,6 +1942,7 @@
     <script src="media-player.js?v=3"></script>
     <script src="admin.js?v=35"></script>
     <script src="admin-upgrades.js?v=21"></script>
+    <script src="admin-verifications.js?v=1"></script>
     <script src="products.js?v=26"></script>
     <script src="shipping.js?v=1"></script>
     <script src="invoices.js?v=1"></script>

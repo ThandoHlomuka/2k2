@@ -31,6 +31,7 @@ function navigateTo(page) {
     if (page === 'admin-users') renderAdminUsers();
     if (page === 'admin-approvals') renderAdminApprovals();
     if (page === 'admin-upgrades') renderAdminUpgrades();
+    if (page === 'admin-verifications') renderAdminVerifications();
     if (page === 'admin-providers') renderAdminProviders();
     if (page === 'admin-listings') renderAdminListings();
     if (page === 'admin-venues') renderAdminVenues();
