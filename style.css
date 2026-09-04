@@ -34,6 +34,11 @@
     box-sizing: border-box;
 }
 
+html {
+    overflow-x: hidden;
+    -webkit-text-size-adjust: 100%;
+}
+
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     background: #f3eddd;
@@ -748,7 +753,7 @@ h1, h2, h3, h4 {
 
 .profiles-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(0, 1fr));
     gap: 20px;
 }
 
@@ -2644,7 +2649,7 @@ h1, h2, h3, h4 {
    ============================================ */
 .directory-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(0, 1fr));
     gap: 20px;
 }
 
@@ -3087,7 +3092,7 @@ h1, h2, h3, h4 {
    ============================================ */
 .ads-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(0, 1fr));
     gap: 20px;
 }
 
@@ -3519,6 +3524,43 @@ h1, h2, h3, h4 {
 
     .list-view > .directory-card .directory-card-actions .btn {
         flex: 1;
+    }
+
+    /* Grid-mode profile/directory cards on mobile: stack vertically so the
+       non-shrinking action buttons never push the card (or the page) wider. */
+    .directory-grid > .profile-list-card,
+    .profiles-grid > .profile-list-card {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+        min-width: 0;
+        width: 100%;
+    }
+
+    .directory-grid > .profile-list-card .list-card-actions,
+    .profiles-grid > .profile-list-card .list-card-actions {
+        margin-left: 0;
+        width: 100%;
+        justify-content: flex-start;
+        flex-wrap: wrap;
+    }
+
+    .directory-grid > .directory-card,
+    .directory-grid > .ad-card,
+    .directory-grid > .forum-thread-card,
+    .content-grid > *,
+    .mon-src-grid > *,
+    .monetization-guide-grid > *,
+    .earn-teaser > * {
+        min-width: 0;
+        max-width: 100%;
+    }
+
+    .directory-card .directory-card-info,
+    .directory-card .dir-info,
+    .directory-card .directory-card-body {
+        min-width: 0;
+        overflow-wrap: break-word;
     }
 
     /* Make the grid/list toggle fill the mobile filter column cleanly. */
@@ -4101,7 +4143,7 @@ h1, h2, h3, h4 {
 
 .content-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(0, 1fr));
     gap: 20px;
     padding: 4px 0;
 }
@@ -5515,7 +5557,7 @@ h1, h2, h3, h4 {
 /* Grid mode for forum-threads containers that also carry directory-grid (experiences/fantasy too) */
 .forum-threads-list.directory-grid:not(.list-view) {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(0, 1fr));
     gap: 20px;
     align-items: stretch;
 }
@@ -8414,7 +8456,7 @@ h1, h2, h3, h4 {
 /* ============ Monetization Hub ============ */
 .mon-src-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(0, 1fr));
     gap: 16px;
 }
 .mon-src-head {
@@ -8454,7 +8496,7 @@ h1, h2, h3, h4 {
 }
 .monetization-guide-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(0, 1fr));
     gap: 16px;
 }
 .monetization-guide-grid .how-step {
@@ -8471,7 +8513,7 @@ h1, h2, h3, h4 {
 }
 .earn-teaser {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(0, 1fr));
     gap: 12px;
     margin-top: 16px;
 }
