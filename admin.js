@@ -54,6 +54,7 @@ function navigateTo(page) {
     if (page === 'admin-products') renderAdminProducts();
     if (page === 'admin-product-orders') renderAdminProductOrders();
     if (page === 'admin-help-queries') renderAdminHelpQueries();
+    if (page === 'admin-investor-queries') renderAdminInvestorQueries();
     if (page === 'admin-invoices') renderAdminInvoices();
 
     const sidebar = document.getElementById('sidebar');
@@ -3529,6 +3530,150 @@ function saveAdminHelpReply(id) {
     closeAdminHelpReply();
     renderAdminHelpQueries();
     showToast('Reply sent to the user. Query marked as resolved.');
+}
+
+// ==========================================
+// INVESTOR ENQUIRIES
+// Enquiries submitted from the public Invest in 2k2 page.
+// ==========================================
+let currentAdminInvestorFilter = 'all';
+let currentInvestorQueryId = null;
+
+function filterAdminInvestor(filter) {
+    currentAdminInvestorFilter = filter;
+    document.querySelectorAll('#page-admin-investor-queries .filter-tab').forEach(t => {
+        t.classList.toggle('active', (t.getAttribute('onclick') || '').includes("'" + filter + "'"));
+    });
+    renderAdminInvestorQueries();
+}
+
+function investorStatusLabel(st) {
+    if (st === 'new') return '<span style="color:#f59e0b;font-weight:700">New</span>';
+    if (st === 'contacted') return '<span style="color:#3b82f6;font-weight:700">Contacted</span>';
+    if (st === 'closed') return '<span style="color:#8a7b55;font-weight:700">Closed</span>';
+    return '<span style="font-weight:700">' + escapeHtml(String(st || 'new')) + '</span>';
+}
+
+function renderAdminInvestorQueries() {
+    let queries = [...Storage.getInvestorQueries()];
+    const search = document.getElementById('adminInvestorSearch')?.value?.toLowerCase() || '';
+
+    const all = Storage.getInvestorQueries();
+    document.getElementById('adminInvestorCount').textContent = all.length;
+    document.getElementById('adminInvestorNewCount').textContent = all.filter(q => q.status === 'new').length;
+    document.getElementById('adminInvestorContactedCount').textContent = all.filter(q => q.status === 'contacted').length;
+    document.getElementById('adminInvestorDeckCount').textContent = all.filter(q => q.wantsDeck).length;
+
+    if (currentAdminInvestorFilter === 'new') queries = queries.filter(q => q.status === 'new');
+    else if (currentAdminInvestorFilter === 'contacted') queries = queries.filter(q => q.status === 'contacted');
+    else if (currentAdminInvestorFilter === 'closed') queries = queries.filter(q => q.status === 'closed');
+
+    if (search) {
+        queries = queries.filter(q =>
+            (q.name || '').toLowerCase().includes(search) ||
+            (q.email || '').toLowerCase().includes(search) ||
+            (q.company || '').toLowerCase().includes(search) ||
+            (q.message || '').toLowerCase().includes(search) ||
+            (q.investorType || '').toLowerCase().includes(search)
+        );
+    }
+
+    queries.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+    const tbody = document.getElementById('adminInvestorTableBody');
+    if (!tbody) return;
+
+    if (queries.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7" class="empty-cell">No investor enquiries found</td></tr>';
+        return;
+    }
+
+    tbody.innerHTML = queries.map(q => {
+        const type = q.investorType || 'Investor';
+        const range = q.range ? (q.investorType ? ' · ' : '') + q.range : '';
+        const company = q.company ? '<div class="truncate" style="max-width:170px;font-size:0.8rem;color:#a99c7e">' + escapeHtml(q.company) + '</div>' : '';
+        return `
+            <tr>
+                <td>
+                    <strong>${escapeHtml(q.name || '-')}</strong>
+                    <div class="truncate" style="max-width:190px;font-size:0.8rem;color:#a99c7e">${escapeHtml(q.email || '')}</div>
+                    ${company}
+                </td>
+                <td>${escapeHtml(type)}${escapeHtml(range)}</td>
+                <td class="truncate" style="max-width:220px">${escapeHtml(q.message || '')}</td>
+                <td>${q.wantsDeck ? '<i class="fas fa-file-invoice-dollar" style="color:#d4a853"></i> Deck' : '<span style="color:#8a7b55">-</span>'}</td>
+                <td>${investorStatusLabel(q.status)}</td>
+                <td>${fmtDate(q.createdAt)}</td>
+                <td>
+                    <div class="admin-actions">
+                        <button class="btn btn-secondary btn-xs" onclick="openAdminInvestorReply('${q.id}')"><i class="fas fa-external-link-alt"></i> View</button>
+                    </div>
+                </td>
+            </tr>
+        `;
+    }).join('');
+}
+
+function openAdminInvestorReply(id) {
+    const q = Storage.getInvestorQueries().find(x => x.id === id);
+    if (!q) return;
+    currentInvestorQueryId = id;
+    const body = document.getElementById('adminInvestorReplyBody');
+    const preview = q.adminReply
+        ? `<div class="admin-view-block"><h4 style="color:#d4a853;margin:0 0 6px">Your Reply</h4><p style="margin:0">${escapeHtml(q.adminReply)}</p></div>`
+        : '';
+    const range = q.range ? ' · ' + escapeHtml(q.range) : '';
+    const company = q.company ? ' · ' + escapeHtml(q.company) : '';
+    body.innerHTML = `
+        <div class="admin-view-block">
+            <h4 style="margin:0 0 6px">${escapeHtml(q.name || 'Unknown')} <span style="font-size:0.75rem;color:#a99c7e">${escapeHtml(q.email || '')}</span></h4>
+            <p style="margin:0 0 4px"><span style="color:#d4a853">${escapeHtml(q.investorType || 'Investor')}${range}${company}</span></p>
+            <p style="margin:0">${escapeHtml(q.message || '')}</p>
+            <p style="font-size:0.78rem;color:#a99c7e;margin-top:4px">${q.wantsDeck ? '<i class="fas fa-file-invoice-dollar"></i> Requested investor deck · ' : ''}Submitted ${fmtDate(q.createdAt)} · Status: ${(q.status || 'new').toUpperCase()}</p>
+        </div>
+        ${preview}
+        <div class="form-group" style="margin-top:14px">
+            <label>Your Response</label>
+            <textarea id="adminInvestorReplyText" rows="5" placeholder="Type your reply to this investor...">${escapeHtml(q.adminReply || '')}</textarea>
+        </div>
+        <div style="text-align:right;margin-top:14px;display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap">
+            <button class="btn btn-secondary" onclick="closeAdminInvestorReply()">Close</button>
+            <button class="btn btn-secondary" onclick="markAdminInvestorStatus('${q.id}','contacted')">Mark Contacted</button>
+            <button class="btn btn-primary" onclick="saveAdminInvestorReply('${q.id}')">${q.status === 'closed' ? 'Update Reply' : 'Send Reply &amp; Close'}</button>
+        </div>
+    `;
+    document.getElementById('adminInvestorReplyModal').classList.add('active');
+}
+
+function closeAdminInvestorReply() {
+    document.getElementById('adminInvestorReplyModal').classList.remove('active');
+}
+
+function markAdminInvestorStatus(id, status) {
+    const queries = Storage.getInvestorQueries();
+    const q = queries.find(x => x.id === id);
+    if (!q) return;
+    q.status = status;
+    q.updatedAt = new Date().toISOString();
+    Storage.setInvestorQueries(queries);
+    renderAdminInvestorQueries();
+    showToast('Enquiry marked as ' + status + '.');
+}
+
+function saveAdminInvestorReply(id) {
+    const reply = document.getElementById('adminInvestorReplyText').value.trim();
+    if (!reply) { showToast('Please type a reply.', 'error'); return; }
+    const queries = Storage.getInvestorQueries();
+    const q = queries.find(x => x.id === id);
+    if (!q) return;
+    q.adminReply = reply;
+    q.status = 'closed';
+    q.repliedAt = new Date().toISOString();
+    q.updatedAt = new Date().toISOString();
+    Storage.setInvestorQueries(queries);
+    closeAdminInvestorReply();
+    renderAdminInvestorQueries();
+    showToast('Reply saved. Enquiry marked as closed.');
 }
 
 function adminMessageLogsSearch() { renderAdminMessageLogs(); }

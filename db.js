@@ -55,7 +55,8 @@
     { name: 'Follows', col: 'follows', key: 'k2_follows' },
     { name: 'EscrowFunds', col: 'escrow_funds', key: 'k2_escrow_funds' },
     { name: 'Shipping', col: 'shipping', key: 'k2_shipping' },
-    { name: 'Invoices', col: 'invoices', key: 'k2_invoices' }
+    { name: 'Invoices', col: 'invoices', key: 'k2_invoices' },
+    { name: 'InvestorQueries', col: 'investor_queries', key: 'k2_investor_queries' }
   ];
 
   const cache = {};      // col -> array
