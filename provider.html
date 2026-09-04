@@ -82,6 +82,10 @@
                 <i class="fas fa-plus-square"></i>
                 <span>New Listing</span>
             </a>
+            <a href="#" class="nav-item" data-page="directory">
+                <i class="fas fa-compass"></i>
+                <span>Browse Listings</span>
+            </a>
             <div class="nav-divider"></div>
             <span class="nav-section-title">Venues</span>
             <a href="#" class="nav-item" data-page="provider-venue-directory">
@@ -91,6 +95,10 @@
             <a href="#" class="nav-item" data-page="provider-venue-create">
                 <i class="fas fa-plus-circle"></i>
                 <span>New Venue</span>
+            </a>
+            <a href="#" class="nav-item" data-page="venue-directory">
+                <i class="fas fa-compass"></i>
+                <span>Browse Venues</span>
             </a>
             <div class="nav-divider"></div>
             <span class="nav-section-title">Services</span>
@@ -102,6 +110,10 @@
                 <i class="fas fa-plus-circle"></i>
                 <span>New Service</span>
             </a>
+            <a href="#" class="nav-item" data-page="services-directory">
+                <i class="fas fa-compass"></i>
+                <span>Browse Services</span>
+            </a>
             <div class="nav-divider"></div>
             <span class="nav-section-title">Products</span>
             <a href="#" class="nav-item" data-page="provider-products">
@@ -111,6 +123,10 @@
             <a href="#" class="nav-item" data-page="provider-product-create">
                 <i class="fas fa-plus-circle"></i>
                 <span>New Product</span>
+            </a>
+            <a href="#" class="nav-item" data-page="products-directory">
+                <i class="fas fa-compass"></i>
+                <span>Browse Products</span>
             </a>
             <a href="#" class="nav-item" data-page="provider-orders">
                 <i class="fas fa-inbox"></i>
@@ -130,6 +146,10 @@
                 <i class="fas fa-plus-circle"></i>
                 <span>New Content</span>
             </a>
+            <a href="#" class="nav-item" data-page="content-directory">
+                <i class="fas fa-compass"></i>
+                <span>Browse Content</span>
+            </a>
             <div class="nav-divider"></div>
             <span class="nav-section-title">Events</span>
             <a href="#" class="nav-item" data-page="provider-events">
@@ -139,6 +159,10 @@
             <a href="#" class="nav-item" data-page="provider-event-create">
                 <i class="fas fa-plus-circle"></i>
                 <span>New Event</span>
+            </a>
+            <a href="#" class="nav-item" data-page="events-directory">
+                <i class="fas fa-compass"></i>
+                <span>Browse Events</span>
             </a>
             <div class="nav-divider"></div>
             <span class="nav-section-title">Forum</span>
@@ -182,6 +206,10 @@
                 <i class="fas fa-pen-to-square"></i>
                 <span>Post an Ad</span>
             </a>
+            <a href="#" class="nav-item" data-page="ads-browse">
+                <i class="fas fa-compass"></i>
+                <span>Browse Ads</span>
+            </a>
             <div class="nav-divider"></div>
             <span class="nav-section-title">Messages</span>
             <a href="#" class="nav-item" data-page="inbox">
@@ -216,9 +244,17 @@
                 <i class="fas fa-plus-circle"></i>
                 <span>Add Experience</span>
             </a>
+            <a href="#" class="nav-item" data-page="experiences-browse">
+                <i class="fas fa-compass"></i>
+                <span>Browse Experiences</span>
+            </a>
             <a href="#" class="nav-item" data-page="provider-fantasy-requests">
                 <i class="fas fa-scroll"></i>
                 <span>Fantasy Requests</span>
+            </a>
+            <a href="#" class="nav-item" data-page="fantasy-requests">
+                <i class="fas fa-compass"></i>
+                <span>Browse Fantasy</span>
             </a>
             <div class="nav-divider"></div>
             <span class="nav-section-title">Earnings</span>
@@ -3369,6 +3405,1433 @@
                     <h1>Fantasy Request</h1>
                 </div>
                 <div id="fantasyViewContent"></div>
+            </div>
+        </div>
+
+        
+        <!-- ============ PROVIDER BROWSE : shared member-visible listing pages ============ -->
+
+<div class="page" id="page-directory">
+            <div class="container">
+                <div class="dashboard-header">
+                    <div>
+                        <h1>Profiles Directory</h1>
+                        <p>Browse service providers by category</p>
+                    </div>
+                </div>
+
+                <div class="directory-filters">
+                    <div class="filter-tabs">
+                        <button class="filter-tab active" onclick="filterDirectory('all')">All</button>
+                        <button class="filter-tab" onclick="filterDirectory('content-creator')"><i class="fas fa-video"></i> Content Creator</button>
+                        <button class="filter-tab" onclick="filterDirectory('model')"><i class="fas fa-camera-retro"></i> Model</button>
+                        <button class="filter-tab" onclick="filterDirectory('exotic-dancer')"><i class="fas fa-music"></i> Exotic Dancer</button>
+                        <button class="filter-tab" onclick="filterDirectory('escort')"><i class="fas fa-gem"></i> Escort</button>
+                        <button class="filter-tab" onclick="filterDirectory('nude-chef')"><i class="fas fa-utensils"></i> Nude Chef</button>
+                        <button class="filter-tab" onclick="filterDirectory('masseuse')"><i class="fas fa-spa"></i> Masseuse</button>
+                    </div>
+                    <div class="filter-bar">
+                        <input type="text" id="directorySearch" placeholder="Search by name, location, or tag..." oninput="searchDirectory()">
+                        <select id="directoryLocationFilter" onchange="searchDirectory()">
+                            <option value="">All Locations</option>
+                            <optgroup label="Gauteng">
+                                <option value="Johannesburg">Johannesburg</option>
+                                <option value="Pretoria">Pretoria</option>
+                                <option value="Sandton">Sandton</option>
+                                <option value="Randburg">Randburg</option>
+                                <option value="Roodepoort">Roodepoort</option>
+                                <option value="Soweto">Soweto</option>
+                                <option value="Midrand">Midrand</option>
+                                <option value="Centurion">Centurion</option>
+                                <option value="Benoni">Benoni</option>
+                                <option value="Boksburg">Boksburg</option>
+                                <option value="Brakpan">Brakpan</option>
+                                <option value="Germiston">Germiston</option>
+                                <option value="Kempton Park">Kempton Park</option>
+                                <option value="Alberton">Alberton</option>
+                                <option value="Vanderbijlpark">Vanderbijlpark</option>
+                                <option value="Vereeniging">Vereeniging</option>
+                                <option value="Krugersdorp">Krugersdorp</option>
+                                <option value="Springs">Springs</option>
+                            </optgroup>
+                            <optgroup label="Western Cape">
+                                <option value="Cape Town">Cape Town</option>
+                                <option value="Stellenbosch">Stellenbosch</option>
+                                <option value="Paarl">Paarl</option>
+                                <option value="George">George</option>
+                                <option value="Worcester">Worcester</option>
+                                <option value="Hermanus">Hermanus</option>
+                                <option value="Somerset West">Somerset West</option>
+                                <option value="Strand">Strand</option>
+                                <option value="Cape Town CBD">Cape Town CBD</option>
+                                <option value="Camps Bay">Camps Bay</option>
+                                <option value="Claremont">Claremont</option>
+                                <option value="Bellville">Bellville</option>
+                                <option value="Khayelitsha">Khayelitsha</option>
+                                <option value="Mitchells Plain">Mitchells Plain</option>
+                                <option value="Mossel Bay">Mossel Bay</option>
+                                <option value="Oudtshoorn">Oudtshoorn</option>
+                                <option value="Saldanha Bay">Saldanha Bay</option>
+                                <option value="Swellendam">Swellendam</option>
+                                <option value="Caledon">Caledon</option>
+                            </optgroup>
+                            <optgroup label="KwaZulu-Natal">
+                                <option value="Durban">Durban</option>
+                                <option value="Pietermaritzburg">Pietermaritzburg</option>
+                                <option value="Umhlanga">Umhlanga</option>
+                                <option value="Richards Bay">Richards Bay</option>
+                                <option value="Newcastle">Newcastle</option>
+                                <option value="Port Shepstone">Port Shepstone</option>
+                                <option value="Ladysmith">Ladysmith</option>
+                                <option value="Dundee">Dundee</option>
+                                <option value="Pinetown">Pinetown</option>
+                                <option value="Westville">Westville</option>
+                                <option value="Phoenix">Phoenix</option>
+                                <option value="Chatsworth">Chatsworth</option>
+                                <option value="Umlazi">Umlazi</option>
+                                <option value="Amanzimtoti">Amanzimtoti</option>
+                                <option value="Margate">Margate</option>
+                                <option value="Ballito">Ballito</option>
+                                <option value="Scottburgh">Scottburgh</option>
+                                <option value="Howick">Howick</option>
+                            </optgroup>
+                            <optgroup label="Eastern Cape">
+                                <option value="Port Elizabeth">Port Elizabeth (Gqeberha)</option>
+                                <option value="East London">East London</option>
+                                <option value="Grahamstown">Grahamstown (Makhanda)</option>
+                                <option value="Mthatha">Mthatha</option>
+                                <option value="Queenstown">Queenstown (Komani)</option>
+                                <option value="Graaff-Reinet">Graaff-Reinet</option>
+                                <option value="Jeffreys Bay">Jeffreys Bay</option>
+                                <option value="Port Alfred">Port Alfred</option>
+                                <option value="St Francis Bay">St Francis Bay</option>
+                                <option value="Kariega">Kariega</option>
+                                <option value="Uitenhage">Uitenhage (Kariega)</option>
+                                <option value="Gqeberha CBD">Gqeberha CBD</option>
+                                <option value="Butterworth">Butterworth</option>
+                                <option value="Centani">Centani</option>
+                            </optgroup>
+                            <optgroup label="Free State">
+                                <option value="Bloemfontein">Bloemfontein</option>
+                                <option value="Welkom">Welkom</option>
+                                <option value="Bethlehem">Bethlehem</option>
+                                <option value="Sasolburg">Sasolburg</option>
+                                <option value="Kroonstad">Kroonstad</option>
+                                <option value="Brandfort">Brandfort</option>
+                                <option value="Harrismith">Harrismith</option>
+                                <option value="Parys">Parys</option>
+                                <option value="Senekal">Senekal</option>
+                                <option value="Thaba Nchu">Thaba Nchu</option>
+                            </optgroup>
+                            <optgroup label="Mpumalanga">
+                                <option value="Nelspruit">Nelspruit (Mbombela)</option>
+                                <option value="Witbank">Witbank (Emalahleni)</option>
+                                <option value="Middelburg">Middelburg</option>
+                                <option value="Secunda">Secunda</option>
+                                <option value="Standerton">Standerton</option>
+                                <option value="Ermelo">Ermelo</option>
+                                <option value="Bethal">Bethal</option>
+                                <option value="Barberton">Barberton</option>
+                                <option value="Hazyview">Hazyview</option>
+                                <option value="White River">White River</option>
+                                <option value="Sabie">Sabie</option>
+                                <option value="Graskop">Graskop</option>
+                            </optgroup>
+                            <optgroup label="Limpopo">
+                                <option value="Polokwane">Polokwane</option>
+                                <option value="Thohoyandou">Thohoyandou</option>
+                                <option value="Tzaneen">Tzaneen</option>
+                                <option value="Mokopane">Mokopane</option>
+                                <option value="Lephalale">Lephalale</option>
+                                <option value="Musina">Musina</option>
+                                <option value="Bela-Bela">Bela-Bela</option>
+                                <option value="Modimolle">Modimolle</option>
+                                <option value="Haenertsburg">Haenertsburg</option>
+                                <option value="Louis Trichardt">Louis Trichardt</option>
+                                <option value="Phalaborwa">Phalaborwa</option>
+                                <option value="Giyani">Giyani</option>
+                            </optgroup>
+                            <optgroup label="North West">
+                                <option value="Rustenburg">Rustenburg</option>
+                                <option value="Mahikeng">Mahikeng</option>
+                                <option value="Potchefstroom">Potchefstroom</option>
+                                <option value="Klerksdorp">Klerksdorp</option>
+                                <option value="Brits">Brits</option>
+                                <option value="Rietfontein">Rietfontein</option>
+                                <option value="Lichtenburg">Lichtenburg</option>
+                                <option value="Vryburg">Vryburg</option>
+                                <option value="Schweizer-Reneke">Schweizer-Reneke</option>
+                                <option value="Ventersdorp">Ventersdorp</option>
+                            </optgroup>
+                            <optgroup label="Northern Cape">
+                                <option value="Kimberley">Kimberley</option>
+                                <option value="Upington">Upington</option>
+                                <option value="Springbok">Springbok</option>
+                                <option value="De Aar">De Aar</option>
+                                <option value="Colesberg">Colesberg</option>
+                                <option value="Griquatown">Griquatown</option>
+                                <option value="Kathu">Kathu</option>
+                                <option value="Kuruman">Kuruman</option>
+                                <option value="Postmasburg">Postmasburg</option>
+                                <option value="Calvinia">Calvinia</option>
+                            </optgroup>
+                        </select>
+                        <select id="directorySort" onchange="searchDirectory()">
+                            <option value="newest">Newest</option>
+                            <option value="oldest">Oldest</option>
+                            <option value="name-asc">Name A-Z</option>
+                            <option value="name-desc">Name Z-A</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="directory-stats" id="directoryStats">
+                    <span id="directoryCount">0</span> profiles found
+                </div>
+
+                <div class="profiles-grid directory-grid" id="directoryList"></div>
+            </div>
+        </div>
+
+<div class="page" id="page-directory-view">
+            <div class="container">
+                <div class="form-header">
+                    <button class="btn-back" onclick="navigateTo('directory')">
+                        <i class="fas fa-arrow-left"></i> Back to Directory
+                    </button>
+                    <h1>Profile Details</h1>
+                </div>
+
+                <div class="view-profile" id="directoryViewContent">
+                    <div class="profile-card view-header-card">
+                        <div class="view-avatar" id="directoryViewAvatar">
+                            <img id="dirViewAvatar" src="" alt="" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'">
+                            <div class="avatar-placeholder" style="display:none"><i class="fas fa-user"></i></div>
+                        </div>
+                        <div class="view-basic-info">
+                            <h1 id="dirViewName">-</h1>
+                            <span class="badge" id="dirViewType">-</span>
+                            <p id="dirViewLocation" class="view-email"><i class="fas fa-map-marker-alt"></i> -</p>
+                            <div class="profile-follow-stats">
+                                <span><i class="fas fa-user-plus"></i> <b data-follower-count data-t="listing" data-id="">0</b> Followers</span>
+                                <span><i class="fas fa-users"></i> <b data-following-count data-t="listing" data-id="">0</b> Following</span>
+                            </div>
+                        </div>
+                        <div class="view-actions-row">
+                            <button type="button" id="dirViewFollowBtn" class="btn btn-primary view-follow" data-follow-btn="1" data-t="listing" data-id="" onclick="event.stopPropagation(); toggleFollow('listing', currentViewListingId, document.getElementById('dirViewName').textContent)"><i class="fas fa-user-plus"></i> Follow</button>
+                            <button class="btn btn-primary" onclick="viewProviderServices(currentActivityOwner)"><i class="fas fa-calendar-check"></i> Book a Service</button>
+                            <button class="btn btn-primary" id="dirBookBtn" onclick="openBookingModal(currentViewListingId, 'listing')"><i class="fas fa-calendar-plus"></i> Book Provider</button>
+                            <button class="btn btn-primary provider-btn" onclick="openComposeTo(currentViewListingId, document.getElementById('dirViewName').textContent, 'listing')"><i class="fas fa-paper-plane"></i> Message</button>
+                            <button class="btn btn-secondary" id="dirTipBtn" onclick="openTipModal(currentViewListingId, 'listing', document.getElementById('dirViewName').textContent)"><i class="fas fa-hand-holding-heart"></i> Tip Jar</button>
+                        </div>
+                    </div>
+
+                    <div class="view-grid">
+                        <div class="profile-card">
+                            <h2><i class="fas fa-info-circle"></i> Details</h2>
+                            <div class="detail-row"><span class="detail-label">Category</span><span class="detail-value" id="dirViewCategory">-</span></div>
+                            <div class="detail-row"><span class="detail-label">Email</span><span class="detail-value" id="dirViewEmail">-</span></div>
+                            <div class="detail-row"><span class="detail-label">Phone</span><span class="detail-value" id="dirViewPhone">-</span></div>
+                            <div class="detail-row"><span class="detail-label">Rate</span><span class="detail-value" id="dirViewRate">-</span></div>
+                        </div>
+                        <div class="profile-card">
+                            <h2><i class="fas fa-file-alt"></i> About</h2>
+                            <p id="dirViewBio" class="view-bio">-</p>
+                            <div class="detail-row" style="margin-top:16px">
+                                <span class="detail-label">Website</span>
+                                <a href="#" id="dirViewWebsite" target="_blank" class="detail-link">-</a>
+                            </div>
+                            <div class="profile-links" id="dirViewLinks"></div>
+                        </div>
+                    </div>
+
+                    <div class="profile-card">
+                        <h2><i class="fas fa-tag"></i> Specialties</h2>
+                        <div class="tags-container" id="dirViewTags"><span class="tag empty-tag">No specialties listed</span></div>
+                    </div>
+
+                    <div class="profile-card">
+                        <h2><i class="fas fa-images"></i> Gallery</h2>
+                        <div class="directory-gallery" id="dirViewGallery"></div>
+                    </div>
+
+                    <div class="profile-card">
+                        <h2><i class="fas fa-video"></i> Video</h2>
+                        <div id="dirViewVideo"></div>
+                    </div>
+
+                    <div class="profile-card">
+                        <h2><i class="fas fa-clock"></i> Availability</h2>
+                        <div class="availability-view" id="dirViewAvailability"></div>
+                    </div>
+
+                    <div class="profile-card" id="directoryActivityCard">
+                        <h2><i class="fas fa-layer-group"></i> Provider Activity</h2>
+                        <p class="activity-subtitle">Everything this provider has shared on 2k2</p>
+                        <div class="activity-tabs">
+                            <button class="activity-tab active" data-act-tab="experiences" onclick="switchProviderActivity('experiences','directoryActivityContent',this)"><i class="fas fa-gem"></i> Experiences</button>
+                            <button class="activity-tab" data-act-tab="gigs" onclick="switchProviderActivity('gigs','directoryActivityContent',this)"><i class="fas fa-briefcase"></i> Gigs</button>
+                            <button class="activity-tab" data-act-tab="content" onclick="switchProviderActivity('content','directoryActivityContent',this)"><i class="fas fa-photo-film"></i> Content</button>
+                            <button class="activity-tab" data-act-tab="forums" onclick="switchProviderActivity('forums','directoryActivityContent',this)"><i class="fas fa-comments"></i> Forums</button>
+                            <button class="activity-tab" data-act-tab="events" onclick="switchProviderActivity('events','directoryActivityContent',this)"><i class="fas fa-calendar"></i> Events</button>
+                        </div>
+                        <div class="activity-section" id="directoryActivityContent"></div>
+                    </div>
+
+                    <div class="profile-card review-section-card" id="profileReviewSection">
+                        <h2><i class="fas fa-star"></i> Reviews & Ratings</h2>
+                        <div class="review-summary" id="profileReviewSummary"></div>
+                        <div class="review-form-wrap">
+                            <h3>Leave a Review</h3>
+                            <div class="star-rating-input" id="profileStarRating" data-rating="0">
+                                <i class="fas fa-star" data-star="1"></i>
+                                <i class="fas fa-star" data-star="2"></i>
+                                <i class="fas fa-star" data-star="3"></i>
+                                <i class="fas fa-star" data-star="4"></i>
+                                <i class="fas fa-star" data-star="5"></i>
+                            </div>
+                            <textarea id="profileReviewText" placeholder="Write your review..." rows="3"></textarea>
+                            <button class="btn btn-primary btn-sm" onclick="submitReview('profile', currentViewListingId)"><i class="fas fa-paper-plane"></i> Submit Review</button>
+                        </div>
+                        <div class="reviews-list" id="profileReviewsList"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+<div class="page" id="page-venue-directory">
+            <div class="container">
+                <div class="dashboard-header">
+                    <div>
+                        <h1>Venues Directory</h1>
+                        <p>Discover venues across South Africa</p>
+                    </div>
+                </div>
+
+                <div class="directory-filters">
+                    <div class="filter-tabs">
+                        <button class="filter-tab active" onclick="filterVenueDirectory('all')">All</button>
+                        <button class="filter-tab" onclick="filterVenueDirectory('bnb')"><i class="fas fa-house-chimney"></i> B&B</button>
+                        <button class="filter-tab" onclick="filterVenueDirectory('lodge')"><i class="fas fa-campground"></i> Lodge</button>
+                        <button class="filter-tab" onclick="filterVenueDirectory('hotel')"><i class="fas fa-bed"></i> Hotel</button>
+                        <button class="filter-tab" onclick="filterVenueDirectory('fetish-club')"><i class="fas fa-mask"></i> Fetish Club</button>
+                        <button class="filter-tab" onclick="filterVenueDirectory('nightclub')"><i class="fas fa-moon"></i> Nightclub</button>
+                        <button class="filter-tab" onclick="filterVenueDirectory('other')"><i class="fas fa-ellipsis"></i> Other</button>
+                    </div>
+                    <div class="filter-bar">
+                        <input type="text" id="venueSearch" placeholder="Search by name, location, or tag..." oninput="searchVenueDirectory()">
+                        <select id="venueLocationFilter" onchange="searchVenueDirectory()">
+                            <option value="">All Locations</option>
+                            <optgroup label="Gauteng">
+                                <option value="Johannesburg">Johannesburg</option>
+                                <option value="Pretoria">Pretoria</option>
+                                <option value="Sandton">Sandton</option>
+                                <option value="Randburg">Randburg</option>
+                                <option value="Roodepoort">Roodepoort</option>
+                                <option value="Soweto">Soweto</option>
+                                <option value="Midrand">Midrand</option>
+                                <option value="Centurion">Centurion</option>
+                                <option value="Benoni">Benoni</option>
+                                <option value="Boksburg">Boksburg</option>
+                                <option value="Brakpan">Brakpan</option>
+                                <option value="Germiston">Germiston</option>
+                                <option value="Kempton Park">Kempton Park</option>
+                                <option value="Alberton">Alberton</option>
+                                <option value="Vanderbijlpark">Vanderbijlpark</option>
+                                <option value="Vereeniging">Vereeniging</option>
+                                <option value="Krugersdorp">Krugersdorp</option>
+                                <option value="Springs">Springs</option>
+                            </optgroup>
+                            <optgroup label="Western Cape">
+                                <option value="Cape Town">Cape Town</option>
+                                <option value="Stellenbosch">Stellenbosch</option>
+                                <option value="Paarl">Paarl</option>
+                                <option value="George">George</option>
+                                <option value="Worcester">Worcester</option>
+                                <option value="Hermanus">Hermanus</option>
+                                <option value="Somerset West">Somerset West</option>
+                                <option value="Strand">Strand</option>
+                                <option value="Camps Bay">Camps Bay</option>
+                                <option value="Claremont">Claremont</option>
+                                <option value="Bellville">Bellville</option>
+                                <option value="Khayelitsha">Khayelitsha</option>
+                                <option value="Mitchells Plain">Mitchells Plain</option>
+                                <option value="Mossel Bay">Mossel Bay</option>
+                                <option value="Oudtshoorn">Oudtshoorn</option>
+                                <option value="Saldanha Bay">Saldanha Bay</option>
+                                <option value="Swellendam">Swellendam</option>
+                                <option value="Caledon">Caledon</option>
+                            </optgroup>
+                            <optgroup label="KwaZulu-Natal">
+                                <option value="Durban">Durban</option>
+                                <option value="Pietermaritzburg">Pietermaritzburg</option>
+                                <option value="Umhlanga">Umhlanga</option>
+                                <option value="Richards Bay">Richards Bay</option>
+                                <option value="Newcastle">Newcastle</option>
+                                <option value="Port Shepstone">Port Shepstone</option>
+                                <option value="Ladysmith">Ladysmith</option>
+                                <option value="Dundee">Dundee</option>
+                                <option value="Pinetown">Pinetown</option>
+                                <option value="Westville">Westville</option>
+                                <option value="Phoenix">Phoenix</option>
+                                <option value="Chatsworth">Chatsworth</option>
+                                <option value="Umlazi">Umlazi</option>
+                                <option value="Amanzimtoti">Amanzimtoti</option>
+                                <option value="Margate">Margate</option>
+                                <option value="Ballito">Ballito</option>
+                                <option value="Scottburgh">Scottburgh</option>
+                                <option value="Howick">Howick</option>
+                            </optgroup>
+                            <optgroup label="Eastern Cape">
+                                <option value="Port Elizabeth">Port Elizabeth (Gqeberha)</option>
+                                <option value="East London">East London</option>
+                                <option value="Grahamstown">Grahamstown (Makhanda)</option>
+                                <option value="Mthatha">Mthatha</option>
+                                <option value="Queenstown">Queenstown (Komani)</option>
+                                <option value="Graaff-Reinet">Graaff-Reinet</option>
+                                <option value="Jeffreys Bay">Jeffreys Bay</option>
+                                <option value="Port Alfred">Port Alfred</option>
+                                <option value="St Francis Bay">St Francis Bay</option>
+                                <option value="Kariega">Kariega</option>
+                                <option value="Butterworth">Butterworth</option>
+                                <option value="Centani">Centani</option>
+                            </optgroup>
+                            <optgroup label="Free State">
+                                <option value="Bloemfontein">Bloemfontein</option>
+                                <option value="Welkom">Welkom</option>
+                                <option value="Bethlehem">Bethlehem</option>
+                                <option value="Sasolburg">Sasolburg</option>
+                                <option value="Kroonstad">Kroonstad</option>
+                                <option value="Brandfort">Brandfort</option>
+                                <option value="Harrismith">Harrismith</option>
+                                <option value="Parys">Parys</option>
+                                <option value="Senekal">Senekal</option>
+                                <option value="Thaba Nchu">Thaba Nchu</option>
+                            </optgroup>
+                            <optgroup label="Mpumalanga">
+                                <option value="Nelspruit">Nelspruit (Mbombela)</option>
+                                <option value="Witbank">Witbank (Emalahleni)</option>
+                                <option value="Middelburg">Middelburg</option>
+                                <option value="Secunda">Secunda</option>
+                                <option value="Standerton">Standerton</option>
+                                <option value="Ermelo">Ermelo</option>
+                                <option value="Bethal">Bethal</option>
+                                <option value="Barberton">Barberton</option>
+                                <option value="Hazyview">Hazyview</option>
+                                <option value="White River">White River</option>
+                                <option value="Sabie">Sabie</option>
+                                <option value="Graskop">Graskop</option>
+                            </optgroup>
+                            <optgroup label="Limpopo">
+                                <option value="Polokwane">Polokwane</option>
+                                <option value="Thohoyandou">Thohoyandou</option>
+                                <option value="Tzaneen">Tzaneen</option>
+                                <option value="Mokopane">Mokopane</option>
+                                <option value="Lephalale">Lephalale</option>
+                                <option value="Musina">Musina</option>
+                                <option value="Bela-Bela">Bela-Bela</option>
+                                <option value="Modimolle">Modimolle</option>
+                                <option value="Haenertsburg">Haenertsburg</option>
+                                <option value="Louis Trichardt">Louis Trichardt</option>
+                                <option value="Phalaborwa">Phalaborwa</option>
+                                <option value="Giyani">Giyani</option>
+                            </optgroup>
+                            <optgroup label="North West">
+                                <option value="Rustenburg">Rustenburg</option>
+                                <option value="Mahikeng">Mahikeng</option>
+                                <option value="Potchefstroom">Potchefstroom</option>
+                                <option value="Klerksdorp">Klerksdorp</option>
+                                <option value="Brits">Brits</option>
+                                <option value="Rietfontein">Rietfontein</option>
+                                <option value="Lichtenburg">Lichtenburg</option>
+                                <option value="Vryburg">Vryburg</option>
+                                <option value="Schweizer-Reneke">Schweizer-Reneke</option>
+                                <option value="Ventersdorp">Ventersdorp</option>
+                            </optgroup>
+                            <optgroup label="Northern Cape">
+                                <option value="Kimberley">Kimberley</option>
+                                <option value="Upington">Upington</option>
+                                <option value="Springbok">Springbok</option>
+                                <option value="De Aar">De Aar</option>
+                                <option value="Colesberg">Colesberg</option>
+                                <option value="Griquatown">Griquatown</option>
+                                <option value="Kathu">Kathu</option>
+                                <option value="Kuruman">Kuruman</option>
+                                <option value="Postmasburg">Postmasburg</option>
+                                <option value="Calvinia">Calvinia</option>
+                            </optgroup>
+                        </select>
+                        <select id="venueSort" onchange="searchVenueDirectory()">
+                            <option value="newest">Newest</option>
+                            <option value="oldest">Oldest</option>
+                            <option value="name-asc">Name A-Z</option>
+                            <option value="name-desc">Name Z-A</option>
+                        </select>
+                        <div class="view-toggle" title="View mode">
+                            <button type="button" class="active" data-view="grid" onclick="setBrowseView('venueDirectoryList','grid',this)"><i class="fas fa-th"></i> Grid</button>
+                            <button type="button" data-view="list" onclick="setBrowseView('venueDirectoryList','list',this)"><i class="fas fa-list"></i> List</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="directory-stats" id="venueDirectoryStats">
+                    <span id="venueDirectoryCount">0</span> venues found
+                </div>
+
+                <div class="profiles-grid directory-grid" id="venueDirectoryList"></div>
+            </div>
+        </div>
+
+<div class="page" id="page-venue-directory-view">
+            <div class="container">
+                <div class="form-header">
+                    <button class="btn-back" onclick="navigateTo('venue-directory')">
+                        <i class="fas fa-arrow-left"></i> Back to Venues
+                    </button>
+                    <h1>Venue Details</h1>
+                </div>
+
+                <div class="view-profile" id="venueViewContent">
+                    <div class="profile-card view-header-card">
+                        <div class="view-avatar" id="venueViewAvatar">
+                            <img id="venViewAvatar" src="" alt="" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'">
+                            <div class="avatar-placeholder" style="display:none"><i class="fas fa-store"></i></div>
+                        </div>
+                        <div class="view-basic-info">
+                            <h1 id="venViewName">-</h1>
+                            <span class="badge" id="venViewType">-</span>
+                            <p id="venViewLocation" class="view-email"><i class="fas fa-map-marker-alt"></i> -</p>
+                        </div>
+                    </div>
+
+                    <div class="view-grid">
+                        <div class="profile-card">
+                            <h2><i class="fas fa-info-circle"></i> Details</h2>
+                            <div class="detail-row"><span class="detail-label">Category</span><span class="detail-value" id="venViewCategory">-</span></div>
+                            <div class="detail-row"><span class="detail-label">Email</span><span class="detail-value" id="venViewEmail">-</span></div>
+                            <div class="detail-row"><span class="detail-label">Phone</span><span class="detail-value" id="venViewPhone">-</span></div>
+                            <div class="detail-row" id="venViewAddressRow" style="display:none"><span class="detail-label">Address</span><span class="detail-value" id="venViewAddress">-</span></div>
+                            <div class="detail-row"><span class="detail-label">Cover Charge</span><span class="detail-value" id="venViewRate">-</span></div>
+                            <div class="detail-row"><span class="detail-label">Capacity</span><span class="detail-value" id="venViewCapacity">-</span></div>
+                        </div>
+                        <div class="profile-card">
+                            <h2><i class="fas fa-file-alt"></i> About</h2>
+                            <p id="venViewBio" class="view-bio">-</p>
+                            <div class="detail-row" style="margin-top:16px">
+                                <span class="detail-label">Website</span>
+                                <a href="#" id="venViewWebsite" target="_blank" class="detail-link">-</a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="profile-card">
+                        <h2><i class="fas fa-tag"></i> Features</h2>
+                        <div class="tags-container" id="venViewTags"><span class="tag empty-tag">No features listed</span></div>
+                    </div>
+
+                    <div class="profile-card">
+                        <h2><i class="fas fa-images"></i> Gallery</h2>
+                        <div class="directory-gallery" id="venViewGallery"></div>
+                    </div>
+
+                    <div class="profile-card" id="venViewVideosCard" style="display:none">
+                        <h2><i class="fas fa-video"></i> Videos</h2>
+                        <div class="directory-videos" id="venViewVideos"></div>
+                    </div>
+
+                    <div class="profile-card">
+                        <h2><i class="fas fa-clock"></i> Hours</h2>
+                        <div class="availability-view" id="venViewHours"></div>
+                    </div>
+
+                    <div class="profile-card review-section-card" id="venueReviewSection">
+                        <h2><i class="fas fa-star"></i> Reviews & Ratings</h2>
+                        <div class="review-summary" id="venueReviewSummary"></div>
+                        <div class="review-form-wrap">
+                            <h3>Leave a Review</h3>
+                            <div class="star-rating-input" id="venueStarRating" data-rating="0">
+                                <i class="fas fa-star" data-star="1"></i>
+                                <i class="fas fa-star" data-star="2"></i>
+                                <i class="fas fa-star" data-star="3"></i>
+                                <i class="fas fa-star" data-star="4"></i>
+                                <i class="fas fa-star" data-star="5"></i>
+                            </div>
+                            <textarea id="venueReviewText" placeholder="Write your review..." rows="3"></textarea>
+                            <button class="btn btn-primary btn-sm" onclick="submitReview('venue', currentViewVenueId)"><i class="fas fa-paper-plane"></i> Submit Review</button>
+                        </div>
+                        <div class="reviews-list" id="venueReviewsList"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+<div class="page" id="page-services-directory">
+            <div class="container">
+                <div class="dashboard-header">
+                    <div>
+                        <h1>Services Directory</h1>
+                        <p>Find services across South Africa</p>
+                    </div>
+                </div>
+
+                <div class="directory-filters">
+                    <div class="filter-tabs" id="servicesFilterTabs">
+                        <button class="filter-tab active" onclick="filterServicesDirectory('all')">All</button>
+                    </div>
+                    <div class="filter-bar">
+                        <input type="text" id="servicesSearch" placeholder="Search by name, location, or tag..." oninput="searchServicesDirectory()">
+                        <select id="servicesLocationFilter" onchange="searchServicesDirectory()">
+                            <option value="">All Locations</option>
+                            <optgroup label="Gauteng">
+                                <option value="Johannesburg">Johannesburg</option>
+                                <option value="Pretoria">Pretoria</option>
+                                <option value="Sandton">Sandton</option>
+                                <option value="Randburg">Randburg</option>
+                                <option value="Roodepoort">Roodepoort</option>
+                                <option value="Soweto">Soweto</option>
+                                <option value="Midrand">Midrand</option>
+                                <option value="Centurion">Centurion</option>
+                                <option value="Benoni">Benoni</option>
+                                <option value="Boksburg">Boksburg</option>
+                                <option value="Kempton Park">Kempton Park</option>
+                            </optgroup>
+                            <optgroup label="Western Cape">
+                                <option value="Cape Town">Cape Town</option>
+                                <option value="Stellenbosch">Stellenbosch</option>
+                                <option value="Paarl">Paarl</option>
+                                <option value="George">George</option>
+                                <option value="Hermanus">Hermanus</option>
+                                <option value="Somerset West">Somerset West</option>
+                                <option value="Camps Bay">Camps Bay</option>
+                            </optgroup>
+                            <optgroup label="KwaZulu-Natal">
+                                <option value="Durban">Durban</option>
+                                <option value="Pietermaritzburg">Pietermaritzburg</option>
+                                <option value="Umhlanga">Umhlanga</option>
+                                <option value="Richards Bay">Richards Bay</option>
+                                <option value="Newcastle">Newcastle</option>
+                                <option value="Ballito">Ballito</option>
+                            </optgroup>
+                            <optgroup label="Eastern Cape">
+                                <option value="Port Elizabeth">Port Elizabeth (Gqeberha)</option>
+                                <option value="East London">East London</option>
+                                <option value="Mthatha">Mthatha</option>
+                                <option value="Jeffreys Bay">Jeffreys Bay</option>
+                            </optgroup>
+                            <optgroup label="Free State">
+                                <option value="Bloemfontein">Bloemfontein</option>
+                                <option value="Welkom">Welkom</option>
+                                <option value="Bethlehem">Bethlehem</option>
+                                <option value="Harrismith">Harrismith</option>
+                            </optgroup>
+                            <optgroup label="Mpumalanga">
+                                <option value="Nelspruit">Nelspruit (Mbombela)</option>
+                                <option value="Witbank">Witbank (Emalahleni)</option>
+                                <option value="Middelburg">Middelburg</option>
+                                <option value="Secunda">Secunda</option>
+                            </optgroup>
+                            <optgroup label="Limpopo">
+                                <option value="Polokwane">Polokwane</option>
+                                <option value="Thohoyandou">Thohoyandou</option>
+                                <option value="Tzaneen">Tzaneen</option>
+                                <option value="Mokopane">Mokopane</option>
+                            </optgroup>
+                            <optgroup label="North West">
+                                <option value="Rustenburg">Rustenburg</option>
+                                <option value="Mahikeng">Mahikeng</option>
+                                <option value="Potchefstroom">Potchefstroom</option>
+                                <option value="Klerksdorp">Klerksdorp</option>
+                            </optgroup>
+                            <optgroup label="Northern Cape">
+                                <option value="Kimberley">Kimberley</option>
+                                <option value="Upington">Upington</option>
+                                <option value="Springbok">Springbok</option>
+                            </optgroup>
+                        </select>
+                        <select id="servicesSort" onchange="searchServicesDirectory()">
+                            <option value="newest">Newest</option>
+                            <option value="oldest">Oldest</option>
+                            <option value="name-asc">Name A-Z</option>
+                            <option value="name-desc">Name Z-A</option>
+                        </select>
+                        <div class="view-toggle" title="View mode">
+                            <button type="button" class="active" data-view="grid" onclick="setBrowseView('servicesDirectoryList','grid',this)"><i class="fas fa-th"></i> Grid</button>
+                            <button type="button" data-view="list" onclick="setBrowseView('servicesDirectoryList','list',this)"><i class="fas fa-list"></i> List</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="services-owner-banner" id="servicesOwnerBanner" style="display:none">
+                    <i class="fas fa-user-tie"></i>
+                    <span>Showing services by <strong id="servicesOwnerBannerTitle"></strong></span>
+                    <button class="btn btn-secondary btn-sm" onclick="clearServicesOwnerFilter()"><i class="fas fa-times"></i> Clear</button>
+                </div>
+
+                <div class="directory-stats" id="servicesDirectoryStats">
+                    <span id="servicesDirectoryCount">0</span> services found
+                </div>
+
+                <div class="profiles-grid directory-grid" id="servicesDirectoryList"></div>
+            </div>
+        </div>
+
+<div class="page" id="page-service-directory-view">
+            <div class="container">
+                <div class="form-header">
+                    <button class="btn-back" onclick="navigateTo('services-directory')">
+                        <i class="fas fa-arrow-left"></i> Back to Services
+                    </button>
+                    <h1>Service Details</h1>
+                </div>
+
+                <div class="view-profile" id="serviceViewContent">
+                    <div class="profile-card view-header-card">
+                        <div class="view-avatar" id="serviceViewAvatar">
+                            <img id="svcViewAvatar" src="" alt="" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'">
+                            <div class="avatar-placeholder" style="display:none"><i class="fas fa-concierge-bell"></i></div>
+                        </div>
+                        <div class="view-basic-info">
+                            <h1 id="svcViewName">-</h1>
+                            <span class="badge" id="svcViewType">-</span>
+                            <p id="svcViewLocation" class="view-email"><i class="fas fa-map-marker-alt"></i> -</p>
+                        </div>
+                        <div class="view-actions-row">
+                            <button class="btn btn-primary" id="svcBookBtn" onclick="openBookingModal(currentServiceViewId, 'service')"><i class="fas fa-calendar-plus"></i> Book Service</button>
+                            <button class="btn btn-secondary" id="svcTipBtn" onclick="openTipModal(currentServiceViewId, 'service', document.getElementById('svcViewName').textContent)"><i class="fas fa-hand-holding-heart"></i> Tip Jar</button>
+                        </div>
+                    </div>
+
+                    <div class="view-grid">
+                        <div class="profile-card">
+                            <h2><i class="fas fa-info-circle"></i> Details</h2>
+                            <div class="detail-row"><span class="detail-label">Category</span><span class="detail-value" id="svcViewCategory">-</span></div>
+                            <div class="detail-row"><span class="detail-label">Email</span><span class="detail-value" id="svcViewEmail">-</span></div>
+                            <div class="detail-row"><span class="detail-label">Phone</span><span class="detail-value" id="svcViewPhone">-</span></div>
+                            <div class="detail-row"><span class="detail-label">Rates</span><span class="detail-value" id="svcViewRate">-</span></div>
+                        </div>
+                        <div class="profile-card">
+                            <h2><i class="fas fa-file-alt"></i> About</h2>
+                            <p id="svcViewBio" class="view-bio">-</p>
+                            <div class="detail-row" style="margin-top:16px">
+                                <span class="detail-label">Website</span>
+                                <a href="#" id="svcViewWebsite" target="_blank" class="detail-link">-</a>
+                            </div>
+                            <div class="profile-links" id="svcViewLinks"></div>
+                        </div>
+                    </div>
+
+                    <div class="profile-card">
+                        <h2><i class="fas fa-tag"></i> Specialties</h2>
+                        <div class="tags-container" id="svcViewTags"><span class="tag empty-tag">No specialties listed</span></div>
+                    </div>
+
+                    <div class="profile-card">
+                        <h2><i class="fas fa-images"></i> Gallery</h2>
+                        <div class="directory-gallery" id="svcViewGallery"></div>
+                    </div>
+
+                    <div class="profile-card">
+                        <h2><i class="fas fa-clock"></i> Availability</h2>
+                        <div class="availability-view" id="svcViewAvailability"></div>
+                    </div>
+
+                    <div class="profile-card" id="serviceActivityCard">
+                        <h2><i class="fas fa-layer-group"></i> Provider Activity</h2>
+                        <p class="activity-subtitle">Everything this provider has shared on 2k2</p>
+                        <div class="activity-tabs">
+                            <button class="activity-tab active" data-act-tab="experiences" onclick="switchProviderActivity('experiences','serviceActivityContent',this)"><i class="fas fa-gem"></i> Experiences</button>
+                            <button class="activity-tab" data-act-tab="gigs" onclick="switchProviderActivity('gigs','serviceActivityContent',this)"><i class="fas fa-briefcase"></i> Gigs</button>
+                            <button class="activity-tab" data-act-tab="content" onclick="switchProviderActivity('content','serviceActivityContent',this)"><i class="fas fa-photo-film"></i> Content</button>
+                            <button class="activity-tab" data-act-tab="forums" onclick="switchProviderActivity('forums','serviceActivityContent',this)"><i class="fas fa-comments"></i> Forums</button>
+                            <button class="activity-tab" data-act-tab="events" onclick="switchProviderActivity('events','serviceActivityContent',this)"><i class="fas fa-calendar"></i> Events</button>
+                        </div>
+                        <div class="activity-section" id="serviceActivityContent"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+<div class="page" id="page-products-directory">
+            <div class="container">
+                <div class="dashboard-header">
+                    <div>
+                        <h1>Products</h1>
+                        <p>Discover products from service providers across South Africa</p>
+                    </div>
+                </div>
+
+                <div class="directory-filters">
+                    <div class="filter-tabs" id="productsFilterTabs">
+                        <button class="filter-tab active" data-cat="all" onclick="filterProductsCategory()"><i class="fas fa-globe"></i> All Products</button>
+                    </div>
+                    <div class="filter-bar">
+                        <input type="text" id="productsSearch" placeholder="Search products, categories, or providers..." oninput="renderProductsBrowser()">
+                        <select id="productsCategoryFilter" onchange="filterProductsCategory()">
+                            <option value="all">All Categories</option>
+                        </select>
+                        <select id="productsSort" onchange="renderProductsBrowser()">
+                            <option value="newest">Newest</option>
+                            <option value="price-asc">Price: Low to High</option>
+                            <option value="price-desc">Price: High to Low</option>
+                            <option value="name-asc">Name: A-Z</option>
+                        </select>
+                        <div class="view-toggle" title="View mode">
+                            <button type="button" class="active" data-view="grid" onclick="setBrowseView('productsDirectoryList','grid',this)"><i class="fas fa-th"></i> Grid</button>
+                            <button type="button" data-view="list" onclick="setBrowseView('productsDirectoryList','list',this)"><i class="fas fa-list"></i> List</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="directory-stats">
+                    <span id="productsDirectoryCount">0</span> products found
+                </div>
+
+                <div class="profiles-grid directory-grid" id="productsDirectoryList"></div>
+            </div>
+        </div>
+
+<div class="page" id="page-product-view">
+            <div class="container">
+                <div class="form-header">
+                    <button class="btn-back" onclick="navigateTo('products-directory')">
+                        <i class="fas fa-arrow-left"></i> Back to Products
+                    </button>
+                    <h1>Product</h1>
+                </div>
+                <div id="productViewContent"></div>
+            </div>
+        </div>
+
+<div class="page" id="page-content-directory">
+            <div class="container">
+                <div class="dashboard-header">
+                    <div>
+                        <h1>Content Directory</h1>
+                        <p>Browse content from creators</p>
+                    </div>
+                </div>
+                <div class="directory-filters">
+                    <div class="filter-tabs" id="contentFilterTabs">
+                        <button class="filter-tab active" onclick="filterContentDirectory('all')"><i class="fas fa-globe"></i> All</button>
+                        <button class="filter-tab" onclick="filterContentDirectory('video')"><i class="fas fa-video"></i> Videos</button>
+                        <button class="filter-tab" onclick="filterContentDirectory('image')"><i class="fas fa-image"></i> Images</button>
+                        <button class="filter-tab" onclick="filterContentDirectory('gif')"><i class="fas fa-icons"></i> GIFs</button>
+                        <button class="filter-tab" onclick="filterContentDirectory('audio')"><i class="fas fa-headphones"></i> Audio</button>
+                        <button class="filter-tab" onclick="filterContentDirectory('podcast')"><i class="fas fa-podcast"></i> Podcasts</button>
+                        <button class="filter-tab" onclick="filterContentDirectory('story')"><i class="fas fa-book-open"></i> Stories</button>
+                        <button class="filter-tab" onclick="filterContentDirectory('book')"><i class="fas fa-book"></i> Books</button>
+                    </div>
+                    <div class="filter-bar">
+                        <input type="text" id="contentSearch" placeholder="Search content..." oninput="searchContentDirectory()">
+                        <select id="contentLocationFilter" onchange="searchContentDirectory()">
+                            <option value="">All Locations</option>
+                        </select>
+                        <select id="contentSort" onchange="searchContentDirectory()">
+                            <option value="newest">Newest</option>
+                            <option value="oldest">Oldest</option>
+                            <option value="title-asc">Title A-Z</option>
+                            <option value="title-desc">Title Z-A</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="directory-stats"><span id="contentDirectoryCount">0</span> items found</div>
+                <div class="content-grid" id="contentDirectoryList"></div>
+            </div>
+        </div>
+
+<div class="page" id="page-content-view">
+            <div class="container">
+                <div class="form-header">
+                    <button class="btn-back" onclick="navigateTo('content-directory')"><i class="fas fa-arrow-left"></i> Back to Content</button>
+                    <h1>Content Details</h1>
+                </div>
+                <div class="view-profile" id="contentViewContent">
+                    <div class="profile-card content-detail-card">
+                        <div class="content-detail-header">
+                            <span class="badge" id="contentDetailViewType">-</span>
+                            <span class="content-detail-date" id="contentDetailViewDate">-</span>
+                        </div>
+                        <h1 class="content-detail-title" id="contentDetailViewTitle">-</h1>
+                        <p class="content-detail-author" id="contentDetailViewAuthor">-</p>
+                        <div class="content-detail-media" id="contentDetailMedia"></div>
+                        <div class="content-reactions-bar" id="contentReactionsBar"></div>
+                        <div class="content-detail-body" id="contentDetailViewBody"></div>
+                        <div class="content-detail-tags" id="contentDetailViewTags"></div>
+                        <div class="content-engagement-bar">
+                            <button class="content-share-btn" onclick="downloadContentView()"><i class="fas fa-download"></i> Download</button>
+                            <button class="content-share-btn" onclick="shareContent()"><i class="fas fa-share-nodes"></i> Share</button>
+                        </div>
+                        <div class="content-comments-section" id="contentCommentsSection">
+                            <div class="content-comments-header">
+                                <h3><i class="fas fa-comments"></i> Comments <span id="contentCommentCount">(0)</span></h3>
+                            </div>
+                            <div class="content-comment-form">
+                                <textarea id="contentCommentInput" placeholder="Write a comment..." rows="2"></textarea>
+                                <button class="btn btn-primary btn-sm" onclick="submitContentComment()"><i class="fas fa-paper-plane"></i> Post</button>
+                            </div>
+                            <div class="content-comments-list" id="contentCommentsList"></div>
+                        </div>
+                        <div class="review-section-card" id="contentReviewSection">
+                            <h2><i class="fas fa-star"></i> Reviews & Ratings</h2>
+                            <div class="review-summary" id="contentReviewSummary"></div>
+                            <div class="review-form-wrap">
+                                <h3>Rate this Content</h3>
+                                <div class="star-rating-input" id="contentStarRating" data-rating="0">
+                                    <i class="fas fa-star" data-star="1"></i>
+                                    <i class="fas fa-star" data-star="2"></i>
+                                    <i class="fas fa-star" data-star="3"></i>
+                                    <i class="fas fa-star" data-star="4"></i>
+                                    <i class="fas fa-star" data-star="5"></i>
+                                </div>
+                                <textarea id="contentReviewText" placeholder="Write your review..." rows="3"></textarea>
+                                <button class="btn btn-primary btn-sm" onclick="submitReview('content', currentContentViewId)"><i class="fas fa-paper-plane"></i> Submit Review</button>
+                            </div>
+                            <div class="reviews-list" id="contentReviewsList"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+<div class="page" id="page-events-directory">
+            <div class="container">
+                <div class="dashboard-header">
+                    <div>
+                        <h1>Events Directory</h1>
+                        <p>Discover events across South Africa</p>
+                    </div>
+                </div>
+                <div class="directory-filters">
+                    <div class="filter-tabs" id="eventFilterTabs">
+                        <button class="filter-tab active" onclick="filterEventsDirectory('all')"><i class="fas fa-globe"></i> All</button>
+                        <button class="filter-tab" onclick="filterEventsDirectory('party')"><i class="fas fa-champagne-glasses"></i> Parties</button>
+                        <button class="filter-tab" onclick="filterEventsDirectory('g2g')"><i class="fas fa-people-arrows"></i> G2G</button>
+                        <button class="filter-tab" onclick="filterEventsDirectory('club')"><i class="fas fa-compact-disc"></i> Club Invites</button>
+                        <button class="filter-tab" onclick="filterEventsDirectory('fun')"><i class="fas fa-sun"></i> Fun Nights/Days</button>
+                        <button class="filter-tab" onclick="filterEventsDirectory('cookout')"><i class="fas fa-fire-burner"></i> Cookout</button>
+                        <button class="filter-tab" onclick="filterEventsDirectory('other')"><i class="fas fa-ellipsis"></i> Other</button>
+                    </div>
+                    <div class="filter-bar">
+                        <input type="text" id="eventSearch" placeholder="Search events..." oninput="searchEventsDirectory()">
+                        <select id="eventProvince" onchange="searchEventsDirectory()">
+                            <option value="">All Locations</option>
+                            <optgroup label="Gauteng">
+                                <option value="Johannesburg">Johannesburg</option>
+                                <option value="Pretoria">Pretoria</option>
+                                <option value="Sandton">Sandton</option>
+                                <option value="Randburg">Randburg</option>
+                                <option value="Roodepoort">Roodepoort</option>
+                                <option value="Soweto">Soweto</option>
+                                <option value="Midrand">Midrand</option>
+                                <option value="Centurion">Centurion</option>
+                                <option value="Benoni">Benoni</option>
+                                <option value="Boksburg">Boksburg</option>
+                                <option value="Brakpan">Brakpan</option>
+                                <option value="Germiston">Germiston</option>
+                                <option value="Kempton Park">Kempton Park</option>
+                                <option value="Alberton">Alberton</option>
+                                <option value="Vanderbijlpark">Vanderbijlpark</option>
+                                <option value="Vereeniging">Vereeniging</option>
+                                <option value="Krugersdorp">Krugersdorp</option>
+                                <option value="Springs">Springs</option>
+                            </optgroup>
+                            <optgroup label="Western Cape">
+                                <option value="Cape Town">Cape Town</option>
+                                <option value="Stellenbosch">Stellenbosch</option>
+                                <option value="Paarl">Paarl</option>
+                                <option value="George">George</option>
+                                <option value="Worcester">Worcester</option>
+                                <option value="Hermanus">Hermanus</option>
+                                <option value="Somerset West">Somerset West</option>
+                                <option value="Strand">Strand</option>
+                                <option value="Camps Bay">Camps Bay</option>
+                                <option value="Claremont">Claremont</option>
+                                <option value="Bellville">Bellville</option>
+                                <option value="Mossel Bay">Mossel Bay</option>
+                                <option value="Oudtshoorn">Oudtshoorn</option>
+                                <option value="Saldanha Bay">Saldanha Bay</option>
+                            </optgroup>
+                            <optgroup label="KwaZulu-Natal">
+                                <option value="Durban">Durban</option>
+                                <option value="Pietermaritzburg">Pietermaritzburg</option>
+                                <option value="Umhlanga">Umhlanga</option>
+                                <option value="Richards Bay">Richards Bay</option>
+                                <option value="Newcastle">Newcastle</option>
+                                <option value="Port Shepstone">Port Shepstone</option>
+                                <option value="Ladysmith">Ladysmith</option>
+                                <option value="Pinetown">Pinetown</option>
+                                <option value="Ballito">Ballito</option>
+                                <option value="Margate">Margate</option>
+                            </optgroup>
+                            <optgroup label="Eastern Cape">
+                                <option value="Port Elizabeth">Port Elizabeth (Gqeberha)</option>
+                                <option value="East London">East London</option>
+                                <option value="Grahamstown">Grahamstown (Makhanda)</option>
+                                <option value="Mthatha">Mthatha</option>
+                                <option value="Queenstown">Queenstown (Komani)</option>
+                                <option value="Jeffreys Bay">Jeffreys Bay</option>
+                            </optgroup>
+                            <optgroup label="Free State">
+                                <option value="Bloemfontein">Bloemfontein</option>
+                                <option value="Welkom">Welkom</option>
+                                <option value="Bethlehem">Bethlehem</option>
+                                <option value="Harrismith">Harrismith</option>
+                            </optgroup>
+                            <optgroup label="Mpumalanga">
+                                <option value="Nelspruit">Nelspruit (Mbombela)</option>
+                                <option value="Witbank">Witbank (Emalahleni)</option>
+                                <option value="Middelburg">Middelburg</option>
+                                <option value="Secunda">Secunda</option>
+                                <option value="Hazyview">Hazyview</option>
+                            </optgroup>
+                            <optgroup label="Limpopo">
+                                <option value="Polokwane">Polokwane</option>
+                                <option value="Thohoyandou">Thohoyandou</option>
+                                <option value="Tzaneen">Tzaneen</option>
+                                <option value="Mokopane">Mokopane</option>
+                            </optgroup>
+                            <optgroup label="North West">
+                                <option value="Rustenburg">Rustenburg</option>
+                                <option value="Mahikeng">Mahikeng</option>
+                                <option value="Potchefstroom">Potchefstroom</option>
+                                <option value="Klerksdorp">Klerksdorp</option>
+                                <option value="Brits">Brits</option>
+                            </optgroup>
+                            <optgroup label="Northern Cape">
+                                <option value="Kimberley">Kimberley</option>
+                                <option value="Upington">Upington</option>
+                                <option value="Springbok">Springbok</option>
+                                <option value="De Aar">De Aar</option>
+                            </optgroup>
+                        </select>
+                        <select id="eventSort" onchange="searchEventsDirectory()">
+                            <option value="newest">Newest</option>
+                            <option value="date-asc">Date (Earliest)</option>
+                            <option value="title-asc">Title A-Z</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="directory-stats"><span id="eventsDirectoryCount">0</span> events found</div>
+                <div class="content-grid" id="eventsDirectoryList"></div>
+            </div>
+        </div>
+
+<div class="page" id="page-event-view">
+            <div class="container">
+                <div class="form-header">
+                    <button class="btn-back" onclick="navigateTo('events-directory')"><i class="fas fa-arrow-left"></i> Back to Events</button>
+                    <h1>Event Details</h1>
+                </div>
+                <div class="view-profile" id="eventViewContent">
+                    <div class="profile-card event-detail-card">
+                        <div class="event-detail-header">
+                            <span class="badge" id="eventDetailViewType">-</span>
+                            <span class="event-detail-date" id="eventDetailViewDate">-</span>
+                        </div>
+                        <h1 class="event-detail-title" id="eventDetailViewTitle">-</h1>
+                        <div class="event-detail-meta" id="eventDetailViewMeta"></div>
+                        <div class="event-detail-body" id="eventDetailViewBody"></div>
+                        <div class="event-detail-tags" id="eventDetailViewTags"></div>
+
+                        <div class="review-section-card" id="eventReviewSection">
+                            <h2><i class="fas fa-star"></i> Reviews & Ratings</h2>
+                            <div class="review-summary" id="eventReviewSummary"></div>
+                            <div class="review-form-wrap">
+                                <h3>Leave a Review</h3>
+                                <div class="star-rating-input" id="eventStarRating" data-rating="0">
+                                    <i class="fas fa-star" data-star="1"></i>
+                                    <i class="fas fa-star" data-star="2"></i>
+                                    <i class="fas fa-star" data-star="3"></i>
+                                    <i class="fas fa-star" data-star="4"></i>
+                                    <i class="fas fa-star" data-star="5"></i>
+                                </div>
+                                <textarea id="eventReviewText" placeholder="Write your review..." rows="3"></textarea>
+                                <button class="btn btn-primary btn-sm" onclick="submitReview('event', currentEventViewId)"><i class="fas fa-paper-plane"></i> Submit Review</button>
+                            </div>
+                            <div class="reviews-list" id="eventReviewsList"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+<div class="page" id="page-ads-browse">
+            <div class="container">
+                <div class="dashboard-header">
+                    <div>
+                        <h1>Personal Ads</h1>
+                        <p>Browse classified and personal ads</p>
+                    </div>
+                    <button class="btn btn-primary" onclick="navigateTo('provider-ads-create')">
+                        <i class="fas fa-pen-to-square"></i> Post Ad
+                    </button>
+                </div>
+
+                <div class="directory-filters">
+                    <div class="filter-tabs">
+                        <button class="filter-tab active" onclick="filterAds('all')">All</button>
+                        <button class="filter-tab" onclick="filterAds('woman-seeking-man')"><i class="fas fa-venus"></i> W4M</button>
+                        <button class="filter-tab" onclick="filterAds('man-seeking-woman')"><i class="fas fa-mars"></i> M4W</button>
+                        <button class="filter-tab" onclick="filterAds('woman-seeking-woman')"><i class="fas fa-venus-double"></i> W4W</button>
+                        <button class="filter-tab" onclick="filterAds('man-seeking-man')"><i class="fas fa-mars-double"></i> M4M</button>
+                        <button class="filter-tab" onclick="filterAds('couple-seeking-single')"><i class="fas fa-user-group"></i> C4S</button>
+                        <button class="filter-tab" onclick="filterAds('single-seeking-couple')"><i class="fas fa-user-group"></i> S4C</button>
+                        <button class="filter-tab" onclick="filterAds('services-offered')"><i class="fas fa-hand-holding-heart"></i> Services Offered</button>
+                        <button class="filter-tab" onclick="filterAds('services-wanted')"><i class="fas fa-search"></i> Services Wanted</button>
+                        <button class="filter-tab" onclick="filterAds('friends-with-benefits')"><i class="fas fa-handshake"></i> FWB</button>
+                        <button class="filter-tab" onclick="filterAds('casual-hookups')"><i class="fas fa-fire"></i> Casual</button>
+                        <button class="filter-tab" onclick="filterAds('general')"><i class="fas fa-tag"></i> General</button>
+                    </div>
+                    <div class="filter-bar">
+                        <input type="text" id="adsSearch" placeholder="Search ads by title, content, or tag..." oninput="searchAds()">
+                        <select id="adsLocationFilter" onchange="searchAds()">
+                            <option value="">All Locations</option>
+                            <optgroup label="Gauteng">
+                                <option value="Johannesburg">Johannesburg</option>
+                                <option value="Pretoria">Pretoria</option>
+                                <option value="Sandton">Sandton</option>
+                                <option value="Randburg">Randburg</option>
+                                <option value="Roodepoort">Roodepoort</option>
+                                <option value="Soweto">Soweto</option>
+                                <option value="Midrand">Midrand</option>
+                                <option value="Centurion">Centurion</option>
+                                <option value="Benoni">Benoni</option>
+                                <option value="Boksburg">Boksburg</option>
+                                <option value="Brakpan">Brakpan</option>
+                                <option value="Germiston">Germiston</option>
+                                <option value="Kempton Park">Kempton Park</option>
+                                <option value="Alberton">Alberton</option>
+                                <option value="Vanderbijlpark">Vanderbijlpark</option>
+                                <option value="Vereeniging">Vereeniging</option>
+                                <option value="Krugersdorp">Krugersdorp</option>
+                                <option value="Springs">Springs</option>
+                            </optgroup>
+                            <optgroup label="Western Cape">
+                                <option value="Cape Town">Cape Town</option>
+                                <option value="Stellenbosch">Stellenbosch</option>
+                                <option value="Paarl">Paarl</option>
+                                <option value="George">George</option>
+                                <option value="Worcester">Worcester</option>
+                                <option value="Hermanus">Hermanus</option>
+                                <option value="Somerset West">Somerset West</option>
+                                <option value="Strand">Strand</option>
+                                <option value="Camps Bay">Camps Bay</option>
+                                <option value="Claremont">Claremont</option>
+                                <option value="Bellville">Bellville</option>
+                                <option value="Mossel Bay">Mossel Bay</option>
+                                <option value="Oudtshoorn">Oudtshoorn</option>
+                                <option value="Saldanha Bay">Saldanha Bay</option>
+                            </optgroup>
+                            <optgroup label="KwaZulu-Natal">
+                                <option value="Durban">Durban</option>
+                                <option value="Pietermaritzburg">Pietermaritzburg</option>
+                                <option value="Umhlanga">Umhlanga</option>
+                                <option value="Richards Bay">Richards Bay</option>
+                                <option value="Newcastle">Newcastle</option>
+                                <option value="Port Shepstone">Port Shepstone</option>
+                                <option value="Ladysmith">Ladysmith</option>
+                                <option value="Pinetown">Pinetown</option>
+                                <option value="Ballito">Ballito</option>
+                                <option value="Margate">Margate</option>
+                            </optgroup>
+                            <optgroup label="Eastern Cape">
+                                <option value="Port Elizabeth">Port Elizabeth (Gqeberha)</option>
+                                <option value="East London">East London</option>
+                                <option value="Grahamstown">Grahamstown (Makhanda)</option>
+                                <option value="Mthatha">Mthatha</option>
+                                <option value="Queenstown">Queenstown (Komani)</option>
+                                <option value="Jeffreys Bay">Jeffreys Bay</option>
+                            </optgroup>
+                            <optgroup label="Free State">
+                                <option value="Bloemfontein">Bloemfontein</option>
+                                <option value="Welkom">Welkom</option>
+                                <option value="Bethlehem">Bethlehem</option>
+                                <option value="Harrismith">Harrismith</option>
+                            </optgroup>
+                            <optgroup label="Mpumalanga">
+                                <option value="Nelspruit">Nelspruit (Mbombela)</option>
+                                <option value="Witbank">Witbank (Emalahleni)</option>
+                                <option value="Middelburg">Middelburg</option>
+                                <option value="Secunda">Secunda</option>
+                                <option value="Hazyview">Hazyview</option>
+                            </optgroup>
+                            <optgroup label="Limpopo">
+                                <option value="Polokwane">Polokwane</option>
+                                <option value="Thohoyandou">Thohoyandou</option>
+                                <option value="Tzaneen">Tzaneen</option>
+                                <option value="Mokopane">Mokopane</option>
+                            </optgroup>
+                            <optgroup label="North West">
+                                <option value="Rustenburg">Rustenburg</option>
+                                <option value="Mahikeng">Mahikeng</option>
+                                <option value="Potchefstroom">Potchefstroom</option>
+                                <option value="Klerksdorp">Klerksdorp</option>
+                                <option value="Brits">Brits</option>
+                            </optgroup>
+                            <optgroup label="Northern Cape">
+                                <option value="Kimberley">Kimberley</option>
+                                <option value="Upington">Upington</option>
+                                <option value="Springbok">Springbok</option>
+                                <option value="De Aar">De Aar</option>
+                            </optgroup>
+                        </select>
+                        <select id="adsSort" onchange="searchAds()">
+                            <option value="newest">Newest</option>
+                            <option value="oldest">Oldest</option>
+                            <option value="title-asc">Title A-Z</option>
+                            <option value="title-desc">Title Z-A</option>
+                        </select>
+                        <div class="view-toggle" title="View mode">
+                            <button type="button" class="active" data-view="grid" onclick="setBrowseView('adsBrowseList','grid',this)"><i class="fas fa-th"></i> Grid</button>
+                            <button type="button" data-view="list" onclick="setBrowseView('adsBrowseList','list',this)"><i class="fas fa-list"></i> List</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="directory-stats" id="adsStats">
+                    <span id="adsCount">0</span> ads found
+                </div>
+
+                <div class="ads-grid" id="adsBrowseList"></div>
+            </div>
+        </div>
+
+<div class="page" id="page-ad-view">
+            <div class="container">
+                <div class="form-header">
+                    <button class="btn-back" onclick="navigateTo('ads-browse')">
+                        <i class="fas fa-arrow-left"></i> Back to Ads
+                    </button>
+                    <h1>Ad Details</h1>
+                </div>
+
+                <div class="view-profile" id="adViewContent">
+                    <div class="profile-card">
+                        <div class="ad-view-header">
+                            <span class="badge" id="adViewType">-</span>
+                            <span class="ad-view-date" id="adViewDate">-</span>
+                        </div>
+                        <h1 class="ad-view-title" id="adViewTitle">-</h1>
+                        <div class="ad-view-meta">
+                            <span><i class="fas fa-user"></i> <span id="adViewAuthor">-</span></span>
+                            <span><i class="fas fa-map-marker-alt"></i> <span id="adViewLocation">-</span></span>
+                            <span id="adViewPhoneWrap"><i class="fas fa-phone"></i> <span id="adViewPhone">-</span></span>
+                        </div>
+                    </div>
+
+                    <div class="profile-card">
+                        <h2><i class="fas fa-file-alt"></i> Description</h2>
+                        <p id="adViewBody" class="view-bio" style="white-space:pre-wrap">-</p>
+                    </div>
+
+                    <div class="profile-card">
+                        <h2><i class="fas fa-tag"></i> Tags</h2>
+                        <div class="tags-container" id="adViewTags"><span class="tag empty-tag">No tags</span></div>
+                    </div>
+
+                    <div class="profile-card">
+                        <h2><i class="fas fa-images"></i> Photos</h2>
+                        <div class="directory-gallery" id="adViewGallery"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+<div class="page" id="page-experiences-browse">
+            <div class="container">
+                <div class="dashboard-header">
+                    <div>
+                        <h1>Game Experiences</h1>
+                        <p>Join paid game experiences hosted by providers</p>
+                    </div>
+                    <button class="btn btn-wallet" onclick="navigateTo('user-wallet')"><i class="fas fa-wallet"></i> <span id="expWalletBalance">R0</span></button>
+                </div>
+                <div class="directory-filters">
+                    <div class="filter-tabs" id="experienceFilterTabs">
+                        <button class="filter-tab active" onclick="filterExperiences('all')"><i class="fas fa-gamepad"></i> All</button>
+                        <button class="filter-tab" onclick="filterExperiences('multiplayer')"><i class="fas fa-users"></i> Multiplayer</button>
+                        <button class="filter-tab" onclick="filterExperiences('arcade')"><i class="fas fa-gamepad"></i> Arcade</button>
+                        <button class="filter-tab" onclick="filterExperiences('board-game')"><i class="fas fa-chess-board"></i> Board</button>
+                        <button class="filter-tab" onclick="filterExperiences('card-game')"><i class="fas fa-suitcase"></i> Card</button>
+                        <button class="filter-tab" onclick="filterExperiences('betting')"><i class="fas fa-dice"></i> Betting</button>
+                        <button class="filter-tab" onclick="filterExperiences('trivia')"><i class="fas fa-lightbulb"></i> Trivia</button>
+                        <button class="filter-tab" onclick="filterExperiences('sports')"><i class="fas fa-futbol"></i> Sports</button>
+                        <button class="filter-tab" onclick="filterExperiences('tournament')"><i class="fas fa-trophy"></i> Tournaments</button>
+                    </div>
+                    <div class="filter-bar">
+                        <input type="text" id="experienceSearch" placeholder="Search experiences..." oninput="searchExperiences()">
+                        <div class="view-toggle" title="View mode">
+                            <button type="button" class="active" data-view="grid" onclick="setBrowseView('experiencesList','grid',this)"><i class="fas fa-th"></i> Grid</button>
+                            <button type="button" data-view="list" onclick="setBrowseView('experiencesList','list',this)"><i class="fas fa-list"></i> List</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="directory-stats"><span><i class="fas fa-gamepad"></i> <strong id="experienceCount">0</strong> experiences</span></div>
+                <div class="forum-threads-list profiles-grid directory-grid" id="experiencesList" style="margin-top:16px"></div>
+            </div>
+        </div>
+
+<div class="page" id="page-experiences-view">
+            <div class="container">
+                <div class="form-header">
+                    <button class="btn-back" onclick="navigateTo('experiences-browse')"><i class="fas fa-arrow-left"></i> Back to Experiences</button>
+                    <h1>Experience Details</h1>
+                </div>
+                <div id="experienceViewContent"></div>
+            </div>
+        </div>
+
+<div class="page" id="page-fantasy-requests">
+            <div class="container">
+                <div class="dashboard-header">
+                    <div>
+                        <h1>Fantasy Requests</h1>
+                        <p>Post your dream game scenario and let providers bid on it</p>
+                    </div>
+                    <button class="btn btn-primary" onclick="navigateTo('provider-fantasy-requests')"><i class="fas fa-plus"></i> Post a Request</button>
+                </div>
+                <div class="directory-filters">
+                    <div class="filter-tabs" id="fantasyFilterTabs">
+                        <button class="filter-tab active" onclick="filterFantasyRequests('all')"><i class="fas fa-scroll"></i> All</button>
+                        <button class="filter-tab" onclick="filterFantasyRequests('sports')"><i class="fas fa-futbol"></i> Sports</button>
+                        <button class="filter-tab" onclick="filterFantasyRequests('gaming')"><i class="fas fa-gamepad"></i> Gaming</button>
+                        <button class="filter-tab" onclick="filterFantasyRequests('roleplay')"><i class="fas fa-masks-theater"></i> Roleplay</button>
+                        <button class="filter-tab" onclick="filterFantasyRequests('battle')"><i class="fas fa-crosshairs"></i> Battle</button>
+                        <button class="filter-tab" onclick="filterFantasyRequests('card')"><i class="fas fa-chess-board"></i> Card</button>
+                        <button class="filter-tab" onclick="filterFantasyRequests('virtual')"><i class="fas fa-vr-cardboard"></i> Virtual</button>
+                    </div>
+                    <div class="filter-bar">
+                        <input type="text" id="fantasySearch" placeholder="Search fantasy requests..." oninput="searchFantasyRequests()">
+                        <div class="view-toggle" title="View mode">
+                            <button type="button" class="active" data-view="grid" onclick="setBrowseView('fantasyRequestsList','grid',this)"><i class="fas fa-th"></i> Grid</button>
+                            <button type="button" data-view="list" onclick="setBrowseView('fantasyRequestsList','list',this)"><i class="fas fa-list"></i> List</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="directory-stats"><span><i class="fas fa-scroll"></i> <strong id="fantasyCount">0</strong> requests</span></div>
+                <div class="profiles-grid directory-grid" id="fantasyRequestsList" style="margin-top:16px"></div>
+            </div>
+        </div>
+
+        <!-- ============ Shared modals used by browse/views ============ -->
+
+<div class="modal-overlay photo-overlay" id="photoModal" onclick="closePhotoModal(event)">
+            <div class="photo-viewer" onclick="event.stopPropagation()">
+                <button class="photo-viewer-close" onclick="closePhotoModal(event)"><i class="fas fa-times"></i></button>
+                <img id="photoModalImg" src="" alt="Full size view">
+            </div>
+        </div>
+
+<div class="modal-overlay" id="bookingModal">
+            <div class="modal modal-lg">
+                <div class="modal-icon" style="background: linear-gradient(135deg, #c9a227, #a07d12);"><i class="fas fa-calendar-plus"></i></div>
+                <h2>Book Provider</h2>
+                <form id="bookingForm" onsubmit="handleBookingSubmit(event)">
+                    <div class="form-grid" style="gap:12px; margin:16px 0;">
+                        <div class="form-group">
+                            <label>Your Name *</label>
+                            <input type="text" id="bookingClientName" placeholder="Full name" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Email *</label>
+                            <input type="email" id="bookingClientEmail" placeholder="Email address" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Phone</label>
+                            <input type="tel" id="bookingClientPhone" placeholder="Phone number">
+                        </div>
+                        <div class="form-group">
+                            <label>Service Type *</label>
+                            <select id="bookingServiceType" required>
+                                <option value="">Select service</option>
+                                <option value="Consultation">Consultation</option>
+                                <option value="Full Service">Full Service</option>
+                                <option value="Half Day">Half Day</option>
+                                <option value="Full Day">Full Day</option>
+                                <option value="Hourly">Hourly</option>
+                                <option value="Custom">Custom (discuss later)</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Preferred Date *</label>
+                            <input type="date" id="bookingDate" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Preferred Time *</label>
+                            <input type="time" id="bookingTime" required>
+                        </div>
+                        <div class="form-group full-width">
+                            <label>Notes</label>
+                            <textarea id="bookingNotes" placeholder="Any details or special requests..." rows="3"></textarea>
+                        </div>
+                    </div>
+                    <div style="display:flex;align-items:center;gap:10px;background:linear-gradient(135deg,#c9a2271a,#c9a2270d);border:1px solid #c9a22744;border-radius:12px;padding:12px 14px;margin-bottom:16px;">
+                        <i class="fas fa-wallet" style="color:#c9a227"></i>
+                        <span style="font-size:0.9rem;color:#8a7b55">This provider's booking fee:</span>
+                        <strong id="bookingFeeDisplay" style="margin-left:auto;color:#c9a227;font-size:1.1rem">R50</strong>
+                    </div>
+                    <div class="modal-actions">
+                        <button type="button" class="btn btn-secondary" onclick="closeBookingModal()">Cancel</button>
+                        <button type="submit" class="btn btn-primary"><i class="fas fa-paper-plane"></i> Send Booking Request</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+<div class="modal-overlay" id="tipModal">
+            <div class="modal">
+                <div class="modal-icon" style="background: linear-gradient(135deg, #f59e0b, #d97706);"><i class="fas fa-hand-holding-heart"></i></div>
+                <h2>Send a Tip</h2>
+                <p>Support <strong id="tipProviderName">-</strong></p>
+                <form id="tipForm" onsubmit="handleTipSubmit(event)">
+                    <div class="tip-amounts">
+                        <button type="button" class="tip-quick" onclick="setTipAmount(50)">R50</button>
+                        <button type="button" class="tip-quick" onclick="setTipAmount(100)">R100</button>
+                        <button type="button" class="tip-quick" onclick="setTipAmount(250)">R250</button>
+                        <button type="button" class="tip-quick" onclick="setTipAmount(500)">R500</button>
+                    </div>
+                    <div class="form-group" style="margin:12px 0;">
+                        <label>Amount (ZAR) *</label>
+                        <input type="number" id="tipAmount" placeholder="Enter amount" min="1" step="0.01" required>
+                    </div>
+                    <div class="form-group" style="margin-bottom:12px;">
+                        <label>Your Name *</label>
+                        <input type="text" id="tipperName" placeholder="Your name" required>
+                    </div>
+                    <div class="form-group" style="margin-bottom:12px;">
+                        <label>Email *</label>
+                        <input type="email" id="tipperEmail" placeholder="Email address" required>
+                    </div>
+                    <div class="form-group" style="margin-bottom:16px;">
+                        <label>Message (optional)</label>
+                        <textarea id="tipMessage" placeholder="Leave a kind message..." rows="2"></textarea>
+                    </div>
+                    <div class="modal-actions">
+                        <button type="button" class="btn btn-secondary" onclick="closeTipModal()">Cancel</button>
+                        <button type="submit" class="btn btn-primary" style="background: linear-gradient(135deg, #f59e0b, #d97706);"><i class="fas fa-heart"></i> Send Tip</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+<div class="modal-overlay" id="topUpModal">
+            <div class="modal">
+                <div class="modal-icon" style="background: linear-gradient(135deg, #10b981, #059669);"><i class="fas fa-plus-circle"></i></div>
+                <h2>Top Up Wallet</h2>
+                <div class="tip-amounts">
+                    <button type="button" class="tip-quick" onclick="setTopUpAmount(100)">R100</button>
+                    <button type="button" class="tip-quick" onclick="setTopUpAmount(250)">R250</button>
+                    <button type="button" class="tip-quick" onclick="setTopUpAmount(500)">R500</button>
+                    <button type="button" class="tip-quick" onclick="setTopUpAmount(1000)">R1000</button>
+                </div>
+                <div class="form-group" style="margin:16px 0">
+                    <label>Amount (ZAR) *</label>
+                    <input type="number" id="topUpAmount" placeholder="Enter amount" min="1" step="0.01" required>
+                </div>
+                <div class="modal-actions">
+                    <button class="btn btn-secondary" onclick="closeTopUpModal()">Cancel</button>
+                    <button class="btn btn-primary" onclick="processTopUp()" style="background: linear-gradient(135deg, #10b981, #059669);"><i class="fas fa-check"></i> Confirm Top Up</button>
+                </div>
             </div>
         </div>
 
