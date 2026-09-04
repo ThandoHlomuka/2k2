@@ -56,7 +56,11 @@
     { name: 'EscrowFunds', col: 'escrow_funds', key: 'k2_escrow_funds' },
     { name: 'Shipping', col: 'shipping', key: 'k2_shipping' },
     { name: 'Invoices', col: 'invoices', key: 'k2_invoices' },
-    { name: 'InvestorQueries', col: 'investor_queries', key: 'k2_investor_queries' }
+    { name: 'InvestorQueries', col: 'investor_queries', key: 'k2_investor_queries' },
+    { name: 'AdPackages', col: 'ad_packages', key: 'k2_ad_packages' },
+    { name: 'AdCampaigns', col: 'ad_campaigns', key: 'k2_ad_campaigns' },
+    { name: 'AdStats', col: 'ad_stats', key: 'k2_ad_stats' },
+    { name: 'AdvertiserQueries', col: 'advertiser_queries', key: 'k2_advertiser_queries' }
   ];
 
   const cache = {};      // col -> array

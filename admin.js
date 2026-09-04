@@ -56,6 +56,7 @@ function navigateTo(page) {
     if (page === 'admin-help-queries') renderAdminHelpQueries();
     if (page === 'admin-investor-queries') renderAdminInvestorQueries();
     if (page === 'admin-invoices') renderAdminInvoices();
+    if (page === 'admin-advertising') renderAdminAdvertising();
 
     const sidebar = document.getElementById('sidebar');
     if (sidebar && window.innerWidth <= 768) sidebar.classList.add('hidden');
@@ -3946,3 +3947,417 @@ function adminRejectFantasy(id) {
     showToast('Fantasy request rejected.');
     renderAdminFantasy();
 }
+
+// ==========================================
+// ADVERTISING MANAGEMENT
+// ==========================================
+const ADMIN_AD_PLACEMENTS = {
+    'sponsored-provider': { label: 'Sponsored Provider Card', price: 299, unit: 'week', description: 'Pin your provider/business card to the top of the directory.' },
+    'featured-listing':   { label: 'Featured Listing',        price: 199, unit: 'week', description: 'Highlight a listing, service or content at the top of its category.' },
+    'banner-top':         { label: 'Top Banner',              price: 499, unit: 'week', description: 'A high-visibility banner at the top of every directory page.' },
+    'banner-sidebar':     { label: 'Sidebar Banner',          price: 349, unit: 'week', description: 'A banner in the sidebar seen across the whole portal.' },
+    'in-feed':            { label: 'In-Feed Ad',              price: 249, unit: 'week', description: 'A native ad card that appears in directory and browse feeds.' },
+    'event-sponsor':      { label: 'Event Sponsorship',       price: 999, unit: 'event', description: 'Brand a featured event or hosted experience.' }
+};
+const ADMIN_AD_STATUSES = {
+    pending: { label: 'Pending', color: '#f59e0b', icon: 'fa-clock' },
+    approved: { label: 'Approved', color: '#6366f1', icon: 'fa-check-circle' },
+    live: { label: 'Live', color: '#10b981', icon: 'fa-circle-notch' },
+    paused: { label: 'Paused', color: '#94a3b8', icon: 'fa-pause-circle' },
+    rejected: { label: 'Rejected', color: '#ef4444', icon: 'fa-ban' },
+    declined: { label: 'Declined', color: '#ef4444', icon: 'fa-times-circle' },
+    completed: { label: 'Completed', color: '#8a7b55', icon: 'fa-flag-checkered' }
+};
+let currentAdminAdTab = 'campaigns';
+
+function adminAdPlacementLabel(key) {
+    return (ADMIN_AD_PLACEMENTS[key] && ADMIN_AD_PLACEMENTS[key].label) || key || '-';
+}
+function adminAdStatusBadge(status) {
+    const s = ADMIN_AD_STATUSES[status] || { label: status || '-', color: '#8a7b55', icon: 'fa-circle' };
+    return `<span class="status-badge" style="background:${s.color}20;color:${s.color}"><i class="fas ${s.icon}"></i> ${escapeHtml(s.label)}</span>`;
+}
+function adminAdMoney(n) {
+    return 'R' + Number(n || 0).toLocaleString('en-ZA', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+function renderAdminAdvertising() {
+    // seeding (idempotent)
+    if (window._2k2Ads && typeof window._2k2Ads.seedPackagesIfEmpty === 'function') {
+        try { window._2k2Ads.seedPackagesIfEmpty(); } catch (e) {}
+    } else {
+        try { if (!Storage.getAdPackages().length) Storage.setAdPackages(defaultAdminAdPackages()); } catch (e) {}
+    }
+
+    const campaigns = Storage.getAdCampaigns();
+    const stats = Storage.getAdStats();
+    const paid = campaigns.filter(c => c.paidFromWallet || Number(c.price) > 0);
+    const revenue = paid.reduce((s, c) => s + (Number(c.price) || 0), 0);
+    document.getElementById('adminAdTotalRevenue').textContent = adminAdMoney(revenue);
+    document.getElementById('adminAdLiveCount').textContent = campaigns.filter(c => c.status === 'live').length;
+    document.getElementById('adminAdPendingCount').textContent = campaigns.filter(c => c.status === 'pending').length;
+    document.getElementById('adminAdImpressions').textContent = campaigns.reduce((s, c) => s + (c.impressions || 0), 0);
+
+    showAdminAdTab(currentAdminAdTab, true);
+}
+
+function showAdminAdTab(tab, skipRender) {
+    currentAdminAdTab = tab;
+    const tabs = ['campaigns', 'packages', 'leads', 'analytics', 'placements'];
+    const page = document.getElementById('page-admin-advertising');
+    if (page) {
+        page.querySelectorAll('.directory-filters .filter-tab').forEach((btn) => {
+            btn.classList.remove('active');
+        });
+        const idx = tabs.indexOf(tab);
+        if (idx >= 0) {
+            const btn = page.querySelectorAll('.directory-filters .filter-tab')[idx];
+            if (btn) btn.classList.add('active');
+        }
+    }
+    tabs.forEach(t => {
+        const el = document.getElementById('adminAdTab' + t.charAt(0).toUpperCase() + t.slice(1));
+        if (el) el.style.display = (t === tab) ? '' : 'none';
+    });
+    const bar = document.getElementById('adminAdFilterBar');
+    if (bar) bar.style.display = (tab === 'campaigns') ? '' : 'none';
+
+    if (tab === 'campaigns') renderAdminAdCampaigns();
+    else if (tab === 'packages') renderAdminAdPackages();
+    else if (tab === 'leads') renderAdminAdLeads();
+    else if (tab === 'analytics') renderAdminAdAnalytics();
+    else if (tab === 'placements') renderAdminAdPlacements();
+}
+
+function renderAdminAdCampaigns() {
+    let campaigns = [...Storage.getAdCampaigns()].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    const status = document.getElementById('adminAdStatusFilter')?.value || 'all';
+    const search = document.getElementById('adminAdSearch')?.value?.toLowerCase() || '';
+    if (status !== 'all') campaigns = campaigns.filter(c => c.status === status);
+    if (search) {
+        campaigns = campaigns.filter(c =>
+            (c.title || c.headline || c.businessName || '').toLowerCase().includes(search) ||
+            (c.businessName || '').toLowerCase().includes(search) ||
+            (c.email || '').toLowerCase().includes(search) ||
+            (c.advertiserId || '').toLowerCase().includes(search)
+        );
+    }
+    const tbody = document.getElementById('adminAdCampaignsBody');
+    if (!tbody) return;
+    if (campaigns.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="8" class="empty-cell">No ad campaigns found</td></tr>';
+        return;
+    }
+    tbody.innerHTML = campaigns.map(c => {
+        const type = c.type || 'custom';
+        const perf = `<span style="font-size:0.8rem;color:#a99c7e">${c.impressions || 0}</span> / <span style="font-size:0.8rem;color:#d4a853">${c.clicks || 0}</span>`;
+        const actions = [];
+        if (c.status === 'pending') {
+            actions.push(`<button class="btn btn-success btn-xs" onclick="adminAdCampaignAction('${c.id}','live')" title="Approve & go live"><i class="fas fa-check"></i></button>`);
+            actions.push(`<button class="btn btn-danger btn-xs" onclick="adminAdCampaignAction('${c.id}','rejected')" title="Reject"><i class="fas fa-ban"></i></button>`);
+        } else if (c.status === 'approved') {
+            actions.push(`<button class="btn btn-success btn-xs" onclick="adminAdCampaignAction('${c.id}','live')" title="Go live"><i class="fas fa-play"></i></button>`);
+            actions.push(`<button class="btn btn-danger btn-xs" onclick="adminAdCampaignAction('${c.id}','rejected')" title="Reject"><i class="fas fa-ban"></i></button>`);
+        } else if (c.status === 'live') {
+            actions.push(`<button class="btn btn-secondary btn-xs" onclick="adminAdCampaignAction('${c.id}','paused')" title="Pause"><i class="fas fa-pause"></i></button>`);
+        } else if (c.status === 'paused') {
+            actions.push(`<button class="btn btn-success btn-xs" onclick="adminAdCampaignAction('${c.id}','live')" title="Resume"><i class="fas fa-play"></i></button>`);
+        }
+        actions.push(`<button class="btn btn-secondary btn-xs" onclick="adminViewAdCampaign('${c.id}')" title="View"><i class="fas fa-eye"></i></button>`);
+        actions.push(`<button class="btn btn-danger btn-xs" onclick="adminAdDeleteCampaign('${c.id}')" title="Delete"><i class="fas fa-trash"></i></button>`);
+        return `
+            <tr>
+                <td><strong>${escapeHtml(c.title || c.headline || c.businessName || 'Campaign')}</strong>
+                    <div class="truncate" style="max-width:180px;font-size:0.78rem;color:#a99c7e">${escapeHtml(c.body || '')}</div>
+                </td>
+                <td>${escapeHtml(type)}<div style="font-size:0.78rem;color:#a99c7e">${escapeHtml(adminAdPlacementLabel(c.placement))}</div></td>
+                <td>${adminAdMoney(c.price)}${c.paidFromWallet ? ' <i class="fas fa-wallet" style="color:#10b981" title="Paid from wallet"></i>' : ''}</td>
+                <td style="font-size:0.82rem">${escapeHtml(c.businessName || c.email || c.contactName || c.advertiserId || 'guest')}</td>
+                <td style="font-size:0.78rem;color:#a99c7e">${c.startDate ? fmtDate(c.startDate) : '-'}<br>&rarr; ${c.endDate ? fmtDate(c.endDate) : '-'}</td>
+                <td>${perf}</td>
+                <td>${adminAdStatusBadge(c.status)}</td>
+                <td><div class="admin-actions">${actions.join('')}</div></td>
+            </tr>`;
+    }).join('');
+}
+
+function adminAdCampaignAction(id, action) {
+    const campaigns = Storage.getAdCampaigns();
+    const c = campaigns.find(x => x.id === id);
+    if (!c) return;
+    if (action === 'rejected') {
+        const reason = prompt('Reason for rejection (optional):');
+        c.adminNote = reason || c.adminNote;
+    }
+    let start = c.startDate;
+    if (action === 'live' && !start) start = new Date().toISOString();
+    c.status = action;
+    if (action === 'live' && !c.endDate) {
+        c.endDate = new Date(new Date(start).getTime() + (Number(c.durationDays) || 7) * 86400000).toISOString();
+    }
+    c.startDate = start;
+    c.updatedAt = new Date().toISOString();
+    Storage.setAdCampaigns(campaigns);
+    showToast('Campaign marked as ' + action + '.');
+    renderAdminAdCampaigns();
+    // refresh aggregate stats
+    renderAdminAdvertising();
+}
+
+function adminAdDeleteCampaign(id) {
+    if (!confirm('Delete this campaign permanently?')) return;
+    const campaigns = Storage.getAdCampaigns().filter(x => x.id !== id);
+    Storage.setAdCampaigns(campaigns);
+    renderAdminAdCampaigns();
+    renderAdminAdvertising();
+    showToast('Campaign deleted.');
+}
+
+function adminViewAdCampaign(id) {
+    const c = Storage.getAdCampaigns().find(x => x.id === id);
+    if (!c) return;
+    const body = document.getElementById('adminAdCampaignBody');
+    const rows = [
+        ['Title', c.title || c.headline || c.businessName || '-'],
+        ['Type', c.type || '-'],
+        ['Placement', adminAdPlacementLabel(c.placement)],
+        ['Target Category', c.targetingCategory || '-'],
+        ['Target Location', c.targetingLocation || '-'],
+        ['Advertiser', c.businessName || c.contactName || c.advertiserId || 'Guest'],
+        ['Email', c.email || '-'],
+        ['Price', adminAdMoney(c.price) + (c.paidFromWallet ? ' (wallet)' : '')],
+        ['Duration', c.durationDays + ' day(s)'],
+        ['Dates', (c.startDate ? fmtDate(c.startDate) : '-') + ' → ' + (c.endDate ? fmtDate(c.endDate) : '-')],
+        ['Impressions', c.impressions || 0],
+        ['Clicks', c.clicks || 0],
+        ['Created', fmtDate(c.createdAt)]
+    ];
+    let html = rows.map(r => `<p class="admin-view-row"><span class="label">${escapeHtml(r[0])}</span><span class="value">${escapeHtml(r[1])}</span></p>`).join('');
+    if (c.body) html += `<p class="admin-view-row"><span class="label">Ad Copy</span></p><p>${escapeHtml(c.body)}</p>`;
+    if (c.linkUrl) html += `<p class="admin-view-row"><span class="label">Link</span><span class="value"><a href="${escapeHtml(c.linkUrl)}" target="_blank" rel="noopener">${escapeHtml(c.linkUrl)}</a></span></p>`;
+    if (c.image) html += `<div style="margin:12px 0"><img src="${escapeHtml(c.image)}" alt="" style="max-width:100%;max-height:200px;border-radius:12px;object-fit:contain"></div>`;
+    html += `<p class="admin-view-row"><span class="label">Status</span><span class="value">${adminAdStatusBadge(c.status)}</span></p>`;
+    body.innerHTML = html;
+    document.getElementById('adminAdCampaignModal').classList.add('active');
+}
+function closeAdminAdCampaign() { document.getElementById('adminAdCampaignModal').classList.remove('active'); }
+
+// ---- Packages ----
+function defaultAdminAdPackages() {
+    const now = new Date().toISOString();
+    const list = [
+        { id: 'pkg_banner', name: 'Top Banner', description: 'High-visibility banner at the top of directory pages for one week.', placement: 'banner-top', price: 499, durationDays: 7, features: ['Top of directory pages', 'Links to your site or profile', '7 days of display', 'Monthly impressions report'], active: true, createdAt: now },
+        { id: 'pkg_sponsored', name: 'Sponsored Provider', description: 'Pin your provider or business card to the top of the directory for one week.', placement: 'sponsored-provider', price: 299, durationDays: 7, features: ['Pinned to top of directory', 'Appears in all category filters', '7 days of display', 'Click-through tracking'], active: true, createdAt: now },
+        { id: 'pkg_featured', name: 'Featured Content Boost', description: 'Boost a listing, service or content piece to the top of its category.', placement: 'featured-listing', price: 199, durationDays: 7, features: ['Top of category', 'Higher visibility', '7 days of display', 'Impression tracking'], active: true, createdAt: now },
+        { id: 'pkg_sidebar', name: 'Sidebar Banner', description: 'A banner shown in the sidebar across the entire portal for one week.', placement: 'banner-sidebar', price: 349, durationDays: 7, features: ['Seen across all pages', 'Short or long copy', '7 days of display', 'Weekly click report'], active: true, createdAt: now },
+        { id: 'pkg_event', name: 'Event Sponsorship', description: 'Brand a featured event or hosted experience as a sponsor.', placement: 'event-sponsor', price: 999, durationDays: 1, features: ['Sponsor badge on event', 'Premium placement', 'Per-event sponsorship', 'Attendee visibility'], active: true, createdAt: now }
+    ];
+    return list;
+}
+
+function renderAdminAdPackages() {
+    let pkgs = [...Storage.getAdPackages()];
+    const tbody = document.getElementById('adminAdPackagesBody');
+    if (!tbody) return;
+    if (pkgs.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" class="empty-cell">No packages defined</td></tr>';
+        return;
+    }
+    tbody.innerHTML = pkgs.map(p => `
+        <tr>
+            <td><strong>${escapeHtml(p.name)}</strong><div class="truncate" style="max-width:220px;font-size:0.78rem;color:#a99c7e">${escapeHtml(p.description || '')}</div></td>
+            <td>${escapeHtml(adminAdPlacementLabel(p.placement))}</td>
+            <td>${adminAdMoney(p.price)}</td>
+            <td>${p.durationDays ? p.durationDays + ' day(s)' : '-'}</td>
+            <td>${p.active === false ? '<span style="color:#ef4444">No</span>' : '<span style="color:#10b981">Yes</span>'}</td>
+            <td>
+                <div class="admin-actions">
+                    <button class="btn btn-secondary btn-xs" onclick="openAdminAdPackage('${p.id}')" title="Edit"><i class="fas fa-edit"></i></button>
+                    <button class="btn btn-danger btn-xs" onclick="adminAdTogglePackage('${p.id}')" title="${p.active === false ? 'Activate' : 'Deactivate'}"><i class="fas ${p.active === false ? 'fa-play' : 'fa-pause'}"></i></button>
+                </div>
+            </td>
+        </tr>`).join('');
+}
+
+function adminAdTogglePackage(id) {
+    const pkgs = Storage.getAdPackages();
+    const p = pkgs.find(x => x.id === id);
+    if (!p) return;
+    p.active = p.active === false;
+    p.updatedAt = new Date().toISOString();
+    Storage.setAdPackages(pkgs);
+    if (window._2k2Ads && typeof window._2k2Ads.seedPackagesIfEmpty === 'function') {} // no-op, keep seeds
+    renderAdminAdPackages();
+    showToast('Package ' + (p.active === false ? 'deactivated' : 'activated') + '.');
+}
+
+function openAdminAdPackage(id) {
+    const p = id ? Storage.getAdPackages().find(x => x.id === id) : null;
+    const body = document.getElementById('adminAdPackageBody');
+    const placementOpts = Object.keys(ADMIN_AD_PLACEMENTS).map(k =>
+        `<option value="${k}" ${p && p.placement === k ? 'selected' : ''}>${escapeHtml(ADMIN_AD_PLACEMENTS[k].label)}</option>`).join('');
+    body.innerHTML = `
+        <input type="hidden" id="adminAdPkgId" value="${p ? p.id : ''}">
+        <div class="form-group"><label>Package Name</label><input type="text" id="adminAdPkgName" value="${p ? escapeHtml(p.name) : ''}"></div>
+        <div class="form-group"><label>Description</label><textarea id="adminAdPkgDesc" rows="2">${p ? escapeHtml(p.description || '') : ''}</textarea></div>
+        <div class="form-group"><label>Placement</label><select id="adminAdPkgPlacement">${placementOpts}</select></div>
+        <div class="form-group"><label>Price (ZAR)</label><input type="number" id="adminAdPkgPrice" value="${p ? p.price : ''}" min="0"></div>
+        <div class="form-group"><label>Duration (days)</label><input type="number" id="adminAdPkgDuration" value="${p ? p.durationDays : 7}" min="1"></div>
+        <div class="form-group"><label>Features (comma separated)</label><input type="text" id="adminAdPkgFeatures" value="${p ? escapeHtml((p.features || []).join(', ')) : ''}"></div>
+        <div style="text-align:right;margin-top:14px;display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap">
+            <button class="btn btn-secondary" onclick="closeAdminAdPackage()">Cancel</button>
+            <button class="btn btn-primary" onclick="saveAdminAdPackage()">${p ? 'Save Changes' : 'Create Package'}</button>
+        </div>`;
+    document.getElementById('adminAdPackageModal').classList.add('active');
+}
+function closeAdminAdPackage() { document.getElementById('adminAdPackageModal').classList.remove('active'); }
+
+function saveAdminAdPackage() {
+    const name = document.getElementById('adminAdPkgName').value.trim();
+    if (!name) { showToast('Package name is required.', 'error'); return; }
+    const id = document.getElementById('adminAdPkgId').value;
+    const price = Number(document.getElementById('adminAdPkgPrice').value) || 0;
+    const pkgs = Storage.getAdPackages();
+    const now = new Date().toISOString();
+    const features = document.getElementById('adminAdPkgFeatures').value.split(',').map(s => s.trim()).filter(Boolean);
+    if (id) {
+        const p = pkgs.find(x => x.id === id);
+        if (!p) return;
+        p.name = name;
+        p.description = document.getElementById('adminAdPkgDesc').value.trim();
+        p.placement = document.getElementById('adminAdPkgPlacement').value;
+        p.price = price;
+        p.durationDays = Number(document.getElementById('adminAdPkgDuration').value) || 7;
+        p.features = features;
+        p.updatedAt = now;
+    } else {
+        pkgs.push({
+            id: 'pkg_' + Date.now().toString(36),
+            name: name,
+            description: document.getElementById('adminAdPkgDesc').value.trim(),
+            placement: document.getElementById('adminAdPkgPlacement').value,
+            price: price,
+            durationDays: Number(document.getElementById('adminAdPkgDuration').value) || 7,
+            features: features,
+            active: true,
+            createdAt: now,
+            updatedAt: now
+        });
+    }
+    Storage.setAdPackages(pkgs);
+    closeAdminAdPackage();
+    renderAdminAdPackages();
+    showToast('Package saved.');
+}
+
+// ---- Leads ----
+function renderAdminAdLeads() {
+    let leads = [...Storage.getAdvertiserQueries()].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    const tbody = document.getElementById('adminAdLeadsBody');
+    if (!tbody) return;
+    if (leads.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7" class="empty-cell">No advertiser leads yet</td></tr>';
+        return;
+    }
+    tbody.innerHTML = leads.map(q => {
+        const actions = [];
+        if (q.status === 'new' || q.status === 'contacted') {
+            actions.push(`<button class="btn btn-success btn-xs" onclick="updateAdminAdLead('${q.id}','contacted')" title="Mark contacted"><i class="fas fa-reply"></i></button>`);
+            actions.push(`<button class="btn btn-danger btn-xs" onclick="updateAdminAdLead('${q.id}','closed')" title="Close"><i class="fas fa-check"></i></button>`);
+        }
+        actions.push(`<button class="btn btn-secondary btn-xs" onclick="adminViewAdLead('${q.id}')" title="View"><i class="fas fa-eye"></i></button>`);
+        return `
+            <tr>
+                <td><strong>${escapeHtml(q.contactName || '-')}</strong><div class="truncate" style="max-width:170px;font-size:0.8rem;color:#a99c7e">${escapeHtml(q.email || '')}</div></td>
+                <td><strong>${escapeHtml(q.businessName || '-')}</strong>${q.phone ? `<div style="font-size:0.78rem;color:#a99c7e">${escapeHtml(q.phone)}</div>` : ''}</td>
+                <td>${escapeHtml(adminAdPlacementLabel(q.placement))}</td>
+                <td class="truncate" style="max-width:220px">${escapeHtml(q.message || '')}</td>
+                <td><span class="status-badge" style="background:${ADMIN_AD_STATUSES[q.status === 'closed' ? 'declined' : (q.status === 'contacted' ? 'approved' : 'pending')].color}20;color:${ADMIN_AD_STATUSES[q.status === 'closed' ? 'declined' : (q.status === 'contacted' ? 'approved' : 'pending')].color}">${escapeHtml((q.status || 'new').toUpperCase())}</span></td>
+                <td>${fmtDate(q.createdAt)}</td>
+                <td><div class="admin-actions">${actions.join('')}</div></td>
+            </tr>`;
+    }).join('');
+}
+
+function updateAdminAdLead(id, status) {
+    const leads = Storage.getAdvertiserQueries();
+    const q = leads.find(x => x.id === id);
+    if (!q) return;
+    q.status = status;
+    q.updatedAt = new Date().toISOString();
+    Storage.setAdvertiserQueries(leads);
+    renderAdminAdLeads();
+    showToast('Lead marked as ' + status + '.');
+}
+function adminViewAdLead(id) {
+    const q = Storage.getAdvertiserQueries().find(x => x.id === id);
+    if (!q) return;
+    const body = document.getElementById('adminAdLeadBody');
+    const rows = [
+        ['Business', q.businessName],
+        ['Contact', q.contactName],
+        ['Email', q.email],
+        ['Phone', q.phone],
+        ['Website', q.website],
+        ['Placement', adminAdPlacementLabel(q.placement)],
+        ['Submitted', fmtDate(q.createdAt)]
+    ];
+    let html = rows.map(r => r[1] ? `<p class="admin-view-row"><span class="label">${escapeHtml(r[0])}</span><span class="value">${escapeHtml(r[1])}</span></p>` : '').join('');
+    if (q.message) html += `<p class="admin-view-row"><span class="label">Message</span></p><p>${escapeHtml(q.message)}</p>`;
+    html += `<p class="admin-view-row"><span class="label">Status</span><span class="value">${escapeHtml((q.status || 'new').toUpperCase())}</span></p>`;
+    if (q.adminReply) html += `<div style="border:1px solid #e6dec8;border-radius:10px;padding:10px 12px;margin-top:10px"><strong style="color:#d4a853">Your reply</strong><p style="margin:6px 0 0">${escapeHtml(q.adminReply)}</p></div>`;
+    body.innerHTML = html;
+    document.getElementById('adminAdLeadModal').classList.add('active');
+}
+function closeAdminAdLead() { document.getElementById('adminAdLeadModal').classList.remove('active'); }
+
+// ---- Analytics ----
+function renderAdminAdAnalytics() {
+    const campaigns = Storage.getAdCampaigns();
+    const approved = campaigns.filter(c => c.impressions || c.clicks);
+    const totalImpr = campaigns.reduce((s, c) => s + (c.impressions || 0), 0);
+    const totalClicks = campaigns.reduce((s, c) => s + (c.clicks || 0), 0);
+    document.getElementById('adminAdAnalyticsApproved').textContent = approved.length;
+    document.getElementById('adminAdAnalyticsImpressions').textContent = totalImpr;
+    document.getElementById('adminAdAnalyticsClicks').textContent = totalClicks;
+    document.getElementById('adminAdAnalyticsCTR').textContent = totalImpr > 0 ? ((totalClicks / totalImpr) * 100).toFixed(2) + '%' : '0%';
+
+    const tbody = document.getElementById('adminAdAnalyticsBody');
+    if (!tbody) return;
+    const withPerf = campaigns.filter(c => (c.impressions || 0) > 0 || (c.clicks || 0) > 0)
+        .sort((a, b) => (b.impressions || 0) - (a.impressions || 0));
+    if (withPerf.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" class="empty-cell">No ad performance data yet</td></tr>';
+        return;
+    }
+    tbody.innerHTML = withPerf.map(c => {
+        const impr = c.impressions || 0;
+        const clicks = c.clicks || 0;
+        const ctr = impr > 0 ? ((clicks / impr) * 100).toFixed(2) + '%' : '0%';
+        return `
+            <tr>
+                <td><strong>${escapeHtml(c.title || c.headline || c.businessName || 'Campaign')}</strong></td>
+                <td>${escapeHtml(adminAdPlacementLabel(c.placement))}</td>
+                <td>${impr}</td>
+                <td>${clicks}</td>
+                <td>${ctr}</td>
+            </tr>`;
+    }).join('');
+}
+
+// ---- Placements ----
+function renderAdminAdPlacements() {
+    const tbody = document.getElementById('adminAdPlacementsBody');
+    if (!tbody) return;
+    tbody.innerHTML = Object.keys(ADMIN_AD_PLACEMENTS).map(k => {
+        const p = ADMIN_AD_PLACEMENTS[k];
+        return `
+            <tr>
+                <td><strong>${escapeHtml(p.label)}</strong></td>
+                <td>${escapeHtml(p.unit)}</td>
+                <td>${adminAdMoney(p.price)}</td>
+                <td style="color:#a99c7e">${escapeHtml(p.description || '-')}</td>
+            </tr>`;
+    }).join('');
+}
+

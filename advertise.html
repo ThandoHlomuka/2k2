@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Advertise on 2k2 | South Africa's #1 Adult Lifestyle Portal</title>
+<meta name="description" content="Advertise on 2k2, South Africa's leading adult lifestyle portal. Reach thousands of members with banners, sponsored placements, featured boosts and self-serve campaigns.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Inter:wght@400;500;600;700&display=swap">
+<style>
+:root{--gold:#d4a853;--gold2:#b8941f;--border:#31291a;--text:#f0e7d0;--muted:#a99c7e;--bg:#0c0a08;--card:#15110b;--danger:#ef4444;--success:#10b981;}
+*{margin:0;padding:0;box-sizing:border-box;}
+html{overflow-x:hidden;}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;-webkit-font-smoothing:antialiased;}
+.shell{min-height:100vh;background:linear-gradient(180deg,#0c0a08 0%,#14100a 100%);}
+a{text-decoration:none;color:inherit;}
+a.tint{color:var(--gold);}
+.wrap{max-width:1120px;margin:0 auto;padding:0 20px;}
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:16px 0;border-bottom:1px solid rgba(212,168,83,.14);}
+.topbar .brand{font-family:'Playfair Display',serif;font-weight:900;font-size:1.5rem;color:var(--gold);}
+.topbar .brand span{color:#fff;}
+.topbar nav a{color:var(--muted);margin-left:22px;font-size:.85rem;font-weight:500;transition:color .2s;}
+.topbar nav a:hover{color:var(--gold);}
+.hero{text-align:center;padding:64px 20px 34px;}
+.hero .badge{display:inline-flex;align-items:center;gap:8px;padding:6px 14px;background:rgba(212,168,83,.12);border:1px solid rgba(212,168,83,.3);border-radius:999px;color:var(--gold);font-size:.72rem;font-weight:600;text-transform:uppercase;letter-spacing:1.5px;}
+.hero h1{font-family:'Playfair Display',serif;font-weight:900;font-size:clamp(2rem,5vw,3.4rem);line-height:1.08;margin:18px 0 12px;}
+.hero h1 .h{background:linear-gradient(135deg,var(--gold),var(--gold2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+.hero p.tag{color:var(--muted);max-width:660px;margin:0 auto;font-size:1.05rem;line-height:1.65;}
+.hero .stats{display:flex;justify-content:center;gap:34px;margin-top:30px;flex-wrap:wrap;}
+.hero .stats .s .num{font-family:'Playfair Display',serif;font-weight:900;font-size:1.6rem;color:var(--gold);}
+.hero .stats .s .lbl{font-size:.78rem;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;}
+.sec{max-width:1060px;margin:0 auto;padding:30px 20px 14px;}
+.sec-head{display:flex;align-items:center;gap:14px;margin-bottom:18px;}
+.sec-head .ic{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1.1rem;background:rgba(212,168,83,.1);border:1px solid rgba(212,168,83,.25);color:var(--gold);flex-shrink:0;}
+.sec-head h2{font-family:'Playfair Display',serif;font-weight:700;color:var(--gold);font-size:1.5rem;}
+.sec-head p{color:var(--muted);font-size:.85rem;flex:1;}
+.tabs{display:flex;gap:10px;flex-wrap:wrap;margin:8px 0 20px;}
+.tab{padding:10px 18px;border-radius:12px;border:1px solid var(--border);background:var(--card);color:var(--muted);font-size:.85rem;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:8px;transition:all .2s;}
+.tab:hover{border-color:var(--gold);color:var(--gold);}
+.tab.active{background:linear-gradient(135deg,var(--gold),var(--gold2));color:#0a0a0a;border-color:transparent;}
+.pkg-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(0,1fr));gap:18px;}
+.pkg{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:22px;display:flex;flex-direction:column;transition:all .2s;position:relative;}
+.pkg:hover{border-color:var(--gold);transform:translateY(-3px);box-shadow:0 12px 40px rgba(212,168,83,.08);}
+.pkg .p-name{font-weight:700;color:#fff;font-size:1.05rem;display:flex;align-items:center;gap:8px;}
+.pkg .p-name i{color:var(--gold);}
+.pkg .p-desc{color:var(--muted);font-size:.82rem;line-height:1.5;margin:8px 0 12px;flex:1;}
+.pkg .p-price{font-family:'Playfair Display',serif;font-weight:900;font-size:1.5rem;color:var(--gold);margin-bottom:12px;}
+.pkg .p-price small{font-size:.8rem;color:var(--muted);font-weight:400;font-family:'Inter';}
+.pkg .p-feats{list-style:none;margin-bottom:16px;}
+.pkg .p-feats li{font-size:.8rem;color:var(--muted);padding:4px 0 4px 22px;position:relative;}
+.pkg .p-feats li::before{content:'\2713';color:var(--success);position:absolute;left:0;font-size:.7rem;}
+.pkg .p-btn{padding:11px;border:none;border-radius:11px;font-weight:700;cursor:pointer;font-size:.85rem;background:linear-gradient(135deg,var(--gold),var(--gold2));color:#0a0a0a;transition:all .2s;font-family:inherit;}
+.pkg .p-btn:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(212,168,83,.3);}
+.card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:22px;margin-bottom:18px;}
+.card h3{font-family:'Playfair Display',serif;color:#fff;margin-bottom:6px;font-size:1.15rem;}
+.card .sub{color:var(--muted);font-size:.82rem;margin-bottom:16px;}
+.fgrid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+field{display:block;}
+field label{display:block;color:var(--muted);font-size:.78rem;font-weight:600;margin-bottom:6px;}
+field input,field select,field textarea{width:100%;padding:11px 14px;background:#0f0c08;border:1px solid var(--border);border-radius:10px;color:var(--text);font-family:inherit;font-size:.88rem;transition:border .2s;}
+field input:focus,field select:focus,field textarea:focus{outline:none;border-color:var(--gold);}
+field.full{grid-column:1/-1;}
+textarea{resize:vertical;min-height:90px;}
+.btn{padding:12px 22px;border:none;border-radius:12px;font-weight:700;cursor:pointer;font-size:.88rem;display:inline-flex;align-items:center;gap:8px;transition:all .2s;font-family:inherit;}
+.btn-primary{background:linear-gradient(135deg,var(--gold),var(--gold2));color:#0a0a0a;}
+.btn-primary:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(212,168,83,.3);}
+.btn-secondary{background:#1c1710;color:var(--muted);border:1px solid var(--border);}
+.btn-secondary:hover{color:var(--gold);border-color:var(--gold);}
+.price-line{display:flex;align-items:center;justify-content:space-between;background:#0f0c08;border:1px solid var(--border);border-radius:10px;padding:12px 16px;margin-top:14px;}
+.price-line .l{color:var(--muted);font-size:.85rem;}
+.price-line .v{font-family:'Playfair Display',serif;font-weight:900;font-size:1.4rem;color:var(--gold);}
+.note{font-size:.75rem;color:var(--muted);margin-top:10px;line-height:1.5;}
+.camp{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px 18px;margin-bottom:12px;}
+.camp .row{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;}
+.camp .camp-title{font-weight:700;color:#fff;}
+.camp .camp-meta{font-size:.78rem;color:var(--muted);margin-top:4px;}
+.status{padding:3px 10px;border-radius:999px;font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.3px;}
+.st-live{background:rgba(16,185,129,.15);color:#34d399;}
+.st-pending{background:rgba(245,158,11,.15);color:#fbbf24;}
+.st-approved{background:rgba(99,102,241,.15);color:#a5b4fc;}
+.st-rejected,.st-declined{background:rgba(239,68,68,.15);color:#fca5a5;}
+.st-completed{background:rgba(138,123,85,.15);color:#a99c7e;}
+.st-paused{background:rgba(148,163,184,.15);color:#cbd5e1;}
+.camp .mini{display:inline-flex;align-items:center;gap:8px;margin-right:16px;font-size:.78rem;color:var(--muted);}
+.camp .mini i{color:var(--gold);}
+.acts{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;}
+.btn-sm{padding:8px 12px;font-size:.75rem;border-radius:9px;}
+.gate{text-align:center;padding:40px 20px;background:var(--card);border:1px solid var(--border);border-radius:16px;margin:24px 0;}
+.gate i{font-size:2.4rem;color:var(--gold);margin-bottom:12px;}
+.gate h3{color:#fff;margin-bottom:8px;}
+.gate p{color:var(--muted);font-size:.9rem;margin-bottom:18px;}
+.adv-toast{position:fixed;left:50%;bottom:28px;transform:translateX(-50%);background:#1d1710;border:1px solid var(--border);color:var(--text);padding:12px 20px;border-radius:12px;display:none;z-index:999;font-size:.88rem;box-shadow:0 8px 30px rgba(0,0,0,.4);max-width:90vw;}
+footer{border-top:1px solid rgba(212,168,83,.14);padding:26px 20px;text-align:center;color:var(--muted);font-size:.85rem;}
+.lead-form{display:none;}
+.section-hint{margin:6px 0 18px;padding:12px 16px;background:rgba(212,168,83,.07);border:1px solid rgba(212,168,83,.2);border-radius:12px;color:var(--muted);font-size:.85rem;display:flex;gap:10px;align-items:center;}
+.section-hint i{color:var(--gold);}
+@media(max-width:720px){.fgrid{grid-template-columns:1fr;}.topbar nav a{margin-left:14px;}}
+</style>
+</head>
+<body>
+<div class="shell">
+    <div class="wrap">
+        <div class="topbar">
+            <a class="brand" href="index.html">2k2 <span>Advertise</span></a>
+            <nav>
+                <a href="#packages">Packages</a>
+                <a href="#selfserve">Self-Serve</a>
+                <a href="#custom">Custom</a>
+                <a href="#mine">My Campaigns</a>
+                <a href="#inquiry">Business Inquiry</a>
+                <a href="index.html">Portal</a>
+            </nav>
+        </div>
+    </div>
+
+    <!-- Hero -->
+    <div class="hero">
+        <div class="badge"><i class="fa-solid fa-bullhorn"></i> Advertiser Portal</div>
+        <h1>Put your brand in front of <span class="h">South Africa's</span> adult lifestyle audience</h1>
+        <p class="tag">Reach thousands of active members and providers across the largest adult lifestyle marketplace in the country. Choose a ready-made package, build your own self-serve campaign, or tell us what you need.</p>
+        <div class="stats">
+            <div class="s"><div class="num" id="statMembers">-</div><div class="lbl">Members</div></div>
+            <div class="s"><div class="num" id="statProviders">-</div><div class="lbl">Providers</div></div>
+            <div class="s"><div class="num" id="statListings">-</div><div class="lbl">Listings</div></div>
+            <div class="s"><div class="num" id="statViews">-</div><div class="lbl">Est. Monthly Views</div></div>
+        </div>
+    </div>
+
+    <div class="wrap">
+        <!-- Packages -->
+        <div class="sec" id="packages">
+            <div class="sec-head">
+                <div class="ic"><i class="fa-solid fa-gem"></i></div>
+                <div><h2>Ready-Made Packages</h2><p>Pick a proven placement and go. Packages are reviewed and activated by our team.</p></div>
+            </div>
+            <div class="section-hint"><i class="fa-solid fa-circle-info"></i> Choose a package below and check out with your account or an email inquiry.</div>
+            <div class="pkg-grid" id="pkgGrid"></div>
+        </div>
+
+        <!-- Self serve -->
+        <div class="sec" id="selfserve">
+            <div class="sec-head">
+                <div class="ic"><i class="fa-solid fa-sliders"></i></div>
+                <div><h2>Self-Serve Campaign Builder</h2><p>Build your own campaign, set placement, targeting and duration, and pay instantly from your wallet.</p></div>
+            </div>
+            <div class="card">
+                <h3>Build Your Campaign</h3>
+                <p class="sub">Pay from your 2k2 wallet. Sign in required. Goes live once your creative is approved.</p>
+                <div class="fgrid">
+                    <field>
+                        <label>Placement</label>
+                        <select id="ssPlacement"></select>
+                    </field>
+                    <field>
+                        <label>Target Category</label>
+                        <select id="ssCategory"></select>
+                    </field>
+                    <field>
+                        <label>Duration (days, 1-90)</label>
+                        <input type="number" id="ssDays" value="7" min="1" max="90">
+                    </field>
+                    <field>
+                        <label>Budget (ZAR)</label>
+                        <input type="number" id="ssBudget" placeholder="Optional budget cap">
+                    </field>
+                    <field class="full">
+                        <label>Headline</label>
+                        <input type="text" id="ssHeadline" maxlength="60" placeholder="Your headline (max 60 chars)">
+                    </field>
+                    <field class="full">
+                        <label>Ad copy</label>
+                        <textarea id="ssBody" maxlength="160" placeholder="Short compelling copy (max 160 chars)"></textarea>
+                    </field>
+                    <field class="full">
+                        <label>Image URL / Banner</label>
+                        <input type="url" id="ssImage" placeholder="https://... (optional)">
+                    </field>
+                    <field class="full">
+                        <label>Link URL</label>
+                        <input type="url" id="ssLink" placeholder="https://your-site.co.za or /profile-page (optional)">
+                    </field>
+                    <field>
+                        <label>Target Location (optional)</label>
+                        <input type="text" id="ssLocation" placeholder="e.g. Johannesburg / All SA">
+                    </field>
+                    <field>
+                        <label>Contact Email</label>
+                        <input type="email" id="ssEmail" placeholder="Email for campaign confirmation">
+                    </field>
+                </div>
+                <div class="price-line">
+                    <span class="l">Estimated total (@ R<span id="ssRate">199</span>/week)</span>
+                    <span class="v" id="ssPrice">R199.00</span>
+                </div>
+                <div style="margin-top:16px;display:flex;gap:12px;align-items:center;flex-wrap:wrap;">
+                    <button class="btn btn-primary" onclick="_2k2Adv.submitSelfServe()"><i class="fa-solid fa-wallet"></i> Pay From Wallet</button>
+                    <button class="btn btn-secondary" onclick="_2k2Adv.openLogin()">Sign In To Pay</button>
+                </div>
+                <p class="note" id="ssNote">Self-serve campaigns are charged from your wallet and go live after admin verifies your creative (usually within a few hours).</p>
+            </div>
+        </div>
+
+        <!-- Custom -->
+        <div class="sec" id="custom">
+            <div class="sec-head">
+                <div class="ic"><i class="fa-solid fa-pen-ruler"></i></div>
+                <div><h2>Custom Advertising</h2><p>Need something tailored? Tell us your goals and our team will propose a plan and quote.</p></div>
+            </div>
+            <div class="card">
+                <h3>Request A Custom Campaign</h3>
+                <p class="sub">We'll get back to you with a tailored proposal and pricing.</p>
+                <div class="fgrid">
+                    <field class="full"><label>Business / Brand Name</label><input type="text" id="cuBiz" placeholder="Your business or brand"></field>
+                    <field><label>Contact Name</label><input type="text" id="cuName" placeholder="Your name"></field>
+                    <field><label>Email</label><input type="email" id="cuEmail" placeholder="you@company.com"></field>
+                    <field><label>Phone (optional)</label><input type="text" id="cuPhone" placeholder="+27..."></field>
+                    <field><label>Preferred Placement</label><select id="cuPlacement"></select></field>
+                    <field><label>Estimated Budget</label><select id="cuBudget">
+                        <option value="Under R1,000">Under R1,000</option>
+                        <option value="R1,000 - R5,000">R1,000 - R5,000</option>
+                        <option value="R5,000 - R20,000">R5,000 - R20,000</option>
+                        <option value="R20,000+">R20,000+</option>
+                    </select></field>
+                    <field class="full"><label>Goal</label><select id="cuGoal">
+                        <option value="brand">Brand awareness</option>
+                        <option value="traffic">Drive traffic to my site</option>
+                        <option value="leads">Generate leads</option>
+                        <option value="sales">Direct sales</option>
+                        <option value="promote">Promote my 2k2 profile/listing</option>
+                        <option value="event">Promote an event</option>
+                        <option value="other">Other</option>
+                    </select></field>
+                    <field class="full"><label>Tell us about your campaign</label><textarea id="cuMsg" placeholder="What are you promoting, who is the audience, timeline..."></textarea></field>
+                </div>
+                <div style="margin-top:16px;">
+                    <button class="btn btn-primary" onclick="_2k2Adv.submitCustom()"><i class="fa-solid fa-paper-plane"></i> Submit Request</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- My campaigns / sign-in -->
+        <div class="sec" id="mine">
+            <div class="sec-head">
+                <div class="ic"><i class="fa-solid fa-chart-line"></i></div>
+                <div><h2>My Campaigns</h2><p>Track your active, pending, completed and rejected campaigns.</p></div>
+            </div>
+            <div id="myCampaignsWrap"></div>
+        </div>
+
+        <!-- External inquiry -->
+        <div class="sec" id="inquiry">
+            <div class="sec-head">
+                <div class="ic"><i class="fa-solid fa-building"></i></div>
+                <div><h2>Business Inquiry</h2><p>Don't have an account yet? Tell us about your business and we'll be in touch.</p></div>
+            </div>
+            <div class="card lead-form" id="leadFormCard">
+                <h3>Get In Touch</h3>
+                <p class="sub">Our advertising team responds within 1 business day.</p>
+                <div class="fgrid">
+                    <field class="full"><label>Business / Brand</label><input type="text" id="ldBiz" placeholder="Business name"></field>
+                    <field><label>Contact Name</label><input type="text" id="ldName" placeholder="Your name"></field>
+                    <field><label>Email</label><input type="email" id="ldEmail" placeholder="you@company.com"></field>
+                    <field><label>Phone (optional)</label><input type="text" id="ldPhone" placeholder="+27..."></field>
+                    <field><label>Website (optional)</label><input type="url" id="ldWeb" placeholder="https://..."></field>
+                    <field><label>Preferred Placement</label><select id="ldPlacement"></select></field>
+                    <field class="full"><label>What would you like to promote?</label><textarea id="ldMsg" placeholder="Tell us about your product, service or event"></textarea></field>
+                </div>
+                <div style="margin-top:16px;">
+                    <button class="btn btn-primary" onclick="_2k2Adv.submitLead()"><i class="fa-solid fa-paper-plane"></i> Send Inquiry</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <p>&copy; <span id="advYear">2026</span> 2k2 &middot; <a href="invest.html" class="tint">Invest</a> &middot; <a href="index.html" class="tint">Member Portal</a> &middot; Ad placements are subject to approval and our advertising terms.</p>
+    </footer>
+</div>
+
+<div class="adv-toast" id="advToast"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="config.js?v=20"></script>
+<script src="db.js?v=26"></script>
+<script src="auth.js?v=1"></script>
+<script src="script.js?v=50"></script>
+<script src="advertise.js?v=1"></script>
+<script>
+(function () {
+    'use strict';
+    var A = window._2k2Ads;
+    var toast = (function (el) { return function (m, ok) { el.textContent = m; el.style.background = ok ? '#12301f' : '#3a1b17'; el.style.borderColor = ok ? '#2e8b57' : '#d9534f'; el.style.display = 'block'; clearTimeout(el._h); el._h = setTimeout(function () { el.style.display = 'none'; }, 6000); }; })(document.getElementById('advToast'));
+
+    function fmt(n) { return n >= 1000 ? (n / 1000).toFixed(1) + 'k' : String(n); }
+    function loadStats() {
+        function n(g) { try { return (g() || []).length; } catch (e) { return 0; } }
+        var m = n(Storage.getUsers), p = n(Storage.getProviders), l = n(Storage.getListings);
+        document.getElementById('statMembers').textContent = fmt(m);
+        document.getElementById('statProviders').textContent = fmt(p);
+        document.getElementById('statListings').textContent = fmt(l);
+        document.getElementById('statViews').textContent = (m * 40 >= 1000 ? fmt(m * 40) : String(m * 40));
+        document.getElementById('advYear').textContent = new Date().getFullYear();
+    }
+
+    function buildPlacementSelects() {
+        var opts = Object.keys(A.AD_PLACEMENTS).map(function (k) {
+            return '<option value="' + k + '">' + A.esc(A.AD_PLACEMENTS[k].label) + ' - ' + A.money(A.AD_PLACEMENTS[k].price) + '/' + A.esc(A.AD_PLACEMENTS[k].unit) + '</option>';
+        }).join('');
+        ['ssPlacement', 'cuPlacement', 'ldPlacement'].forEach(function (id) {
+            var el = document.getElementById(id); if (el) el.innerHTML = opts;
+        });
+        var catOpts = Object.keys(A.AD_TARGET_CATEGORIES).map(function (k) {
+            return '<option value="' + k + '">' + A.esc(A.AD_TARGET_CATEGORIES[k]) + '</option>';
+        }).join('');
+        var ssc = document.getElementById('ssCategory'); if (ssc) ssc.innerHTML = catOpts;
+    }
+
+    function renderPackages() {
+        A.seedPackagesIfEmpty();
+        var pkgs = A.getPackages().filter(function (p) { return p.active !== false; });
+        var grid = document.getElementById('pkgGrid');
+        if (!pkgs.length) { grid.innerHTML = '<p class="note">No packages available right now. Please use the Custom or Self-Serve options.</p>'; return; }
+        grid.innerHTML = pkgs.map(function (p) {
+            var feats = (p.features || []).map(function (f) { return '<li>' + A.esc(f) + '</li>'; }).join('');
+            return '<div class="pkg">' +
+                '<div class="p-name"><i class="fa-solid fa-bullseye"></i>' + A.esc(p.name) + '</div>' +
+                '<div class="p-desc">' + A.esc(p.description) + '</div>' +
+                '<div class="p-price">' + A.money(p.price) + '<small> / ' + A.esc(p.durationDays >= 28 ? p.durationDays / 30 + ' month(s)' : (p.durationDays || 7) + ' day(s)') + '</small></div>' +
+                '<ul class="p-feats">' + feats + '</ul>' +
+                '<button class="p-btn" onclick="_2k2Adv.orderPackage(\'' + p.id + '\')">Order This Package</button>' +
+                '</div>';
+        }).join('');
+    }
+
+    function updateSelfServePrice() {
+        var p = document.getElementById('ssPlacement').value;
+        var d = parseInt(document.getElementById('ssDays').value, 10) || 7;
+        if (!A.AD_PLACEMENTS[p]) return;
+        document.getElementById('ssRate').textContent = A.AD_PLACEMENTS[p].price;
+        document.getElementById('ssPrice').textContent = A.money(A.selfServePrice(p, d));
+    }
+
+    function renderMyCampaigns() {
+        var wrap = document.getElementById('myCampaignsWrap');
+        var auth = A.authState();
+        if (!auth.signedIn) {
+            wrap.innerHTML = '<div class="gate"><i class="fa-solid fa-user-lock"></i><h3>Sign in to manage your campaigns</h3><p>Track spending, pause campaigns and view performance.</p><button class="btn btn-primary" onclick="_2k2Adv.openLogin()"><i class="fa-solid fa-right-to-bracket"></i> Sign In</button></div>';
+            return;
+        }
+        var mine = A.getCampaigns().filter(function (c) { return c.advertiserId === auth.id; });
+        if (!mine.length) {
+            wrap.innerHTML = '<div class="gate"><i class="fa-solid fa-folder-open"></i><h3>No campaigns yet</h3><p>Create a package order, a self-serve campaign or a custom request.</p></div>';
+            return;
+        }
+        wrap.innerHTML = mine.map(function (c) {
+            var st = c.status;
+            var stCls = 'st-' + st;
+            var meta = '<span class="mini"><i class="fa-solid fa-location-dot"></i>' + A.esc((A.AD_PLACEMENTS[c.placement] || {}).label || c.placement) + '</span>' +
+                '<span class="mini"><i class="fa-solid fa-calendar"></i>' + (new Date(c.startDate).toLocaleDateString()) + ' : ' + (new Date(c.endDate).toLocaleDateString()) + '</span>' +
+                '<span class="mini"><i class="fa-solid fa-eye"></i>' + (c.impressions || 0) + '</span>' +
+                '<span class="mini"><i class="fa-solid fa-mouse-pointer"></i>' + (c.clicks || 0) + '</span>' +
+                (c.paidFromWallet ? '<span class="mini"><i class="fa-solid fa-wallet"></i>' + A.money(c.price) + ' paid</span>' : '');
+            var acts = '';
+            if (st === 'pending' || st === 'approved') {
+                acts = '<div class="acts"><button class="btn btn-secondary btn-sm" onclick="_2k2Adv.cancelCampaign(\'' + c.id + '\')">Cancel Request</button></div>';
+            }
+            if (st === 'live') {
+                acts = '<div class="acts"><button class="btn btn-secondary btn-sm" onclick="_2k2Adv.pauseCampaign(\'' + c.id + '\')">Pause</button></div>';
+            }
+            if (st === 'paused') {
+                acts = '<div class="acts"><button class="btn btn-secondary btn-sm" onclick="_2k2Adv.resumeCampaign(\'' + c.id + '\')">Resume</button></div>';
+            }
+            return '<div class="camp"><div class="row"><div><div class="camp-title">' + A.esc(c.title || c.headline || c.businessName || 'Campaign') + '</div>' +
+                '<div class="camp-meta">' + (c.type ? c.type.toUpperCase() + ' / ' : '') + (c.businessName ? A.esc(c.businessName) + ' / ' : '') + (new Date(c.createdAt)).toLocaleDateString() + '</div></div>' +
+                '<span class="status ' + stCls + '">' + escSt(st) + '</span></div>' +
+                '<div style="margin-top:10px">' + meta + '</div>' + acts +
+                (c.adminNote ? '<div class="note" style="margin-top:8px;color:#fbbf24"><i class="fa-solid fa-bullhorn"></i> ' + A.esc(c.adminNote) + '</div>' : '') +
+                '</div>';
+        }).join('');
+    }
+    function escSt(s) { return { pending: 'Pending', approved: 'Approved', live: 'Live', paused: 'Paused', rejected: 'Rejected', completed: 'Completed', declined: 'Declined' }[s] || s; }
+
+    window._2k2Adv = {
+        orderPackage: function (id) {
+            var pkg = A.getPackages().find(function (p) { return p.id === id; });
+            if (!pkg) return toast('Package not found.', false);
+            var auth = A.authState();
+            var now = new Date().toISOString();
+            var endD = new Date(Date.now() + (Number(pkg.durationDays) || 7) * 86400000).toISOString();
+            if (auth.signedIn) {
+                var kind = A.currentAdvertiserType();
+                var charge = A.chargeWallet(kind, pkg.price, 'Ad package: ' + pkg.name);
+                if (!charge.ok) return toast(charge.message, false);
+                A.createCampaign({
+                    advertiserId: auth.id, advertiserType: kind, type: 'package',
+                    placement: pkg.placement, title: pkg.name, businessName: pkg.name,
+                    price: pkg.price, durationDays: Number(pkg.durationDays) || 7,
+                    startDate: now, endDate: endD, status: 'approved', paidFromWallet: true,
+                    source: _2k2_adv_source()
+                });
+                toast('Package ordered and paid from wallet! It will go live shortly.', true);
+            } else {
+                A.createCampaign({
+                    advertiserType: 'guest', type: 'package', placement: pkg.placement,
+                    title: pkg.name, businessName: pkg.name, price: pkg.price,
+                    durationDays: Number(pkg.durationDays) || 7, startDate: now, endDate: endD,
+                    status: 'pending', source: 'external'
+                });
+                window.location.hash = '#inquiry';
+                toast('Almost there! Complete the business inquiry so we can activate your package.', false);
+            }
+            renderMyCampaigns();
+        },
+
+        submitSelfServe: function () {
+            var auth = A.authState();
+            if (!auth.signedIn) return toast('Please sign in to pay from your wallet.', false);
+            var placement = document.getElementById('ssPlacement').value;
+            var days = parseInt(document.getElementById('ssDays').value, 10) || 7;
+            var price = A.selfServePrice(placement, days);
+            var headline = document.getElementById('ssHeadline').value.trim();
+            if (!headline) return toast('Please add a headline.', false);
+            var kind = A.currentAdvertiserType();
+            var charge = A.chargeWallet(kind, price, 'Self-serve ad campaign: ' + headline);
+            if (!charge.ok) return toast(charge.message, false);
+            var body = document.getElementById('ssBody').value.trim();
+            var image = document.getElementById('ssImage').value.trim();
+            var link = document.getElementById('ssLink').value.trim();
+            var location = document.getElementById('ssLocation').value.trim();
+            var email = document.getElementById('ssEmail').value.trim() || (window._2k2 && window._2k2.Auth && window._2k2.Auth.syncUser() || {}).email || '';
+            A.createCampaign({
+                advertiserId: auth.id, advertiserType: kind, type: 'selfserve',
+                placement: placement, title: headline, headline: headline, body: body,
+                image: image, linkUrl: link, targetingCategory: document.getElementById('ssCategory').value,
+                targetingLocation: location, email: email,
+                budget: Number(document.getElementById('ssBudget').value) || 0,
+                price: price, durationDays: days, status: 'approved', paidFromWallet: true
+            });
+            toast('Campaign live! Charged ' + A.money(price) + ' from your wallet.', true);
+            renderMyCampaigns();
+        },
+
+        submitCustom: function () {
+            var biz = document.getElementById('cuBiz').value.trim();
+            var name = document.getElementById('cuName').value.trim();
+            var email = document.getElementById('cuEmail').value.trim();
+            var msg = document.getElementById('cuMsg').value.trim();
+            if (!biz || !name || !email || !msg) return toast('Please fill in all required fields.', false);
+            if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return toast('Please enter a valid email.', false);
+            var auth = A.authState();
+            A.createCampaign({
+                advertiserId: auth.id, advertiserType: auth.signedIn ? A.currentAdvertiserType() : 'guest',
+                type: 'custom', placement: document.getElementById('cuPlacement').value,
+                title: biz, businessName: biz, contactName: name, email: email,
+                phone: document.getElementById('cuPhone').value.trim(),
+                body: msg, status: 'pending', source: auth.signedIn ? _2k2_adv_source() : 'external'
+            });
+            toast('Custom request submitted! Our team will contact you shortly.', true);
+            ['cuBiz', 'cuName', 'cuEmail', 'cuPhone', 'cuMsg'].forEach(function (id) { document.getElementById(id).value = ''; });
+            renderMyCampaigns();
+        },
+
+        submitLead: function () {
+            var biz = document.getElementById('ldBiz').value.trim();
+            var name = document.getElementById('ldName').value.trim();
+            var email = document.getElementById('ldEmail').value.trim();
+            var msg = document.getElementById('ldMsg').value.trim();
+            if (!biz || !name || !email || !msg) return toast('Please fill in all required fields.', false);
+            if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return toast('Please enter a valid email.', false);
+            var q = A.getQueries();
+            q.unshift({
+                id: A.generateId('advq'), clientId: A.guestId(), businessName: biz,
+                contactName: name, email: email, phone: document.getElementById('ldPhone').value.trim(),
+                website: document.getElementById('ldWeb').value.trim(),
+                placement: document.getElementById('ldPlacement').value,
+                message: msg, status: 'new', adminReply: '', repliedAt: null, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString()
+            });
+            window.Storage.setAdvertiserQueries(q);
+            toast('Inquiry sent! Our advertising team will be in touch within 1 business day.', true);
+            ['ldBiz', 'ldName', 'ldEmail', 'ldPhone', 'ldWeb', 'ldMsg'].forEach(function (id) { document.getElementById(id).value = ''; });
+        },
+
+        cancelCampaign: function (id) {
+            var cs = A.getCampaigns(); var c = cs.find(function (x) { return x.id === id; });
+            if (!c) return; c.status = 'declined'; c.updatedAt = new Date().toISOString();
+            window.Storage.setAdCampaigns(cs); toast('Campaign request cancelled.', true); renderMyCampaigns();
+        },
+        pauseCampaign: function (id) {
+            var cs = A.getCampaigns(); var c = cs.find(function (x) { return x.id === id; });
+            if (!c) return; c.status = 'paused'; c.updatedAt = new Date().toISOString();
+            window.Storage.setAdCampaigns(cs); toast('Campaign paused.', true); renderMyCampaigns();
+        },
+        resumeCampaign: function (id) {
+            var cs = A.getCampaigns(); var c = cs.find(function (x) { return x.id === id; });
+            if (!c) return; c.status = 'live'; c.updatedAt = new Date().toISOString();
+            window.Storage.setAdCampaigns(cs); toast('Campaign resumed.', true); renderMyCampaigns();
+        },
+        openLogin: function () { window.location.href = 'login.html?next=advertise.html'; }
+    };
+
+    function _2k2_adv_source() {
+        var snap = (window._2k2 && window._2k2.Auth && window._2k2.Auth.syncUser()) || {};
+        return (snap.role === 'provider' || snap.role === 'admin') ? '2k2-provider' : '2k2-member';
+    }
+
+    A.seedPackagesIfEmpty();
+    A.reconcileCampaignStatus();
+    buildPlacementSelects();
+    renderPackages();
+    updateSelfServePrice();
+    renderMyCampaigns();
+    loadStats();
+    document.getElementById('ssPlacement').addEventListener('change', updateSelfServePrice);
+    document.getElementById('ssDays').addEventListener('input', updateSelfServePrice);
+    if (window._2k2 && window._2k2.Auth && window._2k2.Auth.refreshSyncUser) {
+        window._2k2.Auth.refreshSyncUser().then(function () { renderMyCampaigns(); });
+    }
+})();
+</script>
+</body>
+</html>
