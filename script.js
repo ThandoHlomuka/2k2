@@ -1476,6 +1476,13 @@ function applyAsProvider() {
     window.location.href = currentAuthId() ? 'upgrade.html' : 'register.html?plan=provider';
 }
 
+// Sidebar "Upgrade to Service Provider": signed-in users go to the subscription
+// plan flow; guests get the gated Join popup (subscription will pop up).
+function upgradeToProvider() {
+    if (currentAuthId()) { window.location.href = 'upgrade.html'; return; }
+    requireSignIn('To upgrade to a Service Provider account. ');
+}
+
 async function hasPendingProviderRequest() {
     const client = window._2k2 && typeof window._2k2.getSupabase === 'function' ? window._2k2.getSupabase() : null;
     const id = currentAuthId();
