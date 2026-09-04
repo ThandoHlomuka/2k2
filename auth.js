@@ -29,10 +29,19 @@
     return s?.user || null;
   }
 
+  // Cache the profile per user id so repeated calls during boot do not
+  // hammer Supabase. Invalidated when the auth user changes or on sign-out.
+  let profileCache = { userId: null, profile: null, ts: 0 };
+
   // The profile record (role) for the current auth user.
-  async function getProfile() {
+  async function getProfile({ force } = {}) {
     const user = await currentUser();
     if (!user) return null;
+    const cacheKey = user.id;
+    // Serve cached copy within 5s unless forced refresh.
+    if (!force && profileCache.userId === cacheKey && profileCache.profile && (Date.now() - profileCache.ts) < 5000) {
+      return profileCache.profile;
+    }
     const client = getClient();
     try {
       const { data } = await client
@@ -40,6 +49,7 @@
         .select('*')
         .eq('user_id', user.id)
         .maybeSingle();
+      profileCache = { userId: cacheKey, profile: data || null, ts: Date.now() };
       return data || null;
     } catch (e) { return null; }
   }
@@ -52,6 +62,7 @@
 
   async function signOut() {
     const client = getClient();
+    profileCache = { userId: null, profile: null, ts: 0 };
     if (!client) return;
     try { await client.auth.signOut(); } catch (e) {}
   }
