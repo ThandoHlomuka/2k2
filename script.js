@@ -10131,10 +10131,20 @@ function flashcardClose() {
     document.removeEventListener('keydown', flashcardKeyHandler);
 }
 
+window._flashcardNavTimer = null;
+
 function maybeAutoFlashcard(page) {
+    if (window._flashcardNavTimer) { clearTimeout(window._flashcardNavTimer); window._flashcardNavTimer = null; }
     if (isProviderPortalPage()) return;
-    const map = { 'venue-directory': 'venues', 'directory-view': 'profile', 'service-directory-view': 'profile' };
+    if (window._k2Nav && window._k2Nav.suppress > 0) return;   // browser back/forward, not a fresh click
+    const map = { 'directory': 'profile', 'venue-directory': 'venues' };
     const deckId = map[page];
     if (!deckId) return;
-    window.setTimeout(() => { openFlashcardDeck(deckId, { auto: true }); }, 900);
+    if (flashcardState.deckId) return;                          // one tour at a time
+    window._flashcardNavTimer = window.setTimeout(() => {
+        window._flashcardNavTimer = null;
+        const active = document.querySelector('.page.active');
+        if (!active || active.id !== 'page-' + page) return;    // user navigated elsewhere meanwhile
+        openFlashcardDeck(deckId, { auto: true });
+    }, 900);
 }
