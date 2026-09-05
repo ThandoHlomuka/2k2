@@ -2529,6 +2529,29 @@ h1, h2, h3, h4 {
     box-shadow: 0 4px 14px rgba(211, 173, 68, 0.35);
 }
 
+.filter-tab-thumb {
+    display: inline-flex;
+    width: 22px;
+    height: 22px;
+    border-radius: 7px;
+    overflow: hidden;
+    flex-shrink: 0;
+    background: #f0ead8;
+    border: 1px solid rgba(138, 123, 85, 0.25);
+}
+
+.filter-tab-thumb img,
+.filter-tab-thumb video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.filter-tab .filter-tab-thumb + span {
+    line-height: 1.2;
+}
+
 /* ---- Grid / List view toggle (applies to browse filters) ---- */
 .view-toggle {
     display: inline-flex;

@@ -5367,9 +5367,25 @@ function renderContentDirectory() {
     const countEl = document.getElementById('contentDirectoryCount');
     if (countEl) countEl.textContent = filtered.length;
 
-    // Update filter tabs active state
+    // Update filter tabs active state + category preview thumbnails
+    const tabThumbs = {};
+    content.filter(c => isApprovedPublic(c) && c.fileData && c.fileData.length > 100).forEach(c => {
+        if (!tabThumbs[c.type] && (c.type === 'image' || c.type === 'gif' || c.type === 'video' || c.type === 'video-podcast')) tabThumbs[c.type] = c;
+    });
     document.querySelectorAll('#contentFilterTabs .filter-tab').forEach(tab => {
         tab.classList.toggle('active', tab.getAttribute('onclick')?.includes(`'${currentContentFilter}'`));
+        const m = /filterContentDirectory\('([^']+)'\)/.exec(tab.getAttribute('onclick') || '');
+        const type = m ? m[1] : null;
+        const t = type ? tabThumbs[type] : null;
+        let thumb = '';
+        if (t && (t.type === 'image' || t.type === 'gif')) thumb = '<span class="filter-tab-thumb"><img src="' + t.fileData + '" alt=""></span>';
+        else if (t && (t.type === 'video' || t.type === 'video-podcast')) thumb = '<span class="filter-tab-thumb"><video src="' + t.fileData + '" muted playsinline preload="metadata"></video></span>';
+        if (!tab.dataset.orig) {
+            tab.dataset.orig = tab.innerHTML;
+            tab.dataset.origText = tab.textContent;
+        }
+        if (thumb) tab.innerHTML = thumb + '<span>' + tab.dataset.origText + '</span>';
+        else tab.innerHTML = tab.dataset.orig;
     });
 
     const container = document.getElementById('contentDirectoryList');
