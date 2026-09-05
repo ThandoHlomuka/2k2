@@ -7299,6 +7299,12 @@ function handleForumThreadSubmit(e) {
 
     if (!title || !category || !author || !body) { showToast('Please fill in all required fields.', 'error'); return; }
 
+    const blockedContact = detectContactInfo(body);
+    if (blockedContact.length) {
+        showToast('Contact details (phone/email) are not allowed in forum threads (detected: ' + blockedContact.join(', ') + ').', 'error');
+        return;
+    }
+
     if (subforumId) {
         const targetSub = getForumSubforumById(subforumId);
         if (targetSub && targetSub.joinFee > 0 && !subforumAccessOk(targetSub)) {
@@ -7357,6 +7363,13 @@ function submitForumReply() {
     }
 
     const replies = Storage.getForumReplies();
+
+    const blockedContact = detectContactInfo(body);
+    if (blockedContact.length) {
+        showToast('Contact details (phone/email) are not allowed in forum replies (detected: ' + blockedContact.join(', ') + ').', 'error');
+        return;
+    }
+
     replies.push({
         id: generateId(), threadId: currentForumViewId, author, body,
         createdAt: new Date().toISOString()
@@ -7909,6 +7922,62 @@ function detectContactInfo(text) {
     return found;
 }
 
+/* True when there is an approved (confirmed or completed) booking between two
+   parties, in either direction. Only then may contact details be exchanged in
+   a 1:1 chat between that client and provider. */
+function hasApprovedBookingBetween(a, b) {
+    if (!a || !b || String(a) === String(b)) return false;
+    return (Storage.getBookings() || []).some(bk => {
+        if (bk.status !== 'confirmed' && bk.status !== 'completed') return false;
+        const prov = bk.providerId;
+        const client = bk.clientOwnerId;
+        return (String(prov) === String(a) && String(client) === String(b))
+            || (String(prov) === String(b) && String(client) === String(a));
+    });
+}
+
+/* Whether a message sent to <partyId> (role 'provider'/'listing'/'service')
+   may include contact details for the current user. Only booked client-vs-
+   provider chats qualify; general chats never do. Admins are exempt. */
+function msgMessageAllowsContact(partyId, partyRole, meId) {
+    try {
+        const me = meId || currentAuthId();
+        if (!partyId || !me) return false;
+        const sender = getMsgSenderInfo();
+        if (sender.role === 'admin') return true;
+        let providerId = partyId;
+        if (partyRole === 'listing' || partyRole === 'service') {
+            const ent = partyRole === 'listing'
+                ? Storage.getListings().find(l => String(l.id) === String(partyId))
+                : Storage.getServices().find(s => String(s.id) === String(partyId));
+            providerId = ent ? (ent.ownerId || ent.providerId || null) : null;
+            if (!providerId) return false;
+        }
+        return hasApprovedBookingBetween(me, providerId);
+    } catch (e) { return false; }
+}
+
+/* For a thread, resolve the other party. When the participant is the current
+   user themselves (a provider replying to their own thread), infer the
+   counterparty from the other messages in the conversation. */
+function msgThreadCounterparty(conv) {
+    try {
+        if (!conv) return null;
+        const me = currentAuthId();
+        let partyId = null, partyRole = null;
+        if (conv.participantRole === 'provider') { partyId = conv.participantId; partyRole = 'provider'; }
+        else if (conv.participantRole === 'listing' || conv.participantRole === 'service') { partyId = conv.participantId; partyRole = conv.participantRole; }
+        if (partyId && (!me || String(partyId) !== String(me))) return { id: partyId, role: partyRole };
+        const others = (Storage.getMessages() || []).filter(m => m.conversationId === conv.id);
+        const other = others.find(m => m.senderAccountId && (!me || String(m.senderAccountId) !== String(me))) || others.find(m => m.senderId !== 'me');
+        if (other && other.senderAccountId) {
+            const role = other.senderRole === 'provider' || other.senderRole === 'listing' || other.senderRole === 'service' ? other.senderRole : 'user';
+            return { id: other.senderAccountId, role };
+        }
+        return null;
+    } catch (e) { return null; }
+}
+
 function renderMsgBlockWarning(message) {
     const thread = document.getElementById('messageThreadContent');
     if (!thread) return;
@@ -7989,16 +8058,18 @@ function sendMessageReply() {
     if (!body || !name) { showToast('Please enter your name and a reply.', 'error'); return; }
     if (!currentMessageViewId) { showToast('No conversation selected.', 'error'); return; }
 
-    const blocked = detectContactInfo(body);
-    if (blocked.length) {
-        renderMsgBlockWarning('Sending phone numbers or email addresses is not allowed in chat to keep your contact details private (detected: ' + blocked.join(', ') + ').');
-        showToast('Contact details are blocked in chat.', 'error');
-        return;
-    }
-
     const convs = Storage.getConversations();
     const conv = convs.find(c => c.id === currentMessageViewId);
     if (!conv) { showToast('Conversation not found.', 'error'); return; }
+
+    const blocked = detectContactInfo(body);
+    const cp = msgThreadCounterparty(conv);
+    const contactOk = cp ? msgMessageAllowsContact(cp.id, cp.role, currentAuthId()) : false;
+    if (blocked.length && !contactOk) {
+        renderMsgBlockWarning('Sending phone numbers or email addresses is not allowed in chat unless you have an approved booking with this provider (detected: ' + blocked.join(', ') + ').');
+        showToast('Contact details are only allowed in chats with an approved booking.', 'error');
+        return;
+    }
 
     const messages = Storage.getMessages();
     const sender = getMsgSenderInfo();
@@ -8104,9 +8175,10 @@ function handleMessageSubmit(e) {
     if (recipientId === 'custom') { recipientId = 'contact-' + generateId(); recipientSel.value = recipientId; }
 
     const blocked = detectContactInfo(body);
-    if (blocked.length) {
-        renderMsgBlockWarning('Sending phone numbers or email addresses is not allowed in chat to keep your contact details private (detected: ' + blocked.join(', ') + ').');
-        showToast('Contact details are blocked in chat.', 'error');
+    const contactOk = msgMessageAllowsContact(recipientId, recipientRole, currentAuthId());
+    if (blocked.length && !contactOk) {
+        renderMsgBlockWarning('Sending phone numbers or email addresses is not allowed in general chats. You can only share contact details in a chat with a provider you have an approved booking with (detected: ' + blocked.join(', ') + ').');
+        showToast('Contact details are only allowed in chats with an approved booking.', 'error');
         return;
     }
 
