@@ -1859,7 +1859,13 @@ h1, h2, h3, h4 {
 .modal-actions {
     display: flex;
     justify-content: center;
-    gap: 12px;
+    flex-wrap: wrap;
+    gap: 10px;
+    position: sticky;
+    bottom: 0;
+    z-index: 2;
+    padding-top: 12px;
+    background: var(--cream-white, #fdf9ef);
 }
 
 /* ============================================
@@ -3308,6 +3314,8 @@ h1, h2, h3, h4 {
     border-radius: 16px;
     padding: 24px;
     border: 1px solid #f3eddd;
+    min-width: 0;
+    overflow: hidden;
 }
 
 .admin-chart-card h3 {
@@ -3322,6 +3330,9 @@ h1, h2, h3, h4 {
     gap: 12px;
     height: 160px;
     padding-top: 10px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scrollbar-width: thin;
 }
 
 .admin-bar {
@@ -5169,6 +5180,7 @@ h1, h2, h3, h4 {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
     gap: 20px;
+    min-width: 0;
 }
 
 @media (max-width: 768px) {
@@ -8631,7 +8643,7 @@ h1, h2, h3, h4 {
 /* ---- Update Engine ---- */
 .k2-upd-nav{display:none;}
 .k2-upd-nav-badge{background:linear-gradient(135deg,#10b981,#0d9488);color:#04150f;font-size:.6rem;font-weight:800;padding:2px 8px;border-radius:50px;letter-spacing:.4px;text-transform:uppercase;}
-.k2-upd-note-block{margin:18px 0 6px;text-align:left;}
+.k2-upd-note-block{margin:18px 0 6px;text-align:left;max-height:38vh;overflow-y:auto;}
 .k2-upd-note-block h3{font-size:.95rem;margin-bottom:10px;color:#8a7b55;text-transform:uppercase;letter-spacing:.6px;}
 .k2-upd-notes{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:8px;}
 .k2-upd-notes li{display:flex;align-items:flex-start;gap:10px;font-size:.9rem;line-height:1.5;color:#3d3626;}

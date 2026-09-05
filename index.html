@@ -56,7 +56,7 @@
     <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
     <link rel="manifest" href="manifest.webmanifest">
 
-    <link rel="stylesheet" href="style.css?v=38">
+    <link rel="stylesheet" href="style.css?v=39">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700;900&family=Inter:wght@300;400;500;600;700&family=Dancing+Script:wght@700&display=swap" rel="stylesheet">
 
@@ -569,10 +569,6 @@
                 <a href="advertise.html" class="nav-item">
                     <i class="fas fa-bullhorn"></i>
                     <span>Advertise</span>
-                </a>
-                <a href="admin.html" class="nav-item" id="adminPortalLink">
-                    <i class="fas fa-user-shield"></i>
-                    <span>Admin Portal</span>
                 </a>
             </div>
             <a href="#" class="nav-item" data-page="how-it-works">
@@ -3855,10 +3851,10 @@
 
     <script defer src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
-    <script src="config.js?v=20"></script>
-    <script src="auth.js?v=20"></script>
-    <script src="db.js?v=27"></script>
-    <script src="presence.js?v=22"></script>
+    <script src="config.js?v=21"></script>
+    <script src="auth.js?v=21"></script>
+    <script src="db.js?v=28"></script>
+    <script src="presence.js?v=23"></script>
     <script>
     // Session-aware sidebar (Sign In / Logout / account chip).
     (function () {
@@ -3903,20 +3899,19 @@
             var profile = await window._2k2.Auth.getProfile();
             var role = profile ? profile.role : null;
             if (role === 'provider') { window.location.href = 'provider.html'; return; }
-            if (role !== 'admin') { var adl = document.getElementById('adminPortalLink'); if (adl) adl.style.display = 'none'; }
             render(user, role, profile ? (profile.username || '') : '');
           } catch (e) { render(null); }
         })();
       });
     })();
     </script>
-    <script src="script.js?v=50"></script>
-    <script src="media-player.js?v=3"></script>
-    <script src="products.js?v=26"></script>
-    <script src="shipping.js?v=1"></script>
-    <script src="invoices.js?v=1"></script>
-    <script src="bookings-advance.js?v=1"></script>
-    <script src="msg-lock.js?v=1"></script>
+    <script src="script.js?v=51"></script>
+    <script src="media-player.js?v=4"></script>
+    <script src="products.js?v=27"></script>
+    <script src="shipping.js?v=2"></script>
+    <script src="invoices.js?v=2"></script>
+    <script src="bookings-advance.js?v=2"></script>
+    <script src="msg-lock.js?v=2"></script>
     <script>
         let onbSlide = 0;
         const slides = document.querySelectorAll('.onb-slide');

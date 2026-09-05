@@ -1,9 +1,8 @@
 {
-  "version": "2.3.0",
-  "title": "2k2 Pay-Per-View",
+  "version": "2.3.1",
+  "title": "2k2 Update Notifications",
   "notes": [
-    "New: pay-per-view/listen on all content — images & GIFs get a 5-second preview, videos & audio get 10 seconds",
-    "New: paid stories & books show a 10-page preview before prompting to buy",
-    "Improved: secure wallet-based content purchases with commission tracking"
+    "Fixed: update notification buttons no longer cut off on small screens",
+    "Removed the visible Admin Portal button from menus — admin access is now discreet and role-protected only"
   ]
 }
