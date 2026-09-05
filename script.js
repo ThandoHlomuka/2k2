@@ -284,7 +284,7 @@ const ADMIN_WALLET_TYPE = 'admin';
 const ADMIN_WALLET_ID = 'platform';
 // Types that represent gross earnings from sales (commissionable). Refunds,
 // top-ups, admin-adjusts and other flows are intentionally NOT commissioned.
-const COMMISSIONABLE_TYPES = { 'booking-confirmed': 1, 'tip-received': 1, 'experience-sale': 1, 'product-sale': 1, 'subforum-subscription': 1 };
+const COMMISSIONABLE_TYPES = { 'booking-confirmed': 1, 'tip-received': 1, 'experience-sale': 1, 'product-sale': 1, 'subforum-subscription': 1, 'msg-unlock-earned': 1 };
 
 function adminWalletOwner() { return { ownerType: ADMIN_WALLET_TYPE, ownerId: ADMIN_WALLET_ID }; }
 
@@ -4981,9 +4981,11 @@ function renderUserWallet() {
         } else {
             escrowList.innerHTML = '<div class="profile-card pend-requests-card escrow-card"><h2><i class="fas fa-lock"></i> Escrowed Funds</h2>' +
                 escrows.map(es => {
-                    const heldFor = es.productOrderId
-                        ? ('held for your product order #' + String(es.productOrderId).slice(-8).toUpperCase())
-                        : ('held for your booking');
+                    const heldFor = es.kind === 'msg-unlock'
+                        ? ('held for your paid contact unlock')
+                        : (es.productOrderId
+                            ? ('held for your product order #' + String(es.productOrderId).slice(-8).toUpperCase())
+                            : ('held for your booking'));
                     return `
                     <div class="pending-request-row">
                         <div class="pending-request-info">
@@ -5039,8 +5041,8 @@ function renderUserWallet() {
     }
 
     container.innerHTML = txns.map(t => {
-        const typeColors = { 'top-up': '#10b981', 'tip-sent': '#f59e0b', 'tip-received': '#10b981', 'booking-fee': '#ef4444', 'booking-confirmed': '#3b82f6', 'booking-escrow': '#8b5cf6', 'booking-escrow-released': '#8b5cf6', 'booking-refund': '#06b6d4', 'withdrawal': '#8b5cf6', 'admin-adjust': '#8a7b55', 'refund': '#06b6d4', 'commission': '#f59e0b', 'product-sale': '#10b981', 'product-purchase': '#ef4444', 'product-escrow': '#8b5cf6', 'product-escrow-released': '#8b5cf6', 'product-refund': '#06b6d4' };
-        const typeLabels = { 'top-up': 'Top Up', 'tip-sent': 'Tip Sent', 'tip-received': 'Tip Received', 'booking-fee': 'Booking Fee', 'booking-confirmed': 'Booking Confirmed', 'booking-escrow': 'In Escrow', 'booking-escrow-released': 'Escrow Released', 'booking-refund': 'Booking Refund', 'withdrawal': 'Withdrawal', 'admin-adjust': 'Admin Adjust', 'refund': 'Refund', 'commission': 'Platform Commission', 'product-sale': 'Product Sale', 'product-purchase': 'Product Purchase', 'product-escrow': 'In Escrow', 'product-escrow-released': 'Escrow Released', 'product-refund': 'Product Refund' };
+        const typeColors = { 'top-up': '#10b981', 'tip-sent': '#f59e0b', 'tip-received': '#10b981', 'booking-fee': '#ef4444', 'booking-confirmed': '#3b82f6', 'booking-escrow': '#8b5cf6', 'booking-escrow-released': '#8b5cf6', 'booking-refund': '#06b6d4', 'withdrawal': '#8b5cf6', 'admin-adjust': '#8a7b55', 'refund': '#06b6d4', 'commission': '#f59e0b', 'provider-unlock': '#8b5cf6', 'msg-unlock': '#8b5cf6', 'msg-unlock-escrow': '#8b5cf6', 'msg-unlock-escrow-released': '#8b5cf6', 'msg-unlock-earned': '#3b82f6', 'msg-unlock-refund': '#06b6d4', 'product-sale': '#10b981', 'product-purchase': '#ef4444', 'product-escrow': '#8b5cf6', 'product-escrow-released': '#8b5cf6', 'product-refund': '#06b6d4' };
+        const typeLabels = { 'top-up': 'Top Up', 'tip-sent': 'Tip Sent', 'tip-received': 'Tip Received', 'booking-fee': 'Booking Fee', 'booking-confirmed': 'Booking Confirmed', 'booking-escrow': 'In Escrow', 'booking-escrow-released': 'Escrow Released', 'booking-refund': 'Booking Refund', 'withdrawal': 'Withdrawal', 'admin-adjust': 'Admin Adjust', 'refund': 'Refund', 'commission': 'Platform Commission', 'provider-unlock': 'Paid Contact Unlock', 'msg-unlock': 'Paid Contact Unlock', 'msg-unlock-escrow': 'Unlock Fee In Escrow', 'msg-unlock-escrow-released': 'Escrow Released', 'msg-unlock-earned': 'Paid Contact Earned', 'msg-unlock-refund': 'Unlock Fee Refund', 'product-sale': 'Product Sale', 'product-purchase': 'Product Purchase', 'product-escrow': 'In Escrow', 'product-escrow-released': 'Escrow Released', 'product-refund': 'Product Refund' };
         const color = typeColors[t.type] || '#8a7b55';
         const label = typeLabels[t.type] || t.type;
         return `
@@ -5468,14 +5470,16 @@ let dashWalletChart = null;
 const TYPE_COLORS = {
     'top-up': '#10b981', 'tip-sent': '#f59e0b', 'tip-received': '#f59e0b',
     'booking-fee': '#ef4444', 'booking-confirmed': '#3b82f6', 'withdrawal': '#8b5cf6',
-    'admin-adjust': '#8a7b55', 'refund': '#06b6d4', 'commission': '#f59e0b'
+    'admin-adjust': '#8a7b55', 'refund': '#06b6d4', 'commission': '#f59e0b',
+    'msg-unlock-earned': '#3b82f6', 'msg-unlock-refund': '#06b6d4'
 };
 
 const TYPE_LABELS = {
     'top-up': 'Top Up', 'tip-sent': 'Tips Sent', 'tip-received': 'Tips Received',
     'booking-fee': 'Booking Fees', 'booking-confirmed': 'Booking Income',
     'withdrawal': 'Withdrawals', 'admin-adjust': 'Admin Adjust', 'refund': 'Refunds',
-    'commission': 'Platform Commission'
+    'commission': 'Platform Commission', 'msg-unlock-earned': 'Paid Contact Income',
+    'msg-unlock-refund': 'Unlock Fee Refunds'
 };
 
 function filterTxnsByPeriod(txns, period) {

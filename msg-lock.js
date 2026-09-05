@@ -65,7 +65,8 @@
     if (nameEl) nameEl.textContent = window._paidMsgProvider.name;
     if (feeEl) feeEl.textContent = 'R' + fee;
     if (descEl) descEl.textContent = 'This service provider has enabled paid messaging. Pay R' + fee
-      + ' to open a conversation. If you already have a confirmed booking with '
+      + ' to open a conversation. The fee is held safely in escrow and paid to the provider only once you start '
+      + 'chatting. If you already have a confirmed booking with '
       + window._paidMsgProvider.name + ', messaging is free.';
     var modal = document.getElementById('paidMsgModal');
     if (modal) modal.classList.add('active');
@@ -83,7 +84,79 @@
     if (typeof payProviderUnlock === 'function') payProviderUnlock(p.id, p.name);
   }
 
-  /* ---- Unlock uses the per-provider fee, not the fixed constant ---- */
+  /* ---- Unlock escrow lifecycle (mirrors booking escrow) ----
+     The paid-contact fee is never handed straight to the provider. It is
+     debited from the client wallet and held in escrow (wallet.held), exactly
+     like a booking fee. When a conversation with the provider actually
+     happens (a message is exchanged), the escrow is released to the provider
+     wallet. If the unlock is never used it stays held so it can be refunded
+     by the client/support. */
+
+  function msgUnlockEscrows() {
+    try { return Storage.getEscrowFunds() || []; } catch (e) { return []; }
+  }
+
+  function holdMsgUnlockEscrow(providerId, fee, userId, providerName) {
+    try {
+      var escrows = msgUnlockEscrows();
+      var escrow = {
+        id: generateId(),
+        kind: 'msg-unlock',
+        providerId: String(providerId),
+        fromType: 'user',
+        fromId: userId || currentAuthId(),
+        payeeType: 'provider',
+        payeeId: providerId,
+        amount: fee,
+        status: 'held',
+        description: 'Message unlock fee - ' + (providerName || 'Provider'),
+        createdAt: new Date().toISOString()
+      };
+      escrows.push(escrow);
+      Storage.setEscrowFunds(escrows);
+      adjustWalletHeld('user', escrow.fromId, fee, 'msg-unlock-escrow', 'Message unlock fee of R' + fee.toFixed(2) + ' held in escrow', { providerId: String(providerId) });
+    } catch (e) {}
+  }
+
+  function releaseMsgUnlockEscrow(providerId) {
+    try {
+      var escrows = msgUnlockEscrows();
+      var changed = false;
+      escrows.forEach(function (e) {
+        if (e.kind === 'msg-unlock' && String(e.providerId) === String(providerId) && e.status === 'held') {
+          e.status = 'released';
+          e.releasedAt = new Date().toISOString();
+          adjustWalletHeld('user', e.fromId, -e.amount, 'msg-unlock-escrow-released', 'Message unlock escrow released', { providerId: String(providerId), escrowId: e.id });
+          adjustWallet('provider', providerId, e.amount, 'msg-unlock-earned', 'Message unlock fee released from escrow', { escrowId: e.id, fromId: e.fromId });
+          changed = true;
+        }
+      });
+      if (changed) Storage.setEscrowFunds(escrows);
+    } catch (e) {}
+  }
+
+  function refundMsgUnlockEscrow(providerId, reason) {
+    try {
+      var escrows = msgUnlockEscrows();
+      var changed = false;
+      escrows.forEach(function (e) {
+        if (e.kind === 'msg-unlock' && String(e.providerId) === String(providerId) && e.status === 'held') {
+          e.status = 'refunded';
+          e.refundedAt = new Date().toISOString();
+          adjustWalletHeld('user', e.fromId, -e.amount, 'msg-unlock-escrow-released', 'Message unlock escrow returned', { providerId: String(providerId), escrowId: e.id });
+          adjustWallet('user', e.fromId, e.amount, 'msg-unlock-refund', reason || 'Refund for unpaid message unlock', { providerId: String(providerId), escrowId: e.id });
+          changed = true;
+        }
+      });
+      if (changed) Storage.setEscrowFunds(escrows);
+      try {
+        var list = providerMsgUnlocks().filter(function (x) { return String(x) !== String(providerId); });
+        localStorage.setItem(PROVIDER_UNLOCK_KEY, JSON.stringify(list));
+      } catch (e2) {}
+    } catch (e) {}
+  }
+
+  /* ---- Unlock debits the wallet and holds the fee in escrow ---- */
   var _origPayUnlock = window.payProviderUnlock;
   window.payProviderUnlock = function (providerId, providerName) {
     var fee = getMsgFee(providerId);
@@ -96,12 +169,11 @@
     }
     if (typeof adjustWallet === 'function') {
       adjustWallet('user', uid, -fee, 'provider-unlock', 'Unlock paid contact - ' + (providerName || 'Provider'), { providerId: providerId });
-      if (typeof getOrCreateWallet === 'function') getOrCreateWallet('provider', providerId);
-      adjustWallet('provider', providerId, fee, 'provider-unlock', 'Paid contact unlock - ' + (providerName || 'Provider'), { userId: uid });
+      holdMsgUnlockEscrow(providerId, fee, uid, providerName || 'Provider');
     }
     if (typeof recordProviderMsgUnlock === 'function') recordProviderMsgUnlock(providerId);
     closePaidMsgPopup();
-    showToast('Unlocked! You can now message ' + (providerName || 'the provider') + '.');
+    showToast('Unlocked! R' + fee + ' is held in escrow and is paid to the provider when you start a chat.');
     if (typeof openComposeTo === 'function') openComposeTo(providerId, providerName || 'Provider', 'provider');
   };
 
@@ -197,4 +269,53 @@
   window.confirmPaidMsgPay = confirmPaidMsgPay;
   window.getProviderMsgFee = getMsgFee;
   window.hasApprovedBookingForMsg = hasApprovedBooking;
+  window.releaseMsgUnlockEscrow = releaseMsgUnlockEscrow;
+  window.refundMsgUnlockEscrow = refundMsgUnlockEscrow;
+
+  /* ---- Release escrow once the paid chat actually happens ----
+     Wrapping the two real send paths (compose submit + thread reply) so that
+     the first message delivered to a locked provider pays the provider out of
+     escrow. Mirroring bookings: money clears only on delivery. */
+
+  function conversationProviderId(conv) {
+    if (!conv) return null;
+    if (conv.participantRole === 'provider') return conv.participantId;
+    if (conv.participantRole === 'listing' || conv.participantRole === 'service') {
+      var t = resolveLockTarget(conv.participantId, conv.participantName, conv.participantRole);
+      return t ? t.providerId : null;
+    }
+    return null;
+  }
+
+  var _origReply = window.sendMessageReply;
+  window.sendMessageReply = function () {
+    var conv = null;
+    try {
+      conv = (Storage.getConversations() || []).find(function (c) { return c.id === currentMessageViewId; });
+    } catch (e) {}
+    if (_origReply) _origReply();
+    var pid = null;
+    try { pid = conversationProviderId(conv); } catch (e2) {}
+    if (pid) releaseMsgUnlockEscrow(pid);
+  };
+
+  var _origSubmit = window.handleMessageSubmit;
+  window.handleMessageSubmit = function (e) {
+    var recipientId = null, recipientRole = null;
+    try {
+      var sel = document.getElementById('msgRecipient');
+      if (sel) {
+        recipientId = sel.value;
+        var opt = sel.options[sel.selectedIndex];
+        recipientRole = opt && opt.dataset ? opt.dataset.role : 'contact';
+      }
+    } catch (e) {}
+    if (_origSubmit) _origSubmit(e);
+    try {
+      if (recipientId && recipientRole) {
+        var t = resolveLockTarget(recipientId, '', recipientRole);
+        if (t) releaseMsgUnlockEscrow(t.providerId);
+      }
+    } catch (e2) {}
+  };
 })();
