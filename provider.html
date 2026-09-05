@@ -577,7 +577,7 @@
                     <h1>View Business Profile</h1>
                     <div class="header-actions">
                         <button class="btn btn-secondary" onclick="editProviderProfile()"><i class="fas fa-edit"></i> Edit</button>
-                        <button class="btn btn-primary" onclick="openComposeTo(currentViewProviderId, document.getElementById('providerViewName').textContent, 'provider')"><i class="fas fa-paper-plane"></i> Message</button>
+                        <button class="btn btn-primary" id="providerMsgBtn" onclick="openComposeTo(currentViewProviderId, document.getElementById('providerViewName').textContent, 'provider')"><i class="fas fa-paper-plane"></i> Message</button>
                         <button class="btn btn-danger" onclick="deleteProviderProfile()"><i class="fas fa-trash"></i> Delete</button>
                     </div>
                 </div>
@@ -2600,6 +2600,10 @@
                         <div class="settings-item">
                             <div class="settings-info"><span class="settings-label">Require Paid Contact</span><span class="settings-desc">Lock your profile &amp; messages so only general users who pay a small unlock fee can contact you. Filters out time-wasters and abusers. Providers &amp; admins can always reach you.</span></div>
                             <label class="toggle-switch"><input type="checkbox" id="providerSettingMsgLock" onchange="saveProviderSettings()"><span class="toggle-slider"></span></label>
+                        </div>
+                        <div class="settings-item">
+                            <div class="settings-info"><span class="settings-label">Unlock Fee (R)</span><span class="settings-desc">Set your own paid-contact unlock fee. Blank or 0 uses the default R25.</span></div>
+                            <input type="number" id="providerSettingMsgFee" value="" min="0" step="1" placeholder="25" onchange="saveProviderSettings()">
                         </div>
                     </div>
                 </div>
@@ -5027,6 +5031,24 @@
     <script src="monetization.js?v=1"></script>
     <script src="bookings-advance.js?v=1"></script>
     <script src="schedule.js?v=1"></script>
+    <script src="msg-lock.js?v=1"></script>
     <script src="pwa.js"></script>
+    <!-- Paid message unlock popup -->
+    <div class="modal-overlay" id="paidMsgModal" onclick="if(event.target===this)closePaidMsgPopup()">
+        <div class="modal" style="max-width:440px">
+            <div class="modal-icon" style="background:linear-gradient(135deg,#8b5cf6,#7c3aed)"><i class="fas fa-lock"></i></div>
+            <h2>Unlock Contact</h2>
+            <p id="paidMsgModalName" style="font-size:1.15rem;font-weight:700;color:#c9a227;margin:4px 0 8px">-</p>
+            <p id="paidMsgModalDesc" style="color:#a99c7e;max-width:360px;margin:0 auto;line-height:1.5">This service provider has enabled paid messaging.</p>
+            <div class="form-group" style="margin-top:18px">
+                <label>Unlock Fee</label>
+                <div id="paidMsgModalFee" style="font-size:1.6rem;color:#c9a227;font-weight:800">R25</div>
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-secondary" onclick="closePaidMsgPopup()">Cancel</button>
+                <button class="btn btn-primary" onclick="confirmPaidMsgPay()" id="paidMsgPayBtn"><i class="fas fa-lock-open"></i> Pay to Open Chat</button>
+            </div>
+        </div>
+    </div>
 </body>
 </html>

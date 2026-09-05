@@ -3912,6 +3912,7 @@
     <script src="shipping.js?v=1"></script>
     <script src="invoices.js?v=1"></script>
     <script src="bookings-advance.js?v=1"></script>
+    <script src="msg-lock.js?v=1"></script>
     <script>
         let onbSlide = 0;
         const slides = document.querySelectorAll('.onb-slide');
@@ -3962,5 +3963,22 @@
         });
     </script>
     <script src="pwa.js"></script>
+    <!-- Paid message unlock popup -->
+    <div class="modal-overlay" id="paidMsgModal" onclick="if(event.target===this)closePaidMsgPopup()">
+        <div class="modal" style="max-width:440px">
+            <div class="modal-icon" style="background:linear-gradient(135deg,#8b5cf6,#7c3aed)"><i class="fas fa-lock"></i></div>
+            <h2>Unlock Contact</h2>
+            <p id="paidMsgModalName" style="font-size:1.15rem;font-weight:700;color:#c9a227;margin:4px 0 8px">-</p>
+            <p id="paidMsgModalDesc" style="color:#a99c7e;max-width:360px;margin:0 auto;line-height:1.5">This service provider has enabled paid messaging.</p>
+            <div class="form-group" style="margin-top:18px">
+                <label>Unlock Fee</label>
+                <div id="paidMsgModalFee" style="font-size:1.6rem;color:#c9a227;font-weight:800">R25</div>
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-secondary" onclick="closePaidMsgPopup()">Cancel</button>
+                <button class="btn btn-primary" onclick="confirmPaidMsgPay()" id="paidMsgPayBtn"><i class="fas fa-lock-open"></i> Pay to Open Chat</button>
+            </div>
+        </div>
+    </div>
 </body>
 </html>
