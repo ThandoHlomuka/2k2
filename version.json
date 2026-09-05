@@ -1,0 +1,9 @@
+{
+  "version": "2.1.0",
+  "title": "2k2 Updated",
+  "notes": [
+    "New: preview thumbnails on content directory tabs",
+    "Fixed: video player seek controls no longer squished",
+    "Improved: booking packages for services and listings"
+  ]
+}

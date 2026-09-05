@@ -8586,3 +8586,24 @@ h1, h2, h3, h4 {
 .flashcard-btn.primary{background:linear-gradient(135deg,#c9a227,#a07d12);color:#16130d;border-color:transparent;}
 .flashcard-btn:hover{filter:brightness(1.08);}
 .flashcard-btn:disabled{opacity:.35;cursor:default;filter:none;}
+
+/* ---- Update Engine ---- */
+.k2-upd-nav{display:none;}
+.k2-upd-nav-badge{background:linear-gradient(135deg,#10b981,#0d9488);color:#04150f;font-size:.6rem;font-weight:800;padding:2px 8px;border-radius:50px;letter-spacing:.4px;text-transform:uppercase;}
+.k2-upd-note-block{margin:18px 0 6px;text-align:left;}
+.k2-upd-note-block h3{font-size:.95rem;margin-bottom:10px;color:#8a7b55;text-transform:uppercase;letter-spacing:.6px;}
+.k2-upd-notes{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:8px;}
+.k2-upd-notes li{display:flex;align-items:flex-start;gap:10px;font-size:.9rem;line-height:1.5;color:#3d3626;}
+.k2-upd-notes li i{color:#10b981;margin-top:3px;}
+.k2-upd-note-block .k2-upd-notes li{color:#4a4230;}
+.k2-upd-toast{position:fixed;top:16px;right:16px;z-index:13000;width:min(360px,calc(100vw - 32px));background:linear-gradient(135deg,#17151c,#14121a);border:1px solid #10b98166;border-radius:16px;box-shadow:0 18px 50px rgba(0,0,0,.55);padding:16px 18px;display:flex;flex-direction:column;gap:12px;transform:translateX(120%);transition:transform .35s cubic-bezier(.2,.8,.2,1);}
+.k2-upd-toast.show{transform:none;}
+.k2-upd-toast.hide{transform:translateX(120%);}
+.k2-upd-toast-head{display:flex;align-items:center;gap:10px;color:#f7f0e0;font-weight:700;font-size:.95rem;}
+.k2-upd-toast-head i{color:#10b981;font-size:1.1rem;}
+.k2-upd-toast-title{flex:1;}
+.k2-upd-toast-ver{background:#10b98122;color:#10b981;border:1px solid #10b98144;font-size:.68rem;font-weight:800;padding:3px 9px;border-radius:50px;}
+.k2-upd-toast-close{background:transparent;border:none;color:#a99c7e;cursor:pointer;font-size:.9rem;padding:4px;}
+.k2-upd-toast-close:hover{color:#f7f0e0;}
+.k2-upd-toast .k2-upd-notes li{color:#cfc4a8;}
+.k2-upd-toast .k2-upd-notes li i{color:#10b981;}
