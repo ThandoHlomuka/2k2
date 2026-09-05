@@ -2672,7 +2672,7 @@ h1, h2, h3, h4 {
    ============================================ */
 .directory-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(0, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
     gap: 20px;
 }
 
