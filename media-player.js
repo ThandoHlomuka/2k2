@@ -104,6 +104,9 @@
     '.k2-seek-wrap:hover .k2-seek-thumb{opacity:1;}\n' +
     '.k2-controls-row{display:flex;align-items:center;gap:4px;color:' + C.text + ';}\n' +
     '.k2-btn{background:transparent;border:none;color:' + C.text + ';cursor:pointer;font-size:1rem;width:34px;height:34px;display:flex;align-items:center;justify-content:center;border-radius:8px;transition:.15s;flex-shrink:0;}\n' +
+    '.k2-back10,.k2-fwd10{position:relative;flex-direction:column;gap:0;padding-top:2px;}\n' +
+    '.k2-back10 i,.k2-fwd10 i{font-size:.82rem;line-height:1;}\n' +
+    '.k2-back10 .k2-jump,.k2-fwd10 .k2-jump{font-size:.5rem;font-weight:800;line-height:1;color:' + C.pri + ';margin-top:1px;}\n' +
     '.k2-btn:hover{background:rgba(255,255,255,.1);}\n' +
     '.k2-btn.k2-play{background:' + C.pri + ';color:#211a0d;border-radius:50%;font-size:.85rem;}\n' +
     '.k2-btn.k2-play:hover{background:#e0b45f;transform:scale(1.06);}\n' +
@@ -296,8 +299,8 @@
       '<div class="k2-seek-wrap"><div class="k2-seek"><div class="k2-seek-buffered"></div><div class="k2-seek-fill"></div><div class="k2-seek-thumb"></div></div></div>' +
       '<div class="k2-controls-row">' +
         '<button type="button" class="k2-btn k2-play" aria-label="Play/Pause"><i class="fas fa-play"></i></button>' +
-        '<button type="button" class="k2-btn k2-back10" title="Back 10s"><i class="fas fa-undo" style="font-size:.75rem"></i><span style="font-size:.55rem;font-weight:800;position:absolute;margin-top:2px">10</span></button>' +
-        '<button type="button" class="k2-btn k2-fwd10" title="Forward 10s"><i class="fas fa-redo" style="font-size:.75rem"></i><span style="font-size:.55rem;font-weight:800;position:absolute;margin-top:2px">10</span></button>' +
+        '<button type="button" class="k2-btn k2-back10" title="Back 10s"><i class="fas fa-undo"></i><span class="k2-jump">10</span></button>' +
+        '<button type="button" class="k2-btn k2-fwd10" title="Forward 10s"><i class="fas fa-redo"></i><span class="k2-jump">10</span></button>' +
         '<span class="k2-time k2-now">0:00</span>' +
         '<span class="k2-time">/</span>' +
         '<span class="k2-time k2-total">0:00</span>' +
