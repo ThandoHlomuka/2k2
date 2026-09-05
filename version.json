@@ -1,9 +1,9 @@
 {
-  "version": "2.1.0",
-  "title": "2k2 Updated",
+  "version": "2.2.0",
+  "title": "2k2 Optimized",
   "notes": [
-    "New: preview thumbnails on content directory tabs",
-    "Fixed: video player seek controls no longer squished",
-    "Improved: booking packages for services and listings"
+    "Fixed: directory grid/list view now switches properly and cards fill the screen",
+    "Fixed: flashcard tours now open only on the matching page, on your 1st and 2nd visit",
+    "Improved: app cache refreshed for everyone (all devices get the latest build)"
   ]
 }
