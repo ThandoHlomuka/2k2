@@ -648,6 +648,7 @@ if (page === 'products-directory') renderProductsBrowser();
     if (['directory','venue-directory','services-directory','content-directory','events-directory','ads-browse','gigs-browse','forum-browse','products-directory'].includes(page)) renderSaveButtons();
     setActiveBottomNav(page);
     if (window._k2Nav) window._k2Nav.onNavigate(page);
+    maybeAutoFlashcard(page);
 }
 
 // Re-render the page that is currently visible (called after Supabase
@@ -9969,3 +9970,155 @@ function initTour() {
         initTour();
     }
 })();
+
+// ==========================================
+// FLASHCARD TUTORIAL ENGINE
+// Reusable flashcard popup: deck + slides + prev/next + progress dots.
+// Auto-shows at most 2 times per deck (localStorage counter). Manual
+// calls (openFlashcardDeck) never consume the auto quota.
+// ==========================================
+const K2_FLASHCARD_KEY = 'k2_flashcard_count_';
+
+const K2_FLASHCARD_DECKS = {
+    profile: {
+        cards: [
+            { icon: 'fa-circle-question', title: 'How 2k2 Works', text: '2k2 connects you directly with providers. Browse profiles, check rates and availability, then request a booking. Your payment is held safely in escrow until the provider confirms it.' },
+            { icon: 'fa-file-lines', title: 'Booking Rules', text: 'Every provider sets their own rates and booking fee. When you book, the full amount is deducted from your wallet and held in escrow - the provider only receives it once they confirm your booking. Unsure? Your booking fee is shown before you pay.' },
+            { icon: 'fa-hand-holding-heart', title: 'Tips', text: 'Not ready to book yet? You can still support a provider by sending a tip straight from their profile. Tips go directly to their wallet.' },
+            { icon: 'fa-comments', title: 'Messaging', text: 'Message any profile from the Message button. Once you have an approved booking, contact details open up automatically. Some providers charge a small unlock fee, held in escrow until your conversation starts.' },
+            { icon: 'fa-triangle-exclamation', title: 'Warning', text: 'Stay safe. Never pay anyone outside the 2k2 escrow system, meet in public places when you can, and report suspicious profiles via Help at any time.' },
+            { icon: 'fa-heart', title: 'Enjoy', text: 'That is it - browse, book, tip and enjoy 2k2. Create your own profile to connect with the community too.' }
+        ]
+    },
+    venues: {
+        cards: [
+            { icon: 'fa-map-pin', title: 'Venues', text: 'Discover venues near you - lodges, clubs, private studios and fetish venues. Filter by category and location to find the perfect space.' },
+            { icon: 'fa-circle-question', title: 'How it Works', text: 'Open any venue to see its photos, amenities and availability. Request a booking for your chosen date and time - payment is held in escrow until the venue confirms.' },
+            { icon: 'fa-triangle-exclamation', title: 'Warnings', text: 'Always meet in safe, public settings and never hand money over outside 2k2. If something feels off, stop and report it via Help.' },
+            { icon: 'fa-heart', title: 'Enjoy', text: 'Find the right space, book with confidence and enjoy your time on 2k2.' }
+        ]
+    }
+};
+
+const flashcardState = { deckId: null, index: 0, cards: [] };
+
+function flashcardCount(deckId) {
+    try { return parseInt(localStorage.getItem(K2_FLASHCARD_KEY + deckId) || '0', 10) || 0; } catch (e) { return 0; }
+}
+
+function flashcardBump(deckId) {
+    try { localStorage.setItem(K2_FLASHCARD_KEY + deckId, String(flashcardCount(deckId) + 1)); } catch (e) {}
+}
+
+function flashcardReset(deckId) {
+    try { localStorage.removeItem(K2_FLASHCARD_KEY + deckId); } catch (e) {}
+}
+
+function ensureFlashcardDOM() {
+    if (document.getElementById('k2FlashcardOverlay')) return;
+    const overlay = document.createElement('div');
+    overlay.id = 'k2FlashcardOverlay';
+    overlay.className = 'flashcard-overlay';
+    overlay.innerHTML =
+        '<div class="flashcard-popup" role="dialog" aria-label="Tutorial">' +
+            '<button class="flashcard-close" id="k2FlashcardClose" title="Close tutorial"><i class="fas fa-xmark"></i></button>' +
+            '<div class="flashcard-icon" id="k2FlashcardIcon"><i class="fas fa-circle-question"></i></div>' +
+            '<h3 class="flashcard-title" id="k2FlashcardTitle"></h3>' +
+            '<p class="flashcard-text" id="k2FlashcardText"></p>' +
+            '<div class="flashcard-progress" id="k2FlashcardProgress"></div>' +
+            '<div class="flashcard-actions">' +
+                '<button class="flashcard-btn" id="k2FlashcardPrev"><i class="fas fa-chevron-left"></i> Back</button>' +
+                '<button class="flashcard-btn primary" id="k2FlashcardNext">Next <i class="fas fa-chevron-right"></i></button>' +
+            '</div>' +
+        '</div>';
+    document.body.appendChild(overlay);
+
+    overlay.addEventListener('click', (e) => { if (e.target === overlay) flashcardClose(); });
+    document.getElementById('k2FlashcardClose').addEventListener('click', () => flashcardClose());
+    document.getElementById('k2FlashcardPrev').addEventListener('click', () => flashcardStep(-1));
+    document.getElementById('k2FlashcardNext').addEventListener('click', () => flashcardStep(1));
+}
+
+function flashcardKeyHandler(e) {
+    if (!flashcardState.deckId) return;
+    if (e.key === 'Escape') flashcardClose();
+    else if (e.key === 'ArrowRight') { e.preventDefault(); flashcardStep(1); }
+    else if (e.key === 'ArrowLeft') { e.preventDefault(); flashcardStep(-1); }
+}
+
+function renderFlashcard() {
+    const cards = flashcardState.cards;
+    if (!cards.length) return;
+    const card = cards[flashcardState.index];
+    const total = cards.length;
+
+    const icon = document.getElementById('k2FlashcardIcon');
+    if (icon) icon.innerHTML = '<i class="fas ' + (card.icon || 'fa-circle-question') + '"></i>';
+    document.getElementById('k2FlashcardTitle').textContent = card.title || '';
+    document.getElementById('k2FlashcardText').textContent = card.text || '';
+
+    const progress = document.getElementById('k2FlashcardProgress');
+    progress.innerHTML = '';
+    for (let i = 0; i < total; i++) {
+        const dot = document.createElement('span');
+        dot.className = 'flashcard-dot' + (i === flashcardState.index ? ' active' : '');
+        progress.appendChild(dot);
+    }
+
+    const next = document.getElementById('k2FlashcardNext');
+    const prev = document.getElementById('k2FlashcardPrev');
+    if (flashcardState.index === total - 1) {
+        next.innerHTML = '<i class="fas fa-check"></i> Done';
+    } else {
+        next.innerHTML = 'Next <i class="fas fa-chevron-right"></i>';
+    }
+    prev.style.visibility = flashcardState.index === 0 ? 'hidden' : 'visible';
+}
+
+function openFlashcardDeck(deckId, opts) {
+    const o = opts || {};
+    const deck = K2_FLASHCARD_DECKS[deckId];
+    if (!deck || !deck.cards || !deck.cards.length) return false;
+    if (o.auto && flashcardCount(deckId) >= 2) return false;
+    if (o.auto && document.querySelector('#k2TourOverlay.active')) return false;
+    if (o.auto && document.querySelector('#onboardingOverlay.active')) return false;
+
+    ensureFlashcardDOM();
+    flashcardState.deckId = deckId;
+    flashcardState.index = 0;
+    flashcardState.cards = deck.cards;
+    if (o.auto) flashcardBump(deckId);
+    renderFlashcard();
+    document.getElementById('k2FlashcardOverlay').classList.add('active');
+    document.addEventListener('keydown', flashcardKeyHandler);
+    const nextBtn = document.getElementById('k2FlashcardNext');
+    if (nextBtn) setTimeout(() => nextBtn.focus(), 60);
+    return true;
+}
+
+function flashcardStep(dir) {
+    if (!flashcardState.deckId) return;
+    const total = flashcardState.cards.length;
+    const ni = flashcardState.index + dir;
+    if (ni < 0 || ni >= total) { flashcardClose(); return; }
+    flashcardState.index = ni;
+    renderFlashcard();
+}
+
+function flashcardClose() {
+    if (!flashcardState.deckId) return;
+    flashcardState.deckId = null;
+    flashcardState.index = 0;
+    flashcardState.cards = [];
+    const ov = document.getElementById('k2FlashcardOverlay');
+    if (ov) ov.classList.remove('active');
+    document.removeEventListener('keydown', flashcardKeyHandler);
+}
+
+function maybeAutoFlashcard(page) {
+    if (isProviderPortalPage()) return;
+    const map = { 'venue-directory': 'venues', 'directory-view': 'profile', 'service-directory-view': 'profile' };
+    const deckId = map[page];
+    if (!deckId) return;
+    window.setTimeout(() => { openFlashcardDeck(deckId, { auto: true }); }, 900);
+}
