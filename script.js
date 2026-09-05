@@ -284,7 +284,7 @@ const ADMIN_WALLET_TYPE = 'admin';
 const ADMIN_WALLET_ID = 'platform';
 // Types that represent gross earnings from sales (commissionable). Refunds,
 // top-ups, admin-adjusts and other flows are intentionally NOT commissioned.
-const COMMISSIONABLE_TYPES = { 'booking-confirmed': 1, 'tip-received': 1, 'experience-sale': 1, 'product-sale': 1, 'subforum-subscription': 1, 'msg-unlock-earned': 1 };
+const COMMISSIONABLE_TYPES = { 'booking-confirmed': 1, 'tip-received': 1, 'experience-sale': 1, 'product-sale': 1, 'content-sale': 1, 'subforum-subscription': 1, 'msg-unlock-earned': 1 };
 
 function adminWalletOwner() { return { ownerType: ADMIN_WALLET_TYPE, ownerId: ADMIN_WALLET_ID }; }
 
@@ -5424,6 +5424,33 @@ function filterContentDirectory(type) {
 
 function searchContentDirectory() { renderContentDirectory(); }
 
+function splitStoryIntoPages(text, maxCharsPerPage) {
+    const max = maxCharsPerPage || 600;
+    const rawParagraphs = String(text || '').split(/\r?\n(?:\s*\r?\n)+/);
+    const chunks = [];
+    rawParagraphs.forEach(p => {
+        const words = p.split(/\s+/).filter(Boolean);
+        if (!words.length) return;
+        let cur = words[0];
+        for (let i = 1; i < words.length; i++) {
+            if ((cur + ' ' + words[i]).length > max) { chunks.push(cur); cur = words[i]; }
+            else cur += ' ' + words[i];
+        }
+        chunks.push(cur);
+    });
+    const pages = [];
+    let buf = [];
+    let len = 0;
+    chunks.forEach(c => {
+        if (len + c.length > max && buf.length) { pages.push(buf.join('\n\n')); buf = []; len = 0; }
+        buf.push(c);
+        len += c.length + 2;
+    });
+    if (buf.length) pages.push(buf.join('\n\n'));
+    if (!pages.length) pages.push(String(text || ''));
+    return pages;
+}
+
 function viewContent(id) {
     const content = Storage.getContent();
     const item = content.find(c => c.id === id);
@@ -5436,6 +5463,7 @@ function viewContent(id) {
     const userId = currentAuthId();
     const hasPurchased = isPaid && item.purchasedBy && item.purchasedBy.includes(userId);
     const isOwner = userId && (item.providerId === userId || item.ownerId === userId);
+    const showFullMedia = !isPaid || hasPurchased || isOwner;
 
     document.getElementById('contentDetailViewType').innerHTML = `<i class="fas ${type.icon}"></i> ${type.label}`;
     document.getElementById('contentDetailViewType').style.background = `${type.color}22`;
@@ -5455,13 +5483,25 @@ function viewContent(id) {
     } else {
         priceHtml = '<div class="content-purchase-bar content-purchase-free"><i class="fas fa-gift"></i> Free Content</div>';
     }
-    document.getElementById('contentDetailViewBody').innerHTML = priceHtml + (item.description ? `<p>${escapeHtml(item.description).replace(/\n/g, '<br>')}</p>` : '<p class="empty-text">No description</p>');
+    let bodyDesc = item.description ? `<p>${escapeHtml(item.description).replace(/\n/g, '<br>')}</p>` : '<p class="empty-text">No description</p>';
+    if ((item.type === 'story' || item.type === 'book') && isPaid && !showFullMedia) {
+        const full = item.description || '';
+        const pages = splitStoryIntoPages(full, 600);
+        const kind = item.type === 'story' ? 'story' : 'book';
+        if (pages.length > 10) {
+            const remaining = pages.length - 10;
+            const previewText = pages.slice(0, 10).join('\n\n');
+            bodyDesc = `<p>${escapeHtml(previewText).replace(/\n/g, '<br>')}</p><div class="content-read-lock"><i class="fas fa-lock"></i><span>Preview of the first 10 pages — purchase to read the remaining ${remaining} page${remaining === 1 ? '' : 's'} of this ${kind}</span></div>`;
+        } else {
+            bodyDesc = `<p>${escapeHtml(full).replace(/\n/g, '<br>')}</p><div class="content-read-lock"><i class="fas fa-thumbs-up"></i><span>Full ${kind} preview shown — this one is 10 pages or fewer; purchase to support the creator</span></div>`;
+        }
+    }
+    document.getElementById('contentDetailViewBody').innerHTML = priceHtml + bodyDesc;
 
     // Media player
     const mediaContainer = document.getElementById('contentDetailMedia');
     const isVideoType = item.type === 'video' || item.type === 'video-podcast';
     const isAudioType = item.type === 'audio' || item.type === 'podcast';
-    const showFullMedia = !isPaid || hasPurchased || isOwner;
 
     if (item.fileData && item.fileData.length > 100) {
         if (isVideoType) {
@@ -5530,15 +5570,22 @@ function viewContent(id) {
             } catch (e) {
                 holder.innerHTML = `<div class="audio-icon-wrap"><i class="fas fa-headphones"></i></div><audio controls preload="metadata" class="content-audio-player"><source src="${item.fileData}" type="${item.fileType || 'audio/mpeg'}"></audio>`;
             }
-        } else if (item.type === 'image') {
+        } else if (item.type === 'image' || item.type === 'gif') {
             if (showFullMedia) {
                 mediaContainer.innerHTML = `<div class="content-media-player"><img src="${item.fileData}" alt="${item.title}" class="content-image-player"></div>`;
             } else {
-                const thumbLen = Math.min(item.fileData.length, Math.floor(item.fileData.length * 0.15));
-                mediaContainer.innerHTML = `<div class="content-media-player content-preview-image-wrap"><img src="${item.fileData}" alt="${item.title}" class="content-image-player content-preview-blur"><div class="content-preview-overlay active"><div class="preview-paywall"><div class="preview-lock-icon"><i class="fas fa-lock"></i></div><h3>Preview Ended</h3><p>This content costs <strong>R' + item.price.toFixed(2) + '</strong></p><p class="preview-sub">Purchase to view the full image</p><button class="btn btn-primary" onclick="purchaseContent(\'' + item.id + '\')"><i class="fas fa-shopping-cart"></i> Purchase for R' + item.price.toFixed(2) + '</button></div></div></div>`;
+                mediaContainer.innerHTML = `<div class="content-media-player content-preview-image-wrap"><span class="content-preview-badge"><i class="fas fa-eye"></i> Preview</span><img src="${item.fileData}" alt="${item.title}" class="content-image-player"><div class="content-preview-overlay"><div class="preview-paywall"><div class="preview-lock-icon"><i class="fas fa-lock"></i></div><h3>Preview Ended</h3><p>This content costs <strong>R' + item.price.toFixed(2) + '</strong></p><p class="preview-sub">Purchase to view the full image</p><button class="btn btn-primary" onclick="purchaseContent(\'' + item.id + '\')"><i class="fas fa-shopping-cart"></i> Purchase for R' + item.price.toFixed(2) + '</button></div></div></div>`;
+                const wrap = mediaContainer.querySelector('.content-preview-image-wrap');
+                const imgEl = wrap.querySelector('img');
+                const overlayEl = wrap.querySelector('.content-preview-overlay');
+                const badgeEl = wrap.querySelector('.content-preview-badge');
+                window.setTimeout(() => {
+                    if (currentContentViewId !== id) return;
+                    if (imgEl) imgEl.classList.add('content-preview-blur');
+                    if (badgeEl) badgeEl.classList.add('hidden');
+                    if (overlayEl) overlayEl.classList.add('active');
+                }, 5000);
             }
-        } else if (item.type === 'gif') {
-            mediaContainer.innerHTML = `<div class="content-media-player"><img src="${item.fileData}" alt="${item.title}" class="content-gif-player"></div>`;
         } else {
             mediaContainer.innerHTML = `<div class="content-media-player"><div class="content-file-download"><i class="fas fa-file"></i><span>Attached file</span>${showFullMedia ? `<a href="${item.fileData}" download="${item.title}" class="btn btn-primary btn-sm"><i class="fas fa-download"></i> Download</a>` : `<button class="btn btn-primary btn-sm" onclick="purchaseContent('${item.id}')"><i class="fas fa-lock"></i> Purchase to Download</button>`}</div></div>`;
         }
@@ -6009,21 +6056,13 @@ function purchaseContent(contentId) {
     if (item.purchasedBy && item.purchasedBy.includes(userId)) { showToast('You have already purchased this content.', 'info'); return; }
     if (item.providerId === userId || item.ownerId === userId) { showToast('You own this content.', 'info'); return; }
 
-    const wallets = Storage.getWallets();
-    const userWallet = wallets.find(w => w.id === userId);
-    if (!userWallet || (userWallet.balance || 0) < item.price) {
+    if ((getWalletBalance('user', userId) || 0) < item.price) {
         showToast('Insufficient wallet balance. Please top up your wallet first.', 'error');
         return;
     }
 
-    userWallet.balance = (userWallet.balance || 0) - item.price;
-    Storage.setWallets(wallets);
-
-    const providerWallet = wallets.find(w => w.id === item.providerId);
-    if (providerWallet) {
-        providerWallet.balance = (providerWallet.balance || 0) + item.price;
-        Storage.setWallets(wallets);
-    }
+    adjustWallet('user', userId, -item.price, 'content-purchase', 'Content purchase: ' + item.title, { contentId });
+    adjustWallet('provider', item.providerId, item.price, 'content-sale', 'Content sold: ' + item.title, { contentId, buyerId: userId });
 
     if (!item.purchasedBy) item.purchasedBy = [];
     item.purchasedBy.push(userId);

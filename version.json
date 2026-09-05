@@ -1,9 +1,9 @@
 {
-  "version": "2.2.0",
-  "title": "2k2 Optimized",
+  "version": "2.3.0",
+  "title": "2k2 Pay-Per-View",
   "notes": [
-    "Fixed: directory grid/list view now switches properly and cards fill the screen",
-    "Fixed: flashcard tours now open only on the matching page, on your 1st and 2nd visit",
-    "Improved: app cache refreshed for everyone (all devices get the latest build)"
+    "New: pay-per-view/listen on all content — images & GIFs get a 5-second preview, videos & audio get 10 seconds",
+    "New: paid stories & books show a 10-page preview before prompting to buy",
+    "Improved: secure wallet-based content purchases with commission tracking"
   ]
 }
