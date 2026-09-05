@@ -43,6 +43,15 @@
     return entity && entity.name ? [{ label: entity.name, amount: num(entity.rate) }] : [];
   }
 
+  function getPackages(entity) {
+    if (entity && Array.isArray(entity.packages) && entity.packages.length) {
+      return entity.packages.slice(0, 5).filter(function (p) { return p && p.price; }).map(function (p) {
+        return { name: (p.name || ''), price: p.price, description: (p.description || '') };
+      });
+    }
+    return [];
+  }
+
   function getAvailability(entity) {
     var a = entity && entity.availability ? entity.availability : {};
     var start = (a.workStart || entity && entity.workStart || DEFAULT_START);
@@ -248,22 +257,67 @@
   }
 
   function onBookingRateChange() {
+    var sel = document.getElementById('bookingRateSelect');
+    if (sel && !sel.value) return;
+    window.bkSelectedPackageIdx = null;
+    document.getElementById('bookingSelectedRateAmount').value = '';
+    document.getElementById('bookingSelectedRateLabel').value = '';
+    renderBkPackages();
+    updateBkTotal();
+  }
+
+  function renderBkPackages() {
+    var list = window.bkPackagesList || [];
+    var cont = document.getElementById('bookingPackagesList');
+    var sec = document.getElementById('bookingPackagesSection');
+    if (!cont) { if (sec) sec.style.display = 'none'; return; }
+    if (!list.length) { if (sec) sec.style.display = 'none'; cont.innerHTML = ''; return; }
+    if (sec) sec.style.display = 'block';
+    var selIdx = window.bkSelectedPackageIdx;
+    cont.innerHTML = list.map(function (p, i) {
+      var on = i === selIdx;
+      return '<button type="button" onclick="pickBkPackage(' + i + ')" style="display:block;width:100%;text-align:left;cursor:pointer;margin-bottom:8px;padding:12px 14px;background:' + (on ? 'linear-gradient(135deg,#c9a22726,#c9a22714)' : 'linear-gradient(135deg,#c9a2270d,#c9a22708)') + ';border:1px solid ' + (on ? '#c9a227' : '#c9a22733') + ';border-radius:12px;font-family:inherit;">' +
+        '<div style="display:flex;align-items:center;gap:10px;">' +
+          '<i class="fas ' + (on ? 'fa-check-circle' : 'fa-circle') + '" style="color:#c9a227;font-size:1.1rem;flex:none"></i>' +
+          '<div style="flex:1;min-width:0;">' +
+            '<div style="font-weight:700;color:#ece4d0;">' + escapeHtml(p.name || ('Package ' + (i + 1))) + '</div>' +
+            (p.description ? '<div style="font-size:.8rem;color:#a99c7e;margin-top:2px;">' + escapeHtml(p.description) + '</div>' : '') +
+          '</div>' +
+          '<strong style="color:#c9a227;flex:none;">R' + num(p.price).toFixed(0) + '</strong>' +
+        '</div>' +
+      '</button>';
+    }).join('');
+  }
+
+  function pickBkPackage(idx) {
+    var list = window.bkPackagesList || [];
+    var pk = list[idx];
+    if (!pk) return;
+    window.bkSelectedPackageIdx = idx;
+    var sel = document.getElementById('bookingRateSelect');
+    if (sel) sel.value = '';
+    document.getElementById('bookingSelectedRateAmount').value = num(pk.price);
+    document.getElementById('bookingSelectedRateLabel').value = pk.name || '';
+    renderBkPackages();
     updateBkTotal();
   }
 
   function updateBkTotal() {
     var sel = document.getElementById('bookingRateSelect');
-    var rateAmount = 0, rateLabel = '';
+    var rateAmount = num(document.getElementById('bookingSelectedRateAmount').value);
+    var rateLabel = document.getElementById('bookingSelectedRateLabel').value;
     if (sel && sel.value) {
       var opt = sel.options[sel.selectedIndex];
       rateAmount = num(opt.getAttribute('data-amount'));
       rateLabel = opt.getAttribute('data-label') || opt.text;
+      document.getElementById('bookingSelectedRateAmount').value = rateAmount;
+      document.getElementById('bookingSelectedRateLabel').value = rateLabel;
     }
     var fee = num(window.currentBookingFee);
     var total = rateAmount + fee;
     document.getElementById('bookingSelectedRateAmount').value = rateAmount;
     document.getElementById('bookingSelectedRateLabel').value = rateLabel;
-    document.getElementById('bookingRateAmountDisplay').textContent = 'R' + rateAmount.toFixed(0);
+    document.getElementById('bookingRateAmountDisplay').textContent = rateAmount > 0 ? 'R' + rateAmount.toFixed(0) : 'R0';
     document.getElementById('bookingTotalDisplay').textContent = 'R' + total.toFixed(0);
     var payRow = document.getElementById('bookingPayRow');
     if (payRow) payRow.style.display = rateAmount > 0 ? 'flex' : 'none';
@@ -281,7 +335,12 @@
     bkCalDate = new Date();
 
     var entity = getEntity(providerId, providerType);
-    var rates = getRates(entity);
+    window.bkPackagesList = getPackages(entity);
+    var hasRealRates = entity && Array.isArray(entity.rates) && entity.rates.length && entity.rates.some(function (r) { return num(r.amount) > 0; });
+    var rates = window.bkPackagesList.length && !hasRealRates ? [] : getRates(entity);
+    window.bkSelectedPackageIdx = null;
+    document.getElementById('bookingSelectedRateAmount').value = '';
+    document.getElementById('bookingSelectedRateLabel').value = '';
 
     var feeEl = document.getElementById('bookingFeeDisplay');
     if (feeEl) feeEl.textContent = 'R' + num(window.currentBookingFee);
@@ -315,6 +374,7 @@
     if (payRow) payRow.style.display = 'none';
 
     document.getElementById('bookingModal').classList.add('active');
+    renderBkPackages();
     updateBkTotal();
     refreshBkCalendar();
   };
@@ -324,10 +384,13 @@
   window.closeBookingModal = function () {
     window.bkSelectedDate = null;
     window.bkSelectedTime = null;
+    window.bkSelectedPackageIdx = null;
     var hd = document.getElementById('bookingSelectedDate'); if (hd) hd.value = '';
     var ht = document.getElementById('bookingSelectedTime'); if (ht) ht.value = '';
     var bd = document.getElementById('bookingDate'); if (bd) bd.value = '';
     var bt = document.getElementById('bookingTime'); if (bt) bt.value = '';
+    var ha = document.getElementById('bookingSelectedRateAmount'); if (ha) ha.value = '';
+    var hl = document.getElementById('bookingSelectedRateLabel'); if (hl) hl.value = '';
     if (_origCloseBk) _origCloseBk();
   };
 
@@ -439,6 +502,7 @@
   window.pickBkDate = pickBkDate;
   window.pickBkSlot = pickBkSlot;
   window.onBookingRateChange = onBookingRateChange;
+  window.pickBkPackage = pickBkPackage;
   window.getBookingsSlots = generateDateSlots;
   window.getBookingDayStatus = getDayStatus;
   window.bkGenerateDateSlots = generateDateSlots;

@@ -956,6 +956,12 @@
                                 <label>Rate</label>
                                 <input type="text" id="listingRate" placeholder="e.g. $100/hr">
                             </div>
+                            <div class="form-group full-width">
+                                <label>Booking Packages (max 5)</label>
+                                <p style="color:#a99c7e;font-size:0.85rem;margin-bottom:10px">Optional packages shown to clients in the booking popup — name, price and what's included.</p>
+                                <div id="listingPackagesContainer"></div>
+                                <button type="button" class="btn btn-secondary btn-sm" onclick="addListingPackage()" style="margin-top:8px"><i class="fas fa-plus"></i> Add Package</button>
+                            </div>
                             <div class="form-group">
                                 <label>Your Booking Fee (R) *</label>
                                 <input type="number" id="listingBookingFee" placeholder="e.g. 80" min="0" step="1">
@@ -1454,6 +1460,12 @@
                                 <p style="color:#a99c7e;font-size:0.85rem;margin-bottom:10px">Add each option you charge for (e.g. 30 min session, 60 min session, full day).</p>
                                 <div id="serviceRatesContainer"></div>
                                 <button type="button" class="btn btn-secondary btn-sm" onclick="addServiceRate()" style="margin-top:8px"><i class="fas fa-plus"></i> Add Rate</button>
+                            </div>
+                            <div class="form-group full-width">
+                                <label>Booking Packages (max 5)</label>
+                                <p style="color:#a99c7e;font-size:0.85rem;margin-bottom:10px">Optional packages shown to clients in the booking popup — name, price and what's included.</p>
+                                <div id="servicePackagesContainer"></div>
+                                <button type="button" class="btn btn-secondary btn-sm" onclick="addServicePackage()" style="margin-top:8px"><i class="fas fa-plus"></i> Add Package</button>
                             </div>
                             <div class="form-group">
                                 <label>Your Booking Fee (R) *</label>
@@ -4893,6 +4905,10 @@
                     <div id="bookingPayRow" style="display:none;align-items:center;gap:10px;background:linear-gradient(135deg,#1d8a4e22,#1d8a4e11);border:1px solid #1d8a4e55;border-radius:12px;padding:12px 14px;margin-bottom:16px;">
                         <i class="fas fa-lock" style="color:#5ce6a0"></i>
                         <span style="font-size:0.85rem;color:#5ce6a0">Payment held securely in escrow until the provider confirms.</span>
+                    </div>
+                    <div id="bookingPackagesSection" style="display:none;margin-bottom:16px;">
+                        <label style="font-weight:600;margin-bottom:8px;display:block;">Booking Packages</label>
+                        <div id="bookingPackagesList"></div>
                     </div>
                     <div class="modal-actions">
                         <button type="button" class="btn btn-secondary" onclick="closeBookingModal()">Cancel</button>

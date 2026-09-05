@@ -527,6 +527,8 @@ let serviceTags = [];
 let serviceGallery = [];
 let serviceLinks = [];
 let serviceRates = [];
+let servicePackages = [];
+let listingPackages = [];
 let currentServicesFilter = 'all';
 let currentServicesOwnerFilter = null;
 let providerServiceTags = [];
@@ -2667,10 +2669,12 @@ function resetListingForm() {
     listingGallery = [];
     listingLinks = [];
     listingVideo = '';
+    listingPackages = [];
     renderListingTags();
     renderGalleryUpload();
     renderListingVideo();
     renderListingLinks();
+    renderListingPackages();
     document.getElementById('listingPhotoPreview').innerHTML = '<i class="fas fa-camera"></i><span>Click to upload</span>';
 }
 
@@ -2687,6 +2691,7 @@ function handleListingSubmit(e) {
         phone: document.getElementById('listingPhone').value,
         location: document.getElementById('listingLocation').value,
         rate: document.getElementById('listingRate').value,
+        packages: collectListingPackages(),
         bookingFee: parseFloat(document.getElementById('listingBookingFee')?.value) || null,
         website: document.getElementById('listingWebsite').value,
         links: collectListingLinks(),
@@ -2723,6 +2728,55 @@ function handleListingSubmit(e) {
     }
     Storage.setListings(listings);
     navigateTo('provider-directory');
+}
+
+// LISTING - Booking Packages (max 5)
+function addListingPackage() {
+    listingPackages = syncListingPackagesFromDom();
+    if (listingPackages.length >= 5) { showToast('You can add up to 5 packages.', 'error'); return; }
+    listingPackages.push({ name: '', price: '', description: '' });
+    renderListingPackages();
+}
+
+function removeListingPackage(i) {
+    listingPackages = syncListingPackagesFromDom();
+    listingPackages.splice(i, 1);
+    renderListingPackages();
+}
+
+function syncListingPackagesFromDom() {
+    return (listingPackages || []).map((_, i) => ({
+        name: (document.querySelector(`#listingPackagesContainer input[data-lpkg-name="${i}"]`)?.value || '').trim(),
+        price: (document.querySelector(`#listingPackagesContainer input[data-lpkg-price="${i}"]`)?.value || '').trim(),
+        description: (document.querySelector(`#listingPackagesContainer input[data-lpkg-desc="${i}"]`)?.value || '').trim()
+    }));
+}
+
+function renderListingPackages() {
+    const box = document.getElementById('listingPackagesContainer');
+    if (!box) return;
+    box.innerHTML = listingPackages.map((p, i) => `
+        <div style="display:flex;gap:8px;align-items:flex-start;flex-wrap:wrap;margin-bottom:10px;padding:10px;background:linear-gradient(135deg,#c9a22714,#c9a22708);border:1px solid #c9a22733;border-radius:10px">
+            <div style="flex:1;min-width:150px">
+                <input type="text" data-lpkg-name="${i}" value="${escapeHtml(p.name)}" placeholder="Package name (e.g. Basic, VIP)" class="form-input">
+            </div>
+            <div style="flex:1;min-width:120px">
+                <input type="text" data-lpkg-price="${i}" value="${escapeHtml(p.price)}" placeholder="Price (e.g. R500)" class="form-input">
+            </div>
+            <button type="button" class="btn btn-danger btn-sm" onclick="removeListingPackage(${i})"><i class="fas fa-times"></i></button>
+            <div style="flex:1 1 100%">
+                <input type="text" data-lpkg-desc="${i}" value="${escapeHtml(p.description)}" placeholder="What's included (optional)" class="form-input">
+            </div>
+        </div>
+    `).join('');
+}
+
+function collectListingPackages() {
+    return (listingPackages || []).map((_, i) => ({
+        name: (document.querySelector(`#listingPackagesContainer input[data-lpkg-name="${i}"]`)?.value || '').trim(),
+        price: (document.querySelector(`#listingPackagesContainer input[data-lpkg-price="${i}"]`)?.value || '').trim(),
+        description: (document.querySelector(`#listingPackagesContainer input[data-lpkg-desc="${i}"]`)?.value || '').trim()
+    })).filter(p => p.price).slice(0, 5);
 }
 
 function renderListings(filter = 'all') {
@@ -2789,10 +2843,12 @@ function populateListingForm(l) {
     listingGallery = [...(l.gallery || [])];
     listingLinks = [...(l.links || [])];
     listingVideo = l.video || '';
+    listingPackages = Array.isArray(l.packages) ? l.packages.slice(0, 5).map(p => ({ name: p.name || '', price: p.price || '', description: p.description || '' })) : [];
     renderListingTags();
     renderGalleryUpload();
     renderListingVideo();
     renderListingLinks();
+    renderListingPackages();
 
     if (l.availability) {
         document.getElementById('listMon').checked = l.availability.mon || false;
@@ -4269,10 +4325,12 @@ function resetServiceForm() {
     serviceGallery = [];
     serviceLinks = [];
     serviceRates = [{ label: '', amount: '' }];
+    servicePackages = [];
     renderServiceTags();
     renderServiceGalleryUpload();
     renderServiceLinks();
     renderServiceRates();
+    renderServicePackages();
     const addBtn = document.getElementById('serviceSubmitAddBtn');
     if (addBtn) addBtn.style.display = '';
     renderServicePhotoPreview();
@@ -4377,13 +4435,23 @@ function collectServiceLinks() {
 // SERVICE - Rates & Pricing (multiple rates)
 // ==========================================
 function addServiceRate() {
+    serviceRates = syncServiceRatesFromDom();
     serviceRates.push({ label: '', amount: '' });
     renderServiceRates();
 }
 
 function removeServiceRate(i) {
+    serviceRates = syncServiceRatesFromDom();
     serviceRates.splice(i, 1);
+    if (serviceRates.length === 0) serviceRates = [{ label: '', amount: '' }];
     renderServiceRates();
+}
+
+function syncServiceRatesFromDom() {
+    return (serviceRates || []).map((_, i) => ({
+        label: (document.querySelector(`#serviceRatesContainer input[data-rate-label="${i}"]`)?.value || '').trim(),
+        amount: (document.querySelector(`#serviceRatesContainer input[data-rate-amount="${i}"]`)?.value || '').trim()
+    }));
 }
 
 function renderServiceRates() {
@@ -4408,6 +4476,55 @@ function collectServiceRates() {
 
 function serviceRatesDisplay(rates) {
     return rates.map(r => (r.label ? r.label + ' \u2014 ' : '') + r.amount).join(' \u00b7 ');
+}
+
+// SERVICE - Booking Packages (max 5)
+function addServicePackage() {
+    servicePackages = syncServicePackagesFromDom();
+    if (servicePackages.length >= 5) { showToast('You can add up to 5 packages.', 'error'); return; }
+    servicePackages.push({ name: '', price: '', description: '' });
+    renderServicePackages();
+}
+
+function removeServicePackage(i) {
+    servicePackages = syncServicePackagesFromDom();
+    servicePackages.splice(i, 1);
+    renderServicePackages();
+}
+
+function syncServicePackagesFromDom() {
+    return (servicePackages || []).map((_, i) => ({
+        name: (document.querySelector(`#servicePackagesContainer input[data-pkg-name="${i}"]`)?.value || '').trim(),
+        price: (document.querySelector(`#servicePackagesContainer input[data-pkg-price="${i}"]`)?.value || '').trim(),
+        description: (document.querySelector(`#servicePackagesContainer input[data-pkg-desc="${i}"]`)?.value || '').trim()
+    }));
+}
+
+function renderServicePackages() {
+    const box = document.getElementById('servicePackagesContainer');
+    if (!box) return;
+    box.innerHTML = servicePackages.map((p, i) => `
+        <div style="display:flex;gap:8px;align-items:flex-start;flex-wrap:wrap;margin-bottom:10px;padding:10px;background:linear-gradient(135deg,#c9a22714,#c9a22708);border:1px solid #c9a22733;border-radius:10px">
+            <div style="flex:1;min-width:150px">
+                <input type="text" data-pkg-name="${i}" value="${escapeHtml(p.name)}" placeholder="Package name (e.g. Basic, VIP)" class="form-input">
+            </div>
+            <div style="flex:1;min-width:120px">
+                <input type="text" data-pkg-price="${i}" value="${escapeHtml(p.price)}" placeholder="Price (e.g. R500)" class="form-input">
+            </div>
+            <button type="button" class="btn btn-danger btn-sm" onclick="removeServicePackage(${i})"><i class="fas fa-times"></i></button>
+            <div style="flex:1 1 100%">
+                <input type="text" data-pkg-desc="${i}" value="${escapeHtml(p.description)}" placeholder="What's included (optional)" class="form-input">
+            </div>
+        </div>
+    `).join('');
+}
+
+function collectServicePackages() {
+    return (servicePackages || []).map((_, i) => ({
+        name: (document.querySelector(`#servicePackagesContainer input[data-pkg-name="${i}"]`)?.value || '').trim(),
+        price: (document.querySelector(`#servicePackagesContainer input[data-pkg-price="${i}"]`)?.value || '').trim(),
+        description: (document.querySelector(`#servicePackagesContainer input[data-pkg-desc="${i}"]`)?.value || '').trim()
+    })).filter(p => p.price).slice(0, 5);
 }
 
 function renderServiceGalleryUpload() {
@@ -4448,6 +4565,7 @@ function submitService(addAnother) {
     const serviceData = {
         rates,
         rate: serviceRatesDisplay(rates),
+        packages: collectServicePackages(),
         name: document.getElementById('serviceName').value.trim(),
         category: document.getElementById('serviceCategory').value,
         email: document.getElementById('serviceEmail').value.trim(),
@@ -4518,6 +4636,8 @@ function editService(id) {
         serviceRates = [{ label: '', amount: '' }];
     }
     renderServiceRates();
+    servicePackages = Array.isArray(s.packages) ? s.packages.slice(0, 5).map(p => ({ name: p.name || '', price: p.price || '', description: p.description || '' })) : [];
+    renderServicePackages();
     const addAnother = document.getElementById('serviceSubmitAddBtn');
     if (addAnother) addAnother.style.display = 'none';
     if (document.getElementById('serviceBookingFee')) document.getElementById('serviceBookingFee').value = s.bookingFee ?? '';
