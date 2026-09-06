@@ -1,22 +1,36 @@
 /* 2k2 Update Engine
-   Runs on every portal page. On load it fetches version.json (cache-busted)
-   and compares the served version with the last-applied version saved in
-   localStorage (k2_app_version).
+   Loaded (with a ?v= cache-buster) on EVERY portal page.
 
-   When an update is available:
-     - An "Update" entry is injected into the sidebar menu.
-     - A banner lists the incoming changes with Update Now / Remind Me Later.
-     - If the user does not update within 5 hours of first notice, the app
-       auto-updates (hard reload with a cache-busting query).
+   On load:
+     1. Fetches version.json (cache-busted via ?_t=Date.now()).
+     2. Promotes any CONFIRMED pending update (see handshake) and shows the
+        release-note toast.
+     3. Compares the served version with the last-applied version stored in
+        k2_app_version. If the served version is NEWER, an update entry is
+        injected into the sidebar, the change banner is shown, and the
+        5-hour auto-update is armed.
+     4. Re-checks every 5 minutes even while up-to-date, so long-lived tabs
+        still discover new releases without requiring a manual reload.
 
-   After an update is applied, the pending release notes are shown as a push
-   notification that auto-dismisses after 15 seconds. */
+   Update handshake (device/version control):
+     - k2_app_version is ONLY ever written with a version this device has
+       actually been SERVED.
+     - Triggering an update records the target in k2_app_version_pending and
+       hard-reloads the page.
+     - The reloaded page re-fetches version.json; if the served version
+       matches the pending target, the marker is promoted to k2_app_version
+       and the release notes toast is shown.
+     - If the served version does NOT match the target (reload aborted,
+       network dropped, server rolled back) nothing is stamped - the pending
+       marker is retried on the next load. A device can therefore never
+       believe it is running a build it did not actually receive. */
 (function () {
   'use strict';
 
   var LS_VERSION = 'k2_app_version';
   var LS_NOTICE = 'k2_upd_notice_at';
   var LS_NOTES = 'k2_upd_pending_notes';
+  var LS_PENDING = 'k2_app_version_pending';
   var AUTO_MS = 5 * 60 * 60 * 1000;
   var NOTES_CLOSE_MS = 15000;
   var RECHECK_MS = 5 * 60 * 1000;
@@ -24,6 +38,8 @@
   var info = null;
   var available = false;
   var applied = false;
+  var notified = false;
+  var timer = null;
 
   function get(key) { try { return localStorage.getItem(key); } catch (e) { return null; } }
   function set(key, val) { try { localStorage.setItem(key, val); } catch (e) {} }
@@ -33,6 +49,21 @@
   function escapeHtml(s) {
     if (s === null || s === undefined) return '';
     return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+  }
+
+  // Segment-wise version compare: "2.3.10" > "2.3.9".
+  // Returns 1 if a > b, -1 if a < b, 0 if equal.
+  function compareVers(a, b) {
+    var pa = String(a || '').split('.');
+    var pb = String(b || '').split('.');
+    var n = Math.max(pa.length, pb.length);
+    for (var i = 0; i < n; i++) {
+      var x = parseInt(pa[i], 10) || 0;
+      var y = parseInt(pb[i], 10) || 0;
+      if (x < y) return -1;
+      if (x > y) return 1;
+    }
+    return 0;
   }
 
   function fetchInfo(cb) {
@@ -151,19 +182,38 @@
     setTimeout(function () { if (toast.parentNode) toast.parentNode.removeChild(toast); }, 400);
   }
 
-  /* ---- Applying the update ---- */
-  function applyUpdate() {
-    if (applied) return;
-    applied = true;
-    if (info) {
-      set(LS_NOTES, JSON.stringify({
-        version: info.version,
-        title: info.title || '2k2 Updated',
-        notes: info.notes || []
-      }));
+  /* ---- Pending-update handshake ----
+     After a successful fetch, promote the pending target to k2_app_version
+     ONLY when the served version matches it. Returns true when promoted. */
+  function confirmPending() {
+    var raw = get(LS_PENDING);
+    if (!raw) return false;
+    var pend = null;
+    try { pend = JSON.parse(raw); } catch (e) {}
+    if (!pend || !pend.version) { del(LS_PENDING); return false; }
+    if (info && info.version && String(info.version) === String(pend.version)) {
       set(LS_VERSION, String(info.version));
+      if (pend.notes && pend.notes.length) {
+        set(LS_NOTES, JSON.stringify({ version: String(info.version), title: pend.title || '2k2 Updated', notes: pend.notes }));
+      }
+      del(LS_PENDING);
+      del(LS_NOTICE);
+      showNotesToast();
+      return true;
     }
-    del(LS_NOTICE);
+    return false; // target not served yet - retry on the next load
+  }
+
+  /* ---- Applying the update: mark pending, then hard-reload. ---- */
+  function applyUpdate() {
+    if (applied || !info || !info.version) return;
+    applied = true;
+    set(LS_PENDING, JSON.stringify({
+      version: String(info.version),
+      title: info.title || '2k2 Updated',
+      notes: info.notes || []
+    }));
+    if (!get(LS_NOTICE)) set(LS_NOTICE, String(Date.now()));
     var path = window.location.pathname;
     var sep = path.indexOf('?') === -1 ? '?' : '&';
     window.location.href = path + sep + 'k2u=' + Date.now() + (window.location.hash || '');
@@ -173,6 +223,46 @@
     if (!available || applied) return;
     var noticeAt = parseInt(get(LS_NOTICE) || '0', 10);
     if (noticeAt && Date.now() - noticeAt >= AUTO_MS) applyUpdate();
+  }
+
+  function presentUpdate() {
+    if (!available || applied) return;
+    if (!notified && !get(LS_PENDING)) {
+      notified = true;
+      setTimeout(maybeShowModal, 900);
+    }
+    checkAuto();
+  }
+
+  /* Central evaluation after each version.json fetch. */
+  function evaluateRemote() {
+    if (!info || !info.version) return;
+    confirmPending();
+
+    var local = get(LS_VERSION);
+    if (!local) { set(LS_VERSION, String(info.version)); del(LS_PENDING); return; }
+
+    if (compareVers(local, String(info.version)) >= 0) {
+      available = false;
+      notified = false;
+      return;
+    }
+
+    available = true;
+    injectNavItem();
+    if (!get(LS_NOTICE)) set(LS_NOTICE, String(Date.now()));
+    presentUpdate();
+  }
+
+  function startChecks() {
+    if (timer) return;
+    timer = setInterval(function () {
+      fetchInfo(function (remote) {
+        if (!remote || !remote.version) return;
+        info = remote;
+        evaluateRemote();
+      });
+    }, RECHECK_MS);
   }
 
   function ready(fn) {
@@ -191,22 +281,8 @@
     fetchInfo(function (remote) {
       if (!remote || !remote.version) return;
       info = remote;
-      var local = get(LS_VERSION);
-      if (!local) {
-        set(LS_VERSION, String(remote.version));
-        return;
-      }
-      if (local === String(remote.version)) return;
-
-      available = true;
-      injectNavItem();
-      if (get(LS_NOTICE)) { /* keep earliest notice time */ }
-      else set(LS_NOTICE, String(Date.now()));
-      checkAuto();
-      if (available && !applied) {
-        setTimeout(maybeShowModal, 900);
-        setInterval(checkAuto, RECHECK_MS);
-      }
+      evaluateRemote();
+      startChecks();
     });
   });
 })();

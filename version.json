@@ -1,9 +1,10 @@
 {
-  "version": "2.3.6",
-  "title": "Profile & Account-Type Badge on Mobile Menu",
+  "version": "2.3.7",
+  "title": "Reliable Update Delivery for Every Device",
   "notes": [
-    "Improved: the sidebar now shows your name and account type badge (General User / Service Provider / Admin) in the mobile menu on both portals",
-    "Improved: the badge appears instantly from your saved session and refreshes from the server when available — it no longer disappears just because the server is slow",
-    "Fixed: the Service Provider portal sidebar Logout button actually logs out now"
+    "Improved: updates are now applied only when your device has actually received the new version — no more false 'updated' states",
+    "Improved: version checks are ordered numerically, so a past version can never overwrite a newer one on any device",
+    "Improved: every page (including Login, Register, and Investor pages) now checks for updates, and open tabs re-check every few minutes while you browse",
+    "Improved: stronger cache-busting guarantees every device picks up the newest app files without manual clearing"
   ]
 }
