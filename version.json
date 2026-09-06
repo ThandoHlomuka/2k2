@@ -1,9 +1,9 @@
 {
-  "version": "2.3.2",
-  "title": "2k2 Mobile Onboarding",
+  "version": "2.3.3",
+  "title": "Upgrade to Provider — Verification First",
   "notes": [
-    "Fixed: onboarding walkthrough slides now scroll on mobile — nothing is squished or cut off",
-    "Improved: smaller phone screens (320px+) fit titles and pricing cards without horizontal scroll",
-    "Fixed: update popup buttons no longer cut off on small screens"
+    "Improved: tapping \"Upgrade to Service Provider\" now always lands you on identity verification (Step 1) before payment (Step 2)",
+    "Improved: immediately after your application is approved you're switched to your provider portal, where you can set up your business profile",
+    "Fixed: general users can no longer skip straight to the payment step — ID verification always comes first"
   ]
 }

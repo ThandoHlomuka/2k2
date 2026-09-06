@@ -5044,6 +5044,8 @@ h1, h2, h3, h4 {
     border: 1px solid var(--border, #f3eddd);
     border-radius: 14px;
     padding: 20px;
+    min-width: 0;
+    overflow: hidden;
     animation: analyticsCardIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) backwards;
 }
 
@@ -5065,7 +5067,12 @@ h1, h2, h3, h4 {
 .chart-wrap {
     position: relative;
     height: 220px;
+    width: 100%;
+    min-width: 0;
+    overflow: hidden;
 }
+
+.chart-wrap canvas { max-width: 100%; }
 
 .analytics-stats-row {
     display: grid;
@@ -5178,9 +5185,10 @@ h1, h2, h3, h4 {
 
 .dash-charts-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(min(260px, 100%), 1fr));
     gap: 20px;
     min-width: 0;
+    overflow: hidden;
 }
 
 @media (max-width: 768px) {
@@ -6715,6 +6723,7 @@ h1, h2, h3, h4 {
     inset: 0;
     z-index: 10000;
     background: #0a0a0a;
+    overflow-x: hidden;
     opacity: 0;
     visibility: hidden;
     pointer-events: none;

@@ -1488,13 +1488,13 @@ function closeAuthPrompt() { document.getElementById('authPromptModal')?.classLi
 function openSignInToast() { showToast('Please sign in to continue.', 'info'); }
 
 function applyAsProvider() {
-    window.location.href = currentAuthId() ? 'upgrade.html' : 'register.html?plan=provider';
+    window.location.href = currentAuthId() ? 'upgrade.html?verify=1' : 'register.html?plan=provider';
 }
 
 // Sidebar "Upgrade to Service Provider": signed-in users go to the subscription
 // plan flow; guests get the gated Join popup (subscription will pop up).
 function upgradeToProvider() {
-    if (currentAuthId()) { window.location.href = 'upgrade.html'; return; }
+    if (currentAuthId()) { window.location.href = 'upgrade.html?verify=1'; return; }
     requireSignIn('To upgrade to a Service Provider account. ');
 }
 
