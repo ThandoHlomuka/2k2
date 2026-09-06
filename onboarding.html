@@ -168,12 +168,22 @@
         @keyframes glowPulse { 0%, 100% { opacity: 0.1; transform: scale(1); } 50% { opacity: 0.2; transform: scale(1.2); } }
 
         @media (max-width: 768px) {
-            .welcome-title { font-size: 2.4rem; }
-            .slide-content { padding: 30px 20px; }
+            .onboarding-container { overflow-x: hidden; }
+            .slide { align-items: flex-start; overflow-y: auto; overflow-x: hidden; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+            .slide::-webkit-scrollbar { display: none; }
+            .slide .slide-content, .slide .slide-content.wide { margin: auto; width: auto; max-width: 100%; box-sizing: border-box; }
+            .slide-content { padding: 40px 20px 130px; }
+            .slide-content.wide { padding: 20px 14px 120px; max-width: 100%; max-height: 100vh; }
+            .welcome-title { font-size: 2.1rem !important; }
+            .welcome-crown { font-size: 2rem; }
+            .welcome-subtitle { font-size: 1.1rem; }
+            .welcome-desc { font-size: 0.85rem; margin-bottom: 20px; }
+            .slide-content { padding: 30px 20px 130px; }
             .feature-cards { grid-template-columns: 1fr; }
             .pricing-grid { grid-template-columns: 1fr; }
             .slide-icon-circle { width: 52px; height: 52px; font-size: 1.1rem; }
-            .onboarding-nav { padding: 20px 20px 32px; }
+            .onboarding-nav { padding: 12px 14px 22px; }
+            .pricing-features { max-height: 190px; }
         }
     </style>
 </head>

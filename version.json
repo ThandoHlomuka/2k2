@@ -1,8 +1,9 @@
 {
-  "version": "2.3.1",
-  "title": "2k2 Update Notifications",
+  "version": "2.3.2",
+  "title": "2k2 Mobile Onboarding",
   "notes": [
-    "Fixed: update notification buttons no longer cut off on small screens",
-    "Removed the visible Admin Portal button from menus — admin access is now discreet and role-protected only"
+    "Fixed: onboarding walkthrough slides now scroll on mobile — nothing is squished or cut off",
+    "Improved: smaller phone screens (320px+) fit titles and pricing cards without horizontal scroll",
+    "Fixed: update popup buttons no longer cut off on small screens"
   ]
 }

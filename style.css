@@ -7053,6 +7053,50 @@ h1, h2, h3, h4 {
     border-radius: 4px;
 }
 
+/* Mobile onboarding: slides scroll vertically, content clears the fixed nav,
+   titles fit (inline font-sizes lose to !important), pricing caps its list. */
+@media (max-width: 768px) {
+    .onboarding-overlay { overflow-x: hidden; }
+    .onb-slide {
+        align-items: flex-start;
+        overflow-y: auto;
+        overflow-x: hidden;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+    }
+    .onb-slide::-webkit-scrollbar { display: none; }
+    .onb-slide .onb-content,
+    .onb-slide .onb-content-wide {
+        margin: auto;
+        width: auto;
+        max-width: 100%;
+        min-width: 0;
+        box-sizing: border-box;
+    }
+    .onb-content {
+        padding: 40px 16px 130px;
+    }
+    .onb-content-wide {
+        max-width: 100%;
+        padding: 20px 14px 120px;
+        max-height: 100vh;
+    }
+    .onb-title {
+        font-size: 2.1rem !important;
+    }
+    .onb-subtitle { font-size: 1.05rem; margin-bottom: 10px; }
+    .onb-desc { font-size: 0.85rem; margin-bottom: 16px; }
+    .onb-crown { font-size: 2rem; margin-bottom: 8px; }
+    .onb-icons { margin-top: 14px; }
+    .onb-nav { padding: 12px 14px 22px; }
+    .onb-pricing-card { padding: 14px 12px; }
+    .onb-pricing-features {
+        max-height: 190px;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+}
+
 /* ==========================================
    Onboarding - Pricing Grid
    ========================================== */
