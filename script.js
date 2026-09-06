@@ -5457,6 +5457,9 @@ function viewContent(id) {
     if (!item) { showToast('Content not found.', 'error'); return; }
 
     currentContentViewId = id;
+    item.views = (item.views || 0) + 1;
+    const ci = content.indexOf(item);
+    if (ci >= 0) { content[ci] = item; Storage.setContent(content); }
     const type = CONTENT_TYPES[item.type] || { label: item.type, icon: 'fa-file', color: '#8a7b55' };
     const authorName = resolveProviderAuthorName(item, 'Unknown Creator');
     const isPaid = item.price && item.price > 0;
@@ -8732,6 +8735,26 @@ function filterSavedItems(filter) {
     renderSavedItems();
 }
 
+// Icon + text summary row for content library cards (views / reactions /
+// comments / download date) following the app-wide meta style.
+function buildContentSummary(itemId, s) {
+    const c = Storage.getContent().find(x => x.id === itemId);
+    const views = c ? (c.views || 0) : 0;
+    const reactions = c ? Storage.getContentReactions().filter(r => r.contentId === c.id) : [];
+    const likeCount = reactions.filter(r => r.type === 'like').length;
+    const totalReactions = reactions.length;
+    const comments = c ? Storage.getContentComments().filter(x => x.contentId === c.id).length : 0;
+    const when = s.downloadedAt || s.createdAt;
+    const whenLabel = when ? getTimeAgo(when) : '';
+    const dlLabel = s.downloadedAt ? 'Downloaded ' + (whenLabel || '') : 'Saved ' + (whenLabel || '');
+    const parts = [];
+    parts.push(`<span title="${views} views"><i class="fas fa-eye"></i> ${views}</span>`);
+    parts.push(`<span title="${totalReactions} reactions"><i class="fas ${likeCount > 0 ? 'fa-thumbs-up' : 'fa-heart'}"></i> ${totalReactions}</span>`);
+    parts.push(`<span title="${comments} comments"><i class="fas fa-comment"></i> ${comments}</span>`);
+    parts.push(`<span title="${dlLabel}"><i class="fas fa-download"></i> ${dlLabel}</span>`);
+    return `<div class="saved-item-stats">${parts.join('')}</div>`;
+}
+
 function renderSavedItems() {
     migrateLegacyDownloads();
 
@@ -8772,12 +8795,14 @@ function renderSavedItems() {
             ? `<div class="online-user-avatar initials" style="background:transparent;overflow:hidden"><img src="${s.thumb}" alt="" style="width:100%;height:100%;object-fit:cover"></div>`
             : `<div class="online-user-avatar initials" style="background:${s.color || '#64748b'}"><i class="fas ${s.icon || 'fa-bookmark'}"></i></div>`;
         const purchaseTag = s.isPurchase ? '<span class="mini-tag" style="background:#10b98118;color:#10b981;margin-left:4px">Purchased</span>' : '';
+        const summary = s.kind === 'content' ? buildContentSummary(s.itemId, s) : '';
         return `
             <div class="online-user-card" onclick="openSavedItem('${s.kind}','${s.itemId}')">
                 <div class="online-user-avatar-wrap">${avatarHtml}</div>
                 <div class="online-user-info">
                     <div class="online-user-name">${escapeHtml(s.title)} <span class="mini-tag" style="background:${s.color || '#64748b'}18;color:${s.color || '#64748b'}">${s.kind.replace('-', ' ')}</span>${purchaseTag}</div>
                     <div class="online-user-loc">${escapeHtml(s.sub || '')} &middot; ${getTimeAgo(s.createdAt)}</div>
+                    ${summary}
                 </div>
                 <div class="online-user-actions">
                     <button class="btn btn-secondary btn-sm" onclick="event.stopPropagation(); openSavedItem('${s.kind}','${s.itemId}')"><i class="fas fa-eye"></i> View</button>
@@ -8922,6 +8947,11 @@ function logDownload({ kind, itemId, title, sub, fileData, fileType }) {
     // 2) Library entry = thumbnail + link (redirects to the content page where
     //    the real re-download lives). Pregnancy of the blob is avoided.
     addToSavedLibrary(kind, itemId);
+    try {
+        const saved = Storage.getSavedItems();
+        const entry = saved.find(s => s.kind === kind && s.itemId === itemId);
+        if (entry) { entry.downloadedAt = new Date().toISOString(); Storage.setSavedItems(saved); }
+    } catch (e) {}
     // 3) Always trigger the actual file download from the live content bytes.
     const a = document.createElement('a');
     a.href = fileData;

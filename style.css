@@ -6045,6 +6045,28 @@ h1, h2, h3, h4 {
     font-size: 0.75rem;
 }
 
+.saved-item-stats {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    flex-wrap: wrap;
+    font-size: 0.78rem;
+    color: var(--text-muted, #a99c7e);
+    margin-top: 6px;
+}
+
+.saved-item-stats span {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    white-space: nowrap;
+}
+
+.saved-item-stats i {
+    font-size: 0.72rem;
+    opacity: 0.9;
+}
+
 .forum-thread-tags {
     display: flex;
     gap: 6px;
