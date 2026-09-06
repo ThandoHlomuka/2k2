@@ -299,7 +299,8 @@
         </nav>
 
         <div class="sidebar-footer">
-            <a href="#" class="nav-item">
+            <div id="authUserInfo" style="display:none;padding:8px 16px;font-size:12px;color:#a99c7e;border-top:1px solid var(--border,#e6dec8);margin-bottom:6px"></div>
+            <a href="#" class="nav-item" id="logoutLink">
                 <i class="fas fa-sign-out-alt"></i>
                 <span>Logout</span>
             </a>
@@ -5009,6 +5010,68 @@
           if (!profile || (profile.role !== 'provider' && profile.role !== 'admin')) { window.location.href = 'upgrade.html'; return; }
           try { await window._2k2.Auth.refreshSyncUser(); } catch (e) {}
           var veil = document.getElementById('k2-gate-veil'); if (veil) veil.remove();
+        })();
+      });
+    })();
+    </script>
+    <script>
+    // Session-aware sidebar footer: account chip + role badge + working logout.
+    (function () {
+      document.addEventListener('DOMContentLoaded', function () {
+        var info = document.getElementById('authUserInfo');
+        var logout = document.getElementById('logoutLink');
+        var done = false;
+        function escapeHtml(s) {
+          return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+        }
+        function render(user, role, username) {
+          if (!info || !logout) return;
+          if (user) {
+            logout.style.display = 'flex';
+            info.style.display = 'block';
+            var name = username || user.email || (user.user_metadata && user.user_metadata.full_name) || 'Account';
+            var rl = role === 'admin' ? 'Admin' : 'Service Provider';
+            var rc = role === 'admin' ? '#8b5cf6' : '#34d399';
+            info.innerHTML = '<div style="display:flex;flex-direction:column;gap:3px">' +
+              '<span style="font-weight:700;color:#fdf9ef;font-size:13px"><i class="fas fa-user-circle" style="margin-right:6px"></i>' + escapeHtml(name) + '</span>' +
+              '<span style="align-self:flex-start;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:#0a0a0a;background:' + rc + ';padding:2px 8px;border-radius:50px">' + escapeHtml(rl) + '</span>' +
+              '</div>';
+          } else {
+            logout.style.display = 'none';
+            info.style.display = 'none';
+          }
+        }
+        if (logout) logout.addEventListener('click', async function (e) {
+          e.preventDefault();
+          try { await window._2k2.Auth.signOut(); } catch (err) {}
+          try { localStorage.removeItem('k2_current_user'); } catch (err) {}
+          sessionStorage.removeItem('k2_auth_user_id');
+          window.location.href = 'login.html?next=provider.html';
+        });
+        (async function () {
+          var mirror = null;
+          try { mirror = JSON.parse(localStorage.getItem('k2_current_user') || 'null'); } catch (e) { mirror = null; }
+          function mirrorName() {
+            if (!mirror || !mirror.user_id) return '';
+            try {
+              var mu = Storage.getUsers().find(function (x) { return x.id === mirror.user_id; });
+              if (mu && mu.fullName) return mu.fullName;
+            } catch (e) {}
+            return mirror.email ? mirror.email.split('@')[0].replace(/[._-]+/g, ' ').trim() : '';
+          }
+          if (mirror && mirror.user_id) {
+            render({ id: mirror.user_id, email: mirror.email || '' }, mirror.role || 'provider', mirrorName());
+          } else {
+            render(null);
+          }
+          try {
+            var user = await window._2k2.Auth.currentUser();
+            if (!user) return;
+            await window._2k2.Auth.refreshSyncUser();
+            var profile = await window._2k2.Auth.getProfile();
+            var role = profile ? profile.role : (mirror ? mirror.role : null);
+            render(user, role || 'provider', profile ? (profile.username || profile.display_name || profile.full_name || '') : '');
+          } catch (e) { /* keep mirror badge */ }
         })();
       });
     })();

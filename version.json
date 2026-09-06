@@ -1,8 +1,9 @@
 {
-  "version": "2.3.5",
-  "title": "Saved Items — Content Summaries",
+  "version": "2.3.6",
+  "title": "Profile & Account-Type Badge on Mobile Menu",
   "notes": [
-    "Improved: Saved Items content cards now show a quick summary in icons + text — views, reactions, comments and download date — matching the meta style across the app",
-    "Improved: content views are now counted every time someone opens an item"
+    "Improved: the sidebar now shows your name and account type badge (General User / Service Provider / Admin) in the mobile menu on both portals",
+    "Improved: the badge appears instantly from your saved session and refreshes from the server when available — it no longer disappears just because the server is slow",
+    "Fixed: the Service Provider portal sidebar Logout button actually logs out now"
   ]
 }

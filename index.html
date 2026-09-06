@@ -3871,15 +3871,34 @@
           window.location.href = 'login.html';
         });
         (async function () {
+          // Render instantly from the local sync mirror (k2_current_user) so a
+          // signed-in badge appears even before the Supabase round-trip, and
+          // stays correct while Supabase is slow or briefly unreachable.
+          var mirror = null;
+          try { mirror = JSON.parse(localStorage.getItem('k2_current_user') || 'null'); } catch (e) { mirror = null; }
+          function mirrorName() {
+            if (!mirror || !mirror.user_id) return '';
+            try {
+              var mu = Storage.getUsers().find(function (x) { return x.id === mirror.user_id; });
+              if (mu && mu.fullName) return mu.fullName;
+            } catch (e) {}
+            return mirror.email ? mirror.email.split('@')[0].replace(/[._-]+/g, ' ').trim() : '';
+          }
+          if (mirror && mirror.user_id) {
+            render({ id: mirror.user_id, email: mirror.email || '' }, mirror.role || null, mirrorName());
+          } else {
+            render(null);
+          }
+          // Refresh with live Supabase data when available.
           try {
             var user = await window._2k2.Auth.currentUser();
-            if (!user) { render(null); return; }
+            if (!user) return; // keep the mirror badge if Supabase is unavailable
             await window._2k2.Auth.refreshSyncUser();
             var profile = await window._2k2.Auth.getProfile();
-            var role = profile ? profile.role : null;
+            var role = profile ? profile.role : (mirror ? mirror.role : null);
             if (role === 'provider') { window.location.href = 'provider.html'; return; }
-            render(user, role, profile ? (profile.username || '') : '');
-          } catch (e) { render(null); }
+            render(user, role, profile ? (profile.username || profile.display_name || profile.full_name || '') : '');
+          } catch (e) { /* keep mirror badge */ }
         })();
       });
     })();

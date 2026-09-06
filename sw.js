@@ -7,7 +7,7 @@
      offline the last-cached response is served, and navigation falls back to
      the cached homepage shell.
    - Cache name is versioned; old caches are purged on activate. */
-const CACHE = '2k2-v7';
+const CACHE = '2k2-v8';
 
 const STABLE_ASSETS = [
   './pwa.js',
