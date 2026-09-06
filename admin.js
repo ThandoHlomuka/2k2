@@ -3789,8 +3789,9 @@ function adminPreviewDownload(id) {
     if (!d) return;
     const fileType = (d.fileType || '').toLowerCase();
     let body = `<p class="admin-view-row"><span class="label">Title</span><span class="value">${escapeHtml(d.title)}</span></p>`;
-    body += `<p class="admin-view-row"><span class="label">Type</span><span class="value">${escapeHtml(d.kind)}</span></p>`;
-    if (fileType.startsWith('image/') || fileType.startsWith('video/') || fileType.startsWith('audio/')) {
+    body += `<p class="admin-view-row"><span class="label">Type</span><span class="value">${escapeHtml(d.kind || 'file')}</span></p>`;
+    body += `<p class="admin-view-row"><span class="label">Downloaded</span><span class="value">${fmtDate(d.createdAt)}</span></p>`;
+    if (d.fileData && (fileType.startsWith('image/') || fileType.startsWith('video/') || fileType.startsWith('audio/'))) {
         body += `<div style="margin:16px 0"><img src="${d.fileData}" alt="${escapeHtml(d.title)}" style="max-width:100%;max-height:240px;border-radius:12px;object-fit:contain"></div>`;
     }
     showAdminView(body);

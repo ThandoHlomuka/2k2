@@ -626,7 +626,7 @@ function navigateTo(page) {
     if (page === 'online-users') { populateOnlineCityFilters(); renderOnlineUsers(); }
     if (page === 'help-queries') prefillHelpForm();
     if (page === 'saved-items') renderSavedItems();
-    if (page === 'downloads') renderDownloads();
+    if (page === 'downloads') { navigateTo('saved-items'); return; }
     if (page === 'experiences-browse') renderExperiencesBrowse();
     if (page === 'experiences-my') renderMyGames();
     if (page === 'fantasy-requests') { populateFantasyDropdowns(); renderFantasyRequests(); }
@@ -687,7 +687,7 @@ function rerenderCurrentPage() {
         'page-message-view': () => renderMessageThread(),
         'page-online-users': () => renderOnlineUsers(),
         'page-saved-items': () => renderSavedItems(),
-        'page-downloads': () => renderDownloads(),
+        'page-downloads': () => navigateTo('saved-items'),
         'page-experiences-browse': () => renderExperiencesBrowse(),
         'page-experiences-my': () => renderMyGames(),
         'page-fantasy-requests': () => renderFantasyRequests(),
@@ -8703,7 +8703,7 @@ function toggleSaveItem(kind, id) {
         showToast('Removed from saved items.');
     } else {
         const meta = getSaveableMeta(kind, id);
-        saved.push({ id: generateId(), kind, itemId: id, title: meta.title, sub: meta.sub, icon: meta.icon, color: meta.color, createdAt: new Date().toISOString() });
+        saved.push({ id: generateId(), kind, itemId: id, title: meta.title, sub: meta.sub, icon: meta.icon, color: meta.color, thumb: getSaveableThumb(kind, id), createdAt: new Date().toISOString() });
         Storage.setSavedItems(saved);
         showToast('Saved item added.');
     }
@@ -8733,37 +8733,92 @@ function filterSavedItems(filter) {
 }
 
 function renderSavedItems() {
-    let items = [...Storage.getSavedItems()].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-    if (currentSavedFilter !== 'all') items = items.filter(s => s.kind === currentSavedFilter);
+    migrateLegacyDownloads();
 
+    const saved = [...Storage.getSavedItems()].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    const purchased = getPurchasedContentItems();
     const search = (document.getElementById('savedSearch')?.value || '').toLowerCase();
-    if (search) items = items.filter(s => (s.title || '').toLowerCase().includes(search) || (s.sub || '').toLowerCase().includes(search));
+
+    let filtered;
+    if (currentSavedFilter === 'purchases') {
+        filtered = purchased.map(c => ({
+            kind: 'content',
+            itemId: c.id,
+            title: c.title,
+            sub: c.sub || (c.creatorName || 'Content'),
+            icon: 'fa-photo-film',
+            color: '#0ea5e9',
+            thumb: (c.type === 'image' || c.type === 'gif') ? c.fileData : null,
+            createdAt: c.createdAt,
+            isPurchase: true
+        }));
+    } else {
+        filtered = [...saved];
+        if (currentSavedFilter !== 'all') filtered = filtered.filter(s => s.kind === currentSavedFilter);
+    }
+
+    if (search) {
+        filtered = filtered.filter(s => (s.title || '').toLowerCase().includes(search) || (s.sub || '').toLowerCase().includes(search));
+    }
 
     const container = document.getElementById('savedItemsList');
     const countEl = document.getElementById('savedCount');
-    if (countEl) countEl.textContent = items.length;
+    if (countEl) countEl.textContent = filtered.length;
     if (!container) return;
 
-    if (items.length === 0) {
-        container.innerHTML = '<div class="forum-empty"><i class="fas fa-bookmark-o"></i><h3>No saved items</h3><p>Tap the bookmark icon on profiles, venues, services, content & more to save them here</p></div>';
-        return;
-    }
+    const makeCard = (s) => {
+        const hasThumb = s.thumb && s.thumb.length > 100;
+        const avatarHtml = hasThumb
+            ? `<div class="online-user-avatar initials" style="background:transparent;overflow:hidden"><img src="${s.thumb}" alt="" style="width:100%;height:100%;object-fit:cover"></div>`
+            : `<div class="online-user-avatar initials" style="background:${s.color || '#64748b'}"><i class="fas ${s.icon || 'fa-bookmark'}"></i></div>`;
+        const purchaseTag = s.isPurchase ? '<span class="mini-tag" style="background:#10b98118;color:#10b981;margin-left:4px">Purchased</span>' : '';
+        return `
+            <div class="online-user-card" onclick="openSavedItem('${s.kind}','${s.itemId}')">
+                <div class="online-user-avatar-wrap">${avatarHtml}</div>
+                <div class="online-user-info">
+                    <div class="online-user-name">${escapeHtml(s.title)} <span class="mini-tag" style="background:${s.color || '#64748b'}18;color:${s.color || '#64748b'}">${s.kind.replace('-', ' ')}</span>${purchaseTag}</div>
+                    <div class="online-user-loc">${escapeHtml(s.sub || '')} &middot; ${getTimeAgo(s.createdAt)}</div>
+                </div>
+                <div class="online-user-actions">
+                    <button class="btn btn-secondary btn-sm" onclick="event.stopPropagation(); openSavedItem('${s.kind}','${s.itemId}')"><i class="fas fa-eye"></i> View</button>
+                    ${s.isPurchase ? '' : `<button class="btn btn-danger btn-sm" onclick="event.stopPropagation(); removeSavedItem('${s.id}')"><i class="fas fa-trash"></i></button>`}
+                </div>
+            </div>`;
+    };
 
-    container.innerHTML = items.map(s => `
-        <div class="online-user-card">
-            <div class="online-user-avatar-wrap">
-                <div class="online-user-avatar initials" style="background:${s.color}"><i class="fas ${s.icon}"></i></div>
-            </div>
-            <div class="online-user-info">
-                <div class="online-user-name">${escapeHtml(s.title)} <span class="mini-tag" style="background:${s.color}18;color:${s.color}">${s.kind.replace('-', ' ')}</span></div>
-                <div class="online-user-loc">${escapeHtml(s.sub || '')}</div>
-            </div>
-            <div class="online-user-actions">
-                <button class="btn btn-secondary btn-sm" onclick="openSavedItem('${s.kind}','${s.itemId}')"><i class="fas fa-eye"></i> View</button>
-                <button class="btn btn-danger btn-sm" onclick="removeSavedItem('${s.id}')"><i class="fas fa-trash"></i></button>
-            </div>
-        </div>
-    `).join('');
+    if (currentSavedFilter === 'all' && !search) {
+        const groups = {};
+        filtered.forEach(s => {
+            if (!groups[s.kind]) groups[s.kind] = [];
+            groups[s.kind].push(s);
+        });
+        const order = ['content','profile','venue','service','event','ad','gig','forum-thread'];
+        let html = '';
+        order.forEach(k => {
+            const g = groups[k]; if (!g) return;
+            const meta = getSaveableMeta(k, '');
+            html += `<div style="font-size:.72rem;font-weight:700;text-transform:uppercase;color:var(--text-secondary);padding:12px 0 4px;border-top:1px solid var(--border)"><i class="fas ${meta.icon}" style="margin-right:6px"></i>${k.replace('-',' ')}s (${g.length})</div>`;
+            g.forEach(s => html += makeCard(s));
+        });
+        if (purchased.length > 0 && !groups['content']) {
+            const p = purchased;
+            html += `<div style="font-size:.72rem;font-weight:700;text-transform:uppercase;color:var(--text-secondary);padding:12px 0 4px;border-top:1px solid var(--border)"><i class="fas fa-bag-shopping" style="margin-right:6px"></i>Purchases (${p.length})</div>`;
+            p.forEach(c => html += makeCard({
+                kind: 'content', itemId: c.id, title: c.title,
+                sub: c.sub || (c.creatorName || 'Content'),
+                icon: 'fa-photo-film', color: '#0ea5e9',
+                thumb: (c.type === 'image' || c.type === 'gif') ? c.fileData : null,
+                createdAt: c.createdAt, isPurchase: true
+            }));
+        }
+        container.innerHTML = html || '<div class="forum-empty"><i class="fas fa-bookmark-o"></i><h3>No saved items</h3><p>Tap the bookmark icon on profiles, venues, services, content & more to save them here</p></div>';
+    } else {
+        if (filtered.length === 0) {
+            container.innerHTML = '<div class="forum-empty"><i class="fas fa-bookmark-o"></i><h3>No saved items</h3><p>Tap the bookmark icon on profiles, venues, services, content & more to save them here</p></div>';
+        } else {
+            container.innerHTML = filtered.map(makeCard).join('');
+        }
+    }
 }
 
 function openSavedItem(kind, id) {
@@ -8792,85 +8847,89 @@ function removeSavedItem(id) {
     renderSavedItems();
 }
 
+function getPurchasedContentItems() {
+    const uid = currentAuthId();
+    if (!uid) return [];
+    return Storage.getContent().filter(c => c.price && c.price > 0 && (c.purchasedBy || []).includes(uid));
+}
+
+// One-time migration: legacy downloads stored blobs in k2_downloads. Convert
+// them into lightweight library entries (thumbnail + link) and drop the blobs
+// so localStorage stays under quota.
+function migrateLegacyDownloads() {
+    try {
+        if (localStorage.getItem('k2_dl_migrated_1')) return;
+        const dl = Storage.getDownloads();
+        let changed = false;
+        dl.forEach(d => {
+            if (d.fileData) {
+                addToSavedLibrary(d.kind || 'content', d.itemId);
+                delete d.fileData;
+                delete d.fileType;
+                changed = true;
+            }
+        });
+        if (changed) Storage.setDownloads(dl);
+        localStorage.setItem('k2_dl_migrated_1', '1');
+    } catch (e) {}
+}
+
+function getSaveableThumb(kind, id) {
+    // Tiny thumbnail reference for content items (image/gif only) so library
+    // entries link back to the content page instead of vaulting full blobs.
+    if (kind === 'content') {
+        const c = Storage.getContent().find(x => x.id === id);
+        if (c && (c.type === 'image' || c.type === 'gif') && c.fileData && c.fileData.length > 100 && c.fileData.length <= 150000) return c.fileData;
+    }
+    return null;
+}
+
+function addToSavedLibrary(kind, id) {
+    try {
+        if (isItemSaved(kind, id)) return;
+        const meta = getSaveableMeta(kind, id);
+        const saved = Storage.getSavedItems();
+        saved.push({
+            id: generateId(),
+            kind,
+            itemId: id,
+            title: meta.title,
+            sub: meta.sub,
+            icon: meta.icon,
+            color: meta.color,
+            thumb: getSaveableThumb(kind, id),
+            createdAt: new Date().toISOString()
+        });
+        Storage.setSavedItems(saved);
+    } catch (e) {}
+}
+
 function logDownload({ kind, itemId, title, sub, fileData, fileType }) {
+    const meta = getSaveableMeta(kind, itemId);
+    // 1) Lightweight metadata-only record for the admin console (no blob).
     const dl = Storage.getDownloads();
     if (!dl.some(d => d.kind === kind && d.itemId === itemId)) {
-        const meta = getSaveableMeta(kind, itemId);
         dl.push({
             id: generateId(),
             kind,
             itemId,
             title: title || meta.title,
             sub: sub || meta.sub,
-            fileData,
-            fileType: fileType || 'application/octet-stream',
             createdAt: new Date().toISOString()
         });
         Storage.setDownloads(dl);
     }
+    // 2) Library entry = thumbnail + link (redirects to the content page where
+    //    the real re-download lives). Pregnancy of the blob is avoided.
+    addToSavedLibrary(kind, itemId);
+    // 3) Always trigger the actual file download from the live content bytes.
     const a = document.createElement('a');
     a.href = fileData;
     a.download = (title || meta.title || 'download') + '.' + (fileType || 'file').split('/').pop();
     document.body.appendChild(a);
     a.click();
     a.remove();
-    showToast('Download started.');
-}
-
-function filterDownloads(filter) {
-    document.querySelectorAll('#page-downloads .filter-tab').forEach(t => t.classList.remove('active'));
-    if (event && event.target) event.target.closest('.filter-tab')?.classList.add('active');
-    renderDownloads();
-}
-
-function renderDownloads() {
-    let items = [...Storage.getDownloads()].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-    const search = (document.getElementById('downloadsSearch')?.value || '').toLowerCase();
-    if (search) items = items.filter(d => (d.title || '').toLowerCase().includes(search));
-
-    const container = document.getElementById('downloadsList');
-    const countEl = document.getElementById('downloadsCount');
-    if (countEl) countEl.textContent = items.length;
-    if (!container) return;
-
-    if (items.length === 0) {
-        container.innerHTML = '<div class="forum-empty"><i class="fas fa-download"></i><h3>No downloads yet</h3><p>Files you download from content creators will appear here</p></div>';
-        return;
-    }
-
-    container.innerHTML = items.map(d => `
-        <div class="online-user-card">
-            <div class="online-user-avatar-wrap">
-                <div class="online-user-avatar initials" style="background:${d.color || '#0ea5e9'}"><i class="fas fa-file"></i></div>
-            </div>
-            <div class="online-user-info">
-                <div class="online-user-name">${escapeHtml(d.title)} <span class="mini-tag" style="background:#0ea5e918;color:#0ea5e9">${escapeHtml(d.kind || 'file')}</span></div>
-                <div class="online-user-loc">${escapeHtml(d.sub || '')} &middot; ${getTimeAgo(d.createdAt)}</div>
-            </div>
-            <div class="online-user-actions">
-                <button class="btn btn-primary btn-sm" onclick="reDownload('${d.id}')"><i class="fas fa-download"></i> Download</button>
-                <button class="btn btn-danger btn-sm" onclick="deleteDownload('${d.id}')"><i class="fas fa-trash"></i></button>
-            </div>
-        </div>
-    `).join('');
-}
-
-function reDownload(id) {
-    const d = Storage.getDownloads().find(x => x.id === id);
-    if (!d) return;
-    const a = document.createElement('a');
-    a.href = d.fileData;
-    a.download = d.title + '.' + (d.fileType || 'file').split('/').pop();
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    showToast('Download started.');
-}
-
-function deleteDownload(id) {
-    Storage.setDownloads(Storage.getDownloads().filter(d => d.id !== id));
-    showToast('Download removed.');
-    renderDownloads();
+    showToast('Download started \u2014 find it anytime under Saved Items > Content.');
 }
 
 // ==========================================
@@ -9686,7 +9745,6 @@ const PORT_TOUR_STEPS = {
         { id: 'tourBookings', el: () => document.querySelector('#sidebar .nav-item[data-page="user-bookings"]'), title: 'My Bookings', text: 'Track your bookings, confirmations and any booking fees paid.' },
         { id: 'tourWallet', el: () => document.querySelector('#sidebar .nav-item[data-page="user-wallet"]'), title: 'My Wallet', text: 'Top up, withdraw and keep track of your balance and transactions.' },
         { id: 'tourSaved', el: () => document.querySelector('#sidebar .nav-item[data-page="saved-items"]'), title: 'Saved Items', text: 'One place to view every profile, listing or item you have bookmarked.' },
-        { id: 'tourDownloads', el: () => document.querySelector('#sidebar .nav-item[data-page="downloads"]'), title: 'Downloads', text: 'Access the premium content you have purchased or downloaded.' },
         { id: 'tourUserSettings', el: () => document.querySelector('#sidebar .nav-item[data-page="user-settings"]'), title: 'Settings', text: 'Manage your account, privacy and notification preferences.' },
         { id: 'tourSwitchProvider', el: () => document.querySelector('#sidebar .nav-item[href="provider.html"]'), title: 'Service Provider Portal', text: 'Switch to the provider portal to sell services, host events and start earning.' },
         { id: 'tourHowItWorks', el: () => document.querySelector('#sidebar .nav-item[data-page="how-it-works"]'), title: 'How It Works', text: 'Learn how 2k2 works - costs, features and how to get started.' },
@@ -9733,7 +9791,6 @@ const PORT_TOUR_STEPS = {
         { id: 'tourPFantasy', el: () => document.querySelector('#sidebar .nav-item[data-page="provider-fantasy-requests"]'), title: 'Fantasy Requests', text: 'Browse and respond to fantasy requests from members.' },
         { id: 'tourPWallet', el: () => document.querySelector('#sidebar .nav-item[data-page="provider-wallet"]'), title: 'My Earnings', text: 'Track earnings, withdrawals and your wallet balance.' },
         { id: 'tourSaved', el: () => document.querySelector('#sidebar .nav-item[data-page="saved-items"]'), title: 'Saved Items', text: 'Items you have saved across the platform.' },
-        { id: 'tourPDownloads', el: () => document.querySelector('#sidebar .nav-item[data-page="downloads"]'), title: 'Downloads', text: 'Files and content you have downloaded.' },
         { id: 'tourPSwitchUser', el: () => document.querySelector('#sidebar .nav-item[href="index.html"]'), title: 'General User Portal', text: 'Switch back to the general user view of the app.' },
         { id: 'tourPsettings', el: () => document.querySelector('#sidebar .nav-item[data-page="provider-settings"]'), title: 'Settings', text: 'Manage your provider account settings.' },
         { id: 'tourPHowItWorks', el: () => document.querySelector('#sidebar .nav-item[data-page="how-it-works"]'), title: 'How It Works', text: 'Understand how the provider side of 2k2 works.' }

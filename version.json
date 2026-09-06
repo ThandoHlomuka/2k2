@@ -1,9 +1,10 @@
 {
-  "version": "2.3.3",
-  "title": "Upgrade to Provider — Verification First",
+  "version": "2.3.4",
+  "title": "Downloads & Saved Items Rework",
   "notes": [
-    "Improved: tapping \"Upgrade to Service Provider\" now always lands you on identity verification (Step 1) before payment (Step 2)",
-    "Improved: immediately after your application is approved you're switched to your provider portal, where you can set up your business profile",
-    "Fixed: general users can no longer skip straight to the payment step — ID verification always comes first"
+    "Improved: \"Downloads\" is now part of Saved Items — no separate menu entry on either portal",
+    "Improved: files you download are kept as thumbnails + links (not heavy copies), redirecting to the content page to re-download",
+    "Improved: purchased content now appears in Saved Items under a new Purchases tab, grouped by category",
+    "Improved: single content pages still have their Download button — the file downloads straight from the live content, nothing is copied into your browser storage"
   ]
 }
