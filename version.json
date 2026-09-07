@@ -1,9 +1,10 @@
 {
-  "version": "2.3.9",
-  "title": "Sign In to Engage - Browse Freely, Unlock with an Account",
+  "version": "2.3.10",
+  "title": "Venue Bookings - Calendar, Escrow & Address on Confirmation",
   "notes": [
-    "New: guests can browse the community, directories and marketplaces freely, and must create a free account to open detail views (content, listings, venues, ads, services, events, forum threads, gigs, conversations, experiences, fantasy requests, products)",
-    "Improved: every engagement action already required an account - now the full-detail view tier matches that same sign-in wall, all in one consistent prompt",
-    "Improved: once signed in, every detail view opens instantly with no prompts"
+    "New: venues can enable calendar booking from their listing - guests pick a date + slot and pay the booking rate plus booking fee, all held in escrow until the host confirms",
+    "New: Airbnb-style privacy - a venue's exact street address is only revealed to a guest after their booking is confirmed (hosts/admins always see it); guests see a 'revealed after booking confirmation' notice",
+    "New: each venue sets a booking rate and a free-cancellation window; late cancellations refund the booking fee and let the host keep the booking rate per policy",
+    "Improved: venue bookings now appear in member, host and admin booking views and count toward host wallet earnings and analytics"
   ]
 }

@@ -2954,6 +2954,7 @@
                             <div class="detail-row"><span class="detail-label">Email</span><span class="detail-value" id="venViewEmail">-</span></div>
                             <div class="detail-row"><span class="detail-label">Phone</span><span class="detail-value" id="venViewPhone">-</span></div>
                             <div class="detail-row" id="venViewAddressRow" style="display:none"><span class="detail-label">Address</span><span class="detail-value" id="venViewAddress">-</span></div>
+                            <div class="detail-row" id="venViewAddressHint" style="display:none"><span class="detail-label">Address</span><span class="detail-value" style="color:#a99c7e"><i class="fas fa-lock"></i> Revealed after your booking is confirmed</span></div>
                             <div class="detail-row"><span class="detail-label">Cover Charge</span><span class="detail-value" id="venViewRate">-</span></div>
                             <div class="detail-row"><span class="detail-label">Capacity</span><span class="detail-value" id="venViewCapacity">-</span></div>
                         </div>
@@ -2964,6 +2965,16 @@
                                 <span class="detail-label">Website</span>
                                 <a href="#" id="venViewWebsite" target="_blank" class="detail-link">-</a>
                             </div>
+                        </div>
+                    </div>
+
+                    <div class="profile-card" id="venViewBookCard" style="display:none">
+                        <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;">
+                            <div>
+                                <strong id="venViewBookPrice" style="color:#c9a227;font-size:1.3rem">-</strong>
+                                <div id="venViewRefundPolicy" class="view-email" style="font-size:.8rem;color:#a99c7e">-</div>
+                            </div>
+                            <button type="button" class="btn btn-primary btn-sm" onclick="openBookingModal(currentViewVenueId, 'venue')"><i class="fas fa-calendar-check"></i> Book This Venue</button>
                         </div>
                     </div>
 
@@ -3903,12 +3914,12 @@
       });
     })();
     </script>
-    <script src="script.js?v=55"></script>
+    <script src="script.js?v=56"></script>
     <script src="media-player.js?v=4"></script>
     <script src="products.js?v=28"></script>
     <script src="shipping.js?v=2"></script>
     <script src="invoices.js?v=2"></script>
-    <script src="bookings-advance.js?v=2"></script>
+    <script src="bookings-advance.js?v=3"></script>
     <script src="msg-lock.js?v=2"></script>
     <script>
         let onbSlide = 0;

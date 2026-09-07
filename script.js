@@ -3252,14 +3252,39 @@ function viewVenueDirectory(id) {
 
     const addressRow = document.getElementById('venViewAddressRow');
     const addressEl = document.getElementById('venViewAddress');
+    const addressHintRow = document.getElementById('venViewAddressHint');
     if (addressRow && addressEl) {
         const snap = (_2k2.Auth && _2k2.Auth.syncUser) ? _2k2.Auth.syncUser() : null;
         const isPrivileged = snap && (snap.role === 'provider' || snap.role === 'admin');
-        if (isPrivileged && v.address) {
+        const uid = snap ? (currentUserOwnerId ? currentUserOwnerId() : (snap._id || snap.id)) : null;
+        const hasConfirmedBooking = !!uid && (Storage.getBookings() || []).some(b =>
+            String(b.providerId) === String(v.id) &&
+            String(b.clientOwnerId) === String(uid) &&
+            (b.status === 'confirmed' || b.status === 'completed'));
+        if ((isPrivileged || hasConfirmedBooking) && v.address) {
             addressEl.textContent = v.address;
             addressRow.style.display = '';
+            if (addressHintRow) addressHintRow.style.display = 'none';
         } else {
             addressRow.style.display = 'none';
+            if (addressHintRow) addressHintRow.style.display = v.address ? '' : 'none';
+        }
+    }
+
+    const bookCard = document.getElementById('venViewBookCard');
+    if (bookCard) {
+        const bookingRate = parseFloat(v.bookingRate) || 0;
+        if (bookingRate > 0) {
+            bookCard.style.display = '';
+            const priceEl = document.getElementById('venViewBookPrice');
+            if (priceEl) priceEl.textContent = 'R' + bookingRate.toFixed(0) + ' per booking';
+            const policyEl = document.getElementById('venViewRefundPolicy');
+            if (policyEl) {
+                const wh = parseInt(v.cancelWindowHours, 10) || 0;
+                policyEl.textContent = wh > 0 ? 'Free cancellation up to ' + wh + 'h before your slot' : 'No free-cancellation window. Contact the host for cancellations.';
+            }
+        } else {
+            bookCard.style.display = 'none';
         }
     }
 
@@ -3307,6 +3332,8 @@ function handleVenueSubmit(e) {
         address: document.getElementById('venueAddress').value.trim(),
         rate: document.getElementById('venueRate').value,
         capacity: document.getElementById('venueCapacity').value,
+        bookingRate: parseFloat(document.getElementById('venueBookingRate').value) || 0,
+        cancelWindowHours: parseInt(document.getElementById('venueCancelWindow').value, 10) || 0,
         website: document.getElementById('venueWebsite').value,
         bio: document.getElementById('venueBio').value,
         tags: [...venueTags],
@@ -3397,6 +3424,8 @@ function populateVenueForm(v) {
     document.getElementById('venueAddress').value = v.address || '';
     document.getElementById('venueRate').value = v.rate || '';
     document.getElementById('venueCapacity').value = v.capacity || '';
+    document.getElementById('venueBookingRate').value = v.bookingRate || '';
+    document.getElementById('venueCancelWindow').value = v.cancelWindowHours != null ? v.cancelWindowHours : 24;
     document.getElementById('venueWebsite').value = v.website || '';
     document.getElementById('venueBio').value = v.bio || '';
     document.getElementById('venueFormTitle').textContent = 'Edit Venue';
@@ -4688,10 +4717,15 @@ function deleteService(id) {
 // BOOKING MODAL
 // ==========================================
 function getBookingFeeFor(providerId, providerType) {
-    const items = providerType === 'service' ? Storage.getServices() : Storage.getListings();
+    const items = providerType === 'service' ? Storage.getServices() : (providerType === 'venue' ? Storage.getVenues() : Storage.getListings());
     const item = items.find(x => x.id === providerId);
     if (item && item.bookingFee != null && item.bookingFee >= 0) return item.bookingFee;
     return (getAdminSettings().bookingFee || 50);
+}
+
+function refItemDisplay(providerId, providerType) {
+    const items = providerType === 'service' ? Storage.getServices() : (providerType === 'venue' ? Storage.getVenues() : Storage.getListings());
+    return items.find(x => String(x.id) === String(providerId));
 }
 
 function openBookingModal(providerId, providerType) {
@@ -4832,15 +4866,15 @@ function renderUserBookings() {
 
     container.innerHTML = sorted.map(b => {
         const status = BOOKING_STATUSES[b.status] || BOOKING_STATUSES['pending'];
-        const providers = b.providerType === 'service' ? Storage.getServices() : Storage.getListings();
-        const provider = providers.find(p => p.id === b.providerId);
-        const providerName = provider ? provider.name : 'Unknown Provider';
+        const provider = refItemDisplay(b.providerId, b.providerType);
+        const providerName = provider ? (provider.name || provider.title || 'Unknown Provider') : 'Unknown Provider';
+        const typeIcon = b.providerType === 'service' ? 'fa-concierge-bell' : (b.providerType === 'venue' ? 'fa-store' : 'fa-user-tie');
 
         return `
             <div class="booking-card profile-card">
                 <div class="booking-card-header">
                     <div class="booking-provider">
-                        <i class="fas ${b.providerType === 'service' ? 'fa-concierge-bell' : 'fa-user-tie'}"></i>
+                        <i class="fas ${typeIcon}"></i>
                         <span>${providerName}</span>
                     </div>
                     <span class="booking-status" style="background:${status.color}22; color:${status.color}; border:1px solid ${status.color}44;">
@@ -4854,6 +4888,7 @@ function renderUserBookings() {
                     ${b.rateLabel ? `<div class="booking-detail"><i class="fas fa-layer-group"></i> ${b.rateLabel}: R${parseFloat(b.rateAmount) || 0}</div>` : ''}
                     ${b.totalAmount != null ? `<div class="booking-detail"><i class="fas fa-wallet"></i> Total (escrow): R${parseFloat(b.totalAmount) || 0}</div>` : `<div class="booking-detail"><i class="fas fa-wallet"></i> Booking Fee: R${b.fee != null ? b.fee : getBookingFeeFor(b.providerId, b.providerType)}</div>`}
                     ${b.notes ? `<div class="booking-detail booking-notes"><i class="fas fa-comment"></i> ${b.notes}</div>` : ''}
+                    ${b.refundPolicyShort ? `<div class="booking-detail"><i class="fas fa-undo"></i> ${b.refundPolicyShort}</div>` : ''}
                 </div>
                 <div class="booking-card-footer">
                     <span class="booking-date">Booked ${formatDate(b.createdAt)}</span>
@@ -4870,11 +4905,30 @@ function cancelBooking(id) {
     const bookings = Storage.getBookings();
     const booking = bookings.find(b => b.id === id);
     if (booking) {
-        const amount = (booking.totalAmount != null) ? booking.totalAmount : ((booking.fee != null) ? booking.fee : getBookingFeeFor(booking.providerId, booking.providerType));
+        const totalAmount = (booking.totalAmount != null) ? booking.totalAmount : ((booking.fee != null) ? booking.fee : getBookingFeeFor(booking.providerId, booking.providerType));
+        let refundAmount = parseFloat(totalAmount) || 0;
+        let note = 'Refund for booking cancelled by client';
         booking.status = 'cancelled';
         Storage.setBookings(bookings);
-        refundBookingEscrow(booking, amount, 'Refund for booking cancelled by client');
-        showToast('Booking cancelled. Escrowed amount refunded to your wallet.', 'info');
+
+        if (booking.cancelWindowHours != null && booking.cancelCutoffAt) {
+            const cutoff = new Date(booking.cancelCutoffAt).getTime();
+            if (!isNaN(cutoff) && Date.now() > cutoff) {
+                const feeAmount = parseFloat(booking.fee) || 0;
+                const retainedRate = Math.max(refundAmount - feeAmount, 0);
+                refundAmount = feeAmount;
+                if (retainedRate > 0) {
+                    adjustWallet('provider', booking.providerId, retainedRate, 'booking-late-cancel', 'Late cancellation rate retained from ' + (booking.clientName || 'client') + ' per policy', { bookingId: booking.id });
+                }
+                note = 'Late cancellation: R' + retainedRate.toFixed(2) + ' retained by host per policy, R' + refundAmount.toFixed(2) + ' refunded';
+                showToast('Cancelled per policy. Host keeps R' + retainedRate.toFixed(2) + ' (late cancel); R' + refundAmount.toFixed(2) + ' refunded to your wallet.', 'info');
+            }
+        }
+
+        if (refundAmount > 0) {
+            refundBookingEscrow(booking, refundAmount, note);
+            if (!note.startsWith('Late')) showToast('Booking cancelled. Escrowed amount refunded to your wallet.', 'info');
+        }
         if (window.location.pathname.includes('provider.html')) {
             renderProviderBookings();
         } else {
@@ -4952,7 +5006,8 @@ function renderUserInterests() {
 function renderProviderBookings() {
     const listings = Storage.getListings();
     const services = Storage.getServices();
-    const allProviders = [...listings.map(l => ({...l, _type: 'listing'})), ...services.map(s => ({...s, _type: 'service'}))];
+    const venues = Storage.getVenues();
+    const allProviders = [...listings.map(l => ({...l, _type: 'listing'})), ...services.map(s => ({...s, _type: 'service'})), ...venues.map(v => ({...v, _type: 'venue'}))];
     const providerIds = allProviders.map(p => p.id);
 
     const bookings = Storage.getBookings().filter(b => providerIds.includes(b.providerId));
@@ -4970,9 +5025,9 @@ function renderProviderBookings() {
 
     container.innerHTML = sorted.map(b => {
         const status = BOOKING_STATUSES[b.status] || BOOKING_STATUSES['pending'];
-        const providers = b.providerType === 'service' ? services : listings;
+        const providers = b.providerType === 'service' ? services : (b.providerType === 'venue' ? venues : listings);
         const provider = providers.find(p => p.id === b.providerId);
-        const providerName = provider ? provider.name : 'Unknown';
+        const providerName = provider ? (provider.name || provider.title || 'Unknown') : 'Unknown';
 
         return `
             <div class="booking-card profile-card">
@@ -5215,7 +5270,7 @@ function processTopUp() {
 }
 
 function renderProviderWallet() {
-    const providers = [...Storage.getListings().map(l => l.id), ...Storage.getServices().map(s => s.id)];
+    const providers = [...Storage.getListings().map(l => l.id), ...Storage.getServices().map(s => s.id), ...Storage.getVenues().map(v => v.id)];
     let totalBalance = 0;
     let totalIncome = 0;
     let totalWithdrawn = 0;
@@ -5242,11 +5297,11 @@ function renderProviderWallet() {
     });
     totalTxns = allProviderTxns.length;
 
-    document.getElementById('providerWalletBalance').textContent = `R${totalBalance.toFixed(2)}`;
-    document.getElementById('providerWalletUpdated').textContent = new Date().toLocaleDateString();
-    document.getElementById('providerWalletIncome').textContent = `R${totalIncome.toFixed(2)}`;
-    document.getElementById('providerWalletWithdrawn').textContent = `R${totalWithdrawn.toFixed(2)}`;
-    document.getElementById('providerWalletTxns').textContent = totalTxns;
+    const balEl = document.getElementById('providerWalletBalance'); if (balEl) balEl.textContent = `R${totalBalance.toFixed(2)}`;
+    const updEl = document.getElementById('providerWalletUpdated'); if (updEl) updEl.textContent = new Date().toLocaleDateString();
+    const incEl = document.getElementById('providerWalletIncome'); if (incEl) incEl.textContent = `R${totalIncome.toFixed(2)}`;
+    const wdEl = document.getElementById('providerWalletWithdrawn'); if (wdEl) wdEl.textContent = `R${totalWithdrawn.toFixed(2)}`;
+    const txEl = document.getElementById('providerWalletTxns'); if (txEl) txEl.textContent = totalTxns;
     const heldEl = document.getElementById('providerWalletHeld');
     if (heldEl) heldEl.textContent = `R${totalHeld.toFixed(2)}`;
 
@@ -5301,7 +5356,7 @@ function renderProviderWallet() {
 }
 
 function openWithdrawModal() {
-    const providers = [...Storage.getListings().map(l => l.id), ...Storage.getServices().map(s => s.id)];
+    const providers = [...Storage.getListings().map(l => l.id), ...Storage.getServices().map(s => s.id), ...Storage.getVenues().map(v => v.id)];
     let totalBalance = 0;
     providers.forEach(pid => { totalBalance += getOrCreateWallet('provider', pid).balance; });
     document.getElementById('withdrawAvailable').textContent = `R${totalBalance.toFixed(2)}`;
@@ -5315,7 +5370,7 @@ function processWithdraw() {
     if (!amount || amount <= 0) { showToast('Enter a valid amount.', 'error'); return; }
     if (!guardFinancial('withdraw', amount, 1, 4000)) return;
 
-    const providers = [...Storage.getListings().map(l => l.id), ...Storage.getServices().map(s => s.id)];
+    const providers = [...Storage.getListings().map(l => l.id), ...Storage.getServices().map(s => s.id), ...Storage.getVenues().map(v => v.id)];
     let totalBalance = 0;
     providers.forEach(pid => { totalBalance += getOrCreateWallet('provider', pid).balance; });
 
@@ -5755,7 +5810,7 @@ function renderUserAnalytics() {
 }
 
 function renderProviderAnalytics() {
-    const providerIds = [...Storage.getListings().map(l => l.id), ...Storage.getServices().map(s => s.id)];
+    const providerIds = [...Storage.getListings().map(l => l.id), ...Storage.getServices().map(s => s.id), ...Storage.getVenues().map(v => v.id)];
     let allTxns = [];
     providerIds.forEach(pid => { allTxns = allTxns.concat(getWalletTransactions('provider', pid)); });
     const txns = filterTxnsByPeriod(allTxns, document.getElementById('providerAnalyticsPeriod')?.value || 'all');
@@ -5764,14 +5819,14 @@ function renderProviderAnalytics() {
     const totalEarned = earnedTxns.reduce((s, t) => s + t.amount, 0);
     const avgTxn = earnedTxns.length > 0 ? totalEarned / earnedTxns.length : 0;
 
-    document.getElementById('providerAnalyticsTotalEarned').textContent = 'R' + totalEarned.toFixed(0);
-    document.getElementById('providerAnalyticsAvgTxn').textContent = 'R' + avgTxn.toFixed(0);
-    document.getElementById('providerAnalyticsTxnCount').textContent = earnedTxns.length;
+    const ne1 = document.getElementById('providerAnalyticsTotalEarned'); if (ne1) ne1.textContent = 'R' + totalEarned.toFixed(0);
+    const ne2 = document.getElementById('providerAnalyticsAvgTxn'); if (ne2) ne2.textContent = 'R' + avgTxn.toFixed(0);
+    const ne3 = document.getElementById('providerAnalyticsTxnCount'); if (ne3) ne3.textContent = earnedTxns.length;
 
     const typeCounts = {};
     earnedTxns.forEach(t => { typeCounts[t.type] = (typeCounts[t.type] || 0) + t.amount; });
     const topType = Object.entries(typeCounts).sort((a, b) => b[1] - a[1])[0];
-    document.getElementById('providerAnalyticsTopSource').textContent = topType ? (TYPE_LABELS[topType[0]] || topType[0]) : '-';
+    const ne4 = document.getElementById('providerAnalyticsTopSource'); if (ne4) ne4.textContent = topType ? (TYPE_LABELS[topType[0]] || topType[0]) : '-';
 
     // Earnings by Type (Doughnut)
     const byTypeLabels = Object.keys(typeCounts).map(k => TYPE_LABELS[k] || k);

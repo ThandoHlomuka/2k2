@@ -33,13 +33,14 @@
   function addDays(d, n) { var nd = new Date(d.getFullYear(), d.getMonth(), d.getDate()); nd.setDate(nd.getDate() + n); return nd; }
 
   function getEntity(providerId, providerType) {
-    var items = providerType === 'service' ? Storage.getServices() : Storage.getListings();
+    var items = providerType === 'service' ? Storage.getServices() : (providerType === 'venue' ? Storage.getVenues() : Storage.getListings());
     for (var i = 0; i < items.length; i++) { if (String(items[i].id) === String(providerId)) return items[i]; }
     return null;
   }
 
   function getRates(entity) {
     if (entity && Array.isArray(entity.rates) && entity.rates.length) return entity.rates;
+    if (entity && entity.bookingRate != null && num(entity.bookingRate) > 0) return [{ label: 'Venue Booking', amount: num(entity.bookingRate) }];
     return entity && entity.name ? [{ label: entity.name, amount: num(entity.rate) }] : [];
   }
 
@@ -59,6 +60,9 @@
     var step = parseInt(a.slotStep || entity && entity.slotStep, 10) || DEFAULT_STEP;
     var days = {};
     DAYS.forEach(function (d) { days[d] = a[d] ? true : false; });
+    if (entity && entity.hours) {
+      DAYS.forEach(function (d) { if (typeof entity.hours[d] === 'boolean') days[d] = entity.hours[d]; });
+    }
     var any = DAYS.some(function (d) { return days[d]; });
     if (!any) { DAYS.forEach(function (d) { days[d] = true; }); }
     return { workStart: start, workEnd: end, slotStep: step, days: days };
@@ -437,6 +441,22 @@
       status: 'pending',
       createdAt: new Date().toISOString()
     };
+
+    // Snapshot the host's cancellation policy onto the booking so late
+    // cancellations are enforced consistently after the entity changes.
+    var entity = getEntity(window.currentBookingProviderId, window.currentBookingProviderType);
+    if (entity && entity.cancelWindowHours != null) {
+      var cwh = parseInt(entity.cancelWindowHours, 10) || 0;
+      booking.cancelWindowHours = cwh;
+      booking.refundPolicyShort = cwh > 0 ? 'Free cancellation up to ' + cwh + 'h before your slot' : 'No free-cancellation window';
+      if (cwh > 0 && date && time) {
+        var dp = String(date).split('-');
+        var tp = String(time).split(':');
+        var slotDt = new Date(+dp[0], (+dp[1] - 1), +dp[2], (+tp[0] || 0), (+tp[1] || 0));
+        slotDt.setHours(slotDt.getHours() - cwh);
+        booking.cancelCutoffAt = slotDt.toISOString();
+      }
+    }
 
     // Deduct total from user wallet and hold it in escrow.
     adjustWallet('user', currentUserOwnerId(), -total, 'booking-fee', 'Booking payment of R' + total.toFixed(2) + ' for ' + (rateLabel || 'service'), { bookingId: booking.id, providerId: booking.providerId });

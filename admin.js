@@ -1458,7 +1458,7 @@ function renderAdminBookings() {
     }
 
     const listingTypeLabel = (b) => {
-        const provider = b.providerType === 'service' ? Storage.getServices().find(p => p.id === b.providerId) : Storage.getListings().find(p => p.id === b.providerId);
+        const provider = b.providerType === 'service' ? Storage.getServices().find(p => p.id === b.providerId) : (b.providerType === 'venue' ? Storage.getVenues().find(p => p.id === b.providerId) : Storage.getListings().find(p => p.id === b.providerId));
         return provider ? (provider.name || provider.title || 'Unknown') : (b.serviceType || 'Unknown');
     };
 
