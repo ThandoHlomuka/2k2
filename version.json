@@ -1,9 +1,9 @@
 {
-  "version": "2.3.8",
-  "title": "Mobile Monetization Fix + Release Notes",
+  "version": "2.3.9",
+  "title": "Sign In to Engage - Browse Freely, Unlock with an Account",
   "notes": [
-    "Improved: earnings breakdown cards now wrap gracefully on narrow phones - no more clipped amounts at the edge of the screen",
-    "Improved: asset versioning aligned across every page that loads the main stylesheet",
-    "Improved: full mobile parity sweep confirmed bottom navigation, page reachability, and zero horizontal scrolling across all portals"
+    "New: guests can browse the community, directories and marketplaces freely, and must create a free account to open detail views (content, listings, venues, ads, services, events, forum threads, gigs, conversations, experiences, fantasy requests, products)",
+    "Improved: every engagement action already required an account - now the full-detail view tier matches that same sign-in wall, all in one consistent prompt",
+    "Improved: once signed in, every detail view opens instantly with no prompts"
   ]
 }

@@ -2565,6 +2565,7 @@ function switchProviderActivity(type, containerId, btn) {
 }
 
 function viewDirectoryListing(id) {
+    if (!requireSignIn('Open this listing. ')) return;
     const listings = Storage.getListings();
     const l = listings.find(item => item.id === id);
     if (!l) return;
@@ -3194,6 +3195,7 @@ function filterVenueDirectory(type) {
 function searchVenueDirectory() { renderVenueDirectory(); }
 
 function viewVenueDirectory(id) {
+    if (!requireSignIn('Open this venue. ')) return;
     const venues = Storage.getVenues();
     const v = venues.find(item => item.id === id);
     if (!v) return;
@@ -3633,6 +3635,7 @@ function filterAds(type) {
 function searchAds() { renderAdsBrowse(); }
 
 function viewAd(id) {
+    if (!requireSignIn('Open this ad. ')) return;
     const ads = Storage.getAds();
     const a = ads.find(item => item.id === id);
     if (!a) return;
@@ -4191,6 +4194,7 @@ function restoreBrowseView(containerId) {
 }
 
 function viewServiceDirectory(id) {
+    if (!requireSignIn('Open this service. ')) return;
     const services = Storage.getServices();
     const s = services.find(x => x.id === id);
     if (!s) return;
@@ -5452,6 +5456,7 @@ function splitStoryIntoPages(text, maxCharsPerPage) {
 }
 
 function viewContent(id) {
+    if (!requireSignIn('View this content. ')) return;
     const content = Storage.getContent();
     const item = content.find(c => c.id === id);
     if (!item) { showToast('Content not found.', 'error'); return; }
@@ -6471,6 +6476,7 @@ function filterEventsDirectory(type) {
 function searchEventsDirectory() { renderEventsDirectory(); }
 
 function viewEvent(id) {
+    if (!requireSignIn('Open this event. ')) return;
     const events = Storage.getEvents();
     const ev = events.find(e => e.id === id);
     if (!ev) { showToast('Event not found.', 'error'); return; }
@@ -7353,6 +7359,7 @@ function filterForumProvince(province) {
 }
 
 function viewForumThread(id) {
+    if (!requireSignIn('Open this forum thread. ')) return;
     const threads = Storage.getForumThreads();
     const thread = threads.find(t => t.id === id);
     if (!thread) return;
@@ -7735,6 +7742,7 @@ function renderGigsBrowse() {
 }
 
 function viewGig(id) {
+    if (!requireSignIn('Open this gig. ')) return;
     const gigs = Storage.getGigs();
     const gig = gigs.find(g => g.id === id);
     if (!gig) return;
@@ -8026,6 +8034,7 @@ function renderInbox() {
 }
 
 function openConversation(id) {
+    if (!requireSignIn('Open this conversation. ')) return;
     currentMessageViewId = id;
     const msgs = Storage.getMessages();
     msgs.forEach(m => { if (m.conversationId === id && m.senderId !== 'me') m.read = true; });
@@ -9264,6 +9273,7 @@ function appendCustomExperienceFilterTabs() {
 }
 
 function viewExperience(id) {
+    if (!requireSignIn('Open this experience. ')) return;
     const item = Storage.getExperiences().find(x => x.id === id);
     if (!item) return;
     currentExperienceViewId = id;
@@ -9542,6 +9552,7 @@ function filterFantasyRequests(category) {
 function searchFantasyRequests() { renderFantasyRequests(); }
 
 function viewFantasyRequest(id) {
+    if (!requireSignIn('Open this request. ')) return;
     const r = Storage.getFantasyRequests().find(x => x.id === id);
     if (!r) return;
     currentFantasyViewId = id;

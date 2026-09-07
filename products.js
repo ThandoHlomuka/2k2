@@ -137,6 +137,7 @@
   // GENERAL USERS - product detail + order
   // ============================================
   window.viewProduct = function (id) {
+    if (typeof requireSignIn === 'function' && !requireSignIn('Open this product. ')) return;
     var p = Storage.getProducts().find(function (x) { return x.id === id; });
     if (!p) { alert('Product not found.'); return; }
     var ci = catInfo(p.category);
