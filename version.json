@@ -1,10 +1,9 @@
 {
-  "version": "2.3.7",
-  "title": "Reliable Update Delivery for Every Device",
+  "version": "2.3.8",
+  "title": "Mobile Monetization Fix + Release Notes",
   "notes": [
-    "Improved: updates are now applied only when your device has actually received the new version — no more false 'updated' states",
-    "Improved: version checks are ordered numerically, so a past version can never overwrite a newer one on any device",
-    "Improved: every page (including Login, Register, and Investor pages) now checks for updates, and open tabs re-check every few minutes while you browse",
-    "Improved: stronger cache-busting guarantees every device picks up the newest app files without manual clearing"
+    "Improved: earnings breakdown cards now wrap gracefully on narrow phones - no more clipped amounts at the edge of the screen",
+    "Improved: asset versioning aligned across every page that loads the main stylesheet",
+    "Improved: full mobile parity sweep confirmed bottom navigation, page reachability, and zero horizontal scrolling across all portals"
   ]
 }

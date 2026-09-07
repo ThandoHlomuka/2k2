@@ -8615,6 +8615,8 @@ h1, h2, h3, h4 {
     align-items: center;
     gap: 12px;
     margin-bottom: 10px;
+    flex-wrap: wrap;
+    row-gap: 6px;
 }
 .mon-bar {
     height: 8px;
