@@ -2500,11 +2500,12 @@ h1, h2, h3, h4 {
     display: flex;
     gap: 8px;
     flex-wrap: wrap;
+    padding-right: 4px;
     margin-bottom: 16px;
 }
 
 .filter-tab {
-    padding: 9px 18px;
+    padding: 10px 26px;
     border: 2px solid #e6dec8;
     border-radius: 12px;
     background: white;
@@ -3489,10 +3490,11 @@ h1, h2, h3, h4 {
 @media (max-width: 768px) {
     .filter-tabs {
         gap: 6px;
+        padding-right: 2px;
     }
 
     .filter-tab {
-        padding: 8px 14px;
+        padding: 9px 19px;
         font-size: 0.8rem;
     }
 
@@ -8607,7 +8609,7 @@ h1, h2, h3, h4 {
 /* ============ Monetization Hub ============ */
 .mon-src-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(0, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(min(280px, 100%), 1fr));
     gap: 16px;
 }
 .mon-src-head {
@@ -8649,7 +8651,7 @@ h1, h2, h3, h4 {
 }
 .monetization-guide-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(0, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(min(240px, 100%), 1fr));
     gap: 16px;
 }
 .monetization-guide-grid .how-step {
@@ -8666,7 +8668,7 @@ h1, h2, h3, h4 {
 }
 .earn-teaser {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(0, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(min(160px, 100%), 1fr));
     gap: 12px;
     margin-top: 16px;
 }

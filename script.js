@@ -252,13 +252,30 @@ function getServiceTypeSelectHTML(selectedValue) {
 }
 
 function getServiceTypeFilterHTML() {
-    const types = getAllServiceTypes();
+    // Always render a proper pill tab row (like the static venue/profile/
+    // content directories) so the services filter never collapses to bare text.
+    // When no custom types are registered, fall back to the categories actually
+    // present on approved services so the row is never empty.
+    let types = getAllServiceTypes();
+    if (types.length === 0) {
+        const seen = {};
+        Storage.getServices().forEach(s => {
+            const cat = s.category;
+            if (cat && !seen[cat]) {
+                seen[cat] = true;
+                const meta = getServiceTypeBySlug(cat);
+                const label = meta.label && meta.label !== cat ? meta.label : cat.charAt(0).toUpperCase() + cat.slice(1).replace(/-/g, ' ');
+                types.push({ slug: cat, label, icon: meta.icon });
+            }
+        });
+    }
     let html = '<button class="filter-tab active" onclick="filterServicesDirectory(\'all\')">All</button>';
     types.forEach(t => {
-        html += `<button class="filter-tab" onclick="filterServicesDirectory('${t.slug}')"><i class="fas ${t.icon}"></i> ${t.label}</button>`;
+        const icon = t.icon || getServiceTypeBySlug(t.slug).icon;
+        html += `<button class="filter-tab" onclick="filterServicesDirectory('${t.slug}')"><i class="fas ${icon}"></i> ${t.label}</button>`;
     });
     if (types.length === 0) {
-        html = '<p style="color:var(--text-muted);font-size:0.85rem;padding:8px 0">No service types yet. Create a service to add categories.</p>';
+        html += '<p style="color:var(--text-muted);font-size:0.85rem;padding:8px 0;flex-basis:100%">No service types yet. Create a service to add categories.</p>';
     }
     return html;
 }

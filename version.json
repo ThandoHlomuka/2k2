@@ -1,10 +1,11 @@
 {
-  "version": "2.3.10",
-  "title": "Venue Bookings - Calendar, Escrow & Address on Confirmation",
+  "version": "2.3.11",
+  "title": "UI polish: mobile tabs, Invest portal switch, products & monetization layout",
   "notes": [
-    "New: venues can enable calendar booking from their listing - guests pick a date + slot and pay the booking rate plus booking fee, all held in escrow until the host confirms",
-    "New: Airbnb-style privacy - a venue's exact street address is only revealed to a guest after their booking is confirmed (hosts/admins always see it); guests see a 'revealed after booking confirmation' notice",
-    "New: each venue sets a booking rate and a free-cancellation window; late cancellations refund the booking fee and let the host keep the booking rate per policy",
-    "Improved: venue bookings now appear in member, host and admin booking views and count toward host wallet earnings and analytics"
+    "New: 'Invest' link added to the Switch Portal section (member + provider sidebars) linking to the investor page/portal invest.html",
+    "Fixed: services directory filter tabs no longer collapse to a bare text line - the 'All' tab row always renders (falls back to the categories present on live services)",
+    "Fixed: monetization hub (provider) grid cards were crushing to ~1px slivers from a grid-template collapse bug - guide, revenue-by-source and earnings-teaser cards now keep comfortable widths on all screens",
+    "Fixed: filter tab pills now have roomier padding (26px sides / 19px on mobile) with row right-padding so tab buttons no longer sit pressed against the tab edges (products + all directories)",
+    "Fixed: products filter tabs no longer re-add duplicate category tabs when the products list re-renders"
   ]
 }

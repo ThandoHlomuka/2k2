@@ -911,9 +911,10 @@
       });
     });
     var tabs = document.getElementById('productsFilterTabs');
-    if (tabs && tabs.querySelectorAll('.filter-tab[data-cat]').length === 0) {
+    var existingCatTabs = tabs ? tabs.querySelectorAll('.filter-tab[data-cat]:not([data-cat="all"])') : [];
+    if (tabs && existingCatTabs.length === 0) {
       var allBtn = tabs.querySelector('.filter-tab.active');
-      if (allBtn) allBtn.setAttribute('data-cat', 'all');
+      if (allBtn && !allBtn.getAttribute('data-cat')) allBtn.setAttribute('data-cat', 'all');
       Object.keys(PRODUCT_CATEGORIES).forEach(function (k) {
         var btn = document.createElement('button');
         btn.className = 'filter-tab';
