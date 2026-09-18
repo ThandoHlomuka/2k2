@@ -1,8 +1,9 @@
 {
-  "version": "2.3.13",
-  "title": "Products categories overhaul: adult-marketplace taxonomy",
+  "version": "2.3.14",
+  "title": "Provider free 1-month trial",
   "notes": [
-    "Changed: product filter tabs + category dropdowns (general users, providers, admin) now use the requested 2k2 taxonoomy: Toys, Accessories, BDSM Accessories, Candy, Clothing, Masks, Creams, Condoms, Lube, Libido Boosters, Other (was the generic marketplace list)",
-    "Applies everywhere products are categorised: browse filter tabs, products category filter dropdowns, provider add/edit product form, admin products filter"
+    "Changed: new providers can start with a free 30-day trial instead of paying R200/month — a 'Free 1-Month Trial' plan sits alongside the Standard Service Provider plan on the upgrade page; selecting it skips payment details",
+    "Changed: trial applications flow through the same identity verification + admin approval review, get a green 'Free Trial' badge in the admin approvals list, then the trial clock (trial_started_at / trial_ends_at) is stamped onto the verification record on approval",
+    "Changed: the Service Provider dashboard now shows a trial status banner - days left while active, and a 'go paid R200/mo' prompt once the trial has ended"
   ]
 }

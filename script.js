@@ -1296,7 +1296,46 @@ function currentDisplayName() {
 }
 
 // ==========================================
-// Followers / Following
+// Provider free 1-month trial banner
+// ==========================================
+function providerTrialStatus() {
+    try {
+        const authId = currentAuthId() || currentUserOwnerId();
+        const verif = Storage.getProviderVerifications() || [];
+        const mine = verif.filter(v => String(v.user_id) === String(authId) || String(v.userId) === String(authId));
+        const rec = mine.sort((a, b) => new Date(b.submitted_at || 0) - new Date(a.submitted_at || 0))[0];
+        if (!rec || rec.plan !== 'trial' || !rec.trial_ends_at) return null;
+        const end = new Date(rec.trial_ends_at).getTime();
+        const now = Date.now();
+        return { active: now < end, daysLeft: Math.max(0, Math.ceil((end - now) / 86400000)), endsAt: rec.trial_ends_at };
+    } catch (e) { return null; }
+}
+
+function renderTrialBanner() {
+    const root = document.getElementById('providerTrialBanner');
+    if (!root) return;
+    const t = providerTrialStatus();
+    if (!t) { root.style.display = 'none'; return; }
+    root.style.display = 'block';
+    if (t.active) {
+        root.innerHTML = `<div class="approval-banner" style="background:rgba(52,211,153,.1);border-color:#34d399;color:#0f5132">
+            <i class="fas fa-gift" style="color:#34d399"></i>
+            <div style="flex:1"><strong>You're on your free 1-month trial</strong>
+            <div class="approval-banner-sub" style="color:#3d6b54">${t.daysLeft} day${t.daysLeft === 1 ? '' : 's'} left — switch to the R200/mo plan anytime to keep full provider access.</div></div>
+            <button class="btn btn-primary btn-sm" onclick="window.open('upgrade.html','_self')" style="white-space:nowrap">Go Paid</button>
+        </div>`;
+    } else {
+        root.innerHTML = `<div class="approval-banner approval-banner-rejected">
+            <i class="fas fa-hourglass-end"></i>
+            <div style="flex:1"><strong>Your free trial has ended</strong>
+            <div class="approval-banner-sub">Renew at R200/month to keep your provider access active.</div></div>
+            <button class="btn btn-primary btn-sm" onclick="window.open('upgrade.html','_self')" style="white-space:nowrap">Go Paid R200/mo</button>
+        </div>`;
+    }
+}
+
+// ==========================================
+// Following / Following
 // ==========================================
 function followKey(type, id) { return (type || 'user') + ':' + String(id); }
 
@@ -2130,6 +2169,7 @@ function renderProviderProfiles(filter = 'all') {
     const container = document.getElementById('providerProfilesList');
     const filtered = filter === 'all' ? providers : providers.filter(p => p.status === filter);
     renderDashboardApprovalNotes();
+    if (typeof renderTrialBanner === 'function') { try { renderTrialBanner(); } catch (e) {} }
 
     document.getElementById('providerCount').textContent = providers.length;
 

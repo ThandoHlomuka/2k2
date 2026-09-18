@@ -170,17 +170,8 @@
     } catch (e) { return 'error'; }
   }
 
-  async function loadPendingPayments(userId) {
-    const client = getClient();
-    if (!client) return [];
-    try {
-      const { data } = await client.from('provider_upgrade_requests').select('id').eq('user_id', userId).in('status', ['pending']);
-      return data || [];
-    } catch (e) { return []; }
-  }
-
   window.approveVerification = async function (id) {
-    if (!confirm('Approve this application? The applicant will be granted Service Provider access (payment + identity approved).')) return;
+    if (!confirm('Approve this application? The applicant will be granted Service Provider access (identity verified; payment / trial approved accordingly).')) return;
     const client = getClient();
     const vrs = getVerifications();
     const v = vrs.find(function (x) { return x.id === id; });
@@ -195,11 +186,27 @@
     }
 
     // Mark their payment request approved (if any pending).
+    let payPlan = null;
     if (client) {
-      const payRows = await loadPendingPayments(v.user_id);
-      for (const p of payRows) {
-        try { await client.from('provider_upgrade_requests').update({ status: 'approved', decided_at: new Date().toISOString() }).eq('id', p.id); } catch (e) {}
-      }
+      try {
+        const { data: payRows } = await client
+          .from('provider_upgrade_requests')
+          .select('id, plan')
+          .eq('user_id', v.user_id)
+          .in('status', ['pending']);
+        for (const p of (payRows || [])) {
+          try { await client.from('provider_upgrade_requests').update({ status: 'approved', decided_at: new Date().toISOString() }).eq('id', p.id); } catch (e) {}
+          if (!payPlan) payPlan = p.plan || null;
+        }
+      } catch (e) {}
+    }
+
+    // Stamp trial metadata when approved on the trial plan (no payment).
+    if (payPlan === 'trial') {
+      v.plan = 'trial';
+      v.trial_started_at = new Date().toISOString();
+      var trialEnd = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+      v.trial_ends_at = trialEnd.toISOString();
     }
 
     // Mark verification approved, purge photos (transient retention done).

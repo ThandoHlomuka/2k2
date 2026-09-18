@@ -47,8 +47,9 @@
     }
     for (const r of reqs) {
       const info = await emailFor(r);
-      const plan = esc(r.plan || '-');
-      const amount = 'R' + esc(r.amount == null ? '' : r.amount);
+      const isTrial = String(r.plan || '').toLowerCase() === 'trial';
+      const plan = isTrial ? esc(r.plan || '-') + ' <span style="color:#34d399;font-weight:700;font-size:.7rem;text-transform:uppercase;border:1px solid #34d399;border-radius:50px;padding:1px 8px;margin-left:5px">Free Trial</span>' : esc(r.plan || '-');
+      const amount = isTrial ? 'R0 (no payment)' : 'R' + esc(r.amount == null ? '' : r.amount);
       const email = esc(info.email || '-');
       const name = esc(info.full_name || '-');
       const ref = esc(r.payment_ref || '-');
@@ -88,10 +89,13 @@
   };
 
   window.approveUpgrade = async function (id) {
-    if (!confirm('Approve this provider payment? The applicant will still need identity verification before gaining provider access.')) return;
     const client = getClient();
     const request = (await loadRequests()).find(function (r) { return r.id === id; });
     if (!request) { alert('Request not found.'); return; }
+    const isTrial = String(request.plan || '').toLowerCase() === 'trial';
+    if (!confirm(isTrial
+      ? 'Approve this free 1-month trial application? The applicant will still need identity verification before gaining provider access.'
+      : 'Approve this provider payment? The applicant will still need identity verification before gaining provider access.')) return;
 
     // 1) mark request approved
     const { error: e1 } = await client
@@ -102,8 +106,10 @@
 
     // 2) Provider access is granted once identity verification is also approved
     //    (see the "Provider Applications" / identity page). This page only
-    //    confirms the payment. No role change here.
-    alert('Payment approved. Provider access is granted once the applicant\u2019s identity verification is also approved.');
+    //    confirms the payment (or trial). No role change here.
+    alert(isTrial
+      ? 'Trial application approved. Provider access is granted once the applicant\u2019s identity verification is also approved, and their 30-day free trial will begin then.'
+      : 'Payment approved. Provider access is granted once the applicant\u2019s identity verification is also approved.');
     window.renderAdminUpgrades();
   };
 

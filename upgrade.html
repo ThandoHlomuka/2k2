@@ -112,10 +112,10 @@
     <form id="upgradeForm" style="display:none">
       <div style="text-align:center"><span class="auth-role-chip">Step 2 of 2 · Choose a plan &amp; pay</span></div>
       <h2 class="auth-title">Become a Service Provider</h2>
-      <p class="auth-sub">Choose a plan, pay, and we'll approve your provider access</p>
+      <p class="auth-sub">Start with a free 1-month trial, or pay the R200/month fee</p>
 
       <div class="upg-plans">
-        <div class="upg-plan selected" data-plan="standard" data-amount="200" onclick="selectPlan(this)">
+        <div class="upg-plan" data-plan="standard" data-amount="200" onclick="selectPlan(this)">
           <i class="fa-regular fa-circle-check" style="font-size:20px; color:#d4a853"></i>
           <div style="flex:1">
             <div class="plan-name">Service Provider</div>
@@ -123,19 +123,28 @@
           </div>
           <div class="plan-price">R200/mo</div>
         </div>
+        <div class="upg-plan" data-plan="trial" data-amount="0" onclick="selectPlan(this)">
+          <i class="fa-regular fa-circle-check" style="font-size:20px; color:#d4a853"></i>
+          <div style="flex:1">
+            <div class="plan-name">Free 1-Month Trial</div>
+            <div class="plan-desc">Full provider access free for your first 30 days — no payment required now</div>
+          </div>
+          <div class="plan-price">R0 first month</div>
+        </div>
       </div>
 
-      <div class="upg-note"><i class="fa-solid fa-shield-halved" style="margin-right:6px"></i> This is a manual, admin-reviewed upgrade. After payment you'll receive provider access once your application is approved (usually within 24 hours).</div>
+      <div class="upg-note"><i class="fa-solid fa-shield-halved" style="margin-right:6px"></i> This is a manual, admin-reviewed upgrade. Choose the free 1-month trial to get started with no payment, or the R200/month plan — after approval you'll receive provider access (usually within 24 hours).</div>
 
       <div id="paySection" style="display:none">
-        <div class="auth-field">
+        <div id="payRefWrap" class="auth-field">
           <label>Payment reference / details</label>
           <input type="text" id="paymentRef" class="auth-input" placeholder="e.g. bank EFT reference or proof-of-payment code">
         </div>
-        <div class="auth-field">
+        <div id="payNotesWrap" class="auth-field">
           <label>Notes for our team (optional)</label>
           <input type="text" id="paymentNotes" class="auth-input" placeholder="Anything you'd like us to know">
         </div>
+        <div id="selNotes" style="font-size:12.5px;color:#34d399;line-height:1.5;margin:2px 0 10px"></div>
         <div class="meta-line"><span>Selected plan</span><span id="selPlan">—</span></div>
         <div class="meta-line"><span>Membership amount</span><span id="selAmount">—</span></div>
         <div class="meta-line" style="border-bottom:none"><span>Account</span><span id="selAccount">—</span></div>
@@ -229,8 +238,8 @@
       var form = document.getElementById('upgradeForm');
       var errEl = document.getElementById('authError');
       var msgEl = document.getElementById('authMsg');
-      var chosen = 'standard';
-      var chosenAmount = 200;
+      var chosen = '';
+      var chosenAmount = 0;
       var photos = { f: null, c: null, b: null };
       var MAX = 10 * 1024 * 1024; // 10MB raw cap
 
@@ -243,10 +252,18 @@
         chosen = el.getAttribute('data-plan');
         chosenAmount = el.getAttribute('data-amount');
         document.getElementById('selPlan').textContent = chosen.charAt(0).toUpperCase() + chosen.slice(1);
-        document.getElementById('selAmount').textContent = 'R' + chosenAmount + ' / month';
+        document.getElementById('selAmount').textContent = chosenAmount === '0' ? 'Free — first month' : 'R' + chosenAmount + ' / month';
+        var isTrial = chosen === 'trial';
+        document.getElementById('payRefWrap').style.display = isTrial ? 'none' : 'block';
+        document.getElementById('payNotesWrap').style.display = isTrial ? 'none' : 'block';
+        document.getElementById('payBtn').innerHTML = isTrial
+          ? '<i class="fa-solid fa-gift"></i>&nbsp; Start Free Trial &amp; Request Approval'
+          : '<i class="fa-solid fa-lock"></i>&nbsp; Submit Payment &amp; Request Approval';
+        var payTitle = document.getElementById('selNotes');
+        if (payTitle) payTitle.textContent = isTrial ? 'Your free 30-day trial starts as soon as your application is approved — no payment is collected now.' : '';
       };
       window.revealPayment = function () {
-        if (!chosen) { showErr('Please select a plan first.'); return; }
+        if (!chosen) { showErr('Please choose a plan — Standard (R200/mo) or Free 1-Month Trial.'); return; }
         showMsg(''); errEl.classList.remove('show'); msgEl.classList.remove('show');
         document.getElementById('paySection').style.display = 'block';
         document.getElementById('chooseBtn').style.display = 'none';
@@ -385,12 +402,14 @@
         payBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>&nbsp; Submitting...';
 
         try {
+          if (!chosen) { showErr('Please choose a plan — Standard (R200/mo) or Free 1-Month Trial.'); payBtn.disabled = false; payBtn.innerHTML = '<i class="fa-solid fa-lock"></i>&nbsp; Submit Payment & Request Approval'; return; }
+          const isTrial = chosen === 'trial';
           var { error } = await client.from('provider_upgrade_requests').insert({
             user_id: user.id,
             plan: chosen,
-            amount: Number(chosenAmount),
-            payment_ref: document.getElementById('paymentRef').value.trim() || null,
-            notes: document.getElementById('paymentNotes').value.trim() || null,
+            amount: isTrial ? 0 : Number(chosenAmount),
+            payment_ref: isTrial ? 'FREE-TRIAL' : (document.getElementById('paymentRef').value.trim() || null),
+            notes: (isTrial ? 'Free 1-month trial — no payment. ' : '') + (document.getElementById('paymentNotes').value.trim() || ''),
             status: 'pending'
           });
           if (error) { showErr(error.message || 'Could not submit your request.'); payBtn.disabled = false; payBtn.innerHTML = '<i class="fa-solid fa-lock"></i>&nbsp; Submit Payment & Request Approval'; return; }
@@ -408,7 +427,9 @@
           var st = document.getElementById('verifyStateBox');
           st.style.display = 'block';
           document.getElementById('verifyStateTitle').textContent = 'Application submitted';
-          document.getElementById('verifyStateText').innerHTML = 'Your payment and identity photos are now under review. Once accepted your account will automatically become a Service Provider and you\u2019ll be taken to your provider portal.';
+          document.getElementById('verifyStateText').innerHTML = chosen === 'trial'
+            ? 'Your free 30-day trial application and identity photos are now under review. Once accepted your account will automatically become a Service Provider and your free month begins — no payment required.'
+            : 'Your payment and identity photos are now under review. Once accepted your account will automatically become a Service Provider and you\u2019ll be taken to your provider portal.';
           if (window.scrollTo) window.scrollTo(0, 0);
         } catch (ex) {
           showErr('Something went wrong. Please try again.');
