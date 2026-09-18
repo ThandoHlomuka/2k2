@@ -917,7 +917,7 @@
                 <div class="view-profile" id="userProfileView">
                     <div class="profile-card view-header-card">
                         <div class="view-avatar">
-                            <img id="userViewAvatar" src="" alt="" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'">
+                            <img id="userViewAvatar" src="" alt="" onerror="this.style.display='none'; if(this.nextElementSibling)this.nextElementSibling.style.display='flex'">
                             <div class="avatar-placeholder" style="display:none"><i class="fas fa-user"></i></div>
                         </div>
                         <div class="view-basic-info">
@@ -1336,7 +1336,7 @@
                 <div class="view-profile" id="directoryViewContent">
                     <div class="profile-card view-header-card">
                         <div class="view-avatar" id="directoryViewAvatar">
-                            <img id="dirViewAvatar" src="" alt="" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'">
+                            <img id="dirViewAvatar" src="" alt="" onerror="this.style.display='none'; if(this.nextElementSibling)this.nextElementSibling.style.display='flex'">
                             <div class="avatar-placeholder" style="display:none"><i class="fas fa-user"></i></div>
                         </div>
                         <div class="view-basic-info">
@@ -2272,7 +2272,7 @@
                 <div class="view-profile" id="serviceViewContent">
                     <div class="profile-card view-header-card">
                         <div class="view-avatar" id="serviceViewAvatar">
-                            <img id="svcViewAvatar" src="" alt="" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'">
+                            <img id="svcViewAvatar" src="" alt="" onerror="this.style.display='none'; if(this.nextElementSibling)this.nextElementSibling.style.display='flex'">
                             <div class="avatar-placeholder" style="display:none"><i class="fas fa-concierge-bell"></i></div>
                         </div>
                         <div class="view-basic-info">
@@ -2941,7 +2941,7 @@
                 <div class="view-profile" id="venueViewContent">
                     <div class="profile-card view-header-card">
                         <div class="view-avatar" id="venueViewAvatar">
-                            <img id="venViewAvatar" src="" alt="" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'">
+                            <img id="venViewAvatar" src="" alt="" onerror="this.style.display='none'; if(this.nextElementSibling)this.nextElementSibling.style.display='flex'">
                             <div class="avatar-placeholder" style="display:none"><i class="fas fa-store"></i></div>
                         </div>
                         <div class="view-basic-info">
@@ -3918,12 +3918,12 @@
       });
     })();
     </script>
-    <script src="script.js?v=57"></script>
+    <script src="script.js?v=58"></script>
     <script src="media-player.js?v=4"></script>
     <script src="products.js?v=29"></script>
     <script src="shipping.js?v=2"></script>
     <script src="invoices.js?v=2"></script>
-    <script src="bookings-advance.js?v=3"></script>
+    <script src="bookings-advance.js?v=4"></script>
     <script src="msg-lock.js?v=2"></script>
     <script>
         let onbSlide = 0;

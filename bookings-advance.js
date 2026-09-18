@@ -41,7 +41,12 @@
   function getRates(entity) {
     if (entity && Array.isArray(entity.rates) && entity.rates.length) return entity.rates;
     if (entity && entity.bookingRate != null && num(entity.bookingRate) > 0) return [{ label: 'Venue Booking', amount: num(entity.bookingRate) }];
-    return entity && entity.name ? [{ label: entity.name, amount: num(entity.rate) }] : [];
+    if (entity && entity.name) {
+      var m = String(entity.rate == null ? '' : entity.rate).match(/(\d+(?:\.\d+)?)/);
+      var amt = m ? parseFloat(m[1]) : 0;
+      return [{ label: entity.name, amount: amt }];
+    }
+    return [];
   }
 
   function getPackages(entity) {

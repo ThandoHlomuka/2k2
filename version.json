@@ -1,11 +1,12 @@
 {
-  "version": "2.3.11",
-  "title": "UI polish: mobile tabs, Invest portal switch, products & monetization layout",
+  "version": "2.3.12",
+  "title": "Venue booking fix + address reveal + onerror null-safety",
   "notes": [
-    "New: 'Invest' link added to the Switch Portal section (member + provider sidebars) linking to the investor page/portal invest.html",
-    "Fixed: services directory filter tabs no longer collapse to a bare text line - the 'All' tab row always renders (falls back to the categories present on live services)",
-    "Fixed: monetization hub (provider) grid cards were crushing to ~1px slivers from a grid-template collapse bug - guide, revenue-by-source and earnings-teaser cards now keep comfortable widths on all screens",
-    "Fixed: filter tab pills now have roomier padding (26px sides / 19px on mobile) with row right-padding so tab buttons no longer sit pressed against the tab edges (products + all directories)",
-    "Fixed: products filter tabs no longer re-add duplicate category tabs when the products list re-renders"
+    "New: venue directory cards now show a Book button (price from bookingRate, or parsed from rate text e.g. 'R150 entry / Free')",
+    "New: venue creation stamps ownerId/ownerId/providerId so schedule.js and bookings-advance can operate on shared-directory venues",
+    "New: admin edit-venue form now includes bookingRate and cancelWindowHours fields, plus inline Approve button for pending venues",
+    "New: schedule.js venue support — venue entries appear in ownEntities with '(Venue)' label, getAvail reads entity.hours for day availability",
+    "Fixed: bookings-advance getRates now parses text rates (e.g. 'R150 entry / Free' books at R150 instead of R0)",
+    "Fixed: 8 inline avatar onerror handlers (index + provider) now null-guard nextElementSibling, eliminating the intermittent narrow-viewport smoke flake"
   ]
 }

@@ -1065,10 +1065,14 @@ function renderAdminVenues() {
             <td><span class="directory-type-badge" style="background:${t.color||'#8a7b55'}20;color:${t.color||'#8a7b55'};padding:4px 10px;border-radius:12px;font-size:0.75rem;font-weight:600">${t.label || v.category}</span></td>
             <td>${v.location || '-'}</td>
             <td>${v.capacity || '-'}</td>
-            <td><span class="status-badge status-${v.status}">${v.status}</span></td>
+            <td><span class="status-badge status-${v.status}">${v.status || 'pending'}</span></td>
             <td>${fmtDate(v.createdAt)}</td>
             <td>
                 <div class="admin-actions">
+                    ${(typeof approvalStatus === 'function' && approvalStatus(v) === 'pending') ? `
+                    <button class="btn btn-success btn-xs" onclick="adminApproveVenueItem('${v.id}')" title="Approve venue">
+                        <i class="fas fa-check" style="color:#10b981"></i>
+                    </button>` : ''}
                     <button class="btn btn-secondary btn-xs" onclick="adminViewVenue('${v.id}')"><i class="fas fa-eye"></i></button>
                     <button class="btn btn-secondary btn-xs" onclick="adminToggleVenueStatus('${v.id}')" title="${v.status === 'suspended' ? 'Reinstate' : 'Suspend'}">
                         <i class="fas fa-${v.status === 'suspended' ? 'check-circle' : 'ban'}" style="color:${v.status === 'suspended' ? '#10b981' : '#f59e0b'}"></i>
@@ -1080,11 +1084,27 @@ function renderAdminVenues() {
     }).join('');
 }
 
+function adminApproveVenueItem(id) {
+    const res = (typeof reviewItem === 'function') ? reviewItem('venue', id, 'approved', '') : null;
+    if (res && res.ok) { showToast('Venue approved.'); }
+    else {
+        const venues = Storage.getVenues();
+        const v = venues.find(x => x.id === id);
+        if (!v) return;
+        v.status = 'active';
+        v.approval = { status: 'approved', requestedAt: v.approval && v.approval.requestedAt, reviewedAt: new Date().toISOString(), reviewedBy: 'admin' };
+        Storage.setVenues(venues);
+        showToast('Venue approved.');
+    }
+    renderAdminVenues();
+}
+
 function adminToggleVenueStatus(id) {
     const venues = Storage.getVenues();
     const v = venues.find(x => x.id === id);
     if (!v) return;
     v.status = v.status === 'suspended' ? 'active' : 'suspended';
+    if (v.status === 'active' && !v.approval) v.approval = { status: 'approved', reviewedAt: new Date().toISOString(), reviewedBy: 'admin' };
     Storage.setVenues(venues);
     showToast(v.status === 'suspended' ? 'Venue suspended.' : 'Venue reinstated.');
     renderAdminVenues();
@@ -1140,6 +1160,10 @@ function adminEditVenue(id) {
         <input class="admin-form-input" id="adminEditVenueAddress" value="${escapeHtml(v.address || '')}" />
         <label class="admin-form-label" style="margin-top:12px">Cover Charge</label>
         <input class="admin-form-input" id="adminEditVenueRate" value="${escapeHtml(v.rate || '')}" />
+        <label class="admin-form-label" style="margin-top:12px">Booking Rate (R) — enables the Book button</label>
+        <input class="admin-form-input" id="adminEditVenueBookingRate" type="number" min="0" value="${v.bookingRate || ''}" />
+        <label class="admin-form-label" style="margin-top:12px">Cancellation Window (hours)</label>
+        <input class="admin-form-input" id="adminEditVenueCancelWindow" type="number" min="0" value="${v.cancelWindowHours || ''}" />
         <label class="admin-form-label" style="margin-top:12px">Capacity</label>
         <input class="admin-form-input" id="adminEditVenueCapacity" value="${escapeHtml(v.capacity || '')}" />
         <label class="admin-form-label" style="margin-top:12px">Website</label>
@@ -1168,10 +1192,17 @@ function adminSaveVenueEdit(id) {
     v.location = document.getElementById('adminEditVenueLocation').value.trim();
     v.address = document.getElementById('adminEditVenueAddress').value.trim();
     v.rate = document.getElementById('adminEditVenueRate').value.trim();
+    v.bookingRate = parseFloat(document.getElementById('adminEditVenueBookingRate').value) || 0;
+    v.cancelWindowHours = parseInt(document.getElementById('adminEditVenueCancelWindow').value, 10) || 0;
     v.capacity = document.getElementById('adminEditVenueCapacity').value.trim();
     v.website = document.getElementById('adminEditVenueWebsite').value.trim();
     v.bio = document.getElementById('adminEditVenueBio').value.trim();
     v.status = document.getElementById('adminEditVenueStatus').value;
+    if (v.status === 'active' && v.approval && v.approval.status === 'pending') {
+        v.approval.status = 'approved';
+        v.approval.reviewedAt = new Date().toISOString();
+        v.approval.reviewedBy = 'admin';
+    }
     v.editedByAdmin = true;
     Storage.setVenues(venues);
     showToast('Venue updated.');

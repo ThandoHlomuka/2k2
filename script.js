@@ -3135,6 +3135,14 @@ confirmDelete = function() {
 // ==========================================
 // VENUE DIRECTORY - BROWSE (General User Page)
 // ==========================================
+function venueBookingPrice(v) {
+    if (!v) return 0;
+    const br = parseFloat(v.bookingRate);
+    if (!isNaN(br) && br > 0) return br;
+    const m = String(v.rate == null ? '' : v.rate).match(/(\d+(?:\.\d+)?)/);
+    return m ? parseFloat(m[1]) : 0;
+}
+
 function renderVenueDirectory() {
     const venues = Storage.getVenues();
     const container = document.getElementById('venueDirectoryList');
@@ -3191,10 +3199,11 @@ function renderVenueDirectory() {
                 </div>
                 <p class="directory-card-location"><i class="fas fa-map-marker-alt"></i> ${v.location}</p>
                 <div class="directory-card-tags">${(v.tags || []).slice(0, 3).map(t => `<span class="mini-tag">${t}</span>`).join('')}</div>
-                <div class="directory-card-footer">
-                    <span class="directory-card-rate">${v.rate || 'Free Entry'}</span>
-                    ${v.capacity ? `<span class="directory-card-capacity"><i class="fas fa-users"></i> ${v.capacity}</span>` : ''}
-                </div>
+<div class="directory-card-footer">
+                <span class="directory-card-rate">${v.rate || 'Free Entry'}</span>
+                ${v.capacity ? `<span class="directory-card-capacity"><i class="fas fa-users"></i> ${v.capacity}</span>` : ''}
+                <button type="button" class="btn btn-primary btn-sm directory-card-book" onclick="event.stopPropagation(); openBookingModal('${v.id}','venue')"><i class="fas fa-calendar-check"></i> Book</button>
+            </div>
             </div>
         </div>`;
     }).join('');
@@ -3290,11 +3299,11 @@ function viewVenueDirectory(id) {
 
     const bookCard = document.getElementById('venViewBookCard');
     if (bookCard) {
-        const bookingRate = parseFloat(v.bookingRate) || 0;
-        if (bookingRate > 0) {
+        const bookingPrice = venueBookingPrice(v);
+        if (bookingPrice > 0) {
             bookCard.style.display = '';
             const priceEl = document.getElementById('venViewBookPrice');
-            if (priceEl) priceEl.textContent = 'R' + bookingRate.toFixed(0) + ' per booking';
+            if (priceEl) priceEl.textContent = 'R' + Math.round(bookingPrice) + ' per booking';
             const policyEl = document.getElementById('venViewRefundPolicy');
             if (policyEl) {
                 const wh = parseInt(v.cancelWindowHours, 10) || 0;
@@ -3338,9 +3347,13 @@ function handleVenueSubmit(e) {
     e.preventDefault();
     const id = document.getElementById('venueId').value;
     const now = new Date().toISOString();
+    const { id: providerId, name: providerName } = (typeof getCurrentProviderIdentity === 'function') ? getCurrentProviderIdentity() : { id: 'current', name: '' };
 
     const venue = {
         id: id || generateId(),
+        ownerId: providerId,
+        ownerName: providerName,
+        providerId: providerId,
         name: document.getElementById('venueName').value,
         category: document.getElementById('venueCategory').value,
         email: document.getElementById('venueEmail').value,

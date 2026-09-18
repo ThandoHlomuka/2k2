@@ -9,25 +9,28 @@
   var DAY_KEYS = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
 
   function ownEntities() {
-    var services = [], listings = [];
+    var services = [], listings = [], venues = [];
     try {
       var provId = findCurrentProviderId();
       services = (Storage.getServices() || []).filter(function (s) { return String(s.ownerId) === String(provId) || String(s.providerId) === String(provId); });
       listings = (Storage.getListings() || []).filter(function (l) { return String(l.ownerId) === String(provId) || String(l.providerId) === String(provId); });
+      venues = (Storage.getVenues() || []).filter(function (v) { return String(v.ownerId) === String(provId) || String(v.providerId) === String(provId); });
     } catch (e) {}
     return {
       services: services,
       listings: listings,
+      venues: venues,
       all: services.map(function (s) { return { type: 'service', entity: s }; })
         .concat(listings.map(function (l) { return { type: 'listing', entity: l }; }))
+        .concat(venues.map(function (v) { return { type: 'venue', entity: v }; }))
     };
   }
 
   function storageSet(type) {
-    return type === 'service' ? Storage.setServices : Storage.setListings;
+    return type === 'service' ? Storage.setServices : (type === 'venue' ? Storage.setVenues : Storage.setListings);
   }
   function storageGet(type) {
-    return type === 'service' ? Storage.getServices : Storage.getListings;
+    return type === 'service' ? Storage.getServices : (type === 'venue' ? Storage.getVenues : Storage.getListings);
   }
 
   function saveEntity(type, id, patch) {
@@ -41,11 +44,15 @@
 
   function getAvail(entity) {
     var a = entity.availability || {};
+    var days = DAY_KEYS.reduce(function (o, d) { o[d] = !!a[d]; return o; }, {});
+    if (entity && entity.hours) {
+      DAY_KEYS.forEach(function (d) { if (typeof entity.hours[d] === 'boolean') days[d] = entity.hours[d]; });
+    }
     return {
       workStart: a.workStart || entity.workStart || '09:00',
       workEnd: a.workEnd || entity.workEnd || '17:00',
       slotStep: parseInt(a.slotStep || entity.slotStep, 10) || 60,
-      days: DAY_KEYS.reduce(function (o, d) { o[d] = !!a[d]; return o; }, {})
+      days: days
     };
   }
 
@@ -58,7 +65,7 @@
     var items = ownEntities().all;
     var opts = '<option value="">Choose an item to manage</option>';
     items.forEach(function (it, i) {
-      var label = (it.entity.name || it.entity.title || 'Untitled') + (it.type === 'service' ? ' (Service)' : ' (Listing)');
+      var label = (it.entity.name || it.entity.title || 'Untitled') + (it.type === 'service' ? ' (Service)' : (it.type === 'venue' ? ' (Venue)' : ' (Listing)'));
       opts += '<option value="' + i + '">' + label + '</option>';
     });
     sel.innerHTML = opts;
