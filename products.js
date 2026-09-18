@@ -10,18 +10,16 @@
   'use strict';
 
   var PRODUCT_CATEGORIES = {
-    fashion: { label: 'Fashion & Apparel', icon: 'fa-shirt', color: '#ec4899' },
-    electronics: { label: 'Electronics & Gadgets', icon: 'fa-plug', color: '#3b82f6' },
-    home: { label: 'Home & Living', icon: 'fa-house', color: '#f59e0b' },
-    beauty: { label: 'Beauty & Care', icon: 'fa-spa', color: '#a855f7' },
-    food: { label: 'Food & Drink', icon: 'fa-utensils', color: '#ef4444' },
-    health: { label: 'Wellness & Health', icon: 'fa-heart-pulse', color: '#10b981' },
-    collectibles: { label: 'Art & Collectibles', icon: 'fa-gem', color: '#a07d12' },
-    services_goods: { label: 'Services & Handmade', icon: 'fa-hand-holding-heart', color: '#06b6d4' },
-    toys: { label: 'Toys & Kids', icon: 'fa-baby-carriage', color: '#14b8a6' },
-    sports: { label: 'Sports & Outdoors', icon: 'fa-futbol', color: '#6366f1' },
-    automotive: { label: 'Automotive', icon: 'fa-car', color: '#64748b' },
-    digital: { label: 'Digital & Vouchers', icon: 'fa-ticket', color: '#8b5cf6' },
+    toys: { label: 'Toys', icon: 'fa-dice', color: '#e11d48' },
+    accessories: { label: 'Accessories', icon: 'fa-ring', color: '#2563eb' },
+    bdsm_acc: { label: 'BDSM Accessories', icon: 'fa-link', color: '#6366f1' },
+    candy: { label: 'Candy', icon: 'fa-candy-cane', color: '#ef4444' },
+    clothing: { label: 'Clothing', icon: 'fa-shirt', color: '#ec4899' },
+    masks: { label: 'Masks', icon: 'fa-masks-theater', color: '#8b5cf6' },
+    creams: { label: 'Creams', icon: 'fa-hand-sparkles', color: '#a855f7' },
+    condoms: { label: 'Condoms', icon: 'fa-shield-heart', color: '#10b981' },
+    lube: { label: 'Lube', icon: 'fa-droplet', color: '#06b6d4' },
+    libido: { label: 'Libido Boosters', icon: 'fa-heart-pulse', color: '#f59e0b' },
     other: { label: 'Other', icon: 'fa-box', color: '#a99c7e' }
   };
 

@@ -1,12 +1,8 @@
 {
-  "version": "2.3.12",
-  "title": "Venue booking fix + address reveal + onerror null-safety",
+  "version": "2.3.13",
+  "title": "Products categories overhaul: adult-marketplace taxonomy",
   "notes": [
-    "New: venue directory cards now show a Book button (price from bookingRate, or parsed from rate text e.g. 'R150 entry / Free')",
-    "New: venue creation stamps ownerId/ownerId/providerId so schedule.js and bookings-advance can operate on shared-directory venues",
-    "New: admin edit-venue form now includes bookingRate and cancelWindowHours fields, plus inline Approve button for pending venues",
-    "New: schedule.js venue support — venue entries appear in ownEntities with '(Venue)' label, getAvail reads entity.hours for day availability",
-    "Fixed: bookings-advance getRates now parses text rates (e.g. 'R150 entry / Free' books at R150 instead of R0)",
-    "Fixed: 8 inline avatar onerror handlers (index + provider) now null-guard nextElementSibling, eliminating the intermittent narrow-viewport smoke flake"
+    "Changed: product filter tabs + category dropdowns (general users, providers, admin) now use the requested 2k2 taxonoomy: Toys, Accessories, BDSM Accessories, Candy, Clothing, Masks, Creams, Condoms, Lube, Libido Boosters, Other (was the generic marketplace list)",
+    "Applies everywhere products are categorised: browse filter tabs, products category filter dropdowns, provider add/edit product form, admin products filter"
   ]
 }
