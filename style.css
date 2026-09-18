@@ -7984,6 +7984,65 @@ h1, h2, h3, h4 {
     min-height: 40px;
 }
 
+/* ---- Detail view section tabs (service detail page) ---- */
+.detail-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 4px 0 18px;
+    padding: 6px;
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+}
+
+.detail-tab {
+    flex: 1 1 auto;
+    min-width: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 10px 14px;
+    border: none;
+    border-radius: 10px;
+    background: transparent;
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s, box-shadow 0.2s;
+    white-space: nowrap;
+}
+
+.detail-tab:hover {
+    background: rgba(201, 162, 39, 0.1);
+    color: var(--primary-dark);
+}
+
+.detail-tab.active {
+    background: linear-gradient(135deg, #d3ad44, #a07d12);
+    color: white;
+    box-shadow: 0 3px 10px rgba(211, 173, 68, 0.3);
+}
+
+.detail-tab-badge {
+    background: rgba(255, 255, 255, 0.35);
+    border-radius: 999px;
+    padding: 0 7px;
+    font-size: 0.7rem;
+    line-height: 1.5;
+    font-weight: 700;
+}
+
+.detail-panel {
+    display: none;
+}
+
+.detail-panel.active {
+    display: block;
+}
+
 .activity-list {
     display: flex;
     flex-direction: column;

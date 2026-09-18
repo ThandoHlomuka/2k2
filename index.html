@@ -56,7 +56,7 @@
     <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
     <link rel="manifest" href="manifest.webmanifest">
 
-    <link rel="stylesheet" href="style.css?v=44">
+    <link rel="stylesheet" href="style.css?v=45">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700;900&family=Inter:wght@300;400;500;600;700&family=Dancing+Script:wght@700&display=swap" rel="stylesheet">
 
@@ -2286,51 +2286,87 @@
                         </div>
                     </div>
 
-                    <div class="view-grid">
-                        <div class="profile-card">
-                            <h2><i class="fas fa-info-circle"></i> Details</h2>
-                            <div class="detail-row"><span class="detail-label">Category</span><span class="detail-value" id="svcViewCategory">-</span></div>
-                            <div class="detail-row"><span class="detail-label">Email</span><span class="detail-value" id="svcViewEmail">-</span></div>
-                            <div class="detail-row"><span class="detail-label">Phone</span><span class="detail-value" id="svcViewPhone">-</span></div>
-                            <div class="detail-row"><span class="detail-label">Rates</span><span class="detail-value" id="svcViewRate">-</span></div>
-                        </div>
-                        <div class="profile-card">
-                            <h2><i class="fas fa-file-alt"></i> About</h2>
-                            <p id="svcViewBio" class="view-bio">-</p>
-                            <div class="detail-row" style="margin-top:16px">
-                                <span class="detail-label">Website</span>
-                                <a href="#" id="svcViewWebsite" target="_blank" class="detail-link">-</a>
+                    <div class="detail-tabs" id="serviceDetailTabs">
+                        <button class="detail-tab active" data-dtab="overview" onclick="switchServiceViewTab('overview', this)"><i class="fas fa-circle-info"></i> Overview</button>
+                        <button class="detail-tab" data-dtab="gallery" onclick="switchServiceViewTab('gallery', this)"><i class="fas fa-images"></i> Gallery</button>
+                        <button class="detail-tab" data-dtab="availability" onclick="switchServiceViewTab('availability', this)"><i class="fas fa-clock"></i> Availability</button>
+                        <button class="detail-tab" data-dtab="activity" onclick="switchServiceViewTab('activity', this)"><i class="fas fa-layer-group"></i> Activity</button>
+                        <button class="detail-tab" data-dtab="reviews" onclick="switchServiceViewTab('reviews', this)"><i class="fas fa-star"></i> Reviews <span class="detail-tab-badge" id="svcReviewCountBadge" data-review-count="service">0</span></button>
+                    </div>
+
+                    <div class="detail-panel active" id="svcPanel-overview">
+                        <div class="view-grid">
+                            <div class="profile-card">
+                                <h2><i class="fas fa-info-circle"></i> Details</h2>
+                                <div class="detail-row"><span class="detail-label">Category</span><span class="detail-value" id="svcViewCategory">-</span></div>
+                                <div class="detail-row"><span class="detail-label">Email</span><span class="detail-value" id="svcViewEmail">-</span></div>
+                                <div class="detail-row"><span class="detail-label">Phone</span><span class="detail-value" id="svcViewPhone">-</span></div>
+                                <div class="detail-row"><span class="detail-label">Rates</span><span class="detail-value" id="svcViewRate">-</span></div>
                             </div>
-                            <div class="profile-links" id="svcViewLinks"></div>
+                            <div class="profile-card">
+                                <h2><i class="fas fa-file-alt"></i> About</h2>
+                                <p id="svcViewBio" class="view-bio">-</p>
+                                <div class="detail-row" style="margin-top:16px">
+                                    <span class="detail-label">Website</span>
+                                    <a href="#" id="svcViewWebsite" target="_blank" class="detail-link">-</a>
+                                </div>
+                                <div class="profile-links" id="svcViewLinks"></div>
+                            </div>
+                        </div>
+
+                        <div class="profile-card">
+                            <h2><i class="fas fa-tag"></i> Specialties</h2>
+                            <div class="tags-container" id="svcViewTags"><span class="tag empty-tag">No specialties listed</span></div>
                         </div>
                     </div>
 
-                    <div class="profile-card">
-                        <h2><i class="fas fa-tag"></i> Specialties</h2>
-                        <div class="tags-container" id="svcViewTags"><span class="tag empty-tag">No specialties listed</span></div>
-                    </div>
-
-                    <div class="profile-card">
-                        <h2><i class="fas fa-images"></i> Gallery</h2>
-                        <div class="directory-gallery" id="svcViewGallery"></div>
-                    </div>
-
-                    <div class="profile-card">
-                        <h2><i class="fas fa-clock"></i> Availability</h2>
-                        <div class="availability-view" id="svcViewAvailability"></div>
-                    </div>
-
-                    <div class="profile-card" id="serviceActivityCard">
-                        <h2><i class="fas fa-layer-group"></i> Provider Activity</h2>
-                        <p class="activity-subtitle">Everything this provider has shared on 2k2</p>
-                        <div class="activity-tabs">
-                            <button class="activity-tab active" data-act-tab="experiences" onclick="switchProviderActivity('experiences','serviceActivityContent',this)"><i class="fas fa-gem"></i> Experiences</button>
-                            <button class="activity-tab" data-act-tab="gigs" onclick="switchProviderActivity('gigs','serviceActivityContent',this)"><i class="fas fa-briefcase"></i> Gigs</button>
-                            <button class="activity-tab" data-act-tab="content" onclick="switchProviderActivity('content','serviceActivityContent',this)"><i class="fas fa-photo-film"></i> Content</button>
-                            <button class="activity-tab" data-act-tab="forums" onclick="switchProviderActivity('forums','serviceActivityContent',this)"><i class="fas fa-comments"></i> Forums</button>
-                            <button class="activity-tab" data-act-tab="events" onclick="switchProviderActivity('events','serviceActivityContent',this)"><i class="fas fa-calendar"></i> Events</button>
+                    <div class="detail-panel" id="svcPanel-gallery">
+                        <div class="profile-card">
+                            <h2><i class="fas fa-images"></i> Gallery</h2>
+                            <div class="directory-gallery" id="svcViewGallery"></div>
                         </div>
-                        <div class="activity-section" id="serviceActivityContent"></div>
+                    </div>
+
+                    <div class="detail-panel" id="svcPanel-availability">
+                        <div class="profile-card">
+                            <h2><i class="fas fa-clock"></i> Availability</h2>
+                            <div class="availability-view" id="svcViewAvailability"></div>
+                        </div>
+                    </div>
+
+                    <div class="detail-panel" id="svcPanel-activity">
+                        <div class="profile-card" id="serviceActivityCard">
+                            <h2><i class="fas fa-layer-group"></i> Provider Activity</h2>
+                            <p class="activity-subtitle">Everything this provider has shared on 2k2</p>
+                            <div class="activity-tabs">
+                                <button class="activity-tab active" data-act-tab="experiences" onclick="switchProviderActivity('experiences','serviceActivityContent',this)"><i class="fas fa-gem"></i> Experiences</button>
+                                <button class="activity-tab" data-act-tab="gigs" onclick="switchProviderActivity('gigs','serviceActivityContent',this)"><i class="fas fa-briefcase"></i> Gigs</button>
+                                <button class="activity-tab" data-act-tab="content" onclick="switchProviderActivity('content','serviceActivityContent',this)"><i class="fas fa-photo-film"></i> Content</button>
+                                <button class="activity-tab" data-act-tab="forums" onclick="switchProviderActivity('forums','serviceActivityContent',this)"><i class="fas fa-comments"></i> Forums</button>
+                                <button class="activity-tab" data-act-tab="events" onclick="switchProviderActivity('events','serviceActivityContent',this)"><i class="fas fa-calendar"></i> Events</button>
+                            </div>
+                            <div class="activity-section" id="serviceActivityContent"></div>
+                        </div>
+                    </div>
+
+                    <div class="detail-panel" id="svcPanel-reviews">
+                        <div class="profile-card review-section-card" id="serviceReviewSection">
+                            <h2><i class="fas fa-star"></i> Reviews & Ratings</h2>
+                            <div class="review-summary" id="serviceReviewSummary"></div>
+                            <div class="review-form-wrap">
+                                <h3>Leave a Review</h3>
+                                <div class="star-rating-input" id="serviceStarRating" data-rating="0">
+                                    <i class="fas fa-star" data-star="1"></i>
+                                    <i class="fas fa-star" data-star="2"></i>
+                                    <i class="fas fa-star" data-star="3"></i>
+                                    <i class="fas fa-star" data-star="4"></i>
+                                    <i class="fas fa-star" data-star="5"></i>
+                                </div>
+                                <textarea id="serviceReviewText" placeholder="Write your review..." rows="3"></textarea>
+                                <button class="btn btn-primary btn-sm" onclick="submitReview('service', currentServiceViewId)"><i class="fas fa-paper-plane"></i> Submit Review</button>
+                            </div>
+                            <div class="reviews-list" id="serviceReviewsList"></div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -3918,7 +3954,7 @@
       });
     })();
     </script>
-    <script src="script.js?v=59"></script>
+    <script src="script.js?v=60"></script>
     <script src="media-player.js?v=4"></script>
     <script src="products.js?v=30"></script>
     <script src="shipping.js?v=2"></script>

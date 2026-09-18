@@ -4358,7 +4358,27 @@ function viewServiceDirectory(id) {
     currentActivityOwner = { id: s.ownerId, name: s.ownerName };
     renderProviderActivity('serviceActivityContent', 'experiences');
 
+    // Reset the section tabs to the overview panel.
+    document.querySelectorAll('#serviceViewContent .detail-tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('#serviceViewContent .detail-panel').forEach(p => p.classList.remove('active'));
+    const overviewTab = document.querySelector('#serviceViewContent .detail-tab[data-dtab="overview"]');
+    if (overviewTab) overviewTab.classList.add('active');
+    const overviewPanel = document.getElementById('svcPanel-overview');
+    if (overviewPanel) overviewPanel.classList.add('active');
+
+    // Reviews & Ratings section (reuses the shared review system with target 'service').
+    renderReviewsList('service', s.id);
+    initStarRating('serviceStarRating');
+
     navigateTo('service-directory-view');
+}
+
+function switchServiceViewTab(tab, btn) {
+    document.querySelectorAll('#serviceViewContent .detail-tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('#serviceViewContent .detail-panel').forEach(p => p.classList.remove('active'));
+    if (btn) btn.classList.add('active');
+    const panel = document.getElementById('svcPanel-' + tab);
+    if (panel) panel.classList.add('active');
 }
 
 // ==========================================
@@ -6452,6 +6472,11 @@ function getRatingBadgeHtml(targetType, targetId) {
 function renderReviewsList(targetType, targetId) {
     const reviews = getReviewsForTarget(targetType, targetId);
     reviews.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+    // Update a review-count badge if one exists for this target type
+    // (e.g. the tab badge on the service detail view).
+    const countBadge = document.querySelector('[data-review-count="' + targetType + '"]');
+    if (countBadge) countBadge.textContent = reviews.length;
 
     const summaryEl = document.getElementById(targetType + 'ReviewSummary');
     const listEl = document.getElementById(targetType + 'ReviewsList');
