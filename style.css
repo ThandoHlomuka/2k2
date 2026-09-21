@@ -2639,6 +2639,8 @@ h1, h2, h3, h4 {
 .filter-bar {
     display: flex;
     gap: 12px;
+    flex-wrap: wrap;
+    align-items: center;
 }
 
 .filter-bar input,

@@ -1,9 +1,8 @@
 {
-  "version": "2.3.15",
-  "title": "Service detail page section tabs + reviews",
+  "version": "2.3.16",
+  "title": "Directory filter bars wrap instead of overflowing at laptop widths",
   "notes": [
-    "Changed: the service detail page now shows a section tab bar (Overview / Gallery / Availability / Activity / Reviews) instead of one long stacked page — same gold-pill design language as the rest of the app",
-    "Changed: added a Reviews & Ratings section to services with the shared 5-star review system (summary, leave-a-review, list) and a review-count badge on the Reviews tab",
-    "Changed: works identically on both the general-user portal and the service-provider portal service detail views"
+    "Fixed: Content, Events and Browse Ads directory filter bars (search / location / sort / Grid-List toggle) no longer squish or run off the right edge of the page on desktop widths around 769-1024px - the bar now wraps its controls cleanly onto a second row",
+    "Fixed: verified responsive on all portals (general-user and provider) at every width from 320px up to 1440px; tabs still never collapse and nothing clips"
   ]
 }
