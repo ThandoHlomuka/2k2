@@ -66,6 +66,7 @@
 
   const cache = {};      // col -> array
   const writeQueues = {}; // col -> promise chain
+  const syncErrors = {}; // col -> { message, at } when the last upsert failed
   let readyState = false;
 
   function getClient() {
@@ -95,6 +96,10 @@
   function push(col, arr) {
     const client = getClient();
     if (!client) return;
+    // Anti-clobber: never upsert an EMPTY array. A single empty device (or a
+    // delete-all action) must not be allowed to wipe the shared mirror and, via
+    // the next hydrate, every device's local copy. Empty states stay local-only.
+    if (!Array.isArray(arr) || arr.length === 0) return;
     const payload = JSON.parse(JSON.stringify(arr)); // strip functions/cycles
     writeQueues[col] = (writeQueues[col] || Promise.resolve())
       .catch(function () {})
@@ -104,7 +109,20 @@
           .upsert(
             { collection: col, data: payload, updated_at: new Date().toISOString() },
             { onConflict: 'collection' }
-          );
+          )
+          .then(function (res) {
+            if (res && res.error) {
+              syncErrors[col] = { message: res.error.message || 'upsert failed', at: new Date().toISOString() };
+              try { console.warn('[2k2 sync]', col, res.error.message); } catch (e) {}
+            } else {
+              delete syncErrors[col];
+            }
+            return res;
+          })
+          .catch(function (err) {
+            syncErrors[col] = { message: (err && err.message) || 'sync failed', at: new Date().toISOString() };
+            try { console.warn('[2k2 sync]', col, err && err.message); } catch (e) {}
+          });
       });
   }
 
@@ -129,8 +147,17 @@
       for (const c of COLLECTIONS) {
         const local = loadLocal(c.col);
         if (c.col in remote) {
-          // Supabase is authoritative; adopt it (and mirror to cache/local).
-          cache[c.col] = Array.isArray(remote[c.col]) ? remote[c.col] : local;
+          const r = remote[c.col];
+          // Anti-data-loss: a remote collection that exists but is EMPTY is
+          // never allowed to wipe non-empty local data (this cleared everyone's
+          // users when the cloud row came back []). Keep the local copy and push
+          // it back up to heal the mirror. Empty remote + empty local stays empty.
+          if (Array.isArray(r) && r.length === 0 && local.length > 0) {
+            cache[c.col] = local;
+            push(c.col, local);
+          } else {
+            cache[c.col] = Array.isArray(r) ? r : local;
+          }
           try { localStorage.setItem('k2_' + c.col, JSON.stringify(cache[c.col])); } catch (e) {}
         } else if (local.length > 0) {
           // Fresh DB: migrate existing localStorage data up.

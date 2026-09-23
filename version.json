@@ -1,8 +1,10 @@
 {
-  "version": "2.3.16",
-  "title": "Directory filter bars wrap instead of overflowing at laptop widths",
+  "version": "2.3.17",
+  "title": "Storage fix: users no longer vanish and new users persist (cloud sync hardened)",
   "notes": [
-    "Fixed: Content, Events and Browse Ads directory filter bars (search / location / sort / Grid-List toggle) no longer squish or run off the right edge of the page on desktop widths around 769-1024px - the bar now wraps its controls cleanly onto a second row",
-    "Fixed: verified responsive on all portals (general-user and provider) at every width from 320px up to 1440px; tabs still never collapse and nothing clips"
+    "Fixed: shared cloud storage could wipe every device's local data — when a collection's Supabase row came back EMPTY it was adopted as authoritative and overwrote the device's real local users on load (this is why current users disappeared)",
+    "Fixed: new users/records created while not signed in were silently dropped by the cloud write and then removed on the next load — sync errors are no longer swallowed and failed pushes no longer cascade into data loss",
+    "Fixed: an empty array from a single device can no longer upsert over the shared mirror for the whole community (empty states stay local-only)",
+    "Safe upgrade: any device still holding real users re-uploads them automatically on next load"
   ]
 }
