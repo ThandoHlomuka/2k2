@@ -1,10 +1,8 @@
 {
-  "version": "2.3.17",
-  "title": "Storage fix: users no longer vanish and new users persist (cloud sync hardened)",
+  "version": "2.3.18",
+  "title": "Advertiser/Investor portals open to members & providers — exit returns to your own portal",
   "notes": [
-    "Fixed: shared cloud storage could wipe every device's local data — when a collection's Supabase row came back EMPTY it was adopted as authoritative and overwrote the device's real local users on load (this is why current users disappeared)",
-    "Fixed: new users/records created while not signed in were silently dropped by the cloud write and then removed on the next load — sync errors are no longer swallowed and failed pushes no longer cascade into data loss",
-    "Fixed: an empty array from a single device can no longer upsert over the shared mirror for the whole community (empty states stay local-only)",
-    "Safe upgrade: any device still holding real users re-uploads them automatically on next load"
+    "General Users and Service Providers can now open the Advertise and Invest account pages and the exit/back links (Portal, Member Portal, Back to 2k2) return them to the portal they belong to: members to the GU portal, providers to the Provider portal, admins to Admin",
+    "Exit links on advertise.html + invest.html rewrite themselves from the signed-in role"
   ]
 }

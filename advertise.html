@@ -114,7 +114,7 @@ footer{border-top:1px solid rgba(212,168,83,.14);padding:26px 20px;text-align:ce
                 <a href="#custom">Custom</a>
                 <a href="#mine">My Campaigns</a>
                 <a href="#inquiry">Business Inquiry</a>
-                <a href="index.html">Portal</a>
+                <a href="index.html" data-exit-portal>Portal</a>
             </nav>
         </div>
     </div>
@@ -279,7 +279,7 @@ footer{border-top:1px solid rgba(212,168,83,.14);padding:26px 20px;text-align:ce
     </div>
 
     <footer>
-        <p>&copy; <span id="advYear">2026</span> 2k2 &middot; <a href="invest.html" class="tint">Invest</a> &middot; <a href="index.html" class="tint">Member Portal</a> &middot; Ad placements are subject to approval and our advertising terms.</p>
+        <p>&copy; <span id="advYear">2026</span> 2k2 &middot; <a href="invest.html" class="tint">Invest</a> &middot; <a href="index.html" class="tint" data-exit-portal>Member Portal</a> &middot; Ad placements are subject to approval and our advertising terms.</p>
     </footer>
 </div>
 
@@ -520,6 +520,37 @@ footer{border-top:1px solid rgba(212,168,83,.14);padding:26px 20px;text-align:ce
     document.getElementById('ssDays').addEventListener('input', updateSelfServePrice);
     if (window._2k2 && window._2k2.Auth && window._2k2.Auth.refreshSyncUser) {
         window._2k2.Auth.refreshSyncUser().then(function () { renderMyCampaigns(); });
+    }
+})();
+</script>
+<script>
+(function () {
+    'use strict';
+    function exitTarget() {
+        var role = null;
+        try {
+            var s = window._2k2 && window._2k2.Auth && window._2k2.Auth.syncUser ? window._2k2.Auth.syncUser() : null;
+            role = s && s.role;
+        } catch (e) {}
+        if (role === 'admin') return 'admin.html';
+        if (role === 'provider') return 'provider.html';
+        return 'index.html';
+    }
+    function applyExit() {
+        var t = exitTarget();
+        document.querySelectorAll('[data-exit-portal]').forEach(function (a) {
+            a.setAttribute('href', t);
+            if (t === 'admin.html') a.textContent = 'Admin Portal';
+            else if (t === 'provider.html') a.textContent = 'Provider Portal';
+            else a.textContent = 'Member Portal';
+        });
+    }
+    window._2k2ApplyExit = applyExit;
+    window._2k2ExitTarget = exitTarget;
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', applyExit);
+    else applyExit();
+    if (window._2k2 && window._2k2.Auth && window._2k2.Auth.refreshSyncUser) {
+        window._2k2.Auth.refreshSyncUser().then(applyExit);
     }
 })();
 </script>

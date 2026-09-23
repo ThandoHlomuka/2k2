@@ -77,7 +77,7 @@
                     <p>We are raising a seed round to accelerate growth, on-board more providers in key South African metros, and scale our payments and monetization infrastructure.</p>
                     <p>If you're an investor, angel or strategic partner interested in funding the next leader in the adult lifestyle space, request our investor deck or send us a note.</p>
                     <p style="color:#b8a88a">We respond to all qualified investor enquiries.</p>
-                    <p style="margin-top:14px"><a href="index.html" class="btn btn-primary">Back to 2k2 <i class="fas fa-arrow-right"></i></a></p>
+                    <p style="margin-top:14px"><a href="index.html" class="btn btn-primary" data-exit-portal>Back to 2k2 <i class="fas fa-arrow-right"></i></a></p>
                 </div>
             </div>
         </section>
@@ -136,7 +136,7 @@
         </section>
 
         <footer class="invest-footer">
-            <p>&copy; <span id="investYear">2026</span> 2k2 &middot; All rights reserved &middot; <a href="index.html">Member Portal</a> &middot; <a href="login.html">Sign In</a></p>
+            <p>&copy; <span id="investYear">2026</span> 2k2 &middot; All rights reserved &middot; <a href="index.html" data-exit-portal>Member Portal</a> &middot; <a href="login.html">Sign In</a></p>
         </footer>
     </main>
 
@@ -206,6 +206,34 @@
 
         if (document.readyState === 'loading') { document.addEventListener('DOMContentLoaded', loadStats); }
         else { loadStats(); }
+    })();
+    </script>
+    <script>
+    (function () {
+        'use strict';
+        function exitTarget() {
+            var role = null;
+            try {
+                var s = localStorage.getItem('k2_current_user');
+                if (s) role = (JSON.parse(s) || {}).role || null;
+            } catch (e) {}
+            if (role === 'admin') return 'admin.html';
+            if (role === 'provider') return 'provider.html';
+            return 'index.html';
+        }
+        function applyExit() {
+            var t = exitTarget();
+            document.querySelectorAll('[data-exit-portal]').forEach(function (a) {
+                a.setAttribute('href', t);
+                if (t === 'admin.html') a.textContent = 'Admin Portal';
+                else if (t === 'provider.html') a.textContent = 'Provider Portal';
+                else a.textContent = 'Member Portal';
+            });
+        }
+        window._2k2ApplyExit = applyExit;
+        window._2k2ExitTarget = exitTarget;
+        if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', applyExit);
+        else applyExit();
     })();
     </script>
     <script src="pwa.js?v=1"></script>
