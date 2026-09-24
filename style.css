@@ -5537,6 +5537,227 @@ h1, h2, h3, h4 {
     gap: 5px;
 }
 
+.event-theme-chip {
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    z-index: 3;
+    font-size: 0.68rem;
+    font-weight: 700;
+    padding: 4px 8px;
+    border-radius: 999px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.18);
+}
+
+.event-card-crowd {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 0 20px 8px;
+    font-size: 0.78rem;
+    color: var(--text-secondary, #8a7b55);
+}
+
+.event-card-crowd .fa-users {
+    color: var(--primary, #c9a227);
+}
+
+.event-card-crowd canvas,
+.event-crowd-track {
+    flex: 1;
+    height: 6px;
+    background: var(--border, #f3eddd);
+    border-radius: 999px;
+    overflow: hidden;
+}
+
+.event-crowd-fill {
+    height: 100%;
+    border-radius: 999px;
+    transition: width 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.event-crowd-track-lg {
+    height: 10px;
+    margin: 8px 0 6px;
+}
+
+.fomo-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    padding: 3px 8px;
+    border-radius: 999px;
+    border: 1px solid transparent;
+}
+
+.fomo-badge-lg {
+    font-size: 0.8rem;
+    padding: 4px 10px;
+    align-self: start;
+}
+
+.event-detail-announcement {
+    margin: 16px 20px 0;
+    padding: 12px 16px;
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+    background: linear-gradient(135deg, #f59e0b1a, #d9770610);
+    border: 1px solid #f59e0b55;
+    border-radius: 12px;
+    font-size: 0.88rem;
+    color: var(--text-secondary, #8a7b55);
+    line-height: 1.5;
+}
+
+.event-detail-announcement i {
+    color: #f59e0b;
+    margin-top: 2px;
+}
+
+.event-detail-announcement strong {
+    display: block;
+    color: var(--text-primary, #211a0d);
+    margin-bottom: 2px;
+}
+
+.event-ticket-panel {
+    margin: 0 20px 18px;
+    padding: 14px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    background: linear-gradient(135deg, #c9a22714, #ec48990d);
+    border: 1px solid #c9a22733;
+    border-radius: 14px;
+    flex-wrap: wrap;
+}
+
+.event-ticket-panel .btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.event-ticket-left {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    flex: 1;
+    min-width: 180px;
+}
+
+.event-ticket-label {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--text-primary, #211a0d);
+}
+
+.event-buy-ticket {
+    white-space: nowrap;
+}
+
+.event-detail-gallery {
+    padding: 0 20px 18px;
+}
+
+.event-detail-gallery h3 {
+    font-size: 0.88rem;
+    margin: 0 0 10px;
+    color: var(--text-secondary, #8a7b55);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.event-detail-gallery h3 i {
+    color: var(--primary, #c9a227);
+}
+
+.event-detail-gallery .directory-gallery {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: 8px;
+}
+
+.attendance-summary {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 14px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--border, #f3eddd);
+    font-size: 0.9rem;
+    color: var(--text-secondary, #8a7b55);
+}
+
+.attendance-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 12px;
+    background: var(--bg-secondary, #fdf9ef);
+    border-radius: 10px;
+    margin-bottom: 8px;
+}
+
+.attendance-avatar {
+    width: 38px;
+    height: 38px;
+    min-width: 38px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    color: #fff;
+    background: linear-gradient(135deg, var(--primary, #c9a227), #a07d12);
+}
+
+.attendance-info {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.attendance-info strong {
+    color: var(--text-primary, #211a0d);
+    font-size: 0.88rem;
+}
+
+.attendance-info span {
+    color: var(--text-muted, #a99c7e);
+    font-size: 0.76rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.attendance-meta {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+}
+
+.attendance-status {
+    font-size: 0.74rem;
+    font-weight: 600;
+    color: #f59e0b;
+}
+
+.attendance-status.checked {
+    color: #10b981;
+}
+
 /* Event Detail View */
 .event-detail-card {
     padding: 0;

@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="2k2-version" content="2.3.19">
+    <meta name="2k2-version" content="2.3.20">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="Content-Security-Policy" content="object-src 'none'; base-uri 'self'; frame-src 'none'; upgrade-insecure-requests">
     <title>2k2 - Service Provider Dashboard | Earn Money Online in South Africa</title>
@@ -30,7 +30,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💰</text></svg>">
-    <link rel="stylesheet" href="style.css?v=46">
+    <link rel="stylesheet" href="style.css?v=47">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <script type="application/ld+json">
     {
@@ -1293,6 +1293,34 @@
                             <div class="form-group">
                                 <label>Dress Code</label>
                                 <input type="text" id="eventDressCode" placeholder="e.g. Smart Casual, All Black">
+                            </div>
+                            <div class="form-group">
+                                <label>Capacity (people)</label>
+                                <input type="number" id="eventCapacity" min="0" placeholder="e.g. 150">
+                                <span class="form-hint">Optional — used for the crowd counter &amp; FOMO meter</span>
+                            </div>
+                            <div class="form-group">
+                                <label>Event Theme</label>
+                                <select id="eventTheme">
+                                    <option value="">Default</option>
+                                    <option value="gold">Gold</option>
+                                    <option value="rose">Rose</option>
+                                    <option value="violet">Violet</option>
+                                    <option value="blue">Blue</option>
+                                    <option value="emerald">Emerald</option>
+                                    <option value="amber">Amber</option>
+                                    <option value="red">Red</option>
+                                    <option value="midnight">Midnight</option>
+                                </select>
+                            </div>
+                            <div class="form-group full-width">
+                                <label>Announcement</label>
+                                <textarea id="eventAnnouncement" placeholder="Quick announcement shown at the top of your event (e.g. VIP tables still open, changed start time)" rows="2"></textarea>
+                            </div>
+                            <div class="form-group full-width">
+                                <label>Photo Gallery</label>
+                                <div class="gallery-upload-grid" id="eventGalleryUploadGrid"></div>
+                                <input type="file" id="eventGalleryInput" accept="image/*" style="display:none" onchange="addEventGalleryImage(this)">
                             </div>
                             <div class="form-group full-width">
                                 <label>Description *</label>
@@ -4894,6 +4922,18 @@
             </div>
         </div>
 
+        <!-- Event Attendance Sheet -->
+        <div class="modal-overlay" id="eventAttendanceModal" onclick="if(event.target===this)closeEventAttendance()">
+            <div class="modal modal-lg" style="max-width: 640px;">
+                <div class="modal-icon" style="background: linear-gradient(135deg, #ec4899, #a07d12);"><i class="fas fa-clipboard-user"></i></div>
+                <h2>Attendance Sheet</h2>
+                <div id="eventAttendanceList" style="margin:14px 0 10px; max-height:60vh; overflow-y:auto;"></div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeEventAttendance()">Close</button>
+                </div>
+            </div>
+        </div>
+
 <div class="modal-overlay" id="bookingModal">
             <div class="modal modal-lg">
                 <div class="modal-icon" style="background: linear-gradient(135deg, #c9a227, #a07d12);"><i class="fas fa-calendar-plus"></i></div>
@@ -5145,7 +5185,7 @@
       });
     })();
     </script>
-    <script src="script.js?v=60"></script>
+    <script src="script.js?v=61"></script>
     <script src="media-player.js?v=4"></script>
     <script src="products.js?v=30"></script>
     <script src="shipping.js?v=2"></script>

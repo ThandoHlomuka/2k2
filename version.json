@@ -1,9 +1,11 @@
 {
-  "version": "2.3.19",
-  "title": "Version-clash audit: same build now enforced on every device, browser and platform",
+  "version": "2.3.20",
+  "title": "Events improvements: Buy Ticket with attendance sheet, photo gallery, crowd/capacity + FOMO meter, event theme and announcement bar",
   "notes": [
-    "Every page now carries a 2k2-version meta stamp so the app can detect when a device is running an OLD shell (stale service-worker cache, back/forward-cache restore, or a pinning tab) — and force-reload it onto the current build instead of serving old markup or the old onboarding again",
-    "Back/forward-cache restores and service-worker controller changes now trigger a one-shot reload so every device reconciles to the same released version",
-    "Verified live that all portals, sw.js and version.json deliver 2.3.19 / cache epoch 2k2-v21 on every platform and browser"
+    "Events directory + detail now show crowd/capacity progress, HOT/WARM/COLD FOMO meter, themed accents, and provider announcement bar",
+    "Buy Ticket modal lets members reserve spots (respects capacity, recorded to the event attendance sheet) with check-in management for providers",
+    "Provider event form grows capacity, theme, announcement and multi-photo gallery fields; admin event view shows capacity/going/theme/announcement",
+    "Every page carries a 2k2-version meta stamp so the app detects stale shells and force-reloads onto the current build",
+    "Bumped tokens (script.js?v=61, style.css?v=47, admin.js?v=40), meta 2.3.20 on all 9 shells, version.json 2.3.20, SW epoch 2k2-v22"
   ]
 }

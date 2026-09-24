@@ -113,6 +113,17 @@ const EVENT_TYPES = {
     'other': { label: 'Other', icon: 'fa-ellipsis', color: '#8a7b55' }
 };
 
+const EVENT_THEMES = {
+    'gold': { label: 'Gold', color: '#c9a227' },
+    'rose': { label: 'Rose', color: '#ec4899' },
+    'violet': { label: 'Violet', color: '#8b5cf6' },
+    'blue': { label: 'Blue', color: '#3b82f6' },
+    'emerald': { label: 'Emerald', color: '#10b981' },
+    'amber': { label: 'Amber', color: '#f59e0b' },
+    'red': { label: 'Red', color: '#ef4444' },
+    'midnight': { label: 'Midnight', color: '#1e2a4a' }
+};
+
 const EXPERIENCE_TYPES = {
     'multiplayer': { label: 'Multiplayer', icon: 'fa-users', color: '#ec4899' },
     'arcade': { label: 'Arcade', icon: 'fa-gamepad', color: '#8b5cf6' },
@@ -560,6 +571,8 @@ let currentContentFilter = 'all';
 let currentContentViewId = null;
 let currentEventFilter = 'all';
 let currentEventViewId = null;
+let eventGallery = [];
+let currentEventTicketBuyId = null;
 
 // ==========================================
 // Navigation
@@ -6562,6 +6575,164 @@ function addEventSuggestedTag(tag) {
     if (!eventTags.includes(tag)) { eventTags.push(tag); renderEventTags(); }
 }
 
+function renderEventGalleryUpload() {
+    const container = document.getElementById('eventGalleryUploadGrid');
+    if (!container) return;
+    let html = eventGallery.map((url, i) => `
+        <div class="gallery-upload-item has-image" onclick="event.stopPropagation()">
+            <img src="${url}" alt="Gallery ${i + 1}">
+            <button class="gallery-remove" onclick="event.stopPropagation(); removeEventGalleryImage(${i})"><i class="fas fa-times"></i></button>
+        </div>
+    `).join('');
+    if (eventGallery.length < 8) {
+        html += `<div class="gallery-upload-item" onclick="document.getElementById('eventGalleryInput').click()"><i class="fas fa-plus"></i><span>Add Photo</span></div>`;
+    }
+    container.innerHTML = html;
+}
+
+function addEventGalleryImage(input) {
+    if (!input.files || !input.files[0]) return;
+    const file = input.files[0];
+    if (file.size > 5 * 1024 * 1024) { showToast('File too large. Max 5MB.', 'error'); return; }
+    const reader = new FileReader();
+    reader.onload = (e) => { eventGallery.push(e.target.result); renderEventGalleryUpload(); };
+    reader.readAsDataURL(file);
+    input.value = '';
+}
+
+function removeEventGalleryImage(i) { eventGallery.splice(i, 1); renderEventGalleryUpload(); }
+
+// ---- Event crowd / FOMO / attendance helpers ----
+function eventCrowd(ev) {
+    return (ev.attendees || []).reduce((sum, a) => sum + (parseInt(a.qty) || 1), 0);
+}
+
+function eventCapacity(ev) { return parseInt(ev.capacity) || 0; }
+
+function eventFomo(ev) {
+    const crowd = eventCrowd(ev);
+    const cap = eventCapacity(ev);
+    const ratio = cap > 0 ? crowd / cap : (crowd > 0 ? 1 : 0);
+    if (cap > 0 && ratio >= 0.75) return { label: 'HOT', color: '#ef4444', icon: 'fa-fire', ratio: Math.min(1, ratio) };
+    if (cap > 0 && ratio >= 0.4) return { label: 'WARM', color: '#f59e0b', icon: 'fa-temperature-half', ratio };
+    return { label: 'COLD', color: '#3b82f6', icon: 'fa-snowflake', ratio: cap > 0 ? ratio : 0 };
+}
+
+function eventMetaAccent(ev) {
+    const th = EVENT_THEMES[ev.theme];
+    if (th) return th.color;
+    const type = EVENT_TYPES[ev.type] || { icon: 'fa-calendar', color: '#8a7b55' };
+    return type.color;
+}
+
+// ---- Event Buy Ticket modal ----
+function openEventTicketModal(id) {
+    if (!requireSignIn('Buy a ticket.')) return;
+    currentEventTicketBuyId = id;
+    const ev = (Storage.getEvents() || []).find(x => x.id === id);
+    const feeEl = document.getElementById('eventTicketFeeDisplay');
+    if (feeEl && ev) feeEl.textContent = ev.fee ? ev.fee : 'Free Entry';
+    const modal = document.getElementById('eventTicketModal');
+    if (modal) modal.classList.add('active');
+}
+
+function closeEventTicketModal() {
+    const modal = document.getElementById('eventTicketModal');
+    if (modal) modal.classList.remove('active');
+    const form = document.getElementById('eventTicketForm');
+    if (form) form.reset();
+    currentEventTicketBuyId = null;
+}
+
+function handleEventTicketSubmit(e) {
+    e.preventDefault();
+    if (!requireSignIn('Buy a ticket.')) return;
+    const events = Storage.getEvents();
+    const ev = events.find(x => x.id === currentEventTicketBuyId);
+    if (!ev) { showToast('Event not found.', 'error'); return; }
+    const cap = eventCapacity(ev);
+    const crowd = eventCrowd(ev);
+    const qty = Math.max(1, parseInt(document.getElementById('eventTicketQty')?.value, 10) || 1);
+    if (cap && crowd + qty > cap) {
+        showToast(`Only ${Math.max(0, cap - crowd)} spot${cap - crowd === 1 ? '' : 's'} left!`, 'error');
+        return;
+    }
+    const ticket = {
+        id: generateId(),
+        userId: currentUserOwnerId(),
+        name: document.getElementById('eventTicketName').value.trim(),
+        email: document.getElementById('eventTicketEmail').value.trim(),
+        phone: document.getElementById('eventTicketPhone').value.trim(),
+        qty,
+        status: 'confirmed',
+        createdAt: new Date().toISOString()
+    };
+    if (!ev.attendees) ev.attendees = [];
+    ev.attendees.push(ticket);
+    Storage.setEvents(events);
+    closeEventTicketModal();
+    showToast(`Ticket${qty > 1 ? 's' : ''} secured! ${qty} ${qty > 1 ? 'spots' : 'spot'} saved.`, 'success');
+    if (typeof viewEvent === 'function' && document.getElementById('page-event-view')?.classList.contains('active')) viewEvent(ev.id);
+}
+
+// ---- Provider attendance sheet ----
+function openEventAttendance(eventId) {
+    const events = Storage.getEvents();
+    const ev = events.find(x => x.id === eventId);
+    if (!ev) return;
+    const container = document.getElementById('eventAttendanceList');
+    if (!container) return;
+    const attendees = ev.attendees || [];
+    const fomo = eventFomo(ev);
+    const cap = eventCapacity(ev);
+    const header = `
+        <div class="attendance-summary">
+            <span><i class="fas fa-users" style="color:var(--primary,#c9a227)"></i> <strong>${eventCrowd(ev)}</strong> going${cap ? ' / ' + cap + ' capacity' : ''}</span>
+            <span class="fomo-badge" style="color:${fomo.color};border-color:${fomo.color}44;background:${fomo.color}11"><i class="fas ${fomo.icon}"></i> ${fomo.label}</span>
+        </div>
+    `;
+    if (attendees.length === 0) {
+        container.innerHTML = header + '<div class="empty-section"><i class="fas fa-ticket"></i><p>No tickets sold yet</p><span>Share your event to start filling the guest list</span></div>';
+    } else {
+        const rows = attendees.map((a, i) => `
+            <div class="attendance-row">
+                <div class="attendance-avatar">${escapeHtml((a.name || '?')[0].toUpperCase())}</div>
+                <div class="attendance-info">
+                    <strong>${escapeHtml(a.name || 'Guest')}</strong>
+                    <span>${escapeHtml(a.email || '')}${a.phone ? ' · ' + escapeHtml(a.phone) : ''}</span>
+                </div>
+                <div class="attendance-meta">
+                    <span class="tag-chip">${a.qty || 1} seat${(a.qty || 1) > 1 ? 's' : ''}</span>
+                    <span class="attendance-status ${a.status === 'checked-in' ? 'checked' : ''}">
+                        <i class="fas ${a.status === 'checked-in' ? 'fa-check-circle' : 'fa-clock'}"></i>
+                        ${a.status === 'checked-in' ? 'Checked in' : 'Booked'}
+                    </span>
+                    <button class="btn btn-secondary btn-xs" onclick="toggleEventCheckIn('${ev.id}','${a.id}')">${a.status === 'checked-in' ? 'Undo' : 'Check in'}</button>
+                </div>
+            </div>
+        `).join('');
+        container.innerHTML = header + rows;
+    }
+    const modal = document.getElementById('eventAttendanceModal');
+    if (modal) modal.classList.add('active');
+}
+
+function closeEventAttendance() {
+    const modal = document.getElementById('eventAttendanceModal');
+    if (modal) modal.classList.remove('active');
+}
+
+function toggleEventCheckIn(eventId, attendeeId) {
+    const events = Storage.getEvents();
+    const ev = events.find(x => x.id === eventId);
+    if (!ev) return;
+    const a = (ev.attendees || []).find(x => x.id === attendeeId);
+    if (!a) return;
+    a.status = a.status === 'checked-in' ? 'confirmed' : 'checked-in';
+    Storage.setEvents(events);
+    openEventAttendance(eventId);
+}
+
 function renderEventsDirectory() {
     const events = Storage.getEvents();
     let filtered = currentEventFilter === 'all' ? events.filter(e => isApprovedPublic(e)) : events.filter(e => e.type === currentEventFilter && isApprovedPublic(e));
@@ -6594,23 +6765,31 @@ function renderEventsDirectory() {
 
     container.innerHTML = filtered.map(ev => {
         const type = EVENT_TYPES[ev.type] || { label: ev.type, icon: 'fa-calendar', color: '#8a7b55' };
+        const accent = eventMetaAccent(ev);
         const authorName = resolveProviderAuthorName(ev, 'Unknown Host');
         const eventDate = ev.eventDate ? new Date(ev.eventDate).toLocaleDateString('en-ZA', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' }) : '';
+        const crowd = eventCrowd(ev);
+        const cap = eventCapacity(ev);
+        const fomo = eventFomo(ev);
+        const thumbStyle = ev.gallery && ev.gallery.length ? `background-image:url('${ev.gallery[0]}');background-size:cover;background-position:center` : `background:linear-gradient(135deg, ${accent}22, ${accent}08)`;
         return `
             <div class="content-card profile-card event-grid-card" onclick="viewEvent('${ev.id}')">
                 <button class="save-item-btn ${isItemSaved('event', ev.id) ? 'saved' : ''}" data-kind="event" data-id="${ev.id}" onclick="event.stopPropagation(); toggleSaveItem('event','${ev.id}')"><i class="fas ${isItemSaved('event', ev.id) ? 'fa-bookmark' : 'fa-bookmark-o'}"></i></button>
-                <div class="content-card-thumb event-card-thumb" style="background:linear-gradient(135deg, ${type.color}22, ${type.color}08)">
-                    <div class="content-thumb-icon" style="background:${type.color}22;color:${type.color}"><i class="fas ${type.icon}"></i></div>
+                <div class="content-card-thumb event-card-thumb" style="${thumbStyle}">
+                    ${ev.gallery && ev.gallery.length ? '' : `<div class="content-thumb-icon" style="background:${accent}22;color:${accent}"><i class="fas ${type.icon}"></i></div>`}
                     ${ev.eventDate ? `<div class="event-card-date-badge"><span class="event-date-day">${new Date(ev.eventDate).getDate()}</span><span class="event-date-month">${new Date(ev.eventDate).toLocaleDateString('en-ZA', { month: 'short' })}</span></div>` : ''}
                 </div>
+                ${ev.theme && EVENT_THEMES[ev.theme] ? `<div class="event-theme-chip" style="background:${accent};color:#fff"><i class="fas fa-palette"></i> ${EVENT_THEMES[ev.theme].label}</div>` : ''}
                 <h3 class="content-card-title">${ev.name}</h3>
                 <div class="event-card-info">
                     ${ev.eventTime ? `<span><i class="fas fa-clock"></i> ${ev.eventTime}</span>` : ''}
                     ${ev.venue ? `<span><i class="fas fa-location-dot"></i> ${ev.venue}</span>` : ''}
                 </div>
+                ${cap ? `<div class="event-card-crowd"><div class="event-crowd-track"><div class="event-crowd-fill" style="width:${Math.min(100, (crowd / cap) * 100)}%;background:${accent}"></div></div><span><i class="fas fa-users"></i> ${crowd} / ${cap}</span></div>` : `<div class="event-card-crowd"><span><i class="fas fa-users"></i> ${crowd} going</span></div>`}
                 <p class="content-card-desc">${(ev.description || '').substring(0, 70)}${(ev.description || '').length > 70 ? '...' : ''}</p>
                 <div class="content-card-footer">
                     <span class="badge" style="background:${type.color}22;color:${type.color};border:1px solid ${type.color}44"><i class="fas ${type.icon}"></i> ${type.label}</span>
+                    ${cap ? `<span class="fomo-badge" style="color:${fomo.color};border-color:${fomo.color}44;background:${fomo.color}11"><i class="fas ${fomo.icon}"></i> ${fomo.label}</span>` : ''}
                     <span class="content-card-author"><i class="fas fa-user"></i> ${authorName}</span>
                 </div>
             </div>
@@ -6633,12 +6812,13 @@ function viewEvent(id) {
 
     currentEventViewId = id;
     const type = EVENT_TYPES[ev.type] || { label: ev.type, icon: 'fa-calendar', color: '#8a7b55' };
+    const accent = eventMetaAccent(ev);
     const authorName = resolveProviderAuthorName(ev, 'Unknown Host');
 
     document.getElementById('eventDetailViewType').innerHTML = `<i class="fas ${type.icon}"></i> ${type.label}`;
-    document.getElementById('eventDetailViewType').style.background = `${type.color}22`;
-    document.getElementById('eventDetailViewType').style.color = type.color;
-    document.getElementById('eventDetailViewType').style.border = `1px solid ${type.color}44`;
+    document.getElementById('eventDetailViewType').style.background = `${accent}22`;
+    document.getElementById('eventDetailViewType').style.color = accent;
+    document.getElementById('eventDetailViewType').style.border = `1px solid ${accent}44`;
     document.getElementById('eventDetailViewTitle').textContent = ev.name;
     document.getElementById('eventDetailViewDate').textContent = formatDate(ev.createdAt);
 
@@ -6650,10 +6830,50 @@ function viewEvent(id) {
             ${ev.venue ? `<div class="event-meta-item"><i class="fas fa-location-dot"></i><span>${ev.venue}${ev.province ? ', ' + ev.province : ''}</span></div>` : ''}
             ${ev.fee ? `<div class="event-meta-item"><i class="fas fa-ticket"></i><span>${ev.fee}</span></div>` : ''}
             ${ev.dressCode ? `<div class="event-meta-item"><i class="fas fa-shirt"></i><span>${ev.dressCode}</span></div>` : ''}
+            ${ev.theme && EVENT_THEMES[ev.theme] ? `<div class="event-meta-item"><i class="fas fa-palette"></i><span>Theme: ${EVENT_THEMES[ev.theme].label}</span></div>` : ''}
             <div class="event-meta-item"><i class="fas fa-user"></i><span>Hosted by ${authorName}</span></div>
         </div>
     `;
     document.getElementById('eventDetailViewBody').innerHTML = ev.description ? `<p>${escapeHtml(ev.description).replace(/\n/g, '<br>')}</p>` : '<p class="empty-text">No description</p>';
+
+    const announcementEl = document.getElementById('eventDetailViewAnnouncement');
+    if (announcementEl) {
+        if (ev.announcement) {
+            announcementEl.style.display = 'flex';
+            announcementEl.innerHTML = `<i class="fas fa-bullhorn"></i><div><strong>${escapeHtml(ev.name)}</strong><span>${escapeHtml(ev.announcement).replace(/\n/g, '<br>')}</span></div>`;
+        } else {
+            announcementEl.style.display = 'none';
+        }
+    }
+
+    const galleryEl = document.getElementById('eventDetailViewGallery');
+    if (galleryEl) {
+        if (ev.gallery && ev.gallery.length > 0) {
+            galleryEl.style.display = 'block';
+            galleryEl.innerHTML = '<h3><i class="fas fa-images"></i> Photos</h3>' + ev.gallery.map(img => `<div class="gallery-item" onclick="openPhotoModal('${img}')"><img src="${img}" alt="Event photo"></div>`).join('');
+        } else {
+            galleryEl.style.display = 'none';
+        }
+    }
+
+    const crowd = eventCrowd(ev);
+    const cap = eventCapacity(ev);
+    const fomo = eventFomo(ev);
+    const soldOut = cap > 0 && crowd >= cap;
+    const ticketEl = document.getElementById('eventDetailViewTicket');
+    if (ticketEl) {
+        const barWidth = cap ? Math.min(100, (crowd / cap) * 100) : (crowd > 0 ? 100 : 0);
+        ticketEl.innerHTML = `
+            <div class="event-ticket-panel">
+                <div class="event-ticket-left">
+                    <span class="event-ticket-label"><i class="fas ${fomo.icon}"></i> ${crowd} ${crowd === 1 ? 'person' : 'people'} going${cap ? ' · ' + cap + ' capacity' : ''}</span>
+                    <div class="event-crowd-track event-crowd-track-lg"><div class="event-crowd-fill" style="width:${barWidth}%;background:${fomo.color}"></div></div>
+                    <span class="fomo-badge fomo-badge-lg" style="color:${fomo.color};border-color:${fomo.color}44;background:${fomo.color}11"><i class="fas ${fomo.icon}"></i> FOMO: ${fomo.label}</span>
+                </div>
+                <button class="btn btn-primary event-buy-ticket" ${soldOut ? 'disabled' : ''} onclick="openEventTicketModal('${ev.id}')"><i class="fas fa-ticket"></i> ${soldOut ? 'Sold Out' : 'Buy Ticket'}</button>
+            </div>
+        `;
+    }
 
     const tagsContainer = document.getElementById('eventDetailViewTags');
     if (ev.tags && ev.tags.length > 0) {
@@ -6686,15 +6906,20 @@ function renderProviderEvents() {
 
     container.innerHTML = filtered.map(ev => {
         const type = EVENT_TYPES[ev.type] || { label: ev.type, icon: 'fa-calendar', color: '#8a7b55' };
+        const accent = eventMetaAccent(ev);
         const eventDateStr = ev.eventDate ? new Date(ev.eventDate).toLocaleDateString('en-ZA', { day: 'numeric', month: 'short' }) : '';
+        const crowd = eventCrowd(ev);
+        const cap = eventCapacity(ev);
         return `
             <div class="provider-card profile-card">
-                <div class="provider-card-icon" style="background:${type.color}22;color:${type.color}"><i class="fas ${type.icon}"></i></div>
+                <div class="provider-card-icon" style="background:${accent}22;color:${accent}"><i class="fas ${type.icon}"></i></div>
                 <div class="provider-card-info">
                     <h3>${ev.name}</h3>
                     <span class="provider-card-type"><i class="fas ${type.icon}"></i> ${type.label}${eventDateStr ? ' &middot; ' + eventDateStr : ''}</span>
+                    <span class="provider-card-type"><i class="fas fa-users"></i> ${crowd} going${cap ? ' / ' + cap + ' capacity' : ''}</span>
                 </div>
                 <div class="provider-card-actions">
+                    <button class="btn btn-secondary btn-sm" onclick="openEventAttendance('${ev.id}')"><i class="fas fa-clipboard-user"></i> Attendance</button>
                     <button class="btn btn-secondary btn-sm" onclick="editEvent('${ev.id}')"><i class="fas fa-edit"></i> Edit</button>
                     <button class="btn btn-danger btn-sm" onclick="deleteEvent('${ev.id}')"><i class="fas fa-trash"></i></button>
                 </div>
@@ -6717,9 +6942,14 @@ function resetEventForm() {
     document.getElementById('eventProvinceForm').value = '';
     document.getElementById('eventFee').value = '';
     document.getElementById('eventDressCode').value = '';
+    document.getElementById('eventCapacity').value = '';
+    document.getElementById('eventTheme').value = '';
+    document.getElementById('eventAnnouncement').value = '';
     document.getElementById('eventDescription').value = '';
     eventTags = [];
     renderEventTags();
+    eventGallery = [];
+    renderEventGalleryUpload();
 }
 
 function handleEventSubmit(e) {
@@ -6733,6 +6963,9 @@ function handleEventSubmit(e) {
     const province = document.getElementById('eventProvinceForm').value;
     const fee = document.getElementById('eventFee').value.trim();
     const dressCode = document.getElementById('eventDressCode').value.trim();
+    const capacity = document.getElementById('eventCapacity').value.trim();
+    const theme = document.getElementById('eventTheme').value;
+    const announcement = document.getElementById('eventAnnouncement').value.trim();
     const description = document.getElementById('eventDescription').value.trim();
 
     if (!name || !type || !eventDate || !eventTime || !venue || !province || !description) { showToast('Please fill in all required fields.', 'error'); return; }
@@ -6749,7 +6982,11 @@ function handleEventSubmit(e) {
             events[idx].province = province;
             events[idx].fee = fee;
             events[idx].dressCode = dressCode;
+            events[idx].capacity = capacity;
+            events[idx].theme = theme;
+            events[idx].announcement = announcement;
             events[idx].description = description;
+            events[idx].gallery = [...eventGallery];
             events[idx].tags = [...eventTags];
             events[idx].updatedAt = new Date().toISOString();
             markPendingApproval(events[idx]);
@@ -6759,11 +6996,13 @@ function handleEventSubmit(e) {
         const owner = getCurrentProviderIdentity();
         const item = {
             id: generateId(),
-            name, type, eventDate, eventTime, venue, province, fee, dressCode, description,
+            name, type, eventDate, eventTime, venue, province, fee, dressCode, capacity, theme, announcement, description,
+            gallery: [...eventGallery],
             tags: [...eventTags],
             providerId: owner.id,
             ownerId: owner.id,
             ownerName: owner.name,
+            attendees: [],
             createdAt: new Date().toISOString()
         };
         markPendingApproval(item);
@@ -6790,9 +7029,14 @@ function editEvent(id) {
     document.getElementById('eventProvinceForm').value = ev.province || '';
     document.getElementById('eventFee').value = ev.fee || '';
     document.getElementById('eventDressCode').value = ev.dressCode || '';
+    document.getElementById('eventCapacity').value = ev.capacity || '';
+    document.getElementById('eventTheme').value = ev.theme || '';
+    document.getElementById('eventAnnouncement').value = ev.announcement || '';
     document.getElementById('eventDescription').value = ev.description || '';
     eventTags = [...(ev.tags || [])];
     renderEventTags();
+    eventGallery = [...(ev.gallery || [])];
+    renderEventGalleryUpload();
     navigateTo('provider-event-create');
     renderApprovalBanner('page-provider-event-create', ev, 'Event', 'provider-event-create');
 }

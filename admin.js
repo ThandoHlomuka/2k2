@@ -1917,11 +1917,15 @@ function adminViewEvent(id) {
             <div class="admin-view-row"><span class="label">Type</span><span class="value">${type.label}</span></div>
             <div class="admin-view-row"><span class="label">Date</span><span class="value">${ev.eventDate ? new Date(ev.eventDate).toLocaleString('en-ZA', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '-'}</span></div>
             <div class="admin-view-row"><span class="label">Venue</span><span class="value">${escapeHtml(ev.venue || '-')}</span></div>
-            <div class="admin-view-row"><span class="label">Entry</span><span class="value">${ev.entryFee ? 'R' + ev.entryFee : 'Free'}</span></div>
+            <div class="admin-view-row"><span class="label">Entry</span><span class="value">${ev.entryFee ? 'R' + ev.entryFee : (ev.fee || 'Free')}</span></div>
+            <div class="admin-view-row"><span class="label">Capacity</span><span class="value">${ev.capacity ? ev.capacity : 'Unlimited'}</span></div>
+            <div class="admin-view-row"><span class="label">Going</span><span class="value">${eventCrowd(ev)} / ${ev.capacity || '∞'}</span></div>
+            <div class="admin-view-row"><span class="label">Theme</span><span class="value">${ev.theme && EVENT_THEMES[ev.theme] ? EVENT_THEMES[ev.theme].label : 'Default'}</span></div>
             <div class="admin-view-row"><span class="label">Host</span><span class="value">${escapeHtml(hostName)}</span></div>
             <div class="admin-view-row"><span class="label">Status</span><span class="value">${ev.status || 'active'}</span></div>
             <div class="admin-view-row"><span class="label">Created</span><span class="value">${fmtDate(ev.createdAt)}</span></div>
         </div>
+        ${ev.announcement ? `<div style="padding:12px 14px;background:#fef3c7;border-radius:10px;margin-top:12px;font-size:0.9rem;line-height:1.6"><strong>Announcement:</strong> ${escapeHtml(ev.announcement)}</div>` : ''}
         <div style="padding:14px;background:#fdf9ef;border-radius:10px;margin-top:12px;font-size:0.9rem;line-height:1.6">${renderAdminRichText(ev.description || 'No description')}</div>
         <div style="display:flex;gap:8px;margin-top:16px">
             <button class="btn btn-primary btn-sm" onclick="adminEditEvent('${ev.id}')"><i class="fas fa-pen"></i> Edit</button>
