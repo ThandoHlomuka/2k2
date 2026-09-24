@@ -1,8 +1,9 @@
 {
-  "version": "2.3.18",
-  "title": "Advertiser/Investor portals open to members & providers — exit returns to your own portal",
+  "version": "2.3.19",
+  "title": "Version-clash audit: same build now enforced on every device, browser and platform",
   "notes": [
-    "General Users and Service Providers can now open the Advertise and Invest account pages and the exit/back links (Portal, Member Portal, Back to 2k2) return them to the portal they belong to: members to the GU portal, providers to the Provider portal, admins to Admin",
-    "Exit links on advertise.html + invest.html rewrite themselves from the signed-in role"
+    "Every page now carries a 2k2-version meta stamp so the app can detect when a device is running an OLD shell (stale service-worker cache, back/forward-cache restore, or a pinning tab) — and force-reload it onto the current build instead of serving old markup or the old onboarding again",
+    "Back/forward-cache restores and service-worker controller changes now trigger a one-shot reload so every device reconciles to the same released version",
+    "Verified live that all portals, sw.js and version.json deliver 2.3.19 / cache epoch 2k2-v21 on every platform and browser"
   ]
 }

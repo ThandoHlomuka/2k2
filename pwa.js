@@ -15,6 +15,46 @@
     });
   }
 
+  /* ---- Fresh-shell enforcement ----
+     Two classic "clashing version" paths that let an OLD page keep running:
+       1. Back/forward cache restore - pressing back resurrects the OLD DOM
+          wholesale from memory (byte-for-byte old markup, old onboarding).
+       2. Stale service-worker controller - a tab pinned before a release stays
+          under the previous version's SW until it re-claims this client.
+     Both are flattened with a one-shot reload so the device re-fetches the
+     current shell from the network (see vercel.json no-cache headers). */
+  (function () {
+    try {
+      var RELOAD_KEY = 'k2_reload_guard';
+      var reloading = false;
+      var GUARD_MS = 8000; // silence reloads within a tight window to avoid loops
+      // Only reload when a controller is REPLACED (a real SW update). On a
+      // first visit the initial claim must not flash-reload the page.
+      var hadController = !!(navigator.serviceWorker && navigator.serviceWorker.controller);
+
+      function tryReload() {
+        if (reloading) return;
+        var last = null;
+        try { last = parseInt(sessionStorage.getItem(RELOAD_KEY) || '0', 10) || 0; } catch (e) {}
+        if (Date.now() - last < GUARD_MS) return; // recent reload - no loop
+        try { sessionStorage.setItem(RELOAD_KEY, String(Date.now())); } catch (e) {}
+        reloading = true;
+        setTimeout(function () { window.location.reload(); }, 60);
+      }
+
+      window.addEventListener('pageshow', function (ev) {
+        if (ev.persisted) tryReload(); // restored from bfcache - DOM is stale
+      });
+
+      if (navigator.serviceWorker) {
+        navigator.serviceWorker.addEventListener('controllerchange', function () {
+          if (hadController) tryReload(); // controller replaced = SW update
+          hadController = true;
+        });
+      }
+    } catch (e) {}
+  })();
+
   /* ---- In-app back navigation stack ----
      The app uses pure div-swapping navigation (navigateTo) and never changes the
      URL. So we mirror every in-app page change with history.pushState and walk

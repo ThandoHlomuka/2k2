@@ -40,11 +40,25 @@
   var applied = false;
   var notified = false;
   var timer = null;
+  var shellVersion = null;
 
   function get(key) { try { return localStorage.getItem(key); } catch (e) { return null; } }
   function set(key, val) { try { localStorage.setItem(key, val); } catch (e) {} }
   function del(key) { try { localStorage.removeItem(key); } catch (e) {} }
   function qs(s) { return document.querySelector(s); }
+
+  // The version baked into THIS document by the build. If the served new-version
+  // JSON is newer than this shell, the device is running a STALE page (old SW
+  // runtime-cache, back-forward cache restore, stale controller, or a pinned
+  // tab) and must be forced onto the current build - otherwise the update
+  // engine happily reports "up to date" while the user stares at the old shell
+  // (the "clashing version / old onboarding again" symptom).
+  (function () {
+    try {
+      var m = qs('meta[name="2k2-version"]');
+      shellVersion = m ? String(m.getAttribute('content') || '').trim() : null;
+    } catch (e) {}
+  })();
 
   function escapeHtml(s) {
     if (s === null || s === undefined) return '';
@@ -238,6 +252,18 @@
   function evaluateRemote() {
     if (!info || !info.version) return;
     confirmPending();
+
+    // STALE-SHELL DETECTION: if this document's built-in shell version is
+    // older than the served version, the browser is rendering an old HTML
+    // shell (bfcache restore, stale service-worker controller, runtime-cached
+    // page, or a pinned tab). Force reload now so the device catches up to the
+    // current build - otherwise k2_app_version can already be current and the
+    // engine silently reports "up to date" while the user sees old markup
+    // (the "clashing version / old onboarding again" symptom).
+    if (shellVersion && compareVers(shellVersion, String(info.version)) < 0) {
+      applyUpdate();
+      return;
+    }
 
     var local = get(LS_VERSION);
     if (!local) { set(LS_VERSION, String(info.version)); del(LS_PENDING); return; }
