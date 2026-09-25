@@ -70,7 +70,7 @@
   }
 
   window.renderProductsBrowser = function () {
-    var list = Storage.getProducts().slice().filter(function (p) { return isApprovedPublic(p); });
+    var list = Storage.getProducts().slice().filter(function (p) { return isApprovedPublic(p) && (window.orientationMatches ? window.orientationMatches(null, p) : true); });
     var q = (document.getElementById('productsSearch') ? document.getElementById('productsSearch').value : '').toLowerCase();
     var sort = document.getElementById('productsSort') ? document.getElementById('productsSort').value : 'newest';
     var cat = currentProductsFilter;
@@ -106,6 +106,7 @@
         '<div class="directory-card-body">' +
           '<h3>' + esc(p.name || 'Untitled') + '</h3>' +
           '<div class="directory-card-meta"><i class="fas ' + ci.icon + '" style="color:' + esc(ci.color) + '"></i> <span style="color:' + esc(ci.color) + ';font-weight:600">' + esc(ci.label) + '</span></div>' +
+          '<div class="directory-card-meta">' + (window.attrOrientation ? window.attrOrientation(p) : '') + '</div>' +
           '<div class="directory-card-meta"><i class="fas fa-user"></i> ' + esc(p.authorName || 'Provider') + '</div>' +
           '<div class="directory-card-price" style="margin:8px 0;font-weight:800;color:#c9a227">R' + esc(Number(p.price || 0).toFixed(2)) + '</div>' +
           '<div class="directory-card-bio">' + esc((p.description || '').substring(0, 90)) + '</div>' +
@@ -655,6 +656,7 @@
     var id = (document.getElementById('productId') ? document.getElementById('productId').value : '') || '';
     var name = (document.getElementById('productName') ? document.getElementById('productName').value : '').trim();
     var category = document.getElementById('productCategory') ? document.getElementById('productCategory').value : 'other';
+    var orientation = document.getElementById('productOrientation') ? document.getElementById('productOrientation').value : 'all';
     var price = parseFloat(document.getElementById('productPrice') ? document.getElementById('productPrice').value : 0) || 0;
     var stock = parseInt(document.getElementById('productStock') ? document.getElementById('productStock').value : 0, 10) || 0;
     var description = (document.getElementById('productDescription') ? document.getElementById('productDescription').value : '').trim();
@@ -668,6 +670,7 @@
         id: 'prod_' + Date.now().toString(36) + '_' + Math.random().toString(36).substr(2, 8),
         name: name,
         category: category,
+        orientation: orientation,
         price: price,
         stock: stock,
         description: description,
@@ -682,7 +685,7 @@
       Storage.setProducts(products);
     } else {
       var list = Storage.getProducts().map(function (p) {
-        if (p.id === id) return Object.assign({}, p, { name: name, category: category, price: price, stock: stock, description: description, photo: coverSrc || p.photo });
+        if (p.id === id) return Object.assign({}, p, { name: name, category: category, orientation: orientation, price: price, stock: stock, description: description, photo: coverSrc || p.photo });
         return p;
       });
       for (var i2 = 0; i2 < list.length; i2++) {
@@ -704,6 +707,7 @@
     document.getElementById('productId').value = p.id;
     document.getElementById('productName').value = p.name || '';
     document.getElementById('productCategory').value = p.category || 'other';
+    document.getElementById('productOrientation').value = p.orientation || 'all';
     document.getElementById('productPrice').value = p.price || '';
     document.getElementById('productStock').value = p.stock == null ? '' : p.stock;
     document.getElementById('productDescription').value = p.description || '';

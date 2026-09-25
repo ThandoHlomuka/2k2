@@ -5552,6 +5552,22 @@ h1, h2, h3, h4 {
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.18);
 }
 
+.orientation-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    padding: 3px 9px;
+    border-radius: 999px;
+    border: 1px solid transparent;
+    white-space: nowrap;
+}
+
+.orientation-chip i {
+    font-size: 0.62rem;
+}
+
 .event-card-crowd {
     display: flex;
     align-items: center;

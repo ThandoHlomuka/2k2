@@ -1,11 +1,11 @@
 {
-  "version": "2.3.20",
-  "title": "Events improvements: Buy Ticket with attendance sheet, photo gallery, crowd/capacity + FOMO meter, event theme and announcement bar",
+  "version": "2.3.21",
+  "title": "Orientation preference switch (Straight / Queer / All)",
   "notes": [
-    "Events directory + detail now show crowd/capacity progress, HOT/WARM/COLD FOMO meter, themed accents, and provider announcement bar",
-    "Buy Ticket modal lets members reserve spots (respects capacity, recorded to the event attendance sheet) with check-in management for providers",
-    "Provider event form grows capacity, theme, announcement and multi-photo gallery fields; admin event view shows capacity/going/theme/announcement",
-    "Every page carries a 2k2-version meta stamp so the app detects stale shells and force-reloads onto the current build",
-    "Bumped tokens (script.js?v=61, style.css?v=47, admin.js?v=40), meta 2.3.20 on all 9 shells, version.json 2.3.20, SW epoch 2k2-v22"
+    "Members set an orientation preference in Settings (Discovery Preferences) and on their public profile, defaulting to All",
+    "Everything is filtered by preference while staying legacy-safe: matches, directory (listings/venues/services), ads, content feed, events, gigs, products, experiences, forum subforums and threads; unmarked items are always visible",
+    "All 8 provider content forms (event, gig, listing, venue, content, service, product, experience) and the provider subforum form gained an audience field; fresh and edited records persist orientation",
+    "Orientation chips label member-facing cards; threads inherit their subforum's orientation",
+    "Bumped tokens (script.js?v=62, style.css?v=48, products.js?v=31), meta 2.3.21 on all 9 shells, version.json 2.3.21, SW epoch 2k2-v23"
   ]
 }

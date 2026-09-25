@@ -124,6 +124,12 @@ const EVENT_THEMES = {
     'midnight': { label: 'Midnight', color: '#1e2a4a' }
 };
 
+const ORIENTATIONS = {
+    'all': { label: 'All', color: '#8a7b55' },
+    'straight': { label: 'Straight', color: '#3b82f6' },
+    'queer': { label: 'Queer', color: '#ec4899' }
+};
+
 const EXPERIENCE_TYPES = {
     'multiplayer': { label: 'Multiplayer', icon: 'fa-users', color: '#ec4899' },
     'arcade': { label: 'Arcade', icon: 'fa-gamepad', color: '#8b5cf6' },
@@ -1676,6 +1682,7 @@ function handleUserSubmit(e) {
         location: document.getElementById('userFormLocation').value,
         dob: document.getElementById('userDob').value,
         gender: document.getElementById('userGender').value,
+        orientation: document.getElementById('userOrientation')?.value || 'all',
         bio: document.getElementById('userFormBio').value,
         website: document.getElementById('userFormWebsite').value,
         interests: [...userTags],
@@ -1913,6 +1920,11 @@ function viewUserProfile(id) {
     document.getElementById('userViewLocation').textContent = u.location || '-';
     document.getElementById('userViewDob').textContent = u.dob ? new Date(u.dob).toLocaleDateString() : '-';
     document.getElementById('userViewGender').textContent = u.gender || '-';
+    const oriEl = document.getElementById('userViewOrientation');
+    if (oriEl) {
+        const om = ORIENTATIONS[(u.orientation || 'all')] || ORIENTATIONS.all;
+        oriEl.textContent = om.label;
+    }
     document.getElementById('userViewBio').textContent = u.bio || 'No bio provided.';
     document.getElementById('userViewWebsite').textContent = u.website || '-';
     document.getElementById('userViewWebsite').href = u.website || '#';
@@ -1981,6 +1993,8 @@ function populateUserForm(u) {
     document.getElementById('userFormLocation').value = u.location || '';
     document.getElementById('userDob').value = u.dob || '';
     document.getElementById('userGender').value = u.gender || '';
+    const oriSel = document.getElementById('userOrientation');
+    if (oriSel) oriSel.value = (u.orientation || 'all');
     document.getElementById('userFormBio').value = u.bio || '';
     document.getElementById('userFormWebsite').value = u.website || '';
     document.getElementById('userFormTitle').textContent = 'Edit General User Profile';
@@ -2420,7 +2434,7 @@ function renderDirectory() {
     const container = document.getElementById('directoryList');
     if (!container) return;
 
-    let filtered = listings.filter(l => isApprovedPublic(l));
+    let filtered = listings.filter(l => isApprovedPublic(l) && orientationMatches(null, l));
     
     if (currentDirectoryFilter !== 'all') {
         filtered = filtered.filter(l => l.category === currentDirectoryFilter);
@@ -2469,6 +2483,7 @@ function renderDirectory() {
                     <h3>${l.name}</h3>
                     <span class="directory-type-badge" style="background:${type.color}20; color:${type.color}">${type.label || l.category}</span>
                 </div>
+                ${attrOrientation(l)}
                 <p class="directory-card-location"><i class="fas fa-map-marker-alt"></i> ${l.location}</p>
                 <div class="directory-card-tags">${(l.tags || []).slice(0, 3).map(t => `<span class="mini-tag">${t}</span>`).join('')}</div>
                 <div class="directory-card-footer">
@@ -2759,6 +2774,7 @@ function handleListingSubmit(e) {
         id: id || generateId(),
         name: document.getElementById('listingName').value,
         category: document.getElementById('listingCategory').value,
+        orientation: document.getElementById('listingOrientation')?.value || 'all',
         email: document.getElementById('listingEmail').value,
         phone: document.getElementById('listingPhone').value,
         location: document.getElementById('listingLocation').value,
@@ -2901,6 +2917,7 @@ function populateListingForm(l) {
     document.getElementById('listingId').value = l.id;
     document.getElementById('listingName').value = l.name || '';
     document.getElementById('listingCategory').value = l.category || '';
+    if (document.getElementById('listingOrientation')) document.getElementById('listingOrientation').value = l.orientation || 'all';
     document.getElementById('listingEmail').value = l.email || '';
     document.getElementById('listingPhone').value = l.phone || '';
     document.getElementById('listingLocation').value = l.location || '';
@@ -3201,7 +3218,7 @@ function renderVenueDirectory() {
     const container = document.getElementById('venueDirectoryList');
     if (!container) return;
 
-    let filtered = venues.filter(v => isApprovedPublic(v));
+    let filtered = venues.filter(v => isApprovedPublic(v) && orientationMatches(null, v));
 
     if (currentVenueDirectoryFilter !== 'all') {
         filtered = filtered.filter(v => v.category === currentVenueDirectoryFilter);
@@ -3250,6 +3267,7 @@ function renderVenueDirectory() {
                     <h3>${v.name}</h3>
                     <span class="directory-type-badge" style="background:${type.color}20; color:${type.color}">${type.label || v.category}</span>
                 </div>
+                ${attrOrientation(v)}
                 <p class="directory-card-location"><i class="fas fa-map-marker-alt"></i> ${v.location}</p>
                 <div class="directory-card-tags">${(v.tags || []).slice(0, 3).map(t => `<span class="mini-tag">${t}</span>`).join('')}</div>
 <div class="directory-card-footer">
@@ -3409,6 +3427,7 @@ function handleVenueSubmit(e) {
         providerId: providerId,
         name: document.getElementById('venueName').value,
         category: document.getElementById('venueCategory').value,
+        orientation: document.getElementById('venueOrientation')?.value || 'all',
         email: document.getElementById('venueEmail').value,
         phone: document.getElementById('venuePhone').value,
         location: document.getElementById('venueLocation').value,
@@ -3501,6 +3520,7 @@ function populateVenueForm(v) {
     document.getElementById('venueId').value = v.id;
     document.getElementById('venueName').value = v.name || '';
     document.getElementById('venueCategory').value = v.category || '';
+    if (document.getElementById('venueOrientation')) document.getElementById('venueOrientation').value = v.orientation || 'all';
     document.getElementById('venueEmail').value = v.email || '';
     document.getElementById('venuePhone').value = v.phone || '';
     document.getElementById('venueLocation').value = v.location || '';
@@ -3676,7 +3696,7 @@ function renderAdsBrowse() {
     const container = document.getElementById('adsBrowseList');
     if (!container) return;
 
-    let filtered = ads.filter(a => isApprovedPublic(a));
+    let filtered = ads.filter(a => isApprovedPublic(a) && orientationMatches(null, a));
 
     if (currentAdsFilter !== 'all') {
         filtered = filtered.filter(a => a.category === currentAdsFilter);
@@ -3721,6 +3741,7 @@ function renderAdsBrowse() {
             <button class="save-item-btn ${isItemSaved('ad', a.id) ? 'saved' : ''}" data-kind="ad" data-id="${a.id}" onclick="event.stopPropagation(); toggleSaveItem('ad','${a.id}')"><i class="fas ${isItemSaved('ad', a.id) ? 'fa-bookmark' : 'fa-bookmark-o'}"></i></button>
             <div class="ad-card-header">
                 <span class="ad-card-category" style="background:${cat.color}20; color:${cat.color}"><i class="fas ${cat.icon || 'fa-tag'}"></i> ${cat.label || a.category}</span>
+                ${attrOrientation(a)}
                 <span class="ad-card-date">${formatDate(a.createdAt)}</span>
             </div>
             <h3 class="ad-card-title">${a.title}</h3>
@@ -4193,6 +4214,7 @@ function renderServicesDirectory() {
 
     let filtered = services.filter(s => {
         if (!isApprovedPublic(s)) return false;
+        if (!orientationMatches(null, s)) return false;
         if (currentServicesFilter !== 'all' && s.category !== currentServicesFilter) return false;
         if (currentServicesOwnerFilter && !providerItemMatches(s, currentServicesOwnerFilter)) return false;
         if (location && s.location !== location) return false;
@@ -4236,6 +4258,7 @@ function renderServicesDirectory() {
                         <span class="badge" style="background: ${cat.color}22; color: ${cat.color}; border: 1px solid ${cat.color}44;">
                             <i class="fas ${cat.icon}"></i> ${cat.label}
                         </span>
+                        ${attrOrientation(s)}
                     </div>
                     <div class="dir-meta">
                         <i class="fas fa-map-marker-alt"></i> ${s.location}
@@ -4705,6 +4728,7 @@ function submitService(addAnother) {
         packages: collectServicePackages(),
         name: document.getElementById('serviceName').value.trim(),
         category: document.getElementById('serviceCategory').value,
+        orientation: document.getElementById('serviceOrientation')?.value || 'all',
         email: document.getElementById('serviceEmail').value.trim(),
         phone: document.getElementById('servicePhone').value.trim(),
         location: document.getElementById('serviceLocation').value,
@@ -4763,6 +4787,8 @@ function editService(id) {
     document.getElementById('serviceName').value = s.name || '';
     document.getElementById('serviceBio').value = s.bio || '';
     document.getElementById('serviceEmail').value = s.email || '';
+    const svcOri = document.getElementById('serviceOrientation');
+    if (svcOri) svcOri.value = s.orientation || 'all';
     document.getElementById('servicePhone').value = s.phone || '';
     document.getElementById('serviceLocation').value = s.location || '';
     if (s.rates && s.rates.length) {
@@ -5069,7 +5095,7 @@ function renderUserInterests() {
         return;
     }
 
-    const others = Storage.getUsers().filter(u => !myIds.includes(u.id));
+    const others = Storage.getUsers().filter(u => !myIds.includes(u.id) && orientationMatches(null, u));
     const withMatch = others.map(u => {
         const uTags = Array.from(new Set((u.interests || []).map(t => String(t).trim().toLowerCase()).filter(Boolean)));
         const shared = uTags.filter(t => myTags.includes(t));
@@ -5512,7 +5538,7 @@ function handleContentTagInput(e) {
 
 function renderContentDirectory() {
     const content = Storage.getContent();
-    let filtered = currentContentFilter === 'all' ? content.filter(c => isApprovedPublic(c)) : content.filter(c => c.type === currentContentFilter && isApprovedPublic(c));
+    let filtered = currentContentFilter === 'all' ? content.filter(c => isApprovedPublic(c) && orientationMatches(null, c)) : content.filter(c => c.type === currentContentFilter && isApprovedPublic(c) && orientationMatches(null, c));
 
     const search = document.getElementById('contentSearch')?.value?.toLowerCase() || '';
     if (search) filtered = filtered.filter(c => c.title.toLowerCase().includes(search) || c.description.toLowerCase().includes(search) || (c.tags || []).some(t => t.toLowerCase().includes(search)));
@@ -5572,6 +5598,7 @@ function renderContentDirectory() {
                 <p class="content-card-desc">${(c.description || '').substring(0, 80)}${(c.description || '').length > 80 ? '...' : ''}</p>
                 <div class="content-card-footer">
                     <span class="badge" style="background:${type.color}22;color:${type.color};border:1px solid ${type.color}44"><i class="fas ${type.icon}"></i> ${type.label}</span>
+                    ${attrOrientation(c)}
                     <span class="content-card-author"><i class="fas fa-user"></i> ${authorName}</span>
                 </div>
             </div>
@@ -5992,6 +6019,31 @@ function renderProviderAnalytics() {
 // ==========================================
 function getUserSettings() { return JSON.parse(localStorage.getItem('k2_user_settings') || '{}'); }
 function setUserSettings(s) { localStorage.setItem('k2_user_settings', JSON.stringify(s)); }
+
+function getOrientationPref() {
+    const s = getUserSettings();
+    const v = (s && s.orientation) || 'all';
+    return ORIENTATIONS[v] ? v : 'all';
+}
+function orientationMatches(pref, record) {
+    const p = pref || getOrientationPref();
+    if (p === 'all') return true;
+    const o = (record && record.orientation) || 'all';
+    if (o === 'all') return true;
+    return o === p;
+}
+function attrOrientation(record) {
+    const o = (record && record.orientation) || 'all';
+    const meta = ORIENTATIONS[o] || ORIENTATIONS.all;
+    return o === 'all' ? '' : `<span class="orientation-chip" style="background:${meta.color}18;color:${meta.color}"><i class="fas fa-heart"></i> ${meta.label}</span>`;
+}
+function getThreadOrientation(t) {
+    if (t && typeof t.subforumId === 'string' && t.subforumId) {
+        const sub = getForumSubforumById(t.subforumId);
+        if (sub && sub.orientation) return sub;
+    }
+    return t || {};
+}
 function getProviderSettings() { return JSON.parse(localStorage.getItem('k2_provider_settings') || '{}'); }
 function setProviderSettings(s) { localStorage.setItem('k2_provider_settings', JSON.stringify(s)); }
 function getAdminSettings() { return JSON.parse(localStorage.getItem('k2_admin_settings') || '{}'); }
@@ -6008,6 +6060,7 @@ function loadUserSettings() {
     if (document.getElementById('userSettingEventNotifs')) document.getElementById('userSettingEventNotifs').checked = s.eventNotifs !== false;
     if (document.getElementById('userSettingLanguage')) document.getElementById('userSettingLanguage').value = s.language || 'en';
     if (document.getElementById('userSettingCurrency')) document.getElementById('userSettingCurrency').value = s.currency || 'ZAR';
+    if (document.getElementById('userSettingOrientation')) document.getElementById('userSettingOrientation').value = getOrientationPref();
 }
 
 function saveUserSettings() {
@@ -6020,7 +6073,8 @@ function saveUserSettings() {
         tipNotifs: document.getElementById('userSettingTipNotifs')?.checked !== false,
         eventNotifs: document.getElementById('userSettingEventNotifs')?.checked !== false,
         language: document.getElementById('userSettingLanguage')?.value || 'en',
-        currency: document.getElementById('userSettingCurrency')?.value || 'ZAR'
+        currency: document.getElementById('userSettingCurrency')?.value || 'ZAR',
+        orientation: document.getElementById('userSettingOrientation')?.value || 'all'
     };
     setUserSettings(s);
     showToast('Settings saved!');
@@ -6136,6 +6190,7 @@ function resetContentForm() {
     document.getElementById('contentId').value = '';
     document.getElementById('contentTitle').value = '';
     document.getElementById('contentType').value = '';
+    document.getElementById('contentOrientation').value = 'all';
     document.getElementById('contentDescription').value = '';
     document.getElementById('contentFileData').value = '';
     document.getElementById('contentFileType').value = '';
@@ -6244,6 +6299,7 @@ function handleContentSubmit(e) {
     const id = document.getElementById('contentId').value;
     const title = document.getElementById('contentTitle').value.trim();
     const type = document.getElementById('contentType').value;
+    const orientation = document.getElementById('contentOrientation')?.value || 'all';
     const location = document.getElementById('contentLocation')?.value || '';
     const description = document.getElementById('contentDescription').value.trim();
     const fileData = document.getElementById('contentFileData').value;
@@ -6260,6 +6316,7 @@ function handleContentSubmit(e) {
         if (idx !== -1) {
             content[idx].title = title;
             content[idx].type = type;
+            content[idx].orientation = orientation;
             content[idx].location = location;
             content[idx].description = description;
             if (fileData) { content[idx].fileData = fileData; content[idx].fileType = fileType; }
@@ -6273,7 +6330,7 @@ function handleContentSubmit(e) {
         const owner = getCurrentProviderIdentity();
         const item = {
             id: generateId(),
-            title, type, location, description,
+            title, type, orientation, location, description,
             fileData: fileData || '',
             fileType: fileType || '',
             tags: [...contentTags],
@@ -6302,6 +6359,7 @@ function editContent(id) {
     document.getElementById('contentId').value = item.id;
     document.getElementById('contentTitle').value = item.title;
     document.getElementById('contentType').value = item.type;
+    document.getElementById('contentOrientation').value = item.orientation || 'all';
     document.getElementById('contentLocation').value = item.location || '';
     document.getElementById('contentDescription').value = item.description || '';
     contentTags = [...(item.tags || [])];
@@ -6735,7 +6793,7 @@ function toggleEventCheckIn(eventId, attendeeId) {
 
 function renderEventsDirectory() {
     const events = Storage.getEvents();
-    let filtered = currentEventFilter === 'all' ? events.filter(e => isApprovedPublic(e)) : events.filter(e => e.type === currentEventFilter && isApprovedPublic(e));
+    let filtered = currentEventFilter === 'all' ? events.filter(e => isApprovedPublic(e) && orientationMatches(null, e)) : events.filter(e => e.type === currentEventFilter && isApprovedPublic(e) && orientationMatches(null, e));
 
     const search = document.getElementById('eventSearch')?.value?.toLowerCase() || '';
     if (search) filtered = filtered.filter(e => e.name.toLowerCase().includes(search) || e.description.toLowerCase().includes(search) || e.venue?.toLowerCase().includes(search) || (e.tags || []).some(t => t.toLowerCase().includes(search)));
@@ -6780,6 +6838,7 @@ function renderEventsDirectory() {
                     ${ev.eventDate ? `<div class="event-card-date-badge"><span class="event-date-day">${new Date(ev.eventDate).getDate()}</span><span class="event-date-month">${new Date(ev.eventDate).toLocaleDateString('en-ZA', { month: 'short' })}</span></div>` : ''}
                 </div>
                 ${ev.theme && EVENT_THEMES[ev.theme] ? `<div class="event-theme-chip" style="background:${accent};color:#fff"><i class="fas fa-palette"></i> ${EVENT_THEMES[ev.theme].label}</div>` : ''}
+                ${attrOrientation(ev)}
                 <h3 class="content-card-title">${ev.name}</h3>
                 <div class="event-card-info">
                     ${ev.eventTime ? `<span><i class="fas fa-clock"></i> ${ev.eventTime}</span>` : ''}
@@ -6831,6 +6890,7 @@ function viewEvent(id) {
             ${ev.fee ? `<div class="event-meta-item"><i class="fas fa-ticket"></i><span>${ev.fee}</span></div>` : ''}
             ${ev.dressCode ? `<div class="event-meta-item"><i class="fas fa-shirt"></i><span>${ev.dressCode}</span></div>` : ''}
             ${ev.theme && EVENT_THEMES[ev.theme] ? `<div class="event-meta-item"><i class="fas fa-palette"></i><span>Theme: ${EVENT_THEMES[ev.theme].label}</span></div>` : ''}
+            ${attrOrientation(ev)}
             <div class="event-meta-item"><i class="fas fa-user"></i><span>Hosted by ${authorName}</span></div>
         </div>
     `;
@@ -6944,6 +7004,7 @@ function resetEventForm() {
     document.getElementById('eventDressCode').value = '';
     document.getElementById('eventCapacity').value = '';
     document.getElementById('eventTheme').value = '';
+    document.getElementById('eventOrientation').value = 'all';
     document.getElementById('eventAnnouncement').value = '';
     document.getElementById('eventDescription').value = '';
     eventTags = [];
@@ -6965,6 +7026,7 @@ function handleEventSubmit(e) {
     const dressCode = document.getElementById('eventDressCode').value.trim();
     const capacity = document.getElementById('eventCapacity').value.trim();
     const theme = document.getElementById('eventTheme').value;
+    const orientation = document.getElementById('eventOrientation').value || 'all';
     const announcement = document.getElementById('eventAnnouncement').value.trim();
     const description = document.getElementById('eventDescription').value.trim();
 
@@ -6984,6 +7046,7 @@ function handleEventSubmit(e) {
             events[idx].dressCode = dressCode;
             events[idx].capacity = capacity;
             events[idx].theme = theme;
+            events[idx].orientation = orientation;
             events[idx].announcement = announcement;
             events[idx].description = description;
             events[idx].gallery = [...eventGallery];
@@ -6996,7 +7059,7 @@ function handleEventSubmit(e) {
         const owner = getCurrentProviderIdentity();
         const item = {
             id: generateId(),
-            name, type, eventDate, eventTime, venue, province, fee, dressCode, capacity, theme, announcement, description,
+            name, type, eventDate, eventTime, venue, province, fee, dressCode, capacity, theme, orientation, announcement, description,
             gallery: [...eventGallery],
             tags: [...eventTags],
             providerId: owner.id,
@@ -7031,6 +7094,7 @@ function editEvent(id) {
     document.getElementById('eventDressCode').value = ev.dressCode || '';
     document.getElementById('eventCapacity').value = ev.capacity || '';
     document.getElementById('eventTheme').value = ev.theme || '';
+    document.getElementById('eventOrientation').value = ev.orientation || 'all';
     document.getElementById('eventAnnouncement').value = ev.announcement || '';
     document.getElementById('eventDescription').value = ev.description || '';
     eventTags = [...(ev.tags || [])];
@@ -7218,7 +7282,7 @@ function forumSubforumTreeRoots() {
 }
 
 function forumSubforumChildren(pid) {
-    return getActiveForumSubforums().filter(s => s.parentId === pid);
+    return getActiveForumSubforums().filter(s => s.parentId === pid && orientationMatches(null, s));
 }
 
 function renderForumSubforums() {
@@ -7253,7 +7317,7 @@ function renderForumSubforums() {
                     <div class="forum-subforum-card" onclick="filterForumSubforum('${sub.id}')">
                         <div class="forum-subforum-icon" style="background:${sub.color}18;color:${sub.color}"><i class="fas ${sub.icon || 'fa-folder'}"></i></div>
                         <div class="forum-subforum-info">
-                            <div class="forum-subforum-name">${escapeHtml(sub.name)}</div>
+                            <div class="forum-subforum-name">${escapeHtml(sub.name)} ${attrOrientation(sub)}</div>
                             <div class="forum-subforum-desc">${escapeHtml(ds.desc)}</div>
                             <div class="forum-subforum-meta">
                                 <span><i class="fas fa-comment"></i> ${ds.threads}</span>
@@ -7461,6 +7525,14 @@ function providerSubforumFormHtml(sub) {
                 <label>Description</label>
                 <textarea id="providerSubforumDesc" rows="3" placeholder="Tell members what this group is about...">${sub ? escapeHtml(sub.description || '') : ''}</textarea>
             </div>
+            <div class="form-group" style="margin-top:12px">
+                <label>Audience</label>
+                <select id="providerSubforumOrientation">
+                    <option value="all" ${sub && sub.orientation === 'straight' ? '' : sub && sub.orientation === 'queer' ? '' : 'selected'}>All audiences</option>
+                    <option value="straight" ${sub && sub.orientation === 'straight' ? 'selected' : ''}>Straight audience</option>
+                    <option value="queer" ${sub && sub.orientation === 'queer' ? 'selected' : ''}>Queer audience</option>
+                </select>
+            </div>
             <div style="display:flex;gap:10px;margin-top:14px;flex-wrap:wrap">
                 <button class="btn btn-primary btn-sm" onclick="saveProviderSubforum()"><i class="fas fa-check"></i> ${sub ? 'Save Changes' : 'Create Subforum'}</button>
                 <button class="btn btn-secondary btn-sm" onclick="closeProviderSubforumForm()"><i class="fas fa-times"></i> Cancel</button>
@@ -7504,6 +7576,7 @@ function saveProviderSubforum() {
             subs[idx].name = name;
             subs[idx].description = desc;
             subs[idx].joinFee = fee;
+            subs[idx].orientation = document.getElementById('providerSubforumOrientation')?.value || subs[idx].orientation || 'all';
             subs[idx].updatedAt = new Date().toISOString();
         }
     } else {
@@ -7511,6 +7584,7 @@ function saveProviderSubforum() {
             id: generateId(), name, description: desc, joinFee: fee,
             parentId: null, icon: document.getElementById('providerSubforumIcon').value || 'fa-folder',
             color: '#d97706',
+            orientation: document.getElementById('providerSubforumOrientation')?.value || 'all',
             section: 'premium',
             ownerType: 'provider', ownerId: String(providerId), ownerName,
             status: 'active',
@@ -7627,6 +7701,7 @@ function renderForumThreads() {
         if (currentForumSubforum) {
             return t.subforumId === currentForumSubforum;
         }
+        if (!orientationMatches(null, getThreadOrientation(t))) return false;
         const cat = FORUM_CATEGORIES[t.category];
         if (cat && cat.section !== currentForumSection) return false;
         if (!cat && currentForumSection === 'premium' && !t.subforumId) return false;
@@ -7714,6 +7789,7 @@ function renderForumThreads() {
                     <div class="forum-thread-content">
                         <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:6px">
                             <span class="forum-thread-category-badge" style="background:${cat.color}18;color:${cat.color}"><i class="fas ${cat.icon}"></i> ${cat.label}</span>
+                            ${attrOrientation(getThreadOrientation(thread))}
                             ${renderForumSubforumBadge(thread.subforumId, true)}
                             ${sectionBadge}
                             ${provinceBadge}
@@ -8072,7 +8148,7 @@ function renderGigsBrowse() {
     const locationFilter = document.getElementById('gigLocationFilter')?.value || '';
     const sort = document.getElementById('gigSort')?.value || 'newest';
 
-    let filtered = gigs.filter(g => isApprovedPublic(g));
+    let filtered = gigs.filter(g => isApprovedPublic(g) && orientationMatches(null, g));
 
     if (typeFilter !== 'all') filtered = filtered.filter(g => g.gigType === typeFilter);
     if (locationFilter) filtered = filtered.filter(g => g.location === locationFilter);
@@ -8118,6 +8194,7 @@ function renderGigsBrowse() {
                 <div class="forum-thread-content" style="width:100%">
                     <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:6px">
                         <span class="forum-thread-category-badge" style="background:${type.color}18;color:${type.color}"><i class="fas ${type.icon}"></i> ${type.label}</span>
+                        ${attrOrientation(gig)}
                         ${gig.featured ? '<span class="forum-pin-badge"><i class="fas fa-star"></i> Featured</span>' : ''}
                         ${gig.urgent ? '<span class="forum-lock-badge" style="background:#ef444418;color:#ef4444"><i class="fas fa-bolt"></i> Urgent</span>' : ''}
                     </div>
@@ -8186,6 +8263,7 @@ function handleGigSubmit(e) {
     const id = document.getElementById('gigId')?.value || '';
     const title = document.getElementById('gigTitle').value.trim();
     const gigType = document.getElementById('gigType').value;
+    const orientation = document.getElementById('gigOrientation')?.value || 'all';
     const location = document.getElementById('gigLocation')?.value || '';
     const rate = document.getElementById('gigRate')?.value || '';
     const rateType = document.getElementById('gigRateType')?.value || 'hr';
@@ -8204,6 +8282,7 @@ function handleGigSubmit(e) {
         if (idx !== -1) {
             gigs[idx].title = title;
             gigs[idx].gigType = gigType;
+            gigs[idx].orientation = orientation;
             gigs[idx].location = location;
             gigs[idx].rate = rate ? parseFloat(rate) : null;
             gigs[idx].rateType = rateType;
@@ -8219,7 +8298,7 @@ function handleGigSubmit(e) {
     } else {
         const gigOwner = getCurrentProviderIdentity();
         const item = {
-            id: generateId(), title, gigType, location, rate: rate ? parseFloat(rate) : null, rateType,
+            id: generateId(), title, gigType, orientation, location, rate: rate ? parseFloat(rate) : null, rateType,
             contact, author, authorId: 'current', description, tags, urgent,
             ownerId: gigOwner.id, ownerName: gigOwner.name,
             featured: false
@@ -8236,6 +8315,7 @@ function resetGigForm() {
     document.getElementById('gigId').value = '';
     document.getElementById('gigTitle').value = '';
     document.getElementById('gigType').value = '';
+    document.getElementById('gigOrientation').value = 'all';
     document.getElementById('gigRate').value = '';
     document.getElementById('gigContact').value = '';
     document.getElementById('gigAuthor').value = '';
@@ -8290,6 +8370,7 @@ function editGig(id) {
     document.getElementById('gigId').value = gig.id;
     document.getElementById('gigTitle').value = gig.title;
     document.getElementById('gigType').value = gig.gigType;
+    document.getElementById('gigOrientation').value = gig.orientation || 'all';
     document.getElementById('gigRate').value = gig.rate || '';
     document.getElementById('gigContact').value = gig.contact || '';
     document.getElementById('gigAuthor').value = gig.author;
@@ -9023,6 +9104,7 @@ async function renderOnlineUsers() {
 
     if (currentOnlineFilter === 'online') members = members.filter(m => m.online);
     else if (currentOnlineFilter === 'offline') members = members.filter(m => !m.online);
+    members = members.filter(m => orientationMatches(null, m));
     if (typeF !== 'all') members = members.filter(m => m.role === typeF);
     if (cityF) members = members.filter(m => (m.location || '').toLowerCase().includes(cityF.toLowerCase()));
     if (search) members = members.filter(m => m.name.toLowerCase().includes(search) || (m.location || '').toLowerCase().includes(search));
@@ -9446,6 +9528,7 @@ function handleExperienceSubmit(e) {
     const id = document.getElementById('experienceId')?.value || '';
     const title = document.getElementById('expTitle').value.trim();
     const type = document.getElementById('expType').value;
+    const orientation = document.getElementById('expOrientation')?.value || 'all';
     const location = document.getElementById('expLocation').value;
     const price = parseFloat(document.getElementById('expPrice').value) || 0;
     const description = document.getElementById('expDescription').value.trim();
@@ -9463,13 +9546,13 @@ function handleExperienceSubmit(e) {
     if (id) {
         const idx = experiences.findIndex(x => x.id === id);
         if (idx !== -1) {
-            experiences[idx] = { ...experiences[idx], title, type, location, price, description, rules, includes, capacity, duration, coverPhoto, updatedAt: new Date().toISOString() };
+            experiences[idx] = { ...experiences[idx], title, type, orientation, location, price, description, rules, includes, capacity, duration, coverPhoto, updatedAt: new Date().toISOString() };
             markPendingApproval(experiences[idx]);
         }
         showToast('Experience updated! It is pending admin approval.', 'success');
     } else {
         const item = {
-            id: generateId(), title, type, location, price, description, rules, includes, capacity,
+            id: generateId(), title, type, orientation, location, price, description, rules, includes, capacity,
             duration, coverPhoto, author, providerId, authorId: 'current', ownerId: providerId, ownerName: author, tags: [],
             createdAt: new Date().toISOString(), updatedAt: new Date().toISOString()
         };
@@ -9492,6 +9575,7 @@ function editProviderExperience(id) {
         document.getElementById('experienceSubmitBtn').textContent = 'Save Changes';
         document.getElementById('expTitle').value = e.title || '';
         document.getElementById('expType').value = e.type || '';
+        document.getElementById('expOrientation').value = e.orientation || 'all';
         document.getElementById('expLocation').value = e.location || '';
         document.getElementById('expPrice').value = e.price ?? '';
         document.getElementById('expDescription').value = e.description || '';
@@ -9590,7 +9674,7 @@ function filterProviderExperiences() {
 
 function renderExperiencesBrowse() {
     appendCustomExperienceFilterTabs();
-    const experiences = Storage.getExperiences().filter(x => isApprovedPublic(x));
+    const experiences = Storage.getExperiences().filter(x => isApprovedPublic(x) && orientationMatches(null, x));
     const walletBalanceEl = document.getElementById('expWalletBalance');
     if (walletBalanceEl) walletBalanceEl.textContent = 'R' + getWalletBalance('user', currentUserOwnerId());
     let filtered = [...experiences];
@@ -9623,6 +9707,7 @@ function renderExperiencesBrowse() {
                 <div class="forum-thread-content" style="width:100%">
                     <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:6px">
                         <span class="forum-thread-category-badge" style="background:${type.color}18;color:${type.color}"><i class="fas ${type.icon || 'fa-gamepad'}"></i> ${type.label || x.type}</span>
+                        ${attrOrientation(x)}
                         <span class="forum-pin-badge" style="background:#10b98118;color:#10b981"><i class="fas fa-users"></i> ${soldCount} joined</span>
                     </div>
                     <h3 class="forum-thread-title">${escapeHtml(x.title)}</h3>
@@ -9888,7 +9973,7 @@ function handleFantasySubmit(e) {
 }
 
 function renderFantasyRequests() {
-    const requests = Storage.getFantasyRequests().filter(r => r.status === 'approved' || r.authorId === 'current');
+    const requests = Storage.getFantasyRequests().filter(r => (r.status === 'approved' || r.authorId === 'current') && orientationMatches(null, r));
     let filtered = [...requests];
 
     if (currentFantasyFilter !== 'all') filtered = filtered.filter(r => r.category === currentFantasyFilter);

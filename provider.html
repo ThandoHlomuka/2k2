@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="2k2-version" content="2.3.20">
+    <meta name="2k2-version" content="2.3.21">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="Content-Security-Policy" content="object-src 'none'; base-uri 'self'; frame-src 'none'; upgrade-insecure-requests">
     <title>2k2 - Service Provider Dashboard | Earn Money Online in South Africa</title>
@@ -30,7 +30,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💰</text></svg>">
-    <link rel="stylesheet" href="style.css?v=47">
+    <link rel="stylesheet" href="style.css?v=48">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <script type="application/ld+json">
     {
@@ -801,6 +801,14 @@
                                 </select>
                             </div>
                             <div class="form-group">
+                                <label>Audience</label>
+                                <select id="listingOrientation">
+                                    <option value="all">All audiences</option>
+                                    <option value="straight">Straight audience</option>
+                                    <option value="queer">Queer audience</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
                                 <label>Email *</label>
                                 <input type="email" id="listingEmail" placeholder="Contact email" required>
                             </div>
@@ -1136,6 +1144,14 @@
                                     <option value="book">Book</option>
                                 </select>
                             </div>
+                            <div class="form-group">
+                                <label>Audience</label>
+                                <select id="contentOrientation">
+                                    <option value="all">All audiences</option>
+                                    <option value="straight">Straight audience</option>
+                                    <option value="queer">Queer audience</option>
+                                </select>
+                            </div>
                             <div class="form-group full-width" id="contentPricingSection">
                                 <label>Pricing</label>
                                 <div class="content-pricing-toggle">
@@ -1313,6 +1329,14 @@
                                     <option value="midnight">Midnight</option>
                                 </select>
                             </div>
+                            <div class="form-group">
+                                <label>Audience</label>
+                                <select id="eventOrientation">
+                                    <option value="all">All audiences</option>
+                                    <option value="straight">Straight audience</option>
+                                    <option value="queer">Queer audience</option>
+                                </select>
+                            </div>
                             <div class="form-group full-width">
                                 <label>Announcement</label>
                                 <textarea id="eventAnnouncement" placeholder="Quick announcement shown at the top of your event (e.g. VIP tables still open, changed start time)" rows="2"></textarea>
@@ -1402,6 +1426,14 @@
                             <div class="form-group">
                                 <label>Category *</label>
                                 <select id="serviceCategory" required>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Audience</label>
+                                <select id="serviceOrientation">
+                                    <option value="all">All audiences</option>
+                                    <option value="straight">Straight audience</option>
+                                    <option value="queer">Queer audience</option>
                                 </select>
                             </div>
                             <div class="form-group">
@@ -1637,6 +1669,14 @@
                             <div class="form-group">
                                 <label>Category *</label>
                                 <select id="productCategory" required>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Audience</label>
+                                <select id="productOrientation">
+                                    <option value="all">All audiences</option>
+                                    <option value="straight">Straight audience</option>
+                                    <option value="queer">Queer audience</option>
                                 </select>
                             </div>
                             <div class="form-group">
@@ -2017,6 +2057,14 @@
                                     <option value="fetish-club">Fetish Club</option>
                                     <option value="nightclub">Nightclub</option>
                                     <option value="other">Other</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Audience</label>
+                                <select id="venueOrientation">
+                                    <option value="all">All audiences</option>
+                                    <option value="straight">Straight audience</option>
+                                    <option value="queer">Queer audience</option>
                                 </select>
                             </div>
                             <div class="form-group">
@@ -2793,6 +2841,14 @@
                                 </select>
                             </div>
                             <div class="form-group">
+                                <label>Audience</label>
+                                <select id="gigOrientation">
+                                    <option value="all">All audiences</option>
+                                    <option value="straight">Straight audience</option>
+                                    <option value="queer">Queer audience</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
                                 <label>Location</label>
                                 <select id="gigLocation">
                                     <option value="">Select location</option>
@@ -3490,6 +3546,14 @@
                                 <label>Price (R)</label>
                                 <input type="number" id="expPrice" placeholder="Entry price" min="0" step="0.01" required>
                             </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Audience</label>
+                            <select id="expOrientation">
+                                <option value="all">All audiences</option>
+                                <option value="straight">Straight audience</option>
+                                <option value="queer">Queer audience</option>
+                            </select>
                         </div>
                         <div class="form-group">
                             <label>Location</label>
@@ -5185,9 +5249,9 @@
       });
     })();
     </script>
-    <script src="script.js?v=61"></script>
+    <script src="script.js?v=62"></script>
     <script src="media-player.js?v=4"></script>
-    <script src="products.js?v=30"></script>
+    <script src="products.js?v=31"></script>
     <script src="shipping.js?v=2"></script>
     <script src="invoices.js?v=2"></script>
     <script src="monetization.js?v=2"></script>
